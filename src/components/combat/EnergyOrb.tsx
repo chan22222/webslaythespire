@@ -8,6 +8,7 @@ interface EnergyOrbProps {
 
 export function EnergyOrb({ current, max }: EnergyOrbProps) {
   const hasEnergy = current > 0;
+  const fillPercent = max > 0 ? (current / max) * 100 : 0;
   const [showTooltip, setShowTooltip] = useState(false);
 
   return (
@@ -54,28 +55,29 @@ export function EnergyOrb({ current, max }: EnergyOrbProps) {
           />
         </div>
       )}
-      {/* 외부 글로우 - 에너지가 있을 때만 */}
+      {/* 외부 글로우 - 에너지 레벨에 따라 강도 변화 */}
       {hasEnergy && (
         <>
           <div
-            className="absolute -inset-6 rounded-full animate-energy"
+            className="absolute -inset-6 rounded-full animate-energy transition-opacity duration-500"
             style={{
-              background: 'radial-gradient(circle, rgba(216, 104, 32, 0.6) 0%, transparent 60%)',
+              background: `radial-gradient(circle, rgba(216, 104, 32, ${0.2 + fillPercent * 0.004}) 0%, transparent 60%)`,
+              opacity: fillPercent / 100,
             }}
           />
-          {/* 불꽃 파티클 효과 */}
+          {/* 불꽃 파티클 효과 - 에너지 양에 따라 개수와 강도 변화 */}
           <div className="absolute inset-0">
-            {[...Array(6)].map((_, i) => (
+            {[...Array(Math.ceil((fillPercent / 100) * 6))].map((_, i) => (
               <div
                 key={i}
-                className="absolute w-2 h-2 rounded-full"
+                className="absolute w-2 h-2 rounded-full transition-opacity duration-300"
                 style={{
                   background: 'radial-gradient(circle, #ffa850 0%, #d86820 100%)',
                   left: '50%',
                   top: '50%',
                   transform: `rotate(${i * 60}deg) translateY(-50px)`,
                   animation: `particle-float ${2 + i * 0.3}s ease-in-out infinite`,
-                  opacity: 0.7,
+                  opacity: 0.3 + (fillPercent / 100) * 0.4,
                 }}
               />
             ))}
@@ -111,17 +113,26 @@ export function EnergyOrb({ current, max }: EnergyOrbProps) {
           filter={hasEnergy ? 'url(#runeGlow)' : ''}
         />
 
-        {/* 룬 마크 */}
-        {hasEnergy && [...Array(8)].map((_, i) => (
-          <circle
-            key={i}
-            cx={45 + 38 * Math.cos((i * Math.PI * 2) / 8 - Math.PI / 2)}
-            cy={45 + 38 * Math.sin((i * Math.PI * 2) / 8 - Math.PI / 2)}
-            r="3"
-            fill="var(--gold)"
-            opacity="0.8"
-          />
-        ))}
+        {/* 룬 마크 - 에너지 레벨에 따라 개수 표시 */}
+        {[...Array(8)].map((_, i) => {
+          // 에너지 레벨에 따라 룬 마크 활성화 (아래쪽부터 위쪽으로)
+          const activeRunes = Math.ceil((fillPercent / 100) * 8);
+          const isActive = hasEnergy && i < activeRunes;
+          return (
+            <circle
+              key={i}
+              cx={45 + 38 * Math.cos((i * Math.PI * 2) / 8 - Math.PI / 2)}
+              cy={45 + 38 * Math.sin((i * Math.PI * 2) / 8 - Math.PI / 2)}
+              r="3"
+              fill={isActive ? 'var(--gold)' : '#333'}
+              opacity={isActive ? 0.8 : 0.3}
+              style={{
+                transition: 'fill 0.3s ease, opacity 0.3s ease',
+                filter: isActive ? 'drop-shadow(0 0 3px var(--gold))' : 'none',
+              }}
+            />
+          );
+        })}
 
         {/* 내부 장식 링 */}
         <circle
@@ -150,33 +161,54 @@ export function EnergyOrb({ current, max }: EnergyOrbProps) {
         className="absolute rounded-full flex items-center justify-center overflow-hidden"
         style={{
           inset: '12px',
-          background: hasEnergy
-            ? `
-              radial-gradient(circle at 30% 25%,
-                #ffc870 0%,
-                #f0a040 15%,
-                #d86820 35%,
-                #a84010 60%,
-                #6a2808 85%,
-                #3a1404 100%)
-            `
-            : `
-              radial-gradient(circle at 30% 25%,
-                #555 0%,
-                #3a3a3a 40%,
-                #252525 70%,
-                #151515 100%)
-            `,
+          background: `
+            radial-gradient(circle at 30% 25%,
+              #555 0%,
+              #3a3a3a 40%,
+              #252525 70%,
+              #151515 100%)
+          `,
           boxShadow: hasEnergy
             ? `
-              0 0 40px rgba(216, 104, 32, 0.8),
-              0 0 80px rgba(216, 104, 32, 0.4),
-              inset 0 0 25px rgba(255, 200, 112, 0.4),
+              0 0 40px rgba(216, 104, 32, ${0.3 + fillPercent * 0.005}),
+              0 0 80px rgba(216, 104, 32, ${0.1 + fillPercent * 0.003}),
+              inset 0 0 25px rgba(255, 200, 112, ${fillPercent * 0.004}),
               inset -5px -5px 20px rgba(0, 0, 0, 0.5)
             `
             : 'inset -4px -4px 15px rgba(0,0,0,0.6)',
         }}
       >
+        {/* 에너지 채움 레벨 - 아래에서 위로 차오르는 효과 */}
+        <div
+          className="absolute inset-0 rounded-full transition-all duration-500 ease-out"
+          style={{
+            background: hasEnergy
+              ? `
+                radial-gradient(circle at 30% 25%,
+                  #ffc870 0%,
+                  #f0a040 15%,
+                  #d86820 35%,
+                  #a84010 60%,
+                  #6a2808 85%,
+                  #3a1404 100%)
+              `
+              : 'transparent',
+            clipPath: `inset(${100 - fillPercent}% 0 0 0)`,
+          }}
+        />
+
+        {/* 채움 레벨 경계선 효과 */}
+        {hasEnergy && fillPercent < 100 && (
+          <div
+            className="absolute left-0 right-0 h-1 transition-all duration-500 ease-out"
+            style={{
+              top: `${100 - fillPercent}%`,
+              background: 'linear-gradient(90deg, transparent 0%, rgba(255, 200, 112, 0.8) 50%, transparent 100%)',
+              boxShadow: '0 0 10px rgba(255, 200, 112, 0.6)',
+            }}
+          />
+        )}
+
         {/* 에너지 흐름 효과 */}
         {hasEnergy && (
           <>
@@ -185,6 +217,7 @@ export function EnergyOrb({ current, max }: EnergyOrbProps) {
               style={{
                 background: 'conic-gradient(from 0deg, transparent 0%, rgba(255,200,112,0.3) 25%, transparent 50%)',
                 animation: 'spin 4s linear infinite',
+                opacity: fillPercent / 100,
               }}
             />
             <div
@@ -192,6 +225,7 @@ export function EnergyOrb({ current, max }: EnergyOrbProps) {
               style={{
                 background: 'conic-gradient(from 180deg, transparent 0%, rgba(255,150,80,0.2) 25%, transparent 50%)',
                 animation: 'spin 3s linear infinite reverse',
+                opacity: fillPercent / 100,
               }}
             />
           </>
@@ -200,21 +234,17 @@ export function EnergyOrb({ current, max }: EnergyOrbProps) {
         {/* 하이라이트 */}
         {hasEnergy && (
           <div
-            className="absolute rounded-full"
+            className="absolute rounded-full transition-opacity duration-300"
             style={{
               top: '8px',
               left: '12px',
               width: '20px',
               height: '15px',
               background: 'radial-gradient(ellipse, rgba(255,255,255,0.6) 0%, transparent 70%)',
+              opacity: fillPercent / 100,
             }}
           />
         )}
-
-        {/* 에너지 아이콘 (배경) */}
-        <div className="absolute inset-0 flex items-center justify-center opacity-20">
-          <LightningIcon size={30} color={hasEnergy ? '#fff' : '#333'} />
-        </div>
 
         {/* 에너지 수치 */}
         <span
@@ -232,13 +262,14 @@ export function EnergyOrb({ current, max }: EnergyOrbProps) {
 
       {/* 최대 에너지 표시 */}
       <div
-        className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full"
+        className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2 py-1 rounded-full flex items-center gap-1"
         style={{
           background: 'linear-gradient(180deg, rgba(30,25,20,0.95) 0%, rgba(10,8,5,0.98) 100%)',
           border: '2px solid var(--gold-dark)',
           boxShadow: '0 2px 8px rgba(0,0,0,0.5)',
         }}
       >
+        <LightningIcon size={12} color={hasEnergy ? 'var(--gold-light)' : '#555'} />
         <span
           className="font-title text-sm"
           style={{
