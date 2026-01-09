@@ -22,9 +22,12 @@ export function DraggableCard({
   rotation = 0,
   onHoverChange,
 }: DraggableCardProps) {
-  const [isDragging, setIsDragging] = useState(false);
+  const [dragState, setDragState] = useState({
+    isDragging: false,
+    startX: 0,
+    startY: 0,
+  });
   const [isHovered, setIsHovered] = useState(false);
-  const [cardCenter, setCardCenter] = useState({ x: 0, y: 0 });
   const cardRef = useRef<HTMLDivElement>(null);
 
   const typeConfig = {
@@ -58,36 +61,36 @@ export function DraggableCard({
     e.preventDefault();
     e.stopPropagation();
 
-    // 카드 중심점 계산
+    // 카드 중심점 계산하고 드래그 상태 동시에 설정
     if (cardRef.current) {
       const rect = cardRef.current.getBoundingClientRect();
-      setCardCenter({
-        x: rect.left + rect.width / 2,
-        y: rect.top + rect.height / 2,
+      setDragState({
+        isDragging: true,
+        startX: rect.left + rect.width / 2,
+        startY: rect.top + rect.height / 2,
       });
     }
 
-    setIsDragging(true);
     onSelect();
   };
 
   const handleMouseUp = useCallback((e: MouseEvent) => {
-    if (!isDragging) return;
+    if (!dragState.isDragging) return;
 
     const dragDistance = Math.sqrt(
-      Math.pow(e.clientX - cardCenter.x, 2) +
-      Math.pow(e.clientY - cardCenter.y, 2)
+      Math.pow(e.clientX - dragState.startX, 2) +
+      Math.pow(e.clientY - dragState.startY, 2)
     );
 
-    setIsDragging(false);
+    setDragState(prev => ({ ...prev, isDragging: false }));
     onDragEnd(e.clientX, e.clientY, dragDistance);
-  }, [isDragging, cardCenter, onDragEnd]);
+  }, [dragState, onDragEnd]);
 
   useEffect(() => {
-    if (!isDragging) return;
+    if (!dragState.isDragging) return;
     window.addEventListener('mouseup', handleMouseUp);
     return () => window.removeEventListener('mouseup', handleMouseUp);
-  }, [isDragging, handleMouseUp]);
+  }, [dragState.isDragging, handleMouseUp]);
 
   const handleMouseEnter = () => {
     setIsHovered(true);
@@ -95,27 +98,27 @@ export function DraggableCard({
   };
 
   const handleMouseLeave = () => {
-    if (!isDragging) {
+    if (!dragState.isDragging) {
       setIsHovered(false);
       onHoverChange?.(false);
     }
   };
 
   const getTransform = () => {
-    if (isDragging) {
+    if (dragState.isDragging) {
       return `rotate(0deg) scale(1.25) translateY(-30px)`;
     }
     if (isSelected) {
-      return `rotate(0deg) scale(1.15) translateY(-20px)`;
+      return `rotate(0deg) scale(1.2) translateY(-20px)`;
     }
     if (isHovered && isPlayable) {
-      return `rotate(0deg) translateY(-40px) scale(1.15)`;
+      return `rotate(0deg) translateY(-50px) scale(1.25)`;
     }
     return `rotate(${rotation}deg)`;
   };
 
   const getBoxShadow = () => {
-    if (isDragging || isSelected) {
+    if (dragState.isDragging || isSelected) {
       return `0 0 50px ${config.glowColor}, 0 0 100px ${config.glowColor}, 0 30px 60px rgba(0,0,0,0.8)`;
     }
     if (isHovered && isPlayable) {
@@ -126,14 +129,22 @@ export function DraggableCard({
 
   const CardIcon = card.type === 'ATTACK' ? SwordIcon : card.type === 'SKILL' ? ShieldIcon : PowerIcon;
 
+  // 타겟이 필요한 카드인지 확인
+  const needsTarget = card.effects.some(e =>
+    (e.type === 'DAMAGE' && e.target === 'SINGLE') ||
+    (e.type === 'APPLY_STATUS' && e.target === 'SINGLE')
+  );
+
   return (
     <>
       {/* 화살표 타겟팅 */}
       <TargetingArrow
-        startX={cardCenter.x}
-        startY={cardCenter.y}
-        isActive={isDragging}
+        key={dragState.isDragging ? card.instanceId : 'inactive'}
+        startX={dragState.startX}
+        startY={dragState.startY}
+        isActive={dragState.isDragging}
         cardType={card.type}
+        needsTarget={needsTarget}
       />
 
       <div
@@ -144,7 +155,7 @@ export function DraggableCard({
         className={`
           relative select-none
           ${isPlayable ? 'cursor-pointer' : 'cursor-not-allowed'}
-          ${isDragging ? 'cursor-crosshair' : ''}
+          ${dragState.isDragging ? 'cursor-crosshair' : ''}
           ${!isPlayable ? 'brightness-50 saturate-50' : ''}
         `}
         style={{
@@ -152,8 +163,8 @@ export function DraggableCard({
           height: '195px',
           transform: getTransform(),
           boxShadow: getBoxShadow(),
-          zIndex: isDragging ? 1000 : isSelected ? 100 : isHovered ? 50 : undefined,
-          transition: isDragging ? 'none' : 'transform 0.15s ease-out, box-shadow 0.15s ease-out',
+          zIndex: dragState.isDragging ? 1000 : isSelected ? 100 : isHovered ? 50 : undefined,
+          transition: dragState.isDragging ? 'none' : 'transform 0.15s ease-out, box-shadow 0.15s ease-out',
         }}
       >
         {/* 카드 외부 프레임 */}
@@ -330,7 +341,7 @@ export function DraggableCard({
         </div>
 
         {/* 드래그 중 글로우 오버레이 */}
-        {isDragging && (
+        {dragState.isDragging && (
           <div
             className="absolute inset-0 rounded-xl pointer-events-none"
             style={{

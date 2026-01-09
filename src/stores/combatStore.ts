@@ -49,7 +49,7 @@ interface CombatStore extends CombatState {
 
   // 데미지 팝업
   damagePopups: DamagePopup[];
-  addDamagePopup: (value: number, type: DamagePopup['type'], x: number, y: number) => void;
+  addDamagePopup: (value: number, type: DamagePopup['type'], x: number, y: number, targetId?: string) => void;
   removeDamagePopup: (id: string) => void;
 }
 
@@ -59,10 +59,23 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
   playerStatuses: [],
   damagePopups: [],
 
-  addDamagePopup: (value: number, type: DamagePopup['type'], x: number, y: number) => {
+  addDamagePopup: (value: number, type: DamagePopup['type'], x: number, y: number, targetId?: string) => {
+    let finalX = x;
+    let finalY = y;
+
+    // targetId가 'player'면 플레이어 요소 위치 자동 찾기
+    if (targetId === 'player') {
+      const playerEl = document.querySelector('[data-player]');
+      if (playerEl) {
+        const rect = playerEl.getBoundingClientRect();
+        finalX = rect.left + rect.width / 2;
+        finalY = rect.top + rect.height / 3;
+      }
+    }
+
     const id = `popup-${Date.now()}-${Math.random()}`;
     set(state => ({
-      damagePopups: [...state.damagePopups, { id, value, type, x, y }],
+      damagePopups: [...state.damagePopups, { id, value, type, x: finalX, y: finalY }],
     }));
   },
 
@@ -91,9 +104,7 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       playerBlock: 0,
       playerStatuses: [],
     });
-
-    // 초기 5장 드로우
-    get().drawCards(5);
+    // startPlayerTurn에서 드로우 처리됨
   },
 
   startPlayerTurn: () => {
@@ -150,11 +161,13 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     get().executeEnemyTurn();
   },
 
-  executeEnemyTurn: () => {
+  executeEnemyTurn: async () => {
     const { enemies, turn } = get();
 
-    enemies.forEach(enemy => {
-      if (enemy.currentHp <= 0) return;
+    // 순차적으로 적 행동 처리
+    for (let i = 0; i < enemies.length; i++) {
+      const enemy = enemies[i];
+      if (enemy.currentHp <= 0) continue;
 
       // 적 방어도 리셋
       enemy.block = 0;
@@ -166,7 +179,16 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       if (enemy.intent.type === 'ATTACK') {
         const damage = enemy.intent.damage || 0;
         const strength = enemy.statuses.find(s => s.type === 'STRENGTH')?.stacks || 0;
-        get().dealDamageToPlayer(damage + strength);
+        const totalDamage = damage + strength;
+
+        // 데미지 팝업 표시
+        get().addDamagePopup(totalDamage, 'damage', 0, 0, 'player');
+        get().dealDamageToPlayer(totalDamage);
+
+        // 다음 적 공격 전 딜레이
+        if (i < enemies.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 400));
+        }
       } else if (enemy.intent.type === 'DEFEND') {
         enemy.block += enemy.intent.block || 0;
       } else if (enemy.intent.type === 'BUFF') {
@@ -189,7 +211,7 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
           stacks: s.type === 'WEAK' || s.type === 'VULNERABLE' ? s.stacks - 1 : s.stacks,
         }))
         .filter(s => s.stacks > 0);
-    });
+    }
 
     // 다음 의도 설정
     const updatedEnemies = enemies.map(enemy => {

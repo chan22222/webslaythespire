@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useMemo } from 'react';
 import { useGameStore } from '../../stores/gameStore';
 import { useCombatStore } from '../../stores/combatStore';
 import { CardHand } from './CardHand';
@@ -67,6 +67,17 @@ export function CombatScreen() {
     else enemyRefs.current.delete(enemyId);
   }, []);
 
+  // 배경 파티클 데이터 (한 번만 생성)
+  const particles = useMemo(() =>
+    [...Array(12)].map((_, i) => ({
+      id: i,
+      left: Math.random() * 100,
+      top: Math.random() * 50,
+      opacity: 0.15 + Math.random() * 0.2,
+      duration: 5 + Math.random() * 5,
+      delay: Math.random() * 5,
+    })), []);
+
   // 데미지 팝업을 위한 위치 계산
   const showDamagePopup = useCallback((targetId: string | 'player', value: number, type: 'damage' | 'block') => {
     let x = window.innerWidth / 2;
@@ -106,16 +117,28 @@ export function CombatScreen() {
       (e.type === 'APPLY_STATUS' && e.target === 'SINGLE')
     );
 
+    const SNAP_DISTANCE = 100; // TargetingArrow와 동일한 스냅 거리
+
     if (needsTarget) {
       let targetEnemyId: string | null = null;
+      let minDistance = SNAP_DISTANCE;
+
+      // 스냅 범위 내에서 가장 가까운 적 찾기
       enemyRefs.current.forEach((el, enemyId) => {
         const rect = el.getBoundingClientRect();
-        if (x >= rect.left - 40 && x <= rect.right + 40 &&
-            y >= rect.top - 40 && y <= rect.bottom + 40) {
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        const distance = Math.sqrt(Math.pow(x - centerX, 2) + Math.pow(y - centerY, 2));
+
+        if (distance < minDistance) {
           const enemy = enemies.find(e => e.instanceId === enemyId);
-          if (enemy && enemy.currentHp > 0) targetEnemyId = enemyId;
+          if (enemy && enemy.currentHp > 0) {
+            minDistance = distance;
+            targetEnemyId = enemyId;
+          }
         }
       });
+
       if (targetEnemyId) {
         const damageEffect = card.effects.find(e => e.type === 'DAMAGE');
         if (damageEffect) {
@@ -125,7 +148,7 @@ export function CombatScreen() {
       }
     } else {
       // 논타겟 카드는 화면 상단 절반에 놓으면 사용
-      if (y < window.innerHeight * 0.7) {
+      if (y < window.innerHeight * 0.5) {
         const blockEffect = card.effects.find(e => e.type === 'BLOCK');
         if (blockEffect) {
           showDamagePopup('player', blockEffect.value, 'block');
@@ -161,16 +184,16 @@ export function CombatScreen() {
 
       {/* 배경 파티클 효과 */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        {[...Array(12)].map((_, i) => (
+        {particles.map((p) => (
           <div
-            key={i}
+            key={p.id}
             className="absolute w-1 h-1 rounded-full bg-[var(--gold)]"
             style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 50}%`,
-              opacity: 0.15 + Math.random() * 0.2,
-              animation: `float ${5 + Math.random() * 5}s ease-in-out infinite`,
-              animationDelay: `${Math.random() * 5}s`,
+              left: `${p.left}%`,
+              top: `${p.top}%`,
+              opacity: p.opacity,
+              animation: `float ${p.duration}s ease-in-out infinite`,
+              animationDelay: `${p.delay}s`,
             }}
           />
         ))}
@@ -295,7 +318,7 @@ export function CombatScreen() {
 
       {/* ===== 메인 전투 영역 - 플레이어와 적이 가깝게 마주보는 구도 ===== */}
       <div className="flex-1 relative z-10 flex items-center justify-center">
-        <div className="flex items-center justify-center gap-24">
+        <div className="flex items-center justify-center gap-40">
           {/* 플레이어 영역 - 좌측 */}
           <div className="flex flex-col items-center" ref={playerRef}>
             <PlayerStatus

@@ -52,7 +52,7 @@ export function CardHand({
       style={{
         height: '280px',
         width: '100%',
-        paddingBottom: '15px',
+        paddingBottom: '40px',
       }}
     >
       {/* 카드 렌더링 */}

@@ -1,27 +1,127 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useId, useRef } from 'react';
+import { createPortal } from 'react-dom';
 
 interface TargetingArrowProps {
   startX: number;
   startY: number;
   isActive: boolean;
   cardType: 'ATTACK' | 'SKILL' | 'POWER';
+  needsTarget: boolean;
 }
 
-export function TargetingArrow({ startX, startY, isActive, cardType }: TargetingArrowProps) {
+interface SnapTarget {
+  id: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+const SNAP_DISTANCE = 100; // 자석 효과 범위 (px)
+
+export function TargetingArrow({ startX, startY, isActive, cardType, needsTarget }: TargetingArrowProps) {
   const [mousePos, setMousePos] = useState({ x: startX, y: startY });
+  const [snappedTarget, setSnappedTarget] = useState<SnapTarget | null>(null);
+  const targetsRef = useRef<SnapTarget[]>([]);
+  const playerRef = useRef<SnapTarget | null>(null);
+  const uniqueId = useId();
+
+  // 타겟 요소들의 위치를 업데이트
+  const updateTargets = useCallback(() => {
+    // 적 타겟
+    const enemies = document.querySelectorAll('[data-enemy-id]');
+    const targets: SnapTarget[] = [];
+
+    enemies.forEach((el) => {
+      const rect = el.getBoundingClientRect();
+      const id = el.getAttribute('data-enemy-id');
+      if (id) {
+        targets.push({
+          id,
+          x: rect.left + rect.width / 2,
+          y: rect.top + rect.height / 2,
+          width: rect.width,
+          height: rect.height,
+        });
+      }
+    });
+
+    targetsRef.current = targets;
+
+    // 플레이어 타겟
+    const playerEl = document.querySelector('[data-player]');
+    if (playerEl) {
+      const rect = playerEl.getBoundingClientRect();
+      playerRef.current = {
+        id: 'player',
+        x: rect.left + rect.width / 2,
+        y: rect.top + rect.height / 2,
+        width: rect.width,
+        height: rect.height,
+      };
+    }
+  }, []);
+
+  // 가장 가까운 적 타겟 찾기
+  const findClosestEnemy = useCallback((x: number, y: number): SnapTarget | null => {
+    let closest: SnapTarget | null = null;
+    let minDistance = SNAP_DISTANCE;
+
+    for (const target of targetsRef.current) {
+      const distance = Math.sqrt(
+        Math.pow(x - target.x, 2) + Math.pow(y - target.y, 2)
+      );
+
+      if (distance < minDistance) {
+        minDistance = distance;
+        closest = target;
+      }
+    }
+
+    return closest;
+  }, []);
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
-    setMousePos({ x: e.clientX, y: e.clientY });
-  }, []);
+    updateTargets();
+
+    if (needsTarget) {
+      // 타겟 필요: 적에게 스냅
+      const closest = findClosestEnemy(e.clientX, e.clientY);
+      setSnappedTarget(closest);
+
+      if (closest) {
+        setMousePos({ x: closest.x, y: closest.y - 20 });
+      } else {
+        setMousePos({ x: e.clientX, y: e.clientY });
+      }
+    } else {
+      // 논타겟 카드: 화면 상단 50% 이상일 때만 플레이어에 스냅
+      const isInPlayArea = e.clientY < window.innerHeight * 0.5;
+
+      if (isInPlayArea && playerRef.current) {
+        setSnappedTarget(playerRef.current);
+        setMousePos({ x: playerRef.current.x, y: playerRef.current.y - 30 });
+      } else {
+        setSnappedTarget(null);
+        setMousePos({ x: e.clientX, y: e.clientY });
+      }
+    }
+  }, [updateTargets, findClosestEnemy, needsTarget]);
 
   useEffect(() => {
     if (isActive) {
+      updateTargets();
+      setMousePos({ x: startX, y: startY });
+      setSnappedTarget(null);
       window.addEventListener('mousemove', handleMouseMove);
       return () => window.removeEventListener('mousemove', handleMouseMove);
     }
-  }, [isActive, handleMouseMove]);
+  }, [isActive, handleMouseMove, startX, startY, updateTargets]);
 
   if (!isActive) return null;
+
+  // 시작점이 유효하지 않으면 렌더링하지 않음 (0, 0은 초기값)
+  if (startX === 0 && startY === 0) return null;
 
   // 시작점과 끝점
   const dx = mousePos.x - startX;
@@ -33,7 +133,7 @@ export function TargetingArrow({ startX, startY, isActive, cardType }: Targeting
 
   // 베지어 곡선을 위한 제어점 계산
   const midX = (startX + mousePos.x) / 2;
-  const midY = Math.min(startY, mousePos.y) - distance * 0.3; // 위로 휘는 곡선
+  const midY = Math.min(startY, mousePos.y) - distance * 0.3;
 
   // 색상 설정
   const colors = {
@@ -47,12 +147,27 @@ export function TargetingArrow({ startX, startY, isActive, cardType }: Targeting
   // SVG 경로 생성
   const pathD = `M ${startX} ${startY} Q ${midX} ${midY} ${mousePos.x} ${mousePos.y}`;
 
-  return (
-    <div className="fixed inset-0 pointer-events-none z-[999]">
-      <svg className="w-full h-full">
+  // 고유 ID 생성
+  const glowId = `arrowGlow-${uniqueId}`;
+  const arrowheadId = `arrowhead-${uniqueId}`;
+  const gradientId = `arrowGradient-${uniqueId}`;
+
+  const isSnapped = snappedTarget !== null;
+  const targetSize = isSnapped ? 70 : 50;
+  const crosshairSize = isSnapped ? 40 : 30;
+
+  const content = (
+    <div
+      style={{
+        position: 'fixed',
+        inset: 0,
+        pointerEvents: 'none',
+        zIndex: 99999,
+      }}
+    >
+      <svg style={{ width: '100%', height: '100%' }}>
         <defs>
-          {/* 글로우 필터 */}
-          <filter id="arrowGlow" x="-50%" y="-50%" width="200%" height="200%">
+          <filter id={glowId} x="-50%" y="-50%" width="200%" height="200%">
             <feGaussianBlur stdDeviation="4" result="blur" />
             <feMerge>
               <feMergeNode in="blur" />
@@ -60,9 +175,8 @@ export function TargetingArrow({ startX, startY, isActive, cardType }: Targeting
             </feMerge>
           </filter>
 
-          {/* 화살표 마커 */}
           <marker
-            id="arrowhead"
+            id={arrowheadId}
             markerWidth="12"
             markerHeight="10"
             refX="10"
@@ -75,8 +189,7 @@ export function TargetingArrow({ startX, startY, isActive, cardType }: Targeting
             />
           </marker>
 
-          {/* 그라데이션 */}
-          <linearGradient id="arrowGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+          <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor={color.main} stopOpacity="0.3" />
             <stop offset="100%" stopColor={color.main} stopOpacity="1" />
           </linearGradient>
@@ -89,20 +202,20 @@ export function TargetingArrow({ startX, startY, isActive, cardType }: Targeting
           stroke={color.glow}
           strokeWidth="12"
           strokeLinecap="round"
-          filter="url(#arrowGlow)"
+          filter={`url(#${glowId})`}
         />
 
         {/* 메인 화살표 라인 */}
         <path
           d={pathD}
           fill="none"
-          stroke="url(#arrowGradient)"
+          stroke={`url(#${gradientId})`}
           strokeWidth="4"
           strokeLinecap="round"
-          markerEnd="url(#arrowhead)"
+          markerEnd={`url(#${arrowheadId})`}
         />
 
-        {/* 점선 효과 (애니메이션) */}
+        {/* 점선 효과 */}
         <path
           d={pathD}
           fill="none"
@@ -111,51 +224,77 @@ export function TargetingArrow({ startX, startY, isActive, cardType }: Targeting
           strokeDasharray="8 8"
           strokeLinecap="round"
           style={{
-            animation: 'dash 0.5s linear infinite',
+            animation: 'targetingDash 0.5s linear infinite',
           }}
         />
       </svg>
 
       {/* 타겟 원 */}
       <div
-        className="absolute rounded-full"
         style={{
-          left: mousePos.x - 25,
-          top: mousePos.y - 25,
-          width: 50,
-          height: 50,
-          border: `3px solid ${color.main}`,
-          boxShadow: `0 0 20px ${color.glow}, inset 0 0 20px ${color.glow}`,
+          position: 'absolute',
+          left: mousePos.x - targetSize / 2,
+          top: mousePos.y - targetSize / 2,
+          width: targetSize,
+          height: targetSize,
+          borderRadius: '50%',
+          border: `${isSnapped ? 4 : 3}px solid ${color.main}`,
+          boxShadow: isSnapped
+            ? `0 0 30px ${color.main}, 0 0 60px ${color.glow}, inset 0 0 30px ${color.glow}`
+            : `0 0 20px ${color.glow}, inset 0 0 20px ${color.glow}`,
           animation: 'pulse 1s ease-in-out infinite',
         }}
       />
 
-      {/* 크로스헤어 */}
+      {/* 크로스헤어 - transition 제거 */}
       <div
-        className="absolute"
         style={{
+          position: 'absolute',
           left: mousePos.x - 2,
-          top: mousePos.y - 15,
+          top: mousePos.y - crosshairSize / 2,
           width: 4,
-          height: 30,
+          height: crosshairSize,
           background: color.main,
           boxShadow: `0 0 10px ${color.glow}`,
         }}
       />
       <div
-        className="absolute"
         style={{
-          left: mousePos.x - 15,
+          position: 'absolute',
+          left: mousePos.x - crosshairSize / 2,
           top: mousePos.y - 2,
-          width: 30,
+          width: crosshairSize,
           height: 4,
           background: color.main,
           boxShadow: `0 0 10px ${color.glow}`,
         }}
       />
 
+      {/* 스냅 표시 */}
+      {isSnapped && (
+        <div
+          style={{
+            position: 'absolute',
+            left: mousePos.x,
+            top: mousePos.y + 50,
+            transform: 'translateX(-50%)',
+            padding: '4px 12px',
+            background: 'rgba(0, 0, 0, 0.8)',
+            border: `2px solid ${color.main}`,
+            borderRadius: '6px',
+            color: color.main,
+            fontSize: '12px',
+            fontWeight: 'bold',
+            letterSpacing: '2px',
+            boxShadow: `0 0 15px ${color.glow}`,
+          }}
+        >
+          {snappedTarget?.id === 'player' ? 'SELF' : 'LOCKED'}
+        </div>
+      )}
+
       <style>{`
-        @keyframes dash {
+        @keyframes targetingDash {
           to {
             stroke-dashoffset: -16;
           }
@@ -163,4 +302,6 @@ export function TargetingArrow({ startX, startY, isActive, cardType }: Targeting
       `}</style>
     </div>
   );
+
+  return createPortal(content, document.body);
 }

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { EnemyInstance } from '../../types/enemy';
 import { HealthBar } from '../common/HealthBar';
 import { STATUS_INFO } from '../../types/status';
@@ -18,7 +19,98 @@ interface EnemyProps {
   isTargetable?: boolean;
 }
 
+function EnemyStatusBadge({ status }: { status: { type: string; stacks: number } }) {
+  const [showTooltip, setShowTooltip] = useState(false);
+  const info = STATUS_INFO[status.type as keyof typeof STATUS_INFO];
+
+  const getIcon = () => {
+    switch (status.type) {
+      case 'VULNERABLE':
+        return <VulnerableIcon size={14} color="#ff6b6b" />;
+      case 'WEAK':
+        return <WeakIcon size={14} color="#a78bfa" />;
+      case 'STRENGTH':
+        return <StrengthIcon size={14} color="#4ade80" />;
+      case 'POISON':
+        return <PoisonIcon size={14} color="#84cc16" />;
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div
+      className="relative"
+      onMouseEnter={() => setShowTooltip(true)}
+      onMouseLeave={() => setShowTooltip(false)}
+    >
+      <div
+        className={`
+          flex items-center gap-1.5 px-2.5 py-1.5 rounded-md cursor-help
+          ${info.isDebuff ? 'status-debuff' : 'status-buff'}
+        `}
+        style={{
+          boxShadow: info.isDebuff
+            ? '0 0 8px rgba(180, 60, 60, 0.4)'
+            : '0 0 8px rgba(60, 180, 60, 0.4)',
+        }}
+      >
+        {getIcon()}
+        <span className="text-white font-title text-xs">{status.stacks}</span>
+      </div>
+
+      {showTooltip && (
+        <div
+          className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 rounded-lg whitespace-nowrap z-50"
+          style={{
+            background: 'rgba(0, 0, 0, 0.95)',
+            border: `2px solid ${info.isDebuff ? '#e04040' : '#4ade80'}`,
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.8)',
+          }}
+        >
+          <div className="font-title text-sm mb-1" style={{ color: info.isDebuff ? '#ff6b6b' : '#4ade80' }}>
+            {info.name}
+          </div>
+          <div className="font-card text-xs text-gray-300 max-w-48">
+            {info.description}
+          </div>
+          <div
+            className="absolute left-1/2 -translate-x-1/2 top-full"
+            style={{
+              width: 0,
+              height: 0,
+              borderLeft: '8px solid transparent',
+              borderRight: '8px solid transparent',
+              borderTop: `8px solid ${info.isDebuff ? '#e04040' : '#4ade80'}`,
+            }}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function Enemy({ enemy, isTargetable = false }: EnemyProps) {
+  const [showIntentTooltip, setShowIntentTooltip] = useState(false);
+
+  const getIntentTooltip = () => {
+    switch (enemy.intent.type) {
+      case 'ATTACK':
+        const hits = enemy.intent.hits || 1;
+        return hits > 1
+          ? `플레이어에게 ${hits}회 공격`
+          : '플레이어에게 공격';
+      case 'DEFEND':
+        return '방어도를 획득합니다';
+      case 'BUFF':
+        return '힘 +3 (공격력 증가)';
+      case 'DEBUFF':
+        return '약화 부여 (공격력 25% 감소)';
+      default:
+        return '알 수 없는 행동';
+    }
+  };
+
   const getIntentDisplay = () => {
     switch (enemy.intent.type) {
       case 'ATTACK':
@@ -65,28 +157,47 @@ export function Enemy({ enemy, isTargetable = false }: EnemyProps) {
     }
   };
 
-  const getStatusIcon = (type: string) => {
-    switch (type) {
-      case 'VULNERABLE':
-        return <VulnerableIcon size={14} color="#ff6b6b" />;
-      case 'WEAK':
-        return <WeakIcon size={14} color="#a78bfa" />;
-      case 'STRENGTH':
-        return <StrengthIcon size={14} color="#4ade80" />;
-      case 'POISON':
-        return <PoisonIcon size={14} color="#84cc16" />;
-      default:
-        return null;
-    }
-  };
-
   if (enemy.currentHp <= 0) return null;
 
   return (
-    <div className={`flex flex-col items-center transition-all duration-300 ${isTargetable ? 'scale-105' : ''}`}>
+    <div
+      data-enemy-id={enemy.instanceId}
+      className={`flex flex-col items-center transition-all duration-300 ${isTargetable ? 'scale-105' : ''}`}
+    >
       {/* 인텐트 표시 */}
-      <div className="mb-6 animate-float">
+      <div
+        className="mb-6 animate-float relative cursor-help"
+        onMouseEnter={() => setShowIntentTooltip(true)}
+        onMouseLeave={() => setShowIntentTooltip(false)}
+      >
         {getIntentDisplay()}
+
+        {/* 인텐트 툴팁 */}
+        {showIntentTooltip && (
+          <div
+            className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 rounded-lg whitespace-nowrap z-50"
+            style={{
+              background: 'rgba(0, 0, 0, 0.95)',
+              border: '2px solid var(--gold)',
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.8)',
+            }}
+          >
+            <span className="font-card text-sm text-[var(--gold-light)]">
+              {getIntentTooltip()}
+            </span>
+            {/* 화살표 */}
+            <div
+              className="absolute left-1/2 -translate-x-1/2 top-full"
+              style={{
+                width: 0,
+                height: 0,
+                borderLeft: '8px solid transparent',
+                borderRight: '8px solid transparent',
+                borderTop: '8px solid var(--gold)',
+              }}
+            />
+          </div>
+        )}
       </div>
 
       {/* 적 본체 */}
@@ -157,29 +268,12 @@ export function Enemy({ enemy, isTargetable = false }: EnemyProps) {
         />
       </div>
 
-      {/* 상태 효과 */}
-      {enemy.statuses.length > 0 && (
-        <div className="flex gap-2 mt-3 flex-wrap justify-center max-w-40">
-          {enemy.statuses.map((status, index) => (
-            <div
-              key={index}
-              className={`
-                flex items-center gap-1.5 px-2.5 py-1.5 rounded-md
-                ${STATUS_INFO[status.type].isDebuff ? 'status-debuff' : 'status-buff'}
-              `}
-              title={STATUS_INFO[status.type].description}
-              style={{
-                boxShadow: STATUS_INFO[status.type].isDebuff
-                  ? '0 0 8px rgba(180, 60, 60, 0.4)'
-                  : '0 0 8px rgba(60, 180, 60, 0.4)',
-              }}
-            >
-              {getStatusIcon(status.type)}
-              <span className="text-white font-title text-xs">{status.stacks}</span>
-            </div>
-          ))}
-        </div>
-      )}
+      {/* 상태 효과 - 고정 높이로 레이아웃 안정화 */}
+      <div className="flex gap-2 mt-3 flex-wrap justify-center max-w-40 min-h-[32px]">
+        {enemy.statuses.map((status, index) => (
+          <EnemyStatusBadge key={index} status={status} />
+        ))}
+      </div>
     </div>
   );
 }
