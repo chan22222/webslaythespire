@@ -61,7 +61,7 @@ function EnemyStatusBadge({ status }: { status: { type: string; stacks: number }
 
       {showTooltip && (
         <div
-          className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 rounded-lg whitespace-nowrap z-50"
+          className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 rounded-lg whitespace-nowrap z-[9999] pointer-events-none"
           style={{
             background: 'rgba(0, 0, 0, 0.95)',
             border: `2px solid ${info.isDebuff ? '#e04040' : '#4ade80'}`,
@@ -175,7 +175,7 @@ export function Enemy({ enemy, isTargetable = false }: EnemyProps) {
         {/* 인텐트 툴팁 */}
         {showIntentTooltip && (
           <div
-            className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 rounded-lg whitespace-nowrap z-50"
+            className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 rounded-lg whitespace-nowrap z-[9999] pointer-events-none"
             style={{
               background: 'rgba(0, 0, 0, 0.95)',
               border: '2px solid var(--gold)',
