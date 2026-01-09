@@ -12,7 +12,7 @@ export function CardRewardScreen() {
   const [cardRewards, setCardRewards] = useState<CardType[]>([]);
   const [goldReward, setGoldReward] = useState(0);
   const [goldCollected, setGoldCollected] = useState(false);
-  const [cardCollected, setCardCollected] = useState(false);
+  const [selectedCardIndex, setSelectedCardIndex] = useState<number | null>(null);
 
   useEffect(() => {
     setCardRewards(generateCardRewards(3));
@@ -26,18 +26,20 @@ export function CardRewardScreen() {
     }
   };
 
-  const handleSelectCard = (card: CardType) => {
-    if (!cardCollected) {
-      addCardToDeck(card);
-      setCardCollected(true);
+  const handleSelectCard = (index: number) => {
+    // 같은 카드 클릭 시 선택 해제
+    if (selectedCardIndex === index) {
+      setSelectedCardIndex(null);
+    } else {
+      setSelectedCardIndex(index);
     }
   };
 
-  const handleSkipCard = () => {
-    setCardCollected(true);
-  };
-
   const handleProceed = () => {
+    // 선택된 카드가 있으면 덱에 추가
+    if (selectedCardIndex !== null) {
+      addCardToDeck(cardRewards[selectedCardIndex]);
+    }
     resetCombat();
     setPhase('MAP');
   };
@@ -93,40 +95,64 @@ export function CardRewardScreen() {
       {/* 카드 보상 */}
       <div className="mb-8 relative z-10">
         <h2 className="font-title text-xl text-[var(--gold-light)] text-center mb-6">
-          {cardCollected ? '카드 선택 완료' : '보상 카드를 선택하세요'}
+          {selectedCardIndex !== null
+            ? `"${cardRewards[selectedCardIndex].name}" 선택됨 (다시 클릭하여 해제)`
+            : '보상 카드를 선택하세요 (선택 안함 가능)'}
         </h2>
 
         <div className="flex gap-8">
-          {cardRewards.map((card, index) => (
-            <div
-              key={index}
-              onClick={() => !cardCollected && handleSelectCard(card)}
-              className={`
-                transition-all duration-300
-                ${cardCollected ? 'opacity-40 scale-95' : 'cursor-pointer hover:scale-110 hover:-translate-y-4'}
-              `}
-            >
-              <Card
-                card={createCardInstance(card)}
-                isPlayable={!cardCollected}
-                size="lg"
-              />
-            </div>
-          ))}
+          {cardRewards.map((card, index) => {
+            const isSelected = selectedCardIndex === index;
+            return (
+              <div
+                key={index}
+                onClick={() => handleSelectCard(index)}
+                className={`
+                  transition-all duration-300 cursor-pointer
+                  ${isSelected
+                    ? 'scale-110 -translate-y-6'
+                    : 'hover:scale-105 hover:-translate-y-2'
+                  }
+                `}
+                style={{
+                  filter: selectedCardIndex !== null && !isSelected ? 'brightness(0.5)' : 'none',
+                }}
+              >
+                <div
+                  className="relative"
+                  style={{
+                    boxShadow: isSelected
+                      ? '0 0 30px rgba(74, 222, 128, 0.8), 0 0 60px rgba(74, 222, 128, 0.4)'
+                      : 'none',
+                    borderRadius: '12px',
+                  }}
+                >
+                  <Card
+                    card={createCardInstance(card)}
+                    isPlayable={true}
+                    size="lg"
+                  />
+                  {isSelected && (
+                    <div
+                      className="absolute -top-3 -right-3 w-8 h-8 rounded-full flex items-center justify-center"
+                      style={{
+                        background: 'linear-gradient(135deg, #22c55e 0%, #166534 100%)',
+                        border: '2px solid #4ade80',
+                        boxShadow: '0 0 15px rgba(74, 222, 128, 0.6)',
+                      }}
+                    >
+                      <span className="text-white text-lg">✓</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
 
-        {!cardCollected && (
-          <button
-            onClick={handleSkipCard}
-            className="mt-6 px-6 py-2 rounded-lg font-card text-gray-400 hover:text-white transition-colors block mx-auto"
-            style={{
-              background: 'linear-gradient(180deg, var(--bg-medium) 0%, var(--bg-dark) 100%)',
-              border: '1px solid var(--gold-dark)',
-            }}
-          >
-            카드 건너뛰기
-          </button>
-        )}
+        <p className="mt-4 text-center font-card text-sm text-gray-400">
+          카드를 선택하지 않고 진행할 수 있습니다
+        </p>
       </div>
 
       {/* 진행 버튼 */}
