@@ -1,0 +1,313 @@
+import { useState, useEffect } from 'react';
+import { useGameStore } from '../../stores/gameStore';
+import { Card } from '../combat/Card';
+import { Card as CardType, createCardInstance } from '../../types/card';
+import { Relic } from '../../types/relic';
+import { generateCardRewards } from '../../data/cards';
+import { generateRelicReward } from '../../data/relics';
+import { randomInt } from '../../utils/shuffle';
+
+interface ShopItem {
+  type: 'card' | 'relic' | 'remove';
+  item?: CardType | Relic;
+  price: number;
+  sold: boolean;
+}
+
+export function ShopScreen() {
+  const { player, setPhase, modifyGold, addCardToDeck, addRelic, removeCardFromDeck } = useGameStore();
+  const [shopItems, setShopItems] = useState<ShopItem[]>([]);
+  const [showRemoveModal, setShowRemoveModal] = useState(false);
+
+  useEffect(() => {
+    const cards = generateCardRewards(5);
+    const relic = generateRelicReward();
+
+    const items: ShopItem[] = [
+      ...cards.map(card => ({
+        type: 'card' as const,
+        item: card,
+        price: card.rarity === 'COMMON' ? randomInt(45, 55) :
+          card.rarity === 'UNCOMMON' ? randomInt(68, 82) : randomInt(135, 165),
+        sold: false,
+      })),
+      {
+        type: 'relic' as const,
+        item: relic,
+        price: relic.rarity === 'COMMON' ? randomInt(140, 160) : randomInt(230, 270),
+        sold: false,
+      },
+      {
+        type: 'remove' as const,
+        price: 75,
+        sold: false,
+      },
+    ];
+
+    setShopItems(items);
+  }, []);
+
+  const handleBuyCard = (index: number) => {
+    const item = shopItems[index];
+    if (item.sold || player.gold < item.price || item.type !== 'card') return;
+
+    modifyGold(-item.price);
+    addCardToDeck(item.item as CardType);
+
+    const newItems = [...shopItems];
+    newItems[index].sold = true;
+    setShopItems(newItems);
+  };
+
+  const handleBuyRelic = (index: number) => {
+    const item = shopItems[index];
+    if (item.sold || player.gold < item.price || item.type !== 'relic') return;
+
+    modifyGold(-item.price);
+    addRelic(item.item as Relic);
+
+    const newItems = [...shopItems];
+    newItems[index].sold = true;
+    setShopItems(newItems);
+  };
+
+  const handleBuyRemove = (index: number) => {
+    const item = shopItems[index];
+    if (item.sold || player.gold < item.price) return;
+
+    setShowRemoveModal(true);
+  };
+
+  const handleRemoveCard = (cardInstanceId: string) => {
+    const item = shopItems.find(i => i.type === 'remove' && !i.sold);
+    if (!item) return;
+
+    modifyGold(-item.price);
+    removeCardFromDeck(cardInstanceId);
+
+    const newItems = [...shopItems];
+    const removeIndex = newItems.findIndex(i => i.type === 'remove' && !i.sold);
+    if (removeIndex !== -1) {
+      newItems[removeIndex].sold = true;
+    }
+    setShopItems(newItems);
+    setShowRemoveModal(false);
+  };
+
+  const handleLeave = () => {
+    setPhase('MAP');
+  };
+
+  const cardItems = shopItems.filter(i => i.type === 'card');
+  const relicItems = shopItems.filter(i => i.type === 'relic');
+  const removeItem = shopItems.find(i => i.type === 'remove');
+
+  return (
+    <div className="w-full h-screen bg-[var(--bg-darkest)] texture-noise flex flex-col items-center p-8 relative overflow-hidden">
+      {/* 배경 효과 */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div
+          className="absolute inset-0"
+          style={{
+            background: 'radial-gradient(ellipse at center top, rgba(201, 162, 39, 0.15) 0%, transparent 50%)',
+          }}
+        />
+      </div>
+
+      {/* 상단: 골드 */}
+      <div
+        className="flex items-center gap-3 px-6 py-3 rounded-xl mb-6 relative z-10"
+        style={{
+          background: 'linear-gradient(180deg, var(--bg-medium) 0%, var(--bg-dark) 100%)',
+          border: '2px solid var(--gold)',
+          boxShadow: '0 0 20px var(--gold-glow)',
+        }}
+      >
+        <span className="text-3xl">💰</span>
+        <span className="font-title text-2xl text-[var(--gold-light)]">{player.gold}</span>
+      </div>
+
+      <h1
+        className="font-title text-4xl text-[var(--gold-light)] mb-6 relative z-10"
+        style={{
+          textShadow: '0 0 20px var(--gold-glow), 0 4px 8px rgba(0,0,0,0.8)',
+        }}
+      >
+        상점
+      </h1>
+
+      {/* 카드 판매 */}
+      <div className="mb-6 relative z-10">
+        <h2 className="font-title text-lg text-[var(--gold)] mb-4 text-center">카드</h2>
+        <div className="flex gap-4">
+          {cardItems.map((item, index) => (
+            <div key={index} className="flex flex-col items-center">
+              <div
+                onClick={() => handleBuyCard(shopItems.indexOf(item))}
+                className={`
+                  transition-all duration-300
+                  ${item.sold ? 'opacity-30 scale-95' : player.gold >= item.price ? 'cursor-pointer hover:scale-105 hover:-translate-y-2' : 'opacity-50'}
+                `}
+              >
+                <Card
+                  card={createCardInstance(item.item as CardType)}
+                  isPlayable={!item.sold && player.gold >= item.price}
+                  size="md"
+                />
+              </div>
+              <div
+                className={`mt-2 flex items-center gap-1.5 px-3 py-1 rounded-lg font-title ${
+                  item.sold ? 'text-gray-500' : player.gold >= item.price ? 'text-[var(--gold-light)]' : 'text-[var(--attack-light)]'
+                }`}
+                style={{
+                  background: 'linear-gradient(180deg, var(--bg-medium) 0%, var(--bg-dark) 100%)',
+                  border: `1px solid ${item.sold ? '#444' : player.gold >= item.price ? 'var(--gold-dark)' : 'var(--attack-dark)'}`,
+                }}
+              >
+                <span>💰</span>
+                <span>{item.sold ? '판매됨' : item.price}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* 유물 판매 */}
+      <div className="mb-6 relative z-10">
+        <h2 className="font-title text-lg text-[var(--gold)] mb-4 text-center">유물</h2>
+        <div className="flex gap-4">
+          {relicItems.map((item, index) => {
+            const relic = item.item as Relic;
+            return (
+              <div
+                key={index}
+                onClick={() => handleBuyRelic(shopItems.indexOf(item))}
+                className={`
+                  flex flex-col items-center p-4 rounded-xl transition-all duration-300
+                  ${item.sold ? 'opacity-30' : player.gold >= item.price ? 'cursor-pointer hover:scale-105' : 'opacity-50'}
+                `}
+                style={{
+                  background: 'linear-gradient(135deg, var(--bg-medium) 0%, var(--bg-dark) 100%)',
+                  border: '2px solid var(--gold-dark)',
+                  boxShadow: '0 8px 20px rgba(0,0,0,0.4)',
+                }}
+              >
+                <div
+                  className="w-16 h-16 rounded-lg flex items-center justify-center mb-2"
+                  style={{
+                    background: 'linear-gradient(135deg, var(--bg-light) 0%, var(--bg-dark) 100%)',
+                    border: '2px solid var(--gold)',
+                    boxShadow: 'inset 0 0 15px rgba(0,0,0,0.5)',
+                  }}
+                >
+                  <span className="text-3xl">
+                    {relic.id === 'anchor' && '⚓'}
+                    {relic.id === 'vajra' && '💪'}
+                    {relic.id === 'lantern' && '🏮'}
+                    {relic.id === 'bag_of_marbles' && '🔮'}
+                    {relic.id === 'bronze_scales' && '🛡️'}
+                  </span>
+                </div>
+                <span className="font-title text-[var(--gold-light)]">{relic.name}</span>
+                <span className="font-card text-xs text-gray-400 text-center max-w-32 mt-1">{relic.description}</span>
+                <div
+                  className={`mt-3 flex items-center gap-1.5 px-3 py-1 rounded-lg font-title ${
+                    item.sold ? 'text-gray-500' : player.gold >= item.price ? 'text-[var(--gold-light)]' : 'text-[var(--attack-light)]'
+                  }`}
+                  style={{
+                    background: 'linear-gradient(180deg, var(--bg-medium) 0%, var(--bg-dark) 100%)',
+                    border: `1px solid ${item.sold ? '#444' : player.gold >= item.price ? 'var(--gold-dark)' : 'var(--attack-dark)'}`,
+                  }}
+                >
+                  <span>💰</span>
+                  <span>{item.sold ? '판매됨' : item.price}</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* 카드 제거 서비스 */}
+      {removeItem && (
+        <div className="mb-6 relative z-10">
+          <button
+            onClick={() => handleBuyRemove(shopItems.indexOf(removeItem))}
+            disabled={removeItem.sold || player.gold < removeItem.price}
+            className={`
+              px-6 py-4 rounded-xl font-title flex items-center gap-3
+              transition-all duration-300
+              ${removeItem.sold ? 'opacity-30' :
+                player.gold >= removeItem.price ? 'hover:scale-105' : 'opacity-50 cursor-not-allowed'}
+            `}
+            style={{
+              background: removeItem.sold ? 'var(--bg-dark)' :
+                player.gold >= removeItem.price
+                  ? 'linear-gradient(180deg, var(--attack) 0%, var(--attack-dark) 100%)'
+                  : 'var(--bg-dark)',
+              border: `2px solid ${removeItem.sold ? '#444' :
+                player.gold >= removeItem.price ? 'var(--attack-light)' : '#444'}`,
+              boxShadow: !removeItem.sold && player.gold >= removeItem.price
+                ? '0 0 15px var(--attack-glow)'
+                : 'none',
+            }}
+          >
+            <span className="text-2xl">🗑️</span>
+            <span className="text-white">
+              카드 제거 - 💰 {removeItem.sold ? '판매됨' : removeItem.price}
+            </span>
+          </button>
+        </div>
+      )}
+
+      {/* 나가기 버튼 */}
+      <button
+        onClick={handleLeave}
+        className="btn-game px-8 py-3 text-lg relative z-10"
+      >
+        상점 나가기
+      </button>
+
+      {/* 카드 제거 모달 */}
+      {showRemoveModal && (
+        <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50">
+          <div
+            className="rounded-xl p-8 max-w-4xl max-h-[80vh] overflow-auto"
+            style={{
+              background: 'linear-gradient(135deg, var(--bg-medium) 0%, var(--bg-dark) 100%)',
+              border: '2px solid var(--attack)',
+              boxShadow: '0 0 40px rgba(0,0,0,0.8), 0 0 20px var(--attack-glow)',
+            }}
+          >
+            <h2 className="font-title text-2xl text-[var(--attack-light)] mb-6 text-center">
+              제거할 카드를 선택하세요
+            </h2>
+
+            <div className="grid grid-cols-5 gap-4">
+              {player.deck.map(card => (
+                <div
+                  key={card.instanceId}
+                  onClick={() => handleRemoveCard(card.instanceId)}
+                  className="cursor-pointer hover:scale-105 transition-transform"
+                >
+                  <Card card={card} size="sm" />
+                </div>
+              ))}
+            </div>
+
+            <button
+              onClick={() => setShowRemoveModal(false)}
+              className="mt-6 px-6 py-2 rounded-lg font-card text-gray-400 hover:text-white transition-colors block mx-auto"
+              style={{
+                background: 'linear-gradient(180deg, var(--bg-light) 0%, var(--bg-dark) 100%)',
+                border: '1px solid var(--gold-dark)',
+              }}
+            >
+              취소
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

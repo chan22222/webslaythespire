@@ -1,0 +1,40 @@
+import { StatusType } from './card';
+
+export interface Status {
+  type: StatusType;
+  stacks: number;
+  duration?: number; // undefined = 영구, 숫자 = 턴 후 사라짐
+}
+
+export const STATUS_INFO: Record<StatusType, { name: string; description: string; isDebuff: boolean }> = {
+  VULNERABLE: {
+    name: '취약',
+    description: '받는 피해가 50% 증가합니다.',
+    isDebuff: true,
+  },
+  WEAK: {
+    name: '약화',
+    description: '주는 피해가 25% 감소합니다.',
+    isDebuff: true,
+  },
+  STRENGTH: {
+    name: '힘',
+    description: '공격 피해가 증가합니다.',
+    isDebuff: false,
+  },
+  DEXTERITY: {
+    name: '민첩',
+    description: '방어력 획득이 증가합니다.',
+    isDebuff: false,
+  },
+  POISON: {
+    name: '독',
+    description: '턴 시작 시 독 수치만큼 피해를 받고 1 감소합니다.',
+    isDebuff: true,
+  },
+  BLOCK_NEXT_TURN: {
+    name: '다음 턴 방어',
+    description: '다음 턴 시작 시 방어력을 얻습니다.',
+    isDebuff: false,
+  },
+};
