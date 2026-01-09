@@ -4,10 +4,6 @@ import { HealthBar } from '../common/HealthBar';
 import { STATUS_INFO } from '../../types/status';
 import { getEnemyCharacter } from './characters';
 import {
-  SwordIcon,
-  ShieldIcon,
-  PowerIcon,
-  SkullIcon,
   VulnerableIcon,
   WeakIcon,
   StrengthIcon,
@@ -17,6 +13,276 @@ import {
 interface EnemyProps {
   enemy: EnemyInstance;
   isTargetable?: boolean;
+}
+
+// ===== 게임 스타일 의도 표시 컴포넌트 =====
+
+function AttackIntent({ damage, hits }: { damage: number; hits?: number }) {
+  return (
+    <div className="relative flex items-center justify-center" style={{ width: '56px', height: '56px' }}>
+      {/* 배경 글로우 */}
+      <div
+        className="absolute inset-0 animate-pulse"
+        style={{
+          background: 'radial-gradient(circle, rgba(184, 37, 37, 0.6) 0%, transparent 70%)',
+          filter: 'blur(8px)',
+        }}
+      />
+      {/* 검 형태 SVG */}
+      <svg viewBox="0 0 56 56" className="absolute inset-0 w-full h-full" style={{ filter: 'drop-shadow(0 0 8px rgba(184, 37, 37, 0.8))' }}>
+        <defs>
+          <linearGradient id="attackGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#e04040" />
+            <stop offset="50%" stopColor="#b82525" />
+            <stop offset="100%" stopColor="#7a1818" />
+          </linearGradient>
+          <linearGradient id="attackHighlight" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="rgba(255,255,255,0.4)" />
+            <stop offset="100%" stopColor="rgba(255,255,255,0)" />
+          </linearGradient>
+        </defs>
+        {/* 다이아몬드 형태 배경 */}
+        <path
+          d="M28 4 L48 28 L28 52 L8 28 Z"
+          fill="url(#attackGradient)"
+          stroke="#ff6b6b"
+          strokeWidth="2"
+        />
+        {/* 내부 하이라이트 */}
+        <path
+          d="M28 8 L44 28 L28 48 L12 28 Z"
+          fill="url(#attackHighlight)"
+          opacity="0.5"
+        />
+        {/* 검 아이콘 */}
+        <path
+          d="M28 14 L32 28 L28 42 L24 28 Z"
+          fill="rgba(255,255,255,0.3)"
+          stroke="rgba(255,255,255,0.5)"
+          strokeWidth="1"
+        />
+        <line x1="20" y1="28" x2="36" y2="28" stroke="rgba(255,255,255,0.4)" strokeWidth="2" />
+      </svg>
+      {/* 데미지 숫자 */}
+      <div className="relative z-10 flex flex-col items-center">
+        <span
+          className="font-title text-xl font-bold text-white"
+          style={{ textShadow: '0 0 10px rgba(255, 107, 107, 0.8), 0 2px 4px rgba(0,0,0,0.8)' }}
+        >
+          {damage}
+        </span>
+        {hits && hits > 1 && (
+          <span className="font-title text-[10px] text-white/80" style={{ marginTop: '-4px' }}>
+            x{hits}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function DefendIntent({ block }: { block: number }) {
+  return (
+    <div className="relative flex items-center justify-center" style={{ width: '52px', height: '58px' }}>
+      {/* 배경 글로우 */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background: 'radial-gradient(circle, rgba(40, 102, 168, 0.5) 0%, transparent 70%)',
+          filter: 'blur(6px)',
+        }}
+      />
+      {/* 방패 형태 SVG */}
+      <svg viewBox="0 0 52 58" className="absolute inset-0 w-full h-full" style={{ filter: 'drop-shadow(0 0 10px rgba(40, 102, 168, 0.8))' }}>
+        <defs>
+          <linearGradient id="defendGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="var(--block-light)" />
+            <stop offset="100%" stopColor="var(--block-dark)" />
+          </linearGradient>
+          <linearGradient id="defendHighlight" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="rgba(255,255,255,0.35)" />
+            <stop offset="50%" stopColor="rgba(255,255,255,0)" />
+          </linearGradient>
+        </defs>
+        {/* 방패 외곽 */}
+        <path
+          d="M26 3 L47 10 L47 28 C47 42 36 52 26 56 C16 52 5 42 5 28 L5 10 Z"
+          fill="url(#defendGradient)"
+          stroke="var(--block-bright)"
+          strokeWidth="2.5"
+        />
+        {/* 하이라이트 */}
+        <path
+          d="M26 6 L44 12 L44 28 C44 40 34 49 26 52 C18 49 8 40 8 28 L8 12 Z"
+          fill="url(#defendHighlight)"
+        />
+        {/* 내부 장식 */}
+        <path
+          d="M26 14 L38 18 L38 28 C38 36 32 42 26 45 C20 42 14 36 14 28 L14 18 Z"
+          fill="none"
+          stroke="rgba(255,255,255,0.2)"
+          strokeWidth="1"
+        />
+      </svg>
+      {/* 방어도 숫자 */}
+      <span
+        className="relative z-10 font-title text-xl font-bold text-white"
+        style={{ textShadow: '0 0 10px rgba(74, 154, 216, 0.8), 0 2px 4px rgba(0,0,0,0.8)', marginTop: '-4px' }}
+      >
+        {block}
+      </span>
+    </div>
+  );
+}
+
+function BuffIntent() {
+  return (
+    <div className="relative flex items-center justify-center" style={{ width: '52px', height: '52px' }}>
+      {/* 배경 글로우 */}
+      <div
+        className="absolute inset-0 animate-pulse"
+        style={{
+          background: 'radial-gradient(circle, rgba(74, 222, 128, 0.5) 0%, transparent 70%)',
+          filter: 'blur(8px)',
+        }}
+      />
+      {/* 별/룬 형태 SVG */}
+      <svg viewBox="0 0 52 52" className="absolute inset-0 w-full h-full" style={{ filter: 'drop-shadow(0 0 10px rgba(74, 222, 128, 0.8))' }}>
+        <defs>
+          <linearGradient id="buffGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#4ade80" />
+            <stop offset="50%" stopColor="#22c55e" />
+            <stop offset="100%" stopColor="#166534" />
+          </linearGradient>
+          <linearGradient id="buffInner" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="rgba(255,255,255,0.3)" />
+            <stop offset="100%" stopColor="rgba(255,255,255,0)" />
+          </linearGradient>
+        </defs>
+        {/* 육각형 배경 */}
+        <polygon
+          points="26,3 46,15 46,37 26,49 6,37 6,15"
+          fill="url(#buffGradient)"
+          stroke="#86efac"
+          strokeWidth="2"
+        />
+        {/* 내부 하이라이트 */}
+        <polygon
+          points="26,8 42,18 42,34 26,44 10,34 10,18"
+          fill="url(#buffInner)"
+        />
+        {/* 상승 화살표 */}
+        <path
+          d="M26 16 L32 26 L28 26 L28 36 L24 36 L24 26 L20 26 Z"
+          fill="rgba(255,255,255,0.9)"
+          stroke="rgba(255,255,255,0.3)"
+          strokeWidth="1"
+        />
+      </svg>
+      {/* 강화 텍스트 */}
+      <span
+        className="absolute bottom-0 font-title text-[9px] font-bold text-white px-1.5 py-0.5 rounded"
+        style={{
+          background: 'rgba(0,0,0,0.6)',
+          textShadow: '0 0 5px rgba(74, 222, 128, 0.8)',
+        }}
+      >
+        강화
+      </span>
+    </div>
+  );
+}
+
+function DebuffIntent() {
+  return (
+    <div className="relative flex items-center justify-center" style={{ width: '52px', height: '52px' }}>
+      {/* 배경 글로우 */}
+      <div
+        className="absolute inset-0 animate-pulse"
+        style={{
+          background: 'radial-gradient(circle, rgba(168, 85, 247, 0.5) 0%, transparent 70%)',
+          filter: 'blur(8px)',
+        }}
+      />
+      {/* 저주/독 형태 SVG */}
+      <svg viewBox="0 0 52 52" className="absolute inset-0 w-full h-full" style={{ filter: 'drop-shadow(0 0 10px rgba(168, 85, 247, 0.8))' }}>
+        <defs>
+          <linearGradient id="debuffGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#c084fc" />
+            <stop offset="50%" stopColor="#a855f7" />
+            <stop offset="100%" stopColor="#7c3aed" />
+          </linearGradient>
+          <linearGradient id="debuffInner" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="rgba(255,255,255,0.25)" />
+            <stop offset="100%" stopColor="rgba(255,255,255,0)" />
+          </linearGradient>
+        </defs>
+        {/* 톱니 원형 (저주 느낌) */}
+        <path
+          d="M26 3 L30 10 L38 6 L36 14 L46 15 L40 22 L48 26 L40 30 L46 37 L36 38 L38 46 L30 42 L26 49 L22 42 L14 46 L16 38 L6 37 L12 30 L4 26 L12 22 L6 15 L16 14 L14 6 L22 10 Z"
+          fill="url(#debuffGradient)"
+          stroke="#d8b4fe"
+          strokeWidth="1.5"
+        />
+        {/* 내부 원 */}
+        <circle
+          cx="26"
+          cy="26"
+          r="14"
+          fill="url(#debuffInner)"
+        />
+        {/* 해골/독 아이콘 */}
+        <circle cx="21" cy="23" r="3" fill="rgba(0,0,0,0.5)" />
+        <circle cx="31" cy="23" r="3" fill="rgba(0,0,0,0.5)" />
+        <ellipse cx="26" cy="32" rx="5" ry="3" fill="rgba(0,0,0,0.4)" />
+      </svg>
+      {/* 저주 텍스트 */}
+      <span
+        className="absolute bottom-0 font-title text-[9px] font-bold text-white px-1.5 py-0.5 rounded"
+        style={{
+          background: 'rgba(0,0,0,0.6)',
+          textShadow: '0 0 5px rgba(168, 85, 247, 0.8)',
+        }}
+      >
+        약화
+      </span>
+    </div>
+  );
+}
+
+function UnknownIntent() {
+  return (
+    <div className="relative flex items-center justify-center" style={{ width: '48px', height: '48px' }}>
+      <div
+        className="absolute inset-0"
+        style={{
+          background: 'radial-gradient(circle, rgba(212, 168, 75, 0.4) 0%, transparent 70%)',
+          filter: 'blur(6px)',
+        }}
+      />
+      <svg viewBox="0 0 48 48" className="absolute inset-0 w-full h-full" style={{ filter: 'drop-shadow(0 0 8px rgba(212, 168, 75, 0.6))' }}>
+        <circle
+          cx="24"
+          cy="24"
+          r="20"
+          fill="var(--bg-medium)"
+          stroke="var(--gold)"
+          strokeWidth="2"
+        />
+        <text
+          x="24"
+          y="30"
+          textAnchor="middle"
+          fill="var(--gold-light)"
+          fontSize="20"
+          fontWeight="bold"
+          fontFamily="Cinzel, serif"
+        >
+          ?
+        </text>
+      </svg>
+    </div>
+  );
 }
 
 function EnemyStatusBadge({ status }: { status: { type: string; stacks: number } }) {
@@ -117,46 +383,15 @@ export function Enemy({ enemy, isTargetable = false }: EnemyProps) {
   const getIntentDisplay = () => {
     switch (enemy.intent.type) {
       case 'ATTACK':
-        return (
-          <div className="intent-attack flex items-center gap-2 px-4 py-2 rounded-lg">
-            <SwordIcon size={22} color="#fff" />
-            <span className="font-title text-lg font-bold text-white">
-              {enemy.intent.damage}
-            </span>
-            {enemy.intent.hits && enemy.intent.hits > 1 && (
-              <span className="text-sm text-white/70 font-title">x{enemy.intent.hits}</span>
-            )}
-          </div>
-        );
+        return <AttackIntent damage={enemy.intent.damage || 0} hits={enemy.intent.hits} />;
       case 'DEFEND':
-        return (
-          <div className="intent-defend flex items-center gap-2 px-4 py-2 rounded-lg">
-            <ShieldIcon size={22} color="#fff" />
-            <span className="font-title text-lg font-bold text-white">
-              {enemy.intent.block}
-            </span>
-          </div>
-        );
+        return <DefendIntent block={enemy.intent.block || 0} />;
       case 'BUFF':
-        return (
-          <div className="intent-buff flex items-center gap-2 px-4 py-2 rounded-lg">
-            <PowerIcon size={22} color="#fff" />
-            <span className="font-title text-sm text-white">강화</span>
-          </div>
-        );
+        return <BuffIntent />;
       case 'DEBUFF':
-        return (
-          <div className="intent-debuff flex items-center gap-2 px-4 py-2 rounded-lg">
-            <SkullIcon size={22} color="#fff" />
-            <span className="font-title text-sm text-white">저주</span>
-          </div>
-        );
+        return <DebuffIntent />;
       default:
-        return (
-          <div className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--bg-medium)] border-2 border-[var(--gold-dark)]">
-            <span className="text-lg font-title text-[var(--gold)]">?</span>
-          </div>
-        );
+        return <UnknownIntent />;
     }
   };
 
@@ -228,21 +463,40 @@ export function Enemy({ enemy, isTargetable = false }: EnemyProps) {
           {getEnemyCharacter(enemy.templateId, 100, isTargetable)}
         </div>
 
-        {/* 블록 표시 */}
+        {/* 블록 표시 - 방패 모양 */}
         {enemy.block > 0 && (
           <div
-            className="absolute -left-6 top-1/2 -translate-y-1/2 flex items-center justify-center"
-            style={{
-              width: '44px',
-              height: '44px',
-              borderRadius: '50%',
-              background: 'linear-gradient(135deg, var(--block-light) 0%, var(--block-dark) 100%)',
-              border: '3px solid var(--block-bright)',
-              boxShadow: '0 0 20px rgba(40, 102, 168, 0.7), inset 0 0 10px rgba(255,255,255,0.2)',
-            }}
+            className="absolute -left-4 top-1/2 -translate-y-1/2 flex items-center justify-center"
+            style={{ width: '40px', height: '46px' }}
           >
-            <ShieldIcon size={18} color="#fff" className="absolute opacity-30" />
-            <span className="font-title text-base font-bold text-white relative z-10">{enemy.block}</span>
+            <svg
+              viewBox="0 0 40 46"
+              className="absolute inset-0 w-full h-full"
+              style={{ filter: 'drop-shadow(0 0 10px rgba(40, 102, 168, 0.8))' }}
+            >
+              <defs>
+                <linearGradient id="enemyShieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="var(--block-light)" />
+                  <stop offset="100%" stopColor="var(--block-dark)" />
+                </linearGradient>
+              </defs>
+              <path
+                d="M20 2 L36 8 L36 22 C36 32 28 40 20 44 C12 40 4 32 4 22 L4 8 Z"
+                fill="url(#enemyShieldGrad)"
+                stroke="var(--block-bright)"
+                strokeWidth="2"
+              />
+              <path
+                d="M20 5 L33 10 L33 22 C33 30 26 37 20 40 C14 37 7 30 7 22 L7 10 Z"
+                fill="rgba(255,255,255,0.15)"
+              />
+            </svg>
+            <span
+              className="relative z-10 font-title text-base font-bold text-white"
+              style={{ textShadow: '0 0 8px rgba(40, 102, 168, 0.8), 0 2px 3px rgba(0,0,0,0.6)', marginTop: '-2px' }}
+            >
+              {enemy.block}
+            </span>
           </div>
         )}
       </div>
