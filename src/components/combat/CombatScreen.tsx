@@ -405,15 +405,46 @@ export function CombatScreen() {
         <div className="absolute right-2 md:right-[6%] lg:right-[10%] bottom-2 md:bottom-8 lg:bottom-10 z-30">
           <button
             onClick={endPlayerTurn}
-            className="group relative overflow-hidden active:scale-95 transition-transform px-2 py-1 md:px-5 md:py-3 lg:px-6 lg:py-3"
+            className={`group relative overflow-hidden active:scale-95 transition-all duration-300 px-2 py-1 md:px-5 md:py-3 lg:px-6 lg:py-3 ${energy === 0 ? 'animate-pulse-glow' : ''}`}
             style={{
-              background: 'linear-gradient(180deg, #3a2820 0%, #1a1410 100%)',
-              border: '2px solid var(--gold)',
+              background: energy === 0
+                ? 'linear-gradient(180deg, #4a3020 0%, #2a1810 100%)'
+                : 'linear-gradient(180deg, #3a2820 0%, #1a1410 100%)',
+              border: `2px solid ${energy === 0 ? 'var(--energy)' : 'var(--gold)'}`,
               borderRadius: '8px',
-              boxShadow: '0 4px 15px rgba(0,0,0,0.6), 0 0 15px var(--gold-glow)',
+              boxShadow: energy === 0
+                ? '0 4px 15px rgba(0,0,0,0.6), 0 0 25px var(--energy-glow), 0 0 50px rgba(230, 126, 34, 0.3)'
+                : '0 4px 15px rgba(0,0,0,0.6), 0 0 15px var(--gold-glow)',
             }}
           >
-            <span className="font-title text-[9px] md:text-base lg:text-lg tracking-wider text-[var(--gold-light)] relative z-10">
+            {/* 에너지 0일 때 빛나는 오버레이 */}
+            {energy === 0 && (
+              <>
+                <div
+                  className="absolute inset-0 rounded-md"
+                  style={{
+                    background: 'radial-gradient(circle at center, rgba(230, 126, 34, 0.3) 0%, transparent 70%)',
+                    animation: 'pulse 1.5s ease-in-out infinite',
+                  }}
+                />
+                <div
+                  className="absolute inset-0 rounded-md overflow-hidden"
+                  style={{
+                    background: 'conic-gradient(from 0deg, transparent 0%, rgba(255,150,80,0.2) 25%, transparent 50%)',
+                    animation: 'spin 3s linear infinite',
+                  }}
+                />
+              </>
+            )}
+            <span
+              className="font-title text-[9px] md:text-base lg:text-lg tracking-wider relative z-10 transition-colors duration-300"
+              style={{
+                color: energy === 0 ? 'var(--energy-light)' : 'var(--gold-light)',
+                textShadow: energy === 0
+                  ? '0 0 10px var(--energy-glow), 0 0 20px rgba(230, 126, 34, 0.5)'
+                  : 'none',
+              }}
+            >
               턴 끝내기
             </span>
           </button>
