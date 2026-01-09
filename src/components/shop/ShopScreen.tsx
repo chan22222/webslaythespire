@@ -103,7 +103,7 @@ export function ShopScreen() {
   const removeItem = shopItems.find(i => i.type === 'remove');
 
   return (
-    <div className="w-full h-screen bg-[var(--bg-darkest)] texture-noise flex flex-col items-center p-8 relative overflow-hidden">
+    <div className="w-full h-screen bg-[var(--bg-darkest)] texture-noise flex flex-col items-center p-2 sm:p-8 relative overflow-auto">
       {/* 배경 효과 */}
       <div className="absolute inset-0 pointer-events-none">
         <div
@@ -116,19 +116,19 @@ export function ShopScreen() {
 
       {/* 상단: 골드 */}
       <div
-        className="flex items-center gap-3 px-6 py-3 rounded-xl mb-6 relative z-10"
+        className="flex items-center gap-2 sm:gap-3 px-4 sm:px-6 py-2 sm:py-3 rounded-xl mb-3 sm:mb-6 relative z-10"
         style={{
           background: 'linear-gradient(180deg, var(--bg-medium) 0%, var(--bg-dark) 100%)',
           border: '2px solid var(--gold)',
           boxShadow: '0 0 20px var(--gold-glow)',
         }}
       >
-        <span className="text-3xl">💰</span>
-        <span className="font-title text-2xl text-[var(--gold-light)]">{player.gold}</span>
+        <span className="text-xl sm:text-3xl">💰</span>
+        <span className="font-title text-lg sm:text-2xl text-[var(--gold-light)]">{player.gold}</span>
       </div>
 
       <h1
-        className="font-title text-4xl text-[var(--gold-light)] mb-6 relative z-10"
+        className="font-title text-2xl sm:text-4xl text-[var(--gold-light)] mb-3 sm:mb-6 relative z-10"
         style={{
           textShadow: '0 0 20px var(--gold-glow), 0 4px 8px rgba(0,0,0,0.8)',
         }}
@@ -137,9 +137,9 @@ export function ShopScreen() {
       </h1>
 
       {/* 카드 판매 */}
-      <div className="mb-6 relative z-10">
-        <h2 className="font-title text-lg text-[var(--gold)] mb-4 text-center">카드</h2>
-        <div className="flex gap-4">
+      <div className="mb-3 sm:mb-6 relative z-10">
+        <h2 className="font-title text-sm sm:text-lg text-[var(--gold)] mb-2 sm:mb-4 text-center">카드</h2>
+        <div className="flex gap-1 sm:gap-4 scale-50 sm:scale-75 md:scale-100 origin-top">
           {cardItems.map((item, index) => (
             <div key={index} className="flex flex-col items-center">
               <div
@@ -156,7 +156,7 @@ export function ShopScreen() {
                 />
               </div>
               <div
-                className={`mt-2 flex items-center gap-1.5 px-3 py-1 rounded-lg font-title ${
+                className={`mt-2 flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1 rounded-lg font-title text-xs sm:text-base ${
                   item.sold ? 'text-gray-500' : player.gold >= item.price ? 'text-[var(--gold-light)]' : 'text-[var(--attack-light)]'
                 }`}
                 style={{
@@ -172,10 +172,10 @@ export function ShopScreen() {
         </div>
       </div>
 
-      {/* 유물 판매 */}
-      <div className="mb-6 relative z-10">
-        <h2 className="font-title text-lg text-[var(--gold)] mb-4 text-center">유물</h2>
-        <div className="flex gap-4">
+      {/* 유물 판매 - 모바일에서 가로 스크롤 가능 */}
+      <div className="mb-3 sm:mb-6 relative z-10 w-full sm:w-auto overflow-x-auto">
+        <h2 className="font-title text-sm sm:text-lg text-[var(--gold)] mb-2 sm:mb-4 text-center">유물</h2>
+        <div className="flex gap-2 sm:gap-4 justify-center">
           {relicItems.map((item, index) => {
             const relic = item.item as Relic;
             return (
@@ -183,7 +183,7 @@ export function ShopScreen() {
                 key={index}
                 onClick={() => handleBuyRelic(shopItems.indexOf(item))}
                 className={`
-                  flex flex-col items-center p-4 rounded-xl transition-all duration-300
+                  flex flex-col items-center p-2 sm:p-4 rounded-xl transition-all duration-300 flex-shrink-0
                   ${item.sold ? 'opacity-30' : player.gold >= item.price ? 'cursor-pointer hover:scale-105' : 'opacity-50'}
                 `}
                 style={{
@@ -193,14 +193,14 @@ export function ShopScreen() {
                 }}
               >
                 <div
-                  className="w-16 h-16 rounded-lg flex items-center justify-center mb-2"
+                  className="w-10 h-10 sm:w-16 sm:h-16 rounded-lg flex items-center justify-center mb-1 sm:mb-2"
                   style={{
                     background: 'linear-gradient(135deg, var(--bg-light) 0%, var(--bg-dark) 100%)',
                     border: '2px solid var(--gold)',
                     boxShadow: 'inset 0 0 15px rgba(0,0,0,0.5)',
                   }}
                 >
-                  <span className="text-3xl">
+                  <span className="text-xl sm:text-3xl">
                     {relic.id === 'anchor' && '⚓'}
                     {relic.id === 'vajra' && '💪'}
                     {relic.id === 'lantern' && '🏮'}
@@ -208,10 +208,10 @@ export function ShopScreen() {
                     {relic.id === 'bronze_scales' && '🛡️'}
                   </span>
                 </div>
-                <span className="font-title text-[var(--gold-light)]">{relic.name}</span>
-                <span className="font-card text-xs text-gray-400 text-center max-w-32 mt-1">{relic.description}</span>
+                <span className="font-title text-xs sm:text-base text-[var(--gold-light)]">{relic.name}</span>
+                <span className="font-card text-[10px] sm:text-xs text-gray-400 text-center max-w-20 sm:max-w-32 mt-1 hidden sm:block">{relic.description}</span>
                 <div
-                  className={`mt-3 flex items-center gap-1.5 px-3 py-1 rounded-lg font-title ${
+                  className={`mt-1 sm:mt-3 flex items-center gap-1 px-2 sm:px-3 py-1 rounded-lg font-title text-xs sm:text-base ${
                     item.sold ? 'text-gray-500' : player.gold >= item.price ? 'text-[var(--gold-light)]' : 'text-[var(--attack-light)]'
                   }`}
                   style={{
@@ -230,13 +230,13 @@ export function ShopScreen() {
 
       {/* 카드 제거 서비스 */}
       {removeItem && (
-        <div className="mb-6 relative z-10">
+        <div className="mb-3 sm:mb-6 relative z-10">
           <button
             onClick={() => handleBuyRemove(shopItems.indexOf(removeItem))}
             disabled={removeItem.sold || player.gold < removeItem.price}
             className={`
-              px-6 py-4 rounded-xl font-title flex items-center gap-3
-              transition-all duration-300
+              px-4 sm:px-6 py-2 sm:py-4 rounded-xl font-title flex items-center gap-2 sm:gap-3
+              transition-all duration-300 text-sm sm:text-base
               ${removeItem.sold ? 'opacity-30' :
                 player.gold >= removeItem.price ? 'hover:scale-105' : 'opacity-50 cursor-not-allowed'}
             `}
@@ -252,7 +252,7 @@ export function ShopScreen() {
                 : 'none',
             }}
           >
-            <span className="text-2xl">🗑️</span>
+            <span className="text-lg sm:text-2xl">🗑️</span>
             <span className="text-white">
               카드 제거 - 💰 {removeItem.sold ? '판매됨' : removeItem.price}
             </span>
@@ -263,27 +263,27 @@ export function ShopScreen() {
       {/* 나가기 버튼 */}
       <button
         onClick={handleLeave}
-        className="btn-game px-8 py-3 text-lg relative z-10"
+        className="btn-game px-6 sm:px-8 py-2 sm:py-3 text-sm sm:text-lg relative z-10"
       >
         상점 나가기
       </button>
 
       {/* 카드 제거 모달 */}
       {showRemoveModal && (
-        <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-2 sm:p-4">
           <div
-            className="rounded-xl p-8 max-w-4xl max-h-[80vh] overflow-auto"
+            className="rounded-xl p-4 sm:p-8 max-w-4xl max-h-[90vh] overflow-auto"
             style={{
               background: 'linear-gradient(135deg, var(--bg-medium) 0%, var(--bg-dark) 100%)',
               border: '2px solid var(--attack)',
               boxShadow: '0 0 40px rgba(0,0,0,0.8), 0 0 20px var(--attack-glow)',
             }}
           >
-            <h2 className="font-title text-2xl text-[var(--attack-light)] mb-6 text-center">
-              제거할 카드를 선택하세요
+            <h2 className="font-title text-lg sm:text-2xl text-[var(--attack-light)] mb-4 sm:mb-6 text-center">
+              제거할 카드 선택
             </h2>
 
-            <div className="grid grid-cols-5 gap-4">
+            <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 sm:gap-4 scale-75 sm:scale-100 origin-top">
               {player.deck.map(card => (
                 <div
                   key={card.instanceId}
@@ -297,7 +297,7 @@ export function ShopScreen() {
 
             <button
               onClick={() => setShowRemoveModal(false)}
-              className="mt-6 px-6 py-2 rounded-lg font-card text-gray-400 hover:text-white transition-colors block mx-auto"
+              className="mt-4 sm:mt-6 px-4 sm:px-6 py-2 rounded-lg font-card text-sm sm:text-base text-gray-400 hover:text-white transition-colors block mx-auto"
               style={{
                 background: 'linear-gradient(180deg, var(--bg-light) 0%, var(--bg-dark) 100%)',
                 border: '1px solid var(--gold-dark)',

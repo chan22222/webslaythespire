@@ -81,32 +81,41 @@ export function TargetingArrow({ startX, startY, isActive, cardType, needsTarget
     return closest;
   }, []);
 
-  const handleMouseMove = useCallback((e: MouseEvent) => {
+  const handleMove = useCallback((clientX: number, clientY: number) => {
     updateTargets();
 
     if (needsTarget) {
       // 타겟 필요: 적에게 스냅
-      const closest = findClosestEnemy(e.clientX, e.clientY);
+      const closest = findClosestEnemy(clientX, clientY);
       setSnappedTarget(closest);
 
       if (closest) {
         setMousePos({ x: closest.x, y: closest.y - 20 });
       } else {
-        setMousePos({ x: e.clientX, y: e.clientY });
+        setMousePos({ x: clientX, y: clientY });
       }
     } else {
       // 논타겟 카드: 화면 상단 50% 이상일 때만 플레이어에 스냅
-      const isInPlayArea = e.clientY < window.innerHeight * 0.5;
+      const isInPlayArea = clientY < window.innerHeight * 0.5;
 
       if (isInPlayArea && playerRef.current) {
         setSnappedTarget(playerRef.current);
         setMousePos({ x: playerRef.current.x, y: playerRef.current.y - 30 });
       } else {
         setSnappedTarget(null);
-        setMousePos({ x: e.clientX, y: e.clientY });
+        setMousePos({ x: clientX, y: clientY });
       }
     }
   }, [updateTargets, findClosestEnemy, needsTarget]);
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    handleMove(e.clientX, e.clientY);
+  }, [handleMove]);
+
+  const handleTouchMove = useCallback((e: TouchEvent) => {
+    const touch = e.touches[0];
+    handleMove(touch.clientX, touch.clientY);
+  }, [handleMove]);
 
   useEffect(() => {
     if (isActive) {
@@ -114,9 +123,13 @@ export function TargetingArrow({ startX, startY, isActive, cardType, needsTarget
       setMousePos({ x: startX, y: startY });
       setSnappedTarget(null);
       window.addEventListener('mousemove', handleMouseMove);
-      return () => window.removeEventListener('mousemove', handleMouseMove);
+      window.addEventListener('touchmove', handleTouchMove);
+      return () => {
+        window.removeEventListener('mousemove', handleMouseMove);
+        window.removeEventListener('touchmove', handleTouchMove);
+      };
     }
-  }, [isActive, handleMouseMove, startX, startY, updateTargets]);
+  }, [isActive, handleMouseMove, handleTouchMove, startX, startY, updateTargets]);
 
   if (!isActive) return null;
 
