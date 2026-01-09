@@ -6,6 +6,15 @@ import { Status } from '../types/status';
 import { shuffle } from '../utils/shuffle';
 import { useGameStore } from './gameStore';
 
+// 데미지 팝업 타입
+export interface DamagePopup {
+  id: string;
+  value: number;
+  type: 'damage' | 'block' | 'heal' | 'buff' | 'debuff';
+  x: number;
+  y: number;
+}
+
 interface CombatStore extends CombatState {
   // 전투 초기화
   initCombat: (deck: CardInstance[], enemies: EnemyTemplate[]) => void;
@@ -37,12 +46,31 @@ interface CombatStore extends CombatState {
   // 플레이어 상태 (전투 중)
   playerBlock: number;
   playerStatuses: Status[];
+
+  // 데미지 팝업
+  damagePopups: DamagePopup[];
+  addDamagePopup: (value: number, type: DamagePopup['type'], x: number, y: number) => void;
+  removeDamagePopup: (id: string) => void;
 }
 
 export const useCombatStore = create<CombatStore>((set, get) => ({
   ...createInitialCombatState(),
   playerBlock: 0,
   playerStatuses: [],
+  damagePopups: [],
+
+  addDamagePopup: (value: number, type: DamagePopup['type'], x: number, y: number) => {
+    const id = `popup-${Date.now()}-${Math.random()}`;
+    set(state => ({
+      damagePopups: [...state.damagePopups, { id, value, type, x, y }],
+    }));
+  },
+
+  removeDamagePopup: (id: string) => {
+    set(state => ({
+      damagePopups: state.damagePopups.filter(p => p.id !== id),
+    }));
+  },
 
   initCombat: (deck: CardInstance[], enemyTemplates: EnemyTemplate[]) => {
     // 덱 복사 및 셔플
@@ -476,6 +504,7 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       ...createInitialCombatState(),
       playerBlock: 0,
       playerStatuses: [],
+      damagePopups: [],
     });
   },
 }));

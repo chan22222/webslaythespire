@@ -5,6 +5,7 @@ import { CardHand } from './CardHand';
 import { Enemy } from './Enemy';
 import { EnergyOrb } from './EnergyOrb';
 import { PlayerStatus } from './PlayerStatus';
+import { DamagePopupManager } from './DamagePopup';
 import { generateNormalEncounter, ELITE_ENEMIES, BOSS_ENEMIES } from '../../data/enemies';
 
 export function CombatScreen() {
@@ -20,16 +21,21 @@ export function CombatScreen() {
     playerStatuses,
     drawPile,
     discardPile,
+    combatLog,
+    damagePopups,
     initCombat,
     playCard,
     selectCard,
     endPlayerTurn,
     startPlayerTurn,
     checkCombatEnd,
+    addDamagePopup,
+    removeDamagePopup,
   } = useCombatStore();
 
   const currentNode = getCurrentNode();
   const enemyRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const playerRef = useRef<HTMLDivElement>(null);
   const playAreaRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -61,6 +67,27 @@ export function CombatScreen() {
     else enemyRefs.current.delete(enemyId);
   }, []);
 
+  // 데미지 팝업을 위한 위치 계산
+  const showDamagePopup = useCallback((targetId: string | 'player', value: number, type: 'damage' | 'block') => {
+    let x = window.innerWidth / 2;
+    let y = window.innerHeight / 2;
+
+    if (targetId === 'player' && playerRef.current) {
+      const rect = playerRef.current.getBoundingClientRect();
+      x = rect.left + rect.width / 2;
+      y = rect.top + rect.height / 3;
+    } else if (targetId !== 'player') {
+      const el = enemyRefs.current.get(targetId);
+      if (el) {
+        const rect = el.getBoundingClientRect();
+        x = rect.left + rect.width / 2;
+        y = rect.top + rect.height / 3;
+      }
+    }
+
+    addDamagePopup(value, type, x, y);
+  }, [addDamagePopup]);
+
   const handleCardDragEnd = useCallback((cardInstanceId: string, x: number, y: number, dragDistance: number) => {
     const card = hand.find(c => c.instanceId === cardInstanceId);
     if (!card || card.cost > energy) {
@@ -68,7 +95,7 @@ export function CombatScreen() {
       return;
     }
 
-    const MIN_DRAG_DISTANCE = 100;
+    const MIN_DRAG_DISTANCE = 80;
     if (dragDistance < MIN_DRAG_DISTANCE) {
       selectCard(null);
       return;
@@ -83,21 +110,39 @@ export function CombatScreen() {
       let targetEnemyId: string | null = null;
       enemyRefs.current.forEach((el, enemyId) => {
         const rect = el.getBoundingClientRect();
-        if (x >= rect.left - 20 && x <= rect.right + 20 &&
-            y >= rect.top - 20 && y <= rect.bottom + 20) {
+        if (x >= rect.left - 40 && x <= rect.right + 40 &&
+            y >= rect.top - 40 && y <= rect.bottom + 40) {
           const enemy = enemies.find(e => e.instanceId === enemyId);
           if (enemy && enemy.currentHp > 0) targetEnemyId = enemyId;
         }
       });
-      if (targetEnemyId) playCard(cardInstanceId, targetEnemyId);
+      if (targetEnemyId) {
+        const damageEffect = card.effects.find(e => e.type === 'DAMAGE');
+        if (damageEffect) {
+          showDamagePopup(targetEnemyId, damageEffect.value, 'damage');
+        }
+        playCard(cardInstanceId, targetEnemyId);
+      }
     } else {
-      if (playAreaRef.current) {
-        const rect = playAreaRef.current.getBoundingClientRect();
-        if (y < rect.top + rect.height * 0.6) playCard(cardInstanceId);
+      // 논타겟 카드는 화면 상단 절반에 놓으면 사용
+      if (y < window.innerHeight * 0.7) {
+        const blockEffect = card.effects.find(e => e.type === 'BLOCK');
+        if (blockEffect) {
+          showDamagePopup('player', blockEffect.value, 'block');
+        }
+        const damageEffect = card.effects.find(e => e.type === 'DAMAGE' && e.target === 'ALL');
+        if (damageEffect) {
+          enemies.forEach(enemy => {
+            if (enemy.currentHp > 0) {
+              showDamagePopup(enemy.instanceId, damageEffect.value, 'damage');
+            }
+          });
+        }
+        playCard(cardInstanceId);
       }
     }
     selectCard(null);
-  }, [hand, energy, enemies, playCard, selectCard]);
+  }, [hand, energy, enemies, playCard, selectCard, showDamagePopup]);
 
   const handleCardSelect = useCallback((cardInstanceId: string) => {
     selectCard(selectedCardId === cardInstanceId ? null : cardInstanceId);
@@ -108,71 +153,167 @@ export function CombatScreen() {
       ref={playAreaRef}
       className="w-full h-screen combat-arena vignette flex flex-col relative overflow-hidden"
     >
+      {/* 데미지 팝업 */}
+      <DamagePopupManager
+        popups={damagePopups}
+        onPopupComplete={removeDamagePopup}
+      />
+
+      {/* 배경 파티클 효과 */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        {[...Array(12)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute w-1 h-1 rounded-full bg-[var(--gold)]"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 50}%`,
+              opacity: 0.15 + Math.random() * 0.2,
+              animation: `float ${5 + Math.random() * 5}s ease-in-out infinite`,
+              animationDelay: `${Math.random() * 5}s`,
+            }}
+          />
+        ))}
+      </div>
+
       {/* ===== 상단 UI ===== */}
-      <div className="relative z-20 flex justify-between items-start px-4 pt-3">
-        {/* 덱 파일 */}
-        <div className="flex flex-col gap-3">
+      <div className="relative z-20 flex justify-between items-start px-6 pt-4">
+        {/* 덱 더미들 */}
+        <div className="flex gap-6">
           {/* 뽑기 더미 */}
-          <button className="group relative w-14 h-18 transition-transform hover:scale-110">
-            <div className="absolute bottom-0 left-1/2 -translate-x-1/2">
-              <div className="relative">
-                <div className="absolute w-10 h-14 rounded bg-gradient-to-br from-[var(--bg-light)] to-[var(--bg-darkest)] border-2 border-[var(--gold-dark)]"
-                  style={{ transform: 'rotate(-6deg) translateY(3px)', left: '-20px' }} />
-                <div className="absolute w-10 h-14 rounded bg-gradient-to-br from-[var(--bg-light)] to-[var(--bg-darkest)] border-2 border-[var(--gold-dark)]"
-                  style={{ transform: 'rotate(-2deg) translateY(1px)', left: '-20px' }} />
-                <div className="relative w-10 h-14 rounded bg-gradient-to-br from-[var(--bg-medium)] to-[var(--bg-dark)] border-2 border-[var(--gold)]"
-                  style={{ left: '-20px' }} />
+          <button className="group relative transition-transform hover:scale-110 active:scale-95">
+            <div className="relative">
+              <div
+                className="absolute w-12 h-16 rounded-lg"
+                style={{
+                  background: 'linear-gradient(135deg, var(--bg-light) 0%, var(--bg-darkest) 100%)',
+                  border: '2px solid var(--gold-dark)',
+                  transform: 'rotate(-8deg) translate(-2px, 4px)',
+                }}
+              />
+              <div
+                className="absolute w-12 h-16 rounded-lg"
+                style={{
+                  background: 'linear-gradient(135deg, var(--bg-light) 0%, var(--bg-darkest) 100%)',
+                  border: '2px solid var(--gold-dark)',
+                  transform: 'rotate(-4deg) translate(-1px, 2px)',
+                }}
+              />
+              <div
+                className="relative w-12 h-16 rounded-lg"
+                style={{
+                  background: 'linear-gradient(135deg, var(--bg-medium) 0%, var(--bg-dark) 100%)',
+                  border: '2px solid var(--gold)',
+                }}
+              >
+                <div
+                  className="absolute inset-1 rounded opacity-30"
+                  style={{
+                    background: `repeating-linear-gradient(45deg, var(--gold-dark), var(--gold-dark) 2px, transparent 2px, transparent 8px)`,
+                  }}
+                />
               </div>
             </div>
-            <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-[var(--bg-darkest)] border border-[var(--gold-dark)] rounded-full px-2 py-0.5">
-              <span className="font-title text-xs text-[var(--gold-light)]">{drawPile.length}</span>
+            <div
+              className="absolute -bottom-3 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full"
+              style={{
+                background: 'linear-gradient(180deg, var(--bg-medium) 0%, var(--bg-darkest) 100%)',
+                border: '2px solid var(--gold)',
+              }}
+            >
+              <span className="font-title text-sm text-[var(--gold-light)]">{drawPile.length}</span>
             </div>
           </button>
 
           {/* 버린 더미 */}
-          <button className="group relative w-14 h-18 transition-transform hover:scale-110">
-            <div className="absolute bottom-0 left-1/2 -translate-x-1/2">
-              <div className="relative w-10 h-14 rounded bg-gradient-to-br from-[var(--attack-deep)] to-[var(--bg-darkest)] border-2 border-[var(--attack-dark)] opacity-70"
-                style={{ left: '-20px' }} />
-            </div>
-            <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-[var(--bg-darkest)] border border-[var(--attack-dark)] rounded-full px-2 py-0.5">
-              <span className="font-title text-xs text-[var(--attack-light)]">{discardPile.length}</span>
+          <button className="group relative transition-transform hover:scale-110 active:scale-95">
+            <div
+              className="relative w-12 h-16 rounded-lg"
+              style={{
+                background: 'linear-gradient(135deg, var(--attack-deep) 0%, var(--bg-darkest) 100%)',
+                border: '2px solid var(--attack-dark)',
+                opacity: 0.8,
+              }}
+            />
+            <div
+              className="absolute -bottom-3 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full"
+              style={{
+                background: 'linear-gradient(180deg, var(--attack-dark) 0%, var(--bg-darkest) 100%)',
+                border: '2px solid var(--attack)',
+              }}
+            >
+              <span className="font-title text-sm text-[var(--attack-light)]">{discardPile.length}</span>
             </div>
           </button>
         </div>
 
         {/* 턴 표시 */}
         <div
-          className="px-5 py-2 rounded-b-lg"
+          className="px-6 py-3 rounded-b-xl"
           style={{
             background: 'linear-gradient(180deg, var(--bg-medium) 0%, var(--bg-darkest) 100%)',
-            borderLeft: '2px solid var(--gold-dark)',
-            borderRight: '2px solid var(--gold-dark)',
-            borderBottom: '2px solid var(--gold-dark)',
+            borderLeft: '3px solid var(--gold)',
+            borderRight: '3px solid var(--gold)',
+            borderBottom: '3px solid var(--gold)',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
           }}
         >
-          <span className="font-display text-sm tracking-widest text-[var(--gold)]">
-            TURN
-          </span>
-          <span className="font-title text-xl text-white ml-2">{turn}</span>
+          <div className="flex items-center gap-3">
+            <span className="font-display text-sm tracking-[0.2em] text-[var(--gold-dark)]">TURN</span>
+            <span className="font-title text-2xl text-white" style={{ textShadow: '0 0 10px var(--gold-glow)' }}>
+              {turn}
+            </span>
+          </div>
         </div>
 
-        {/* 빈 공간 (대칭) */}
-        <div className="w-14" />
+        {/* 전투 로그 */}
+        <div
+          className="w-56 h-20 overflow-hidden rounded-lg"
+          style={{
+            background: 'linear-gradient(180deg, rgba(10,10,15,0.85) 0%, rgba(5,5,8,0.9) 100%)',
+            border: '1px solid rgba(212,168,75,0.3)',
+          }}
+        >
+          <div className="p-2 h-full overflow-y-auto text-xs font-card">
+            {combatLog.slice(-4).map((log, i) => (
+              <div
+                key={i}
+                className="py-0.5"
+                style={{
+                  color: log.includes('피해') ? 'var(--attack-light)' :
+                         log.includes('방어') ? 'var(--block-light)' :
+                         log.includes('승리') ? 'var(--gold-light)' : '#999',
+                  opacity: 0.5 + (i * 0.15),
+                }}
+              >
+                {log}
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
-      {/* ===== 메인 전투 영역 ===== */}
-      <div className="flex-1 relative z-10 flex">
-        {/* 적 영역 - 화면 중앙~우측 상단 */}
-        <div className="flex-1 flex items-start justify-center pt-8">
-          <div className="flex items-end justify-center gap-10">
+      {/* ===== 메인 전투 영역 - 플레이어와 적이 가깝게 마주보는 구도 ===== */}
+      <div className="flex-1 relative z-10 flex items-center justify-center">
+        <div className="flex items-center justify-center gap-24">
+          {/* 플레이어 영역 - 좌측 */}
+          <div className="flex flex-col items-center" ref={playerRef}>
+            <PlayerStatus
+              player={player}
+              block={playerBlock}
+              statuses={playerStatuses}
+            />
+          </div>
+
+          {/* 적 영역 - 우측 */}
+          <div className="flex items-end justify-center gap-6">
             {enemies.map((enemy, index) => (
               <div
                 key={enemy.instanceId}
                 ref={(el) => setEnemyRef(enemy.instanceId, el)}
                 className="transition-all duration-300"
                 style={{
-                  transform: `translateY(${index % 2 === 0 ? 0 : 20}px)`,
+                  transform: `translateY(${index % 2 === 0 ? 0 : 15}px)`,
                 }}
               >
                 <Enemy
@@ -191,21 +332,12 @@ export function CombatScreen() {
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
-            background: 'linear-gradient(to top, rgba(5,5,8,0.98) 0%, rgba(5,5,8,0.85) 50%, transparent 100%)',
+            background: `linear-gradient(to top, rgba(5,5,8,0.99) 0%, rgba(5,5,8,0.85) 50%, transparent 100%)`,
           }}
         />
 
-        {/* 플레이어 - 좌측 하단 */}
-        <div className="absolute left-6 bottom-4 z-30">
-          <PlayerStatus
-            player={player}
-            block={playerBlock}
-            statuses={playerStatuses}
-          />
-        </div>
-
-        {/* 에너지 오브 - 플레이어 우측 */}
-        <div className="absolute left-40 bottom-24 z-30">
+        {/* 에너지 오브 - 좌측 */}
+        <div className="absolute left-8 bottom-20 z-30">
           <EnergyOrb current={energy} max={maxEnergy} />
         </div>
 
@@ -223,34 +355,36 @@ export function CombatScreen() {
         </div>
 
         {/* 턴 종료 버튼 - 우측 하단 */}
-        <div className="absolute right-6 bottom-10 z-30">
+        <div className="absolute right-8 bottom-16 z-30">
           <button
             onClick={endPlayerTurn}
             className="group relative overflow-hidden"
             style={{
-              padding: '14px 24px',
+              padding: '14px 28px',
               background: 'linear-gradient(180deg, #3a2820 0%, #1a1410 100%)',
-              border: '3px solid var(--gold-dark)',
-              borderRadius: '8px',
-              boxShadow: '0 4px 20px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.1)',
+              border: '3px solid var(--gold)',
+              borderRadius: '10px',
+              boxShadow: '0 6px 25px rgba(0,0,0,0.6), 0 0 20px var(--gold-glow)',
             }}
           >
-            <span className="font-title text-sm tracking-wider text-[var(--gold-light)] relative z-10">
-              턴 종료
-            </span>
             <div
-              className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity"
-              style={{
-                background: 'linear-gradient(180deg, rgba(212,168,75,0.2) 0%, transparent 100%)',
-              }}
+              className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+              style={{ background: 'linear-gradient(180deg, rgba(212,168,75,0.3) 0%, transparent 100%)' }}
             />
+            <div
+              className="absolute top-0 left-2 right-2 h-px"
+              style={{ background: 'linear-gradient(90deg, transparent 0%, var(--gold-light) 50%, transparent 100%)' }}
+            />
+            <span className="font-title text-base tracking-wider text-[var(--gold-light)] relative z-10">
+              END TURN
+            </span>
           </button>
         </div>
       </div>
 
-      {/* 타겟팅 안내 */}
+      {/* 타겟팅 안내 - 카드 드래그 시 */}
       {selectedCardId && (
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 pointer-events-none z-50 animate-pulse">
+        <div className="absolute top-20 left-1/2 -translate-x-1/2 pointer-events-none z-40">
           <div
             className="px-5 py-2 rounded-lg font-title text-sm"
             style={{
@@ -260,7 +394,7 @@ export function CombatScreen() {
               boxShadow: '0 0 20px var(--skill-glow)',
             }}
           >
-            적에게 드래그
+            Release on target
           </div>
         </div>
       )}
