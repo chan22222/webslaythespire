@@ -96,16 +96,19 @@ export function Enemy({ enemy, isTargetable = false }: EnemyProps) {
   const getIntentTooltip = () => {
     switch (enemy.intent.type) {
       case 'ATTACK':
+        const damage = enemy.intent.damage || 0;
         const hits = enemy.intent.hits || 1;
+        const totalDamage = damage * hits;
         return hits > 1
-          ? `플레이어에게 ${hits}회 공격`
-          : '플레이어에게 공격';
+          ? `${damage} 데미지를 ${hits}회 가합니다. (총 ${totalDamage})`
+          : `${damage} 데미지를 가합니다.`;
       case 'DEFEND':
-        return '방어도를 획득합니다';
+        const block = enemy.intent.block || 0;
+        return `${block} 방어도를 획득합니다.`;
       case 'BUFF':
-        return '힘 +3 (공격력 증가)';
+        return '자신을 강화합니다. (힘 +3)';
       case 'DEBUFF':
-        return '약화 부여 (공격력 25% 감소)';
+        return '약화를 부여합니다. (피해량 25% 감소)';
       default:
         return '알 수 없는 행동';
     }
