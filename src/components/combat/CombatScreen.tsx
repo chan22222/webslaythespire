@@ -64,9 +64,18 @@ export function CombatScreen() {
   const enemyRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const playerRef = useRef<HTMLDivElement>(null);
   const playAreaRef = useRef<HTMLDivElement>(null);
+  const combatLogRef = useRef<HTMLDivElement>(null);
+
+  // 전투 로그 자동 스크롤
+  useEffect(() => {
+    if (combatLogRef.current) {
+      combatLogRef.current.scrollTop = combatLogRef.current.scrollHeight;
+    }
+  }, [combatLog]);
 
   // 툴팁 상태
   const [hoveredPile, setHoveredPile] = useState<'draw' | 'discard' | null>(null);
+  const [showEndTurnTooltip, setShowEndTurnTooltip] = useState(false);
   // 카드 목록 모달 상태
   const [viewingPile, setViewingPile] = useState<'draw' | 'discard' | null>(null);
 
@@ -322,11 +331,14 @@ export function CombatScreen() {
             border: '2px solid rgba(212,168,75,0.3)',
           }}
         >
-          <div className="p-2 h-full overflow-y-auto text-[10px] md:text-[11px] lg:text-xs font-card">
-            {combatLog.slice(-6).map((log, i) => (
+          <div
+            ref={combatLogRef}
+            className="p-2 h-full overflow-y-auto text-[10px] md:text-[11px] lg:text-xs font-card scroll-smooth"
+          >
+            {combatLog.map((log, i) => (
               <div
                 key={i}
-                className="py-0.5 truncate"
+                className="py-0.5"
                 style={{
                   color: log.includes('피해') ? 'var(--attack-light)' :
                          log.includes('방어') ? 'var(--block-light)' :
@@ -402,7 +414,11 @@ export function CombatScreen() {
         </div>
 
         {/* 턴 종료 버튼 - 우측 하단 (안쪽으로) */}
-        <div className="absolute right-2 md:right-[6%] lg:right-[10%] bottom-2 md:bottom-8 lg:bottom-10 z-30">
+        <div
+          className="absolute right-2 md:right-[6%] lg:right-[10%] bottom-2 md:bottom-8 lg:bottom-10 z-30"
+          onMouseEnter={() => setShowEndTurnTooltip(true)}
+          onMouseLeave={() => setShowEndTurnTooltip(false)}
+        >
           <button
             onClick={endPlayerTurn}
             className={`group relative overflow-hidden active:scale-95 transition-all duration-300 px-2 py-1 md:px-5 md:py-3 lg:px-6 lg:py-3 ${energy === 0 ? 'animate-pulse-glow' : ''}`}
@@ -448,6 +464,44 @@ export function CombatScreen() {
               턴 끝내기
             </span>
           </button>
+          {/* 턴 끝내기 툴팁 */}
+          {showEndTurnTooltip && (
+            <div
+              className="absolute z-[9999] px-3 py-2 rounded-lg whitespace-nowrap pointer-events-none"
+              style={{
+                bottom: '100%',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                marginBottom: '8px',
+                background: 'rgba(0, 0, 0, 0.95)',
+                border: '2px solid var(--gold)',
+                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.8)',
+              }}
+            >
+              <div className="font-title text-sm mb-1 text-[var(--gold-light)]">
+                턴 끝내기
+              </div>
+              <div className="font-card text-xs text-gray-300">
+                현재 턴을 종료하고 적의 턴으로 넘깁니다.
+                <br />
+                남은 에너지: {energy}/{maxEnergy}
+              </div>
+              {/* 화살표 */}
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '100%',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  width: 0,
+                  height: 0,
+                  borderLeft: '8px solid transparent',
+                  borderRight: '8px solid transparent',
+                  borderTop: '8px solid var(--gold)',
+                }}
+              />
+            </div>
+          )}
         </div>
       </div>
 

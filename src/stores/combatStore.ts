@@ -505,7 +505,8 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
 
   addToCombatLog: (message: string) => {
     const { combatLog } = get();
-    set({ combatLog: [...combatLog.slice(-19), message] });
+    // 최대 50개 로그 유지
+    set({ combatLog: [...combatLog.slice(-49), message] });
   },
 
   checkCombatEnd: (): 'ONGOING' | 'VICTORY' | 'DEFEAT' => {
@@ -522,8 +523,11 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
   },
 
   resetCombat: () => {
+    const { combatLog } = get();
     set({
       ...createInitialCombatState(),
+      // 이전 전투 로그 유지
+      combatLog: combatLog.length > 0 ? [...combatLog, '─────────────'] : [],
       playerBlock: 0,
       playerStatuses: [],
       damagePopups: [],
