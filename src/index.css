@@ -71,18 +71,52 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
 }
 
 html, body, #root {
   width: 100%;
   height: 100%;
   overflow: hidden;
+  overscroll-behavior: none;
+  touch-action: manipulation;
 }
 
 body {
   font-family: 'Crimson Text', Georgia, serif;
   background-color: var(--bg-abyss);
   color: #e8e6e3;
+}
+
+/* 모바일 가로 모드 최적화 */
+@media (max-height: 500px) {
+  .mobile-scale {
+    transform: scale(0.85);
+    transform-origin: center center;
+  }
+}
+
+/* 세로 모드 감지 - 회전 안내 표시 */
+.rotate-device-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: var(--bg-abyss);
+  z-index: 99999;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--gold-light);
+}
+
+@media (orientation: portrait) and (max-width: 768px) {
+  .rotate-device-overlay {
+    display: flex;
+  }
+
+  .game-content {
+    display: none !important;
+  }
 }
 
 /* 타이포그래피 */

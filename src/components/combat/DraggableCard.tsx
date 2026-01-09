@@ -56,12 +56,9 @@ export function DraggableCard({
 
   const config = typeConfig[card.type];
 
-  const handleMouseDown = (e: React.MouseEvent) => {
+  const startDrag = () => {
     if (!isPlayable) return;
-    e.preventDefault();
-    e.stopPropagation();
 
-    // 카드 중심점 계산하고 드래그 상태 동시에 설정
     if (cardRef.current) {
       const rect = cardRef.current.getBoundingClientRect();
       setDragState({
@@ -74,25 +71,49 @@ export function DraggableCard({
     onSelect();
   };
 
-  const handleMouseUp = useCallback((e: MouseEvent) => {
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    startDrag();
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    e.stopPropagation();
+    startDrag();
+  };
+
+  const endDrag = useCallback((clientX: number, clientY: number) => {
     if (!dragState.isDragging) return;
 
     const dragDistance = Math.sqrt(
-      Math.pow(e.clientX - dragState.startX, 2) +
-      Math.pow(e.clientY - dragState.startY, 2)
+      Math.pow(clientX - dragState.startX, 2) +
+      Math.pow(clientY - dragState.startY, 2)
     );
 
     setDragState(prev => ({ ...prev, isDragging: false }));
     setIsHovered(false);
     onHoverChange?.(false);
-    onDragEnd(e.clientX, e.clientY, dragDistance);
+    onDragEnd(clientX, clientY, dragDistance);
   }, [dragState, onDragEnd, onHoverChange]);
+
+  const handleMouseUp = useCallback((e: MouseEvent) => {
+    endDrag(e.clientX, e.clientY);
+  }, [endDrag]);
+
+  const handleTouchEnd = useCallback((e: TouchEvent) => {
+    const touch = e.changedTouches[0];
+    endDrag(touch.clientX, touch.clientY);
+  }, [endDrag]);
 
   useEffect(() => {
     if (!dragState.isDragging) return;
     window.addEventListener('mouseup', handleMouseUp);
-    return () => window.removeEventListener('mouseup', handleMouseUp);
-  }, [dragState.isDragging, handleMouseUp]);
+    window.addEventListener('touchend', handleTouchEnd);
+    return () => {
+      window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [dragState.isDragging, handleMouseUp, handleTouchEnd]);
 
   const handleMouseEnter = () => {
     setIsHovered(true);
@@ -152,6 +173,7 @@ export function DraggableCard({
       <div
         ref={cardRef}
         onMouseDown={handleMouseDown}
+        onTouchStart={handleTouchStart}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         className={`

@@ -11,7 +11,15 @@ function App() {
   const { phase } = useGameStore();
 
   return (
-    <div className="w-full min-h-screen bg-gray-900">
+    <>
+      {/* 세로 모드 회전 안내 */}
+      <div className="rotate-device-overlay">
+        <div className="text-6xl mb-6 animate-bounce">📱</div>
+        <div className="font-title text-xl mb-2">화면을 가로로 회전해주세요</div>
+        <div className="font-card text-sm text-gray-400">Please rotate your device</div>
+      </div>
+
+      <div className="game-content w-full min-h-screen bg-gray-900">
       {phase === 'MAIN_MENU' && <MainMenu />}
       {phase === 'MAP' && <MapScreen />}
       {phase === 'COMBAT' && <CombatScreen />}
@@ -47,7 +55,8 @@ function App() {
           </button>
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }
 
