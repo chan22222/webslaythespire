@@ -5,7 +5,6 @@ import { HealthBar } from '../common/HealthBar';
 import { STATUS_INFO } from '../../types/status';
 import { IroncladSilhouette } from './characters';
 import {
-  ShieldIcon,
   VulnerableIcon,
   WeakIcon,
   StrengthIcon,
@@ -94,6 +93,110 @@ function StatusBadge({ status }: { status: Status }) {
   );
 }
 
+function BlockBadge({ block }: { block: number }) {
+  const [showTooltip, setShowTooltip] = useState(false);
+
+  return (
+    <div
+      className="absolute -right-4 top-1/2 -translate-y-1/2 flex items-center justify-center cursor-help"
+      style={{
+        width: '44px',
+        height: '52px',
+      }}
+      onMouseEnter={() => setShowTooltip(true)}
+      onMouseLeave={() => setShowTooltip(false)}
+    >
+      {/* 방패 모양 SVG 배경 */}
+      <svg
+        viewBox="0 0 44 52"
+        className="absolute inset-0 w-full h-full"
+        style={{
+          filter: 'drop-shadow(0 0 12px rgba(40, 102, 168, 0.8))',
+        }}
+      >
+        <defs>
+          <linearGradient id="shieldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="var(--block-light)" />
+            <stop offset="100%" stopColor="var(--block-dark)" />
+          </linearGradient>
+          <linearGradient id="shieldHighlight" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="rgba(255,255,255,0.3)" />
+            <stop offset="50%" stopColor="rgba(255,255,255,0)" />
+          </linearGradient>
+        </defs>
+        {/* 방패 외곽 */}
+        <path
+          d="M22 2 L40 8 L40 24 C40 36 30 46 22 50 C14 46 4 36 4 24 L4 8 Z"
+          fill="url(#shieldGradient)"
+          stroke="var(--block-bright)"
+          strokeWidth="2.5"
+        />
+        {/* 하이라이트 */}
+        <path
+          d="M22 4 L38 9.5 L38 24 C38 34.5 29 43.5 22 47 C15 43.5 6 34.5 6 24 L6 9.5 Z"
+          fill="url(#shieldHighlight)"
+        />
+        {/* 내부 방패 라인 */}
+        <path
+          d="M22 10 L32 14 L32 24 C32 32 26 38 22 41 C18 38 12 32 12 24 L12 14 Z"
+          fill="none"
+          stroke="rgba(255,255,255,0.15)"
+          strokeWidth="1"
+        />
+      </svg>
+      {/* 숫자 */}
+      <span
+        className="font-title text-lg font-bold text-white relative z-10"
+        style={{
+          textShadow: '0 0 10px rgba(40, 102, 168, 0.8), 0 2px 4px rgba(0,0,0,0.5)',
+          marginTop: '-4px',
+        }}
+      >
+        {block}
+      </span>
+
+      {/* 툴팁 */}
+      {showTooltip && (
+        <div
+          className="absolute z-[9999] px-3 py-2 rounded-lg whitespace-nowrap pointer-events-none"
+          style={{
+            left: '100%',
+            top: '50%',
+            transform: 'translateY(-50%)',
+            marginLeft: '12px',
+            background: 'rgba(0, 0, 0, 0.95)',
+            border: '2px solid var(--block-bright)',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.8)',
+          }}
+        >
+          <div className="font-title text-sm mb-1 text-[var(--block-bright)]">
+            방어도
+          </div>
+          <div className="font-card text-xs text-gray-300">
+            피해를 받으면 방어도가 먼저 감소합니다.
+            <br />
+            턴이 끝나면 방어도가 0이 됩니다.
+          </div>
+          {/* 화살표 */}
+          <div
+            style={{
+              position: 'absolute',
+              right: '100%',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              width: 0,
+              height: 0,
+              borderTop: '8px solid transparent',
+              borderBottom: '8px solid transparent',
+              borderRight: '8px solid var(--block-bright)',
+            }}
+          />
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function PlayerStatus({ player, block, statuses }: PlayerStatusProps) {
   return (
     <div data-player className="flex flex-col items-center">
@@ -122,22 +225,9 @@ export function PlayerStatus({ player, block, statuses }: PlayerStatusProps) {
           <IroncladSilhouette size={90} />
         </div>
 
-        {/* 블록 뱃지 */}
+        {/* 블록 뱃지 - 방패 모양 */}
         {block > 0 && (
-          <div
-            className="absolute -right-4 top-1/2 -translate-y-1/2 flex items-center justify-center"
-            style={{
-              width: '48px',
-              height: '48px',
-              borderRadius: '50%',
-              background: 'linear-gradient(135deg, var(--block-light) 0%, var(--block-dark) 100%)',
-              border: '3px solid var(--block-bright)',
-              boxShadow: '0 0 25px rgba(40, 102, 168, 0.8), inset 0 0 15px rgba(255,255,255,0.2)',
-            }}
-          >
-            <ShieldIcon size={20} color="#fff" className="absolute opacity-30" />
-            <span className="font-title text-lg font-bold text-white relative z-10">{block}</span>
-          </div>
+          <BlockBadge block={block} />
         )}
       </div>
 
