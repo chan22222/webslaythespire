@@ -155,15 +155,15 @@ function BlockBadge({ block }: { block: number }) {
         {block}
       </span>
 
-      {/* 툴팁 */}
+      {/* 툴팁 - 왼쪽에 표시 (적 이미지에 가려지지 않게) */}
       {showTooltip && (
         <div
           className="absolute z-[9999] px-3 py-2 rounded-lg whitespace-nowrap pointer-events-none"
           style={{
-            left: '100%',
+            right: '100%',
             top: '50%',
             transform: 'translateY(-50%)',
-            marginLeft: '12px',
+            marginRight: '12px',
             background: 'rgba(0, 0, 0, 0.95)',
             border: '2px solid var(--block-bright)',
             boxShadow: '0 4px 20px rgba(0, 0, 0, 0.8)',
@@ -177,18 +177,18 @@ function BlockBadge({ block }: { block: number }) {
             <br />
             턴이 끝나면 방어도가 0이 됩니다.
           </div>
-          {/* 화살표 */}
+          {/* 화살표 - 오른쪽으로 */}
           <div
             style={{
               position: 'absolute',
-              right: '100%',
+              left: '100%',
               top: '50%',
               transform: 'translateY(-50%)',
               width: 0,
               height: 0,
               borderTop: '8px solid transparent',
               borderBottom: '8px solid transparent',
-              borderRight: '8px solid var(--block-bright)',
+              borderLeft: '8px solid var(--block-bright)',
             }}
           />
         </div>
