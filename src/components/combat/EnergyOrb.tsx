@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { LightningIcon } from './icons';
 
 interface EnergyOrbProps {
@@ -7,9 +8,52 @@ interface EnergyOrbProps {
 
 export function EnergyOrb({ current, max }: EnergyOrbProps) {
   const hasEnergy = current > 0;
+  const [showTooltip, setShowTooltip] = useState(false);
 
   return (
-    <div className="relative" style={{ width: '90px', height: '90px' }}>
+    <div
+      className="relative"
+      style={{ width: '90px', height: '90px' }}
+      onMouseEnter={() => setShowTooltip(true)}
+      onMouseLeave={() => setShowTooltip(false)}
+    >
+      {/* 툴팁 */}
+      {showTooltip && (
+        <div
+          className="absolute z-[9999] px-3 py-2 rounded-lg whitespace-nowrap pointer-events-none"
+          style={{
+            bottom: '100%',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            marginBottom: '12px',
+            background: 'rgba(0, 0, 0, 0.95)',
+            border: '2px solid var(--gold)',
+            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.8)',
+          }}
+        >
+          <div className="font-title text-sm mb-1 text-[var(--gold-light)]">
+            에너지
+          </div>
+          <div className="font-card text-xs text-gray-300">
+            카드를 사용하려면 에너지가 필요합니다.
+            <br />
+            매 턴 {max} 에너지를 얻습니다.
+          </div>
+          <div
+            style={{
+              position: 'absolute',
+              top: '100%',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              width: 0,
+              height: 0,
+              borderLeft: '8px solid transparent',
+              borderRight: '8px solid transparent',
+              borderTop: '8px solid var(--gold)',
+            }}
+          />
+        </div>
+      )}
       {/* 외부 글로우 - 에너지가 있을 때만 */}
       {hasEnergy && (
         <>

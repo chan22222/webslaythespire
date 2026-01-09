@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback, useMemo } from 'react';
+import { useEffect, useRef, useCallback, useMemo, useState } from 'react';
 import { useGameStore } from '../../stores/gameStore';
 import { useCombatStore } from '../../stores/combatStore';
 import { CardHand } from './CardHand';
@@ -7,6 +7,46 @@ import { EnergyOrb } from './EnergyOrb';
 import { PlayerStatus } from './PlayerStatus';
 import { DamagePopupManager } from './DamagePopup';
 import { generateNormalEncounter, ELITE_ENEMIES, BOSS_ENEMIES } from '../../data/enemies';
+
+// 간단한 툴팁 컴포넌트
+function UITooltip({ show, title, description, position = 'bottom' }: {
+  show: boolean;
+  title: string;
+  description: string;
+  position?: 'top' | 'bottom' | 'left' | 'right';
+}) {
+  if (!show) return null;
+
+  const positionStyles = {
+    top: { bottom: '100%', left: '50%', transform: 'translateX(-50%)', marginBottom: '8px' },
+    bottom: { top: '100%', left: '50%', transform: 'translateX(-50%)', marginTop: '8px' },
+    left: { right: '100%', top: '50%', transform: 'translateY(-50%)', marginRight: '8px' },
+    right: { left: '100%', top: '50%', transform: 'translateY(-50%)', marginLeft: '8px' },
+  };
+
+  const arrowStyles = {
+    top: { top: '100%', left: '50%', transform: 'translateX(-50%)', borderTop: '8px solid var(--gold)', borderLeft: '8px solid transparent', borderRight: '8px solid transparent' },
+    bottom: { bottom: '100%', left: '50%', transform: 'translateX(-50%)', borderBottom: '8px solid var(--gold)', borderLeft: '8px solid transparent', borderRight: '8px solid transparent' },
+    left: { left: '100%', top: '50%', transform: 'translateY(-50%)', borderLeft: '8px solid var(--gold)', borderTop: '8px solid transparent', borderBottom: '8px solid transparent' },
+    right: { right: '100%', top: '50%', transform: 'translateY(-50%)', borderRight: '8px solid var(--gold)', borderTop: '8px solid transparent', borderBottom: '8px solid transparent' },
+  };
+
+  return (
+    <div
+      className="absolute z-[9999] px-3 py-2 rounded-lg whitespace-nowrap pointer-events-none"
+      style={{
+        ...positionStyles[position],
+        background: 'rgba(0, 0, 0, 0.95)',
+        border: '2px solid var(--gold)',
+        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.8)',
+      }}
+    >
+      <div className="font-title text-sm mb-1 text-[var(--gold-light)]">{title}</div>
+      <div className="font-card text-xs text-gray-300 whitespace-pre-line">{description}</div>
+      <div className="absolute" style={{ ...arrowStyles[position], width: 0, height: 0 }} />
+    </div>
+  );
+}
 
 export function CombatScreen() {
   const { player, getCurrentNode, setPhase, healPlayer } = useGameStore();
@@ -37,6 +77,14 @@ export function CombatScreen() {
   const enemyRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const playerRef = useRef<HTMLDivElement>(null);
   const playAreaRef = useRef<HTMLDivElement>(null);
+
+  // 툴팁 상태
+  const [tooltips, setTooltips] = useState({
+    drawPile: false,
+    discardPile: false,
+    endTurn: false,
+    turn: false,
+  });
 
   useEffect(() => {
     if (enemies.length === 0 && currentNode) {
@@ -204,7 +252,17 @@ export function CombatScreen() {
         {/* 덱 더미들 */}
         <div className="flex gap-6">
           {/* 뽑기 더미 */}
-          <button className="group relative transition-transform hover:scale-110 active:scale-95">
+          <button
+            className="group relative transition-transform hover:scale-110 active:scale-95"
+            onMouseEnter={() => setTooltips(t => ({ ...t, drawPile: true }))}
+            onMouseLeave={() => setTooltips(t => ({ ...t, drawPile: false }))}
+          >
+            <UITooltip
+              show={tooltips.drawPile}
+              title="뽑기 더미"
+              description="턴 시작 시 여기서 카드를 뽑습니다."
+              position="right"
+            />
             <div className="relative">
               <div
                 className="absolute w-12 h-16 rounded-lg"
@@ -249,7 +307,17 @@ export function CombatScreen() {
           </button>
 
           {/* 버린 더미 */}
-          <button className="group relative transition-transform hover:scale-110 active:scale-95">
+          <button
+            className="group relative transition-transform hover:scale-110 active:scale-95"
+            onMouseEnter={() => setTooltips(t => ({ ...t, discardPile: true }))}
+            onMouseLeave={() => setTooltips(t => ({ ...t, discardPile: false }))}
+          >
+            <UITooltip
+              show={tooltips.discardPile}
+              title="버린 더미"
+              description="사용한 카드가 이곳에 쌓입니다.\n뽑기 더미가 비면 섞여서 돌아갑니다."
+              position="right"
+            />
             <div
               className="relative w-12 h-16 rounded-lg"
               style={{
@@ -291,14 +359,14 @@ export function CombatScreen() {
 
         {/* 전투 로그 */}
         <div
-          className="w-56 h-20 overflow-hidden rounded-lg"
+          className="w-72 h-36 overflow-hidden rounded-lg"
           style={{
-            background: 'linear-gradient(180deg, rgba(10,10,15,0.85) 0%, rgba(5,5,8,0.9) 100%)',
+            background: 'linear-gradient(180deg, rgba(10,10,15,0.9) 0%, rgba(5,5,8,0.95) 100%)',
             border: '1px solid rgba(212,168,75,0.3)',
           }}
         >
           <div className="p-2 h-full overflow-y-auto text-xs font-card">
-            {combatLog.slice(-4).map((log, i) => (
+            {combatLog.slice(-8).map((log, i) => (
               <div
                 key={i}
                 className="py-0.5"
@@ -378,7 +446,17 @@ export function CombatScreen() {
         </div>
 
         {/* 턴 종료 버튼 - 우측 하단 */}
-        <div className="absolute right-8 bottom-16 z-30">
+        <div
+          className="absolute right-8 bottom-16 z-30"
+          onMouseEnter={() => setTooltips(t => ({ ...t, endTurn: true }))}
+          onMouseLeave={() => setTooltips(t => ({ ...t, endTurn: false }))}
+        >
+          <UITooltip
+            show={tooltips.endTurn}
+            title="턴 종료"
+            description="턴을 종료하고 적의 행동을 시작합니다.\n남은 방어도는 다음 턴에 사라집니다."
+            position="top"
+          />
           <button
             onClick={endPlayerTurn}
             className="group relative overflow-hidden"
