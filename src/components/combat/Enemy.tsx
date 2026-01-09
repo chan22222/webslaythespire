@@ -19,53 +19,59 @@ interface EnemyProps {
 
 function AttackIntent({ damage, hits }: { damage: number; hits?: number }) {
   return (
-    <div className="relative flex items-center justify-center" style={{ width: '52px', height: '52px' }}>
+    <div className="relative flex items-center justify-center" style={{ width: '48px', height: '56px' }}>
       {/* 배경 글로우 */}
       <div
-        className="absolute inset-0 animate-pulse"
+        className="absolute inset-0"
         style={{
           background: 'radial-gradient(circle, rgba(184, 37, 37, 0.5) 0%, transparent 70%)',
           filter: 'blur(6px)',
         }}
       />
-      {/* 교차된 검 형태 배경 */}
-      <svg viewBox="0 0 52 52" className="absolute inset-0 w-full h-full" style={{ filter: 'drop-shadow(0 0 8px rgba(184, 37, 37, 0.8))' }}>
+      {/* 검 모양 뱃지 (방패의 뒤집힌 형태) */}
+      <svg viewBox="0 0 48 56" className="absolute inset-0 w-full h-full" style={{ filter: 'drop-shadow(0 0 10px rgba(184, 37, 37, 0.8))' }}>
         <defs>
-          <linearGradient id="attackBg" x1="0%" y1="0%" x2="100%" y2="100%">
+          <linearGradient id="attackGrad" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#e04040" />
             <stop offset="50%" stopColor="#b82525" />
             <stop offset="100%" stopColor="#7a1818" />
           </linearGradient>
+          <linearGradient id="attackHighlight" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="rgba(255,255,255,0.35)" />
+            <stop offset="50%" stopColor="rgba(255,255,255,0)" />
+          </linearGradient>
         </defs>
-        {/* 원형 배경 */}
-        <circle cx="26" cy="26" r="22" fill="url(#attackBg)" stroke="#ff6b6b" strokeWidth="2" />
-        {/* 검 1 (왼쪽 위 → 오른쪽 아래) */}
+        {/* 검 형태 외곽 (위가 뾰족한 형태) */}
         <path
-          d="M14 14 L18 18 L34 34 L38 38 M36 36 L38 34 L40 38 L36 40 Z"
-          stroke="rgba(255,255,255,0.7)"
-          strokeWidth="3"
-          strokeLinecap="round"
-          fill="rgba(255,255,255,0.7)"
+          d="M24 2 L44 16 L44 38 L24 54 L4 38 L4 16 Z"
+          fill="url(#attackGrad)"
+          stroke="#ff6b6b"
+          strokeWidth="2.5"
         />
-        {/* 검 2 (오른쪽 위 → 왼쪽 아래) */}
+        {/* 하이라이트 */}
         <path
-          d="M38 14 L34 18 L18 34 L14 38 M16 36 L14 34 L12 38 L16 40 Z"
-          stroke="rgba(255,255,255,0.7)"
-          strokeWidth="3"
-          strokeLinecap="round"
-          fill="rgba(255,255,255,0.7)"
+          d="M24 6 L40 18 L40 36 L24 50 L8 36 L8 18 Z"
+          fill="url(#attackHighlight)"
         />
+        {/* 내부 검 장식 */}
+        <path
+          d="M24 12 L28 20 L28 40 L24 46 L20 40 L20 20 Z"
+          fill="none"
+          stroke="rgba(255,255,255,0.2)"
+          strokeWidth="1"
+        />
+        <line x1="16" y1="28" x2="32" y2="28" stroke="rgba(255,255,255,0.2)" strokeWidth="1" />
       </svg>
       {/* 데미지 숫자 */}
-      <div className="relative z-10 flex flex-col items-center">
+      <div className="relative z-10 flex flex-col items-center" style={{ marginTop: '-2px' }}>
         <span
           className="font-title text-xl font-bold text-white"
-          style={{ textShadow: '0 2px 4px rgba(0,0,0,0.9), 0 0 10px rgba(0,0,0,0.5)' }}
+          style={{ textShadow: '0 0 10px rgba(255, 107, 107, 0.8), 0 2px 4px rgba(0,0,0,0.8)' }}
         >
           {damage}
         </span>
         {hits && hits > 1 && (
-          <span className="font-title text-[10px] text-white/90" style={{ marginTop: '-2px' }}>
+          <span className="font-title text-[10px] text-white/90" style={{ marginTop: '-3px' }}>
             x{hits}
           </span>
         )}
