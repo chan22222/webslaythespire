@@ -83,8 +83,10 @@ export function DraggableCard({
     );
 
     setDragState(prev => ({ ...prev, isDragging: false }));
+    setIsHovered(false);
+    onHoverChange?.(false);
     onDragEnd(e.clientX, e.clientY, dragDistance);
-  }, [dragState, onDragEnd]);
+  }, [dragState, onDragEnd, onHoverChange]);
 
   useEffect(() => {
     if (!dragState.isDragging) return;
