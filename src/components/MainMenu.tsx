@@ -4,6 +4,25 @@ import { useGameStore } from '../stores/gameStore';
 function AnimatedTitle() {
   return (
     <div className="relative text-center">
+      {/* 타이틀 뒤 이미지 - 둥둥 떠다니기 */}
+      <div
+        className="absolute left-1/2 top-1/2 -z-10"
+        style={{
+          transform: 'translate(-50%, -50%) scale(3.5)',
+        }}
+      >
+        <div style={{ animation: 'floatSubtle 3.3s ease-in-out infinite' }}>
+          <img
+            src="/title_sub.png"
+            alt=""
+            style={{
+              imageRendering: 'pixelated',
+              opacity: 0.85,
+            }}
+          />
+        </div>
+      </div>
+
       {/* 메인 타이틀 */}
       <div className="relative">
         {/* Shuffle - 레이어드 텍스트 */}
@@ -13,47 +32,59 @@ function AnimatedTitle() {
             animation: 'titleSlam 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
           }}
         >
-          {/* 백 섀도우 레이어 */}
+          {/* 깊은 그림자 레이어 */}
           <span
-            className="absolute inset-0 block text-4xl sm:text-5xl md:text-6xl lg:text-7xl tracking-[0.2em] sm:tracking-[0.25em]"
+            className="absolute inset-0 block text-4xl sm:text-5xl md:text-6xl lg:text-7xl tracking-[0.08em] sm:tracking-[0.1em]"
             style={{
               fontFamily: '"Press Start 2P", monospace',
-              color: '#2a1800',
-              transform: 'translate(6px, 6px)',
-              WebkitTextStroke: '2px #1a0f00',
+              color: '#1a1205',
+              transform: 'translate(4px, 4px)',
             }}
           >
             SHUFFLE
           </span>
-          {/* 미드 글로우 레이어 */}
+          {/* 외부 글로우 */}
           <span
-            className="absolute inset-0 block text-4xl sm:text-5xl md:text-6xl lg:text-7xl tracking-[0.2em] sm:tracking-[0.25em]"
+            className="absolute inset-0 block text-4xl sm:text-5xl md:text-6xl lg:text-7xl tracking-[0.08em] sm:tracking-[0.1em]"
             style={{
               fontFamily: '"Press Start 2P", monospace',
-              color: 'var(--gold)',
-              filter: 'blur(8px)',
-              opacity: 0.8,
+              color: '#ffc830',
+              filter: 'blur(12px)',
+              opacity: 0.25,
             }}
           >
             SHUFFLE
           </span>
-          {/* 메인 텍스트 레이어 */}
+          {/* 메인 텍스트 - 프리미엄 골드 */}
           <span
-            className="relative block text-4xl sm:text-5xl md:text-6xl lg:text-7xl tracking-[0.2em] sm:tracking-[0.25em]"
+            className="relative block text-4xl sm:text-5xl md:text-6xl lg:text-7xl tracking-[0.08em] sm:tracking-[0.1em]"
             style={{
               fontFamily: '"Press Start 2P", monospace',
-              background: 'linear-gradient(180deg, #fff8e0 0%, #ffd700 25%, #daa520 50%, #b8860b 75%, #8b6914 100%)',
+              background: 'linear-gradient(175deg, #fff4d0 0%, #ffd860 15%, #ffca28 35%, #e5a820 55%, #c48c18 75%, #a06a10 100%)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               backgroundClip: 'text',
-              filter: 'drop-shadow(0 0 10px var(--gold-glow)) drop-shadow(2px 2px 0 #000)',
+              filter: 'drop-shadow(0 0 6px rgba(255, 200, 48, 0.4)) drop-shadow(2px 2px 0 #3d2a08)',
+            }}
+          >
+            SHUFFLE
+          </span>
+          {/* 하이라이트 오버레이 */}
+          <span
+            className="absolute inset-0 block text-4xl sm:text-5xl md:text-6xl lg:text-7xl tracking-[0.08em] sm:tracking-[0.1em] pointer-events-none"
+            style={{
+              fontFamily: '"Press Start 2P", monospace',
+              background: 'linear-gradient(180deg, rgba(255,248,220,0.3) 0%, transparent 35%, transparent 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
             }}
           >
             SHUFFLE
           </span>
         </div>
 
-        {/* &Slash - 레이어드 텍스트 */}
+        {/* & SLASH - 레이어드 텍스트 */}
         <div
           className="relative mt-1 sm:mt-2"
           style={{
@@ -61,43 +92,55 @@ function AnimatedTitle() {
             opacity: 0,
           }}
         >
-          {/* 백 섀도우 레이어 */}
+          {/* 깊은 그림자 레이어 */}
           <span
-            className="absolute inset-0 block text-4xl sm:text-5xl md:text-6xl lg:text-7xl tracking-[0.2em] sm:tracking-[0.25em]"
+            className="absolute inset-0 block text-4xl sm:text-5xl md:text-6xl lg:text-7xl tracking-[0.08em] sm:tracking-[0.1em]"
             style={{
               fontFamily: '"Press Start 2P", monospace',
-              color: '#2a0000',
-              transform: 'translate(6px, 6px)',
-              WebkitTextStroke: '2px #1a0000',
+              color: '#1a1205',
+              transform: 'translate(4px, 4px)',
             }}
           >
-            &SLASH
+            & SLASH
           </span>
-          {/* 미드 글로우 레이어 */}
+          {/* 외부 글로우 */}
           <span
-            className="absolute inset-0 block text-4xl sm:text-5xl md:text-6xl lg:text-7xl tracking-[0.2em] sm:tracking-[0.25em]"
+            className="absolute inset-0 block text-4xl sm:text-5xl md:text-6xl lg:text-7xl tracking-[0.08em] sm:tracking-[0.1em]"
             style={{
               fontFamily: '"Press Start 2P", monospace',
-              color: 'var(--attack)',
-              filter: 'blur(8px)',
-              opacity: 0.8,
+              color: '#ffc830',
+              filter: 'blur(12px)',
+              opacity: 0.25,
             }}
           >
-            &SLASH
+            & SLASH
           </span>
-          {/* 메인 텍스트 레이어 */}
+          {/* 메인 텍스트 - 프리미엄 골드 */}
           <span
-            className="relative block text-4xl sm:text-5xl md:text-6xl lg:text-7xl tracking-[0.2em] sm:tracking-[0.25em]"
+            className="relative block text-4xl sm:text-5xl md:text-6xl lg:text-7xl tracking-[0.08em] sm:tracking-[0.1em]"
             style={{
               fontFamily: '"Press Start 2P", monospace',
-              background: 'linear-gradient(180deg, #ffcccc 0%, #ff6b6b 25%, #e04040 50%, #b82525 75%, #7a1818 100%)',
+              background: 'linear-gradient(175deg, #fff4d0 0%, #ffd860 15%, #ffca28 35%, #e5a820 55%, #c48c18 75%, #a06a10 100%)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
               backgroundClip: 'text',
-              filter: 'drop-shadow(0 0 10px var(--attack-glow)) drop-shadow(2px 2px 0 #000)',
+              filter: 'drop-shadow(0 0 6px rgba(255, 200, 48, 0.4)) drop-shadow(2px 2px 0 #3d2a08)',
             }}
           >
-            &SLASH
+            & SLASH
+          </span>
+          {/* 하이라이트 오버레이 */}
+          <span
+            className="absolute inset-0 block text-4xl sm:text-5xl md:text-6xl lg:text-7xl tracking-[0.08em] sm:tracking-[0.1em] pointer-events-none"
+            style={{
+              fontFamily: '"Press Start 2P", monospace',
+              background: 'linear-gradient(180deg, rgba(255,248,220,0.3) 0%, transparent 35%, transparent 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+            }}
+          >
+            & SLASH
           </span>
         </div>
 
@@ -140,9 +183,10 @@ function AnimatedTitle() {
   );
 }
 
-// 떠다니는 파티클 배경
-function FloatingParticles() {
-  const particles = Array.from({ length: 20 }, (_, i) => ({
+// 블랙홀 소용돌이 배경
+function BlackholeBackground() {
+  // 떠다니는 파티클들
+  const particles = Array.from({ length: 25 }, (_, i) => ({
     id: i,
     size: Math.random() * 4 + 2,
     left: Math.random() * 100,
@@ -152,20 +196,65 @@ function FloatingParticles() {
   }));
 
   return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {particles.map((p) => (
-        <div
-          key={p.id}
-          className="absolute rounded-full bg-[var(--gold)]"
-          style={{
-            width: p.size,
-            height: p.size,
-            left: `${p.left}%`,
-            opacity: p.opacity,
-            animation: `floatUp ${p.duration}s linear ${p.delay}s infinite`,
-          }}
-        />
-      ))}
+    <div className="absolute inset-0 overflow-hidden">
+      {/* 깊은 우주 배경 */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background: 'radial-gradient(ellipse at center, #15121a 0%, #0a0a10 50%, #000 100%)',
+        }}
+      />
+
+      {/* 소용돌이 링들 */}
+      <div className="absolute inset-0 flex items-center justify-center">
+        {[...Array(6)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute rounded-full"
+            style={{
+              width: `${(i + 1) * 14}%`,
+              height: `${(i + 1) * 14}%`,
+              border: `1px solid rgba(212, 168, 75, ${0.08 - i * 0.01})`,
+              boxShadow: `0 0 ${12 - i * 2}px rgba(212, 168, 75, ${0.12 - i * 0.015})`,
+              animation: `vortexSpin ${15 + i * 5}s linear infinite ${i % 2 === 0 ? '' : 'reverse'}`,
+            }}
+          />
+        ))}
+      </div>
+
+      {/* 중앙 글로우 - 더 강하게 */}
+      <div
+        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 rounded-full"
+        style={{
+          background: 'radial-gradient(circle, rgba(212,168,75,0.25) 0%, rgba(212,168,75,0.1) 30%, transparent 60%)',
+          animation: 'blackholePulse 3s ease-in-out infinite',
+        }}
+      />
+
+      {/* 떠오르는 파티클들 */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {particles.map((p) => (
+          <div
+            key={p.id}
+            className="absolute rounded-full bg-[var(--gold)]"
+            style={{
+              width: p.size,
+              height: p.size,
+              left: `${p.left}%`,
+              opacity: p.opacity,
+              animation: `floatUp ${p.duration}s linear ${p.delay}s infinite`,
+            }}
+          />
+        ))}
+      </div>
+
+      {/* 외곽 비네트 */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: 'radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.7) 100%)',
+        }}
+      />
     </div>
   );
 }
@@ -174,19 +263,9 @@ export function MainMenu() {
   const { startNewGame, startDeckBuilding } = useGameStore();
 
   return (
-    <div className="w-full h-screen bg-[#0a0a12] flex flex-col items-center justify-center relative overflow-hidden">
-      {/* 메인 배경 이미지 - 세로 기준 채우기 */}
-      <img
-        src="/main.webp"
-        alt="Shuffle & Slash"
-        className="absolute h-full w-auto left-1/2 -translate-x-1/2"
-        style={{
-          imageRendering: 'pixelated',
-        }}
-      />
-
-      {/* 동적 파티클 배경 */}
-      <FloatingParticles />
+    <div className="w-full h-screen bg-black flex flex-col items-center justify-center relative overflow-hidden">
+      {/* 블랙홀 소용돌이 배경 */}
+      <BlackholeBackground />
 
       {/* 타이틀 텍스트 */}
       <div className="absolute top-[12%] sm:top-[15%] z-10 text-center px-4">
