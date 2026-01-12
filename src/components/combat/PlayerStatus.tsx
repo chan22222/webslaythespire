@@ -3,7 +3,7 @@ import { Player } from '../../types/player';
 import { Status } from '../../types/status';
 import { HealthBar } from '../common/HealthBar';
 import { STATUS_INFO } from '../../types/status';
-import { IroncladSilhouette } from './characters';
+import { WarriorSprite } from './characters';
 import {
   VulnerableIcon,
   WeakIcon,
@@ -16,6 +16,8 @@ interface PlayerStatusProps {
   player: Player;
   block: number;
   statuses: Status[];
+  animation?: 'idle' | 'attack' | 'hurt';
+  onAnimationEnd?: () => void;
 }
 
 function StatusBadge({ status }: { status: Status }) {
@@ -197,7 +199,7 @@ function BlockBadge({ block }: { block: number }) {
   );
 }
 
-export function PlayerStatus({ player, block, statuses }: PlayerStatusProps) {
+export function PlayerStatus({ player, block, statuses, animation = 'idle', onAnimationEnd }: PlayerStatusProps) {
   return (
     <div data-player className="flex flex-col items-center">
       {/* 플레이어 캐릭터 프레임 */}
@@ -222,7 +224,7 @@ export function PlayerStatus({ player, block, statuses }: PlayerStatusProps) {
               : 'drop-shadow(0 5px 15px rgba(0, 0, 0, 0.6))',
           }}
         >
-          <IroncladSilhouette size={90} />
+          <WarriorSprite size={180} animation={animation} onAnimationEnd={onAnimationEnd} />
         </div>
 
         {/* 블록 뱃지 - 방패 모양 */}
@@ -232,7 +234,7 @@ export function PlayerStatus({ player, block, statuses }: PlayerStatusProps) {
       </div>
 
       {/* 체력바 */}
-      <div className="w-36 mt-4">
+      <div className="w-36 mt-4 -ml-14">
         <HealthBar
           current={player.currentHp}
           max={player.maxHp}
@@ -243,7 +245,7 @@ export function PlayerStatus({ player, block, statuses }: PlayerStatusProps) {
       </div>
 
       {/* 상태 효과 - 고정 높이로 레이아웃 안정화 */}
-      <div className="flex gap-2 mt-3 flex-wrap justify-center max-w-36 min-h-[32px]">
+      <div className="flex gap-2 mt-3 flex-wrap justify-center max-w-36 min-h-[32px] -ml-14">
         {statuses.map((status, index) => (
           <StatusBadge key={index} status={status} />
         ))}

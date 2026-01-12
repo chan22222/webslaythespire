@@ -1,9 +1,144 @@
 // Slay the Spire 스타일 실루엣 캐릭터 SVG
+import { useEffect, useState, useRef } from 'react';
 
 interface CharacterProps {
   size?: number;
   className?: string;
   isTargetable?: boolean;
+}
+
+// 스프라이트시트 설정
+const SPRITE_CONFIG = {
+  frameWidth: 69,
+  frameHeight: 44,
+  columns: 6,
+  // 각 애니메이션의 시작 행과 프레임 수
+  // multiRow: true인 경우 startRow/startFrame ~ endRow/endFrame 까지 연속 재생
+  animations: {
+    idle: { row: 0, frames: 6, speed: 150 },
+    attack: {
+      multiRow: true,
+      startRow: 11, startFrame: 3,
+      endRow: 14, endFrame: 1,
+      speed: 50
+    },
+    hurt: {
+      multiRow: true,
+      startRow: 7, startFrame: 2,
+      endRow: 7, endFrame: 5,
+      speed: 100
+    },
+  },
+};
+
+type AnimationState = 'idle' | 'attack' | 'hurt';
+
+interface WarriorSpriteProps {
+  size?: number;
+  className?: string;
+  animation?: AnimationState;
+  onAnimationEnd?: () => void;
+}
+
+// multiRow 애니메이션의 총 프레임 수 계산
+function getMultiRowFrameCount(startRow: number, startFrame: number, endRow: number, endFrame: number): number {
+  const columns = SPRITE_CONFIG.columns;
+  const startIndex = startRow * columns + startFrame;
+  const endIndex = endRow * columns + endFrame;
+  return endIndex - startIndex + 1;
+}
+
+// 프레임 인덱스로부터 row, col 계산
+function getFramePosition(startRow: number, startFrame: number, frameIndex: number): { row: number; col: number } {
+  const columns = SPRITE_CONFIG.columns;
+  const startIndex = startRow * columns + startFrame;
+  const currentIndex = startIndex + frameIndex;
+  return {
+    row: Math.floor(currentIndex / columns),
+    col: currentIndex % columns,
+  };
+}
+
+// 워리어 스프라이트 캐릭터
+export function WarriorSprite({
+  size = 120,
+  className = '',
+  animation = 'idle',
+  onAnimationEnd
+}: WarriorSpriteProps) {
+  const [frame, setFrame] = useState(0);
+  const config = SPRITE_CONFIG.animations[animation];
+
+  // onAnimationEnd를 ref로 관리하여 의존성 문제 방지
+  const onAnimationEndRef = useRef(onAnimationEnd);
+  onAnimationEndRef.current = onAnimationEnd;
+
+  // 스케일 계산 (기본 44px 높이 기준)
+  const scale = size / 44;
+  const width = SPRITE_CONFIG.frameWidth * scale;
+  const height = SPRITE_CONFIG.frameHeight * scale;
+
+  // multiRow 애니메이션인지 확인
+  const isMultiRow = 'multiRow' in config && config.multiRow;
+
+  // 총 프레임 수 계산
+  const totalFrames = isMultiRow
+    ? getMultiRowFrameCount(
+        (config as { startRow: number; startFrame: number; endRow: number; endFrame: number }).startRow,
+        (config as { startRow: number; startFrame: number; endRow: number; endFrame: number }).startFrame,
+        (config as { startRow: number; startFrame: number; endRow: number; endFrame: number }).endRow,
+        (config as { startRow: number; startFrame: number; endRow: number; endFrame: number }).endFrame
+      )
+    : (config as { frames: number }).frames;
+
+  useEffect(() => {
+    setFrame(0); // 애니메이션 변경 시 프레임 리셋
+
+    const interval = setInterval(() => {
+      setFrame((prev) => {
+        const nextFrame = prev + 1;
+        if (nextFrame >= totalFrames) {
+          if (animation !== 'idle' && onAnimationEndRef.current) {
+            onAnimationEndRef.current();
+          }
+          return animation === 'idle' ? 0 : totalFrames - 1;
+        }
+        return nextFrame;
+      });
+    }, config.speed);
+
+    return () => clearInterval(interval);
+  }, [animation, totalFrames, config.speed]);
+
+  // background-position 계산
+  let bgX: number;
+  let bgY: number;
+
+  if (isMultiRow) {
+    const multiConfig = config as { startRow: number; startFrame: number };
+    const pos = getFramePosition(multiConfig.startRow, multiConfig.startFrame, frame);
+    bgX = -(pos.col * SPRITE_CONFIG.frameWidth) * scale;
+    bgY = -(pos.row * SPRITE_CONFIG.frameHeight) * scale;
+  } else {
+    const singleConfig = config as { row: number };
+    bgX = -(frame * SPRITE_CONFIG.frameWidth) * scale;
+    bgY = -(singleConfig.row * SPRITE_CONFIG.frameHeight) * scale;
+  }
+
+  return (
+    <div
+      className={className}
+      style={{
+        width: `${width}px`,
+        height: `${height}px`,
+        backgroundImage: 'url(/sprites/warrior.png)',
+        backgroundPosition: `${bgX}px ${bgY}px`,
+        backgroundSize: `${414 * scale}px ${748 * scale}px`,
+        backgroundRepeat: 'no-repeat',
+        imageRendering: 'pixelated',
+      }}
+    />
+  );
 }
 
 // 아이언클래드 (플레이어) 실루엣
