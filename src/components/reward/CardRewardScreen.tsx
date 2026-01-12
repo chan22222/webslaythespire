@@ -8,21 +8,38 @@ import { randomInt } from '../../utils/shuffle';
 
 export function CardRewardScreen() {
   const { setPhase, modifyGold, addCardToDeck } = useGameStore();
-  const { resetCombat } = useCombatStore();
+  const { resetCombat, enemies } = useCombatStore();
   const [cardRewards, setCardRewards] = useState<CardType[]>([]);
   const [goldReward, setGoldReward] = useState(0);
+  const [bonusGold, setBonusGold] = useState(0);
   const [goldCollected, setGoldCollected] = useState(false);
+  const [bonusCollected, setBonusCollected] = useState(false);
   const [selectedCardIndex, setSelectedCardIndex] = useState<number | null>(null);
+
+  // 이스터에그 적 확인
+  const hasEasterEggEnemy = enemies.some(
+    e => e.templateId === 'real_tukbug' || e.templateId === 'kkuchu'
+  );
 
   useEffect(() => {
     setCardRewards(generateCardRewards(3));
     setGoldReward(randomInt(10, 25));
-  }, []);
+    if (hasEasterEggEnemy) {
+      setBonusGold(2000);
+    }
+  }, [hasEasterEggEnemy]);
 
   const handleCollectGold = () => {
     if (!goldCollected) {
       modifyGold(goldReward);
       setGoldCollected(true);
+    }
+  };
+
+  const handleCollectBonus = () => {
+    if (!bonusCollected && bonusGold > 0) {
+      modifyGold(bonusGold);
+      setBonusCollected(true);
     }
   };
 
@@ -44,7 +61,7 @@ export function CardRewardScreen() {
     setPhase('MAP');
   };
 
-  const canProceed = goldCollected;
+  const canProceed = goldCollected && (bonusGold === 0 || bonusCollected);
 
   return (
     <div className="w-full h-screen bg-[var(--bg-darkest)] texture-noise vignette flex flex-col items-center justify-center relative overflow-hidden">
@@ -73,7 +90,7 @@ export function CardRewardScreen() {
       </div>
 
       {/* 골드 보상 */}
-      <div className="mb-4 sm:mb-8 relative z-10">
+      <div className="mb-4 sm:mb-8 relative z-10 flex flex-col gap-3">
         <button
           onClick={handleCollectGold}
           disabled={goldCollected}
@@ -90,6 +107,32 @@ export function CardRewardScreen() {
           <span className="text-xl sm:text-3xl">💰</span>
           <span>{goldCollected ? '획득 완료!' : `${goldReward} 골드 획득`}</span>
         </button>
+
+        {/* 이스터에그 보너스 골드 */}
+        {bonusGold > 0 && (
+          <button
+            onClick={handleCollectBonus}
+            disabled={bonusCollected}
+            className={`
+              px-4 sm:px-8 py-2 sm:py-4 rounded-xl font-title text-base sm:text-xl
+              flex items-center gap-2 sm:gap-4
+              transition-all duration-300
+              ${bonusCollected
+                ? 'bg-[var(--bg-dark)] text-gray-500 cursor-not-allowed border-2 border-gray-600'
+                : 'hover:scale-105'
+              }
+            `}
+            style={!bonusCollected ? {
+              background: 'linear-gradient(180deg, #ffd700 0%, #ff8c00 100%)',
+              border: '3px solid #fff700',
+              boxShadow: '0 0 30px rgba(255, 215, 0, 0.8), 0 0 60px rgba(255, 140, 0, 0.5)',
+              animation: 'pulse 1s ease-in-out infinite',
+            } : {}}
+          >
+            <span className="text-xl sm:text-3xl">✨</span>
+            <span className="text-black font-bold">{bonusCollected ? '보너스 획득!' : `${bonusGold} 보너스 골드!`}</span>
+          </button>
+        )}
       </div>
 
       {/* 카드 보상 */}

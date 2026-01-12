@@ -722,16 +722,6 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     const allEnemiesDead = enemies.every(e => e.currentHp <= 0);
     if (allEnemiesDead) {
       get().addToCombatLog('승리!');
-
-      // 이스터에그 적이 있었다면 보너스 골드 2000
-      const hasEasterEggEnemy = enemies.some(
-        e => e.templateId === 'real_tukbug' || e.templateId === 'kkuchu'
-      );
-      if (hasEasterEggEnemy) {
-        useGameStore.getState().modifyGold(2000);
-        get().addToCombatLog('이스터에그 보너스! 골드 2000 획득!');
-      }
-
       return 'VICTORY';
     }
 
