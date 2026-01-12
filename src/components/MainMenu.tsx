@@ -4,14 +4,16 @@ import { useGameStore } from '../stores/gameStore';
 function AnimatedTitle() {
   return (
     <div className="relative text-center">
-      {/* 타이틀 뒤 이미지 - 둥둥 떠다니기 */}
+      {/* 타이틀 뒤 이미지 - 페이드인 후 둥둥 떠다니기 */}
       <div
         className="absolute left-1/2 top-1/2 -z-10"
         style={{
-          transform: 'translate(-50%, -50%) scale(3.5)',
+          transform: 'translate(-50%, -68%) scale(3.5)',
+          animation: 'fadeIn 1.2s ease-out 1s forwards',
+          opacity: 0,
         }}
       >
-        <div style={{ animation: 'floatSubtle 3.3s ease-in-out infinite' }}>
+        <div style={{ animation: 'floatTiny 4s ease-in-out infinite' }}>
           <img
             src="/title_sub.png"
             alt=""
@@ -24,12 +26,13 @@ function AnimatedTitle() {
       </div>
 
       {/* 메인 타이틀 */}
-      <div className="relative">
+      <div className="relative" style={{ animation: 'floatSubtle 3.3s ease-in-out infinite' }}>
         {/* Shuffle - 레이어드 텍스트 */}
         <div
           className="relative"
           style={{
-            animation: 'titleSlam 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
+            animation: 'titleFadeIn 0.8s ease-out forwards',
+            willChange: 'opacity, transform',
           }}
         >
           {/* 깊은 그림자 레이어 */}
@@ -88,8 +91,9 @@ function AnimatedTitle() {
         <div
           className="relative mt-1 sm:mt-2"
           style={{
-            animation: 'titleSlam 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.15s forwards',
+            animation: 'titleFadeIn 0.8s ease-out 0.15s forwards',
             opacity: 0,
+            willChange: 'opacity, transform',
           }}
         >
           {/* 깊은 그림자 레이어 */}
@@ -278,6 +282,10 @@ export function MainMenu() {
         <button
           onClick={startNewGame}
           className="relative transition-all duration-150 hover:scale-105 hover:brightness-125"
+          style={{
+            animation: 'buttonFadeIn 0.5s ease-out 0.6s forwards',
+            opacity: 0,
+          }}
         >
           <img
             src="/button_long.png"
@@ -300,6 +308,10 @@ export function MainMenu() {
         <button
           onClick={startDeckBuilding}
           className="relative transition-all duration-150 hover:scale-105 hover:brightness-125"
+          style={{
+            animation: 'buttonFadeIn 0.5s ease-out 0.7s forwards',
+            opacity: 0,
+          }}
         >
           <img
             src="/button_long.png"
@@ -321,16 +333,20 @@ export function MainMenu() {
         {/* 이어하기 버튼 */}
         <button
           disabled
-          className="relative opacity-50 cursor-not-allowed"
+          className="relative cursor-not-allowed"
+          style={{
+            animation: 'buttonFadeIn 0.5s ease-out 0.8s forwards',
+            opacity: 0,
+          }}
         >
           <img
             src="/button_long.png"
             alt=""
-            className="w-[160px] sm:w-[200px] h-auto"
+            className="w-[160px] sm:w-[200px] h-auto opacity-50"
             style={{ imageRendering: 'pixelated' }}
           />
           <span
-            className="absolute inset-0 flex items-center justify-center text-[var(--gold-light)] text-sm sm:text-base"
+            className="absolute inset-0 flex items-center justify-center text-[var(--gold-light)] text-sm sm:text-base opacity-50"
             style={{
               fontFamily: '"NeoDunggeunmo", "Neo둥근모", cursive',
               textShadow: '2px 2px 0 #000',
@@ -343,16 +359,20 @@ export function MainMenu() {
         {/* 설정 버튼 */}
         <button
           disabled
-          className="relative opacity-50 cursor-not-allowed"
+          className="relative cursor-not-allowed"
+          style={{
+            animation: 'buttonFadeIn 0.5s ease-out 0.9s forwards',
+            opacity: 0,
+          }}
         >
           <img
             src="/button_long.png"
             alt=""
-            className="w-[160px] sm:w-[200px] h-auto"
+            className="w-[160px] sm:w-[200px] h-auto opacity-50"
             style={{ imageRendering: 'pixelated' }}
           />
           <span
-            className="absolute inset-0 flex items-center justify-center text-[var(--gold-light)] text-sm sm:text-base"
+            className="absolute inset-0 flex items-center justify-center text-[var(--gold-light)] text-sm sm:text-base opacity-50"
             style={{
               fontFamily: '"NeoDunggeunmo", "Neo둥근모", cursive',
               textShadow: '2px 2px 0 #000',

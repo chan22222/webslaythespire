@@ -17,10 +17,10 @@ function LoadingScreen({ onLoadComplete }: { onLoadComplete: () => void }) {
 
   // 도착 애니메이션 상태
   const [isArrived, setIsArrived] = useState(false);
-  const [arrivalFrame, setArrivalFrame] = useState(0);
-  const [arrivalLoopCount, setArrivalLoopCount] = useState(0);
+  // 마지막 프레임(앉은 상태)에서 시작하여 애니메이션 없이 바로 고정
+  const [arrivalComplete, setArrivalComplete] = useState(false);
 
-  // 도착 애니메이션 프레임 (10,3 ~ 11,1 = 5프레임)
+  // 도착 애니메이션 프레임 (마지막 프레임 = 앉은 상태)
   const ARRIVAL_FRAMES = 5;
   const ARRIVAL_START_ROW = 10;
   const ARRIVAL_START_COL = 3;
@@ -67,41 +67,24 @@ function LoadingScreen({ onLoadComplete }: { onLoadComplete: () => void }) {
     return () => clearInterval(runInterval);
   }, [isArrived]);
 
-  // 50%쯤 되면 도착 애니메이션 시작 (로딩 트릭)
+  // 50%쯤 되면 도착 (바로 앉은 상태로 고정)
   useEffect(() => {
     if (progress >= 50 && !isArrived) {
       setIsArrived(true);
+      // 바로 앉은 상태로 고정 (애니메이션 없이)
+      setArrivalComplete(true);
     }
   }, [progress, isArrived]);
 
-  // 도착 애니메이션 재생 (1번 반복)
+  // 도착 완료 AND 로딩 100% 후 페이드아웃
   useEffect(() => {
-    if (!isArrived || arrivalLoopCount >= 1) return;
-
-    const arrivalInterval = setInterval(() => {
-      setArrivalFrame(prev => {
-        const nextFrame = prev + 1;
-        if (nextFrame >= ARRIVAL_FRAMES) {
-          setArrivalLoopCount(count => count + 1);
-          return 0;
-        }
-        return nextFrame;
-      });
-    }, 100);
-
-    return () => clearInterval(arrivalInterval);
-  }, [isArrived, arrivalLoopCount]);
-
-
-  // 도착 애니메이션 1번 완료 AND 로딩 100% 후 페이드아웃
-  useEffect(() => {
-    if (arrivalLoopCount >= 1 && progress >= 100) {
+    if (arrivalComplete && progress >= 100) {
       setTimeout(() => {
         setFadeOut(true);
         setTimeout(onLoadComplete, 600);
       }, 200);
     }
-  }, [arrivalLoopCount, progress, onLoadComplete]);
+  }, [arrivalComplete, progress, onLoadComplete]);
 
   // 바운스 효과 (달리는 프레임에 따라, 도착 후에는 없음)
   const bounceY = isArrived ? 0 : Math.sin(runFrame * 0.8) * 3;
@@ -237,9 +220,8 @@ function LoadingScreen({ onLoadComplete }: { onLoadComplete: () => void }) {
                 backgroundSize: `${SPRITE_WIDTH * 6 * SPRITE_SCALE}px auto`,
                 backgroundPosition: (() => {
                   if (isArrived) {
-                    // 도착 애니메이션 완료 후 마지막 프레임 고정
-                    const frame = arrivalLoopCount >= 1 ? ARRIVAL_FRAMES - 1 : arrivalFrame;
-                    const frameIndex = ARRIVAL_START_ROW * 6 + ARRIVAL_START_COL + frame;
+                    // 바로 앉은 상태(마지막 프레임) 고정
+                    const frameIndex = ARRIVAL_START_ROW * 6 + ARRIVAL_START_COL + (ARRIVAL_FRAMES - 1);
                     const row = Math.floor(frameIndex / 6);
                     const col = frameIndex % 6;
                     return `-${col * SPRITE_WIDTH * SPRITE_SCALE}px -${row * SPRITE_HEIGHT * SPRITE_SCALE}px`;
