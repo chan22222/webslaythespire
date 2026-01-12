@@ -289,8 +289,6 @@ export function CombatScreen() {
           // 데미지 없는 타겟 카드는 스킬 애니메이션 후 실행
           const hasLoseHpTarget = card.effects.some(e => e.type === 'LOSE_HP');
           setPlayerAnimation('skill');
-          // 스킬 이펙트 팝업 표시
-          showDamagePopup('player', 0, 'skill');
           setTimeout(() => {
             playCard(cardInstanceId, confirmedTargetId);
             if (!hasLoseHpTarget) {
@@ -350,8 +348,6 @@ export function CombatScreen() {
           // 데미지 없는 카드는 스킬 애니메이션 후 실행
           const hasLoseHp = card.effects.some(e => e.type === 'LOSE_HP');
           setPlayerAnimation('skill');
-          // 스킬 이펙트 팝업 표시
-          showDamagePopup('player', 0, 'skill');
           setTimeout(() => {
             playCard(cardInstanceId);
             // LOSE_HP가 있으면 hurt 애니메이션이 실행되므로 idle 설정 안함

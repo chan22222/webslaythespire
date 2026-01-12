@@ -13,6 +13,107 @@ import {
   MetallicizeIcon,
 } from './icons';
 
+// 스킬 이펙트 컴포넌트
+function SkillEffect({ isActive }: { isActive: boolean }) {
+  if (!isActive) return null;
+
+  // 고정된 화살표 위치들 (x: 가로, y: 세로 오프셋, delay: 지연시간)
+  const arrows = [
+    { x: -45, y: 25, delay: 0.02 },
+    { x: -22, y: -15, delay: 0.08 },
+    { x: 0, y: 12, delay: 0 },
+    { x: 22, y: -22, delay: 0.05 },
+    { x: 45, y: 5, delay: 0.1 },
+  ];
+
+  return (
+    <div
+      className="absolute pointer-events-none"
+      style={{
+        left: '38%',
+        top: '35%',
+        transform: 'translateX(-50%)',
+        zIndex: 100,
+        width: '150px',
+        height: '100px',
+      }}
+    >
+      {/* 위쪽 화살표들 */}
+      {arrows.map((arrow, i) => (
+        <div
+          key={i}
+          className="absolute"
+          style={{
+            left: '50%',
+            bottom: `${arrow.y}px`,
+            marginLeft: `${arrow.x}px`,
+            animation: `skillArrowFloat 0.7s ease-out forwards`,
+            animationDelay: `${arrow.delay}s`,
+          }}
+        >
+          <svg
+            width="20"
+            height="28"
+            viewBox="0 0 20 28"
+            style={{
+              filter: 'drop-shadow(0 0 8px rgba(56, 189, 248, 1))',
+            }}
+          >
+            <path
+              d="M10 0 L18 12 L13 12 L13 28 L7 28 L7 12 L2 12 Z"
+              fill="rgba(125, 211, 252, 0.9)"
+              stroke="rgba(186, 230, 253, 1)"
+              strokeWidth="1"
+            />
+          </svg>
+        </div>
+      ))}
+
+      {/* 중앙 글로우 이펙트 */}
+      <div
+        className="absolute left-1/2 bottom-0 -translate-x-1/2"
+        style={{
+          width: '100px',
+          height: '80px',
+          background: 'radial-gradient(ellipse at center bottom, rgba(56, 189, 248, 0.5) 0%, transparent 70%)',
+          animation: 'skillGlow 0.5s ease-out forwards',
+        }}
+      />
+
+      <style>{`
+        @keyframes skillArrowFloat {
+          0% {
+            opacity: 0;
+            transform: translateY(0) scale(0.8);
+          }
+          20% {
+            opacity: 1;
+            transform: translateY(-10px) scale(1);
+          }
+          100% {
+            opacity: 0;
+            transform: translateY(-70px) scale(0.6);
+          }
+        }
+        @keyframes skillGlow {
+          0% {
+            opacity: 0;
+            transform: translateX(-50%) scale(0.8);
+          }
+          30% {
+            opacity: 1;
+            transform: translateX(-50%) scale(1);
+          }
+          100% {
+            opacity: 0;
+            transform: translateX(-50%) scale(1.3);
+          }
+        }
+      `}</style>
+    </div>
+  );
+}
+
 interface PlayerStatusProps {
   player: Player;
   block: number;
@@ -235,6 +336,9 @@ export function PlayerStatus({ player, block, statuses, animation = 'idle', atta
             }}
           />
         )}
+
+        {/* 스킬 이펙트 */}
+        <SkillEffect isActive={animation === 'skill'} />
 
         {/* 플레이어 캐릭터 SVG */}
         <div
