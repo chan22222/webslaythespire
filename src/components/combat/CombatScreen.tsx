@@ -58,6 +58,7 @@ export function CombatScreen() {
     checkCombatEnd,
     addDamagePopup,
     removeDamagePopup,
+    setOnPlayerHit,
   } = useCombatStore();
 
   const currentNode = getCurrentNode();
@@ -82,6 +83,17 @@ export function CombatScreen() {
   const [playerAnimation, setPlayerAnimation] = useState<'idle' | 'attack' | 'hurt'>('idle');
   // 공격 타겟 위치
   const [attackTargetPos, setAttackTargetPos] = useState<{ x: number; y: number } | null>(null);
+  // 공격 중 여부 (카드 사용 불가)
+  const [isAttacking, setIsAttacking] = useState(false);
+
+  // 피격 콜백 설정
+  useEffect(() => {
+    setOnPlayerHit(() => {
+      setPlayerAnimation('hurt');
+      setTimeout(() => setPlayerAnimation('idle'), 400);
+    });
+    return () => setOnPlayerHit(null);
+  }, [setOnPlayerHit]);
   // 대기 중인 공격 (애니메이션 중간에 실행)
   const pendingAttackRef = useRef<{
     cardInstanceId: string;
@@ -151,6 +163,12 @@ export function CombatScreen() {
   }, [addDamagePopup]);
 
   const handleCardDragEnd = useCallback((cardInstanceId: string, x: number, y: number, dragDistance: number) => {
+    // 공격 중이면 카드 사용 불가
+    if (isAttacking) {
+      selectCard(null);
+      return;
+    }
+
     const card = hand.find(c => c.instanceId === cardInstanceId);
     if (!card || card.cost > energy) {
       selectCard(null);
@@ -205,6 +223,7 @@ export function CombatScreen() {
             targetEnemyId,
             damagePopups: [{ targetId: targetEnemyId, value: damageEffect.value }]
           };
+          setIsAttacking(true);
           setPlayerAnimation('attack');
           // 애니메이션 중간(600ms)에 데미지 적용
           setTimeout(() => {
@@ -247,6 +266,7 @@ export function CombatScreen() {
             cardInstanceId,
             damagePopups: popups
           };
+          setIsAttacking(true);
           setPlayerAnimation('attack');
           // 애니메이션 중간(600ms)에 데미지 적용
           setTimeout(() => {
@@ -265,7 +285,7 @@ export function CombatScreen() {
       }
     }
     selectCard(null);
-  }, [hand, energy, enemies, playCard, selectCard, showDamagePopup]);
+  }, [hand, energy, enemies, playCard, selectCard, showDamagePopup, isAttacking]);
 
   const handleCardSelect = useCallback((cardInstanceId: string) => {
     selectCard(selectedCardId === cardInstanceId ? null : cardInstanceId);
@@ -511,6 +531,7 @@ export function CombatScreen() {
               onAnimationEnd={() => {
                 setPlayerAnimation('idle');
                 setAttackTargetPos(null);
+                setIsAttacking(false);
               }}
             />
           </div>

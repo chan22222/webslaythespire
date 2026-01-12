@@ -24,6 +24,10 @@ interface CombatStore extends CombatState {
   endPlayerTurn: () => void;
   executeEnemyTurn: () => void;
 
+  // 피격 콜백
+  onPlayerHit: (() => void) | null;
+  setOnPlayerHit: (callback: (() => void) | null) => void;
+
   // 카드 관리
   drawCards: (count: number) => void;
   playCard: (cardInstanceId: string, targetEnemyId?: string) => void;
@@ -58,6 +62,8 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
   playerBlock: 0,
   playerStatuses: [],
   damagePopups: [],
+  onPlayerHit: null,
+  setOnPlayerHit: (callback) => set({ onPlayerHit: callback }),
 
   addDamagePopup: (value: number, type: DamagePopup['type'], x: number, y: number, targetId?: string) => {
     let finalX = x;
@@ -181,14 +187,18 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
         const strength = enemy.statuses.find(s => s.type === 'STRENGTH')?.stacks || 0;
         const totalDamage = damage + strength;
 
+        // 피격 콜백 호출
+        const { onPlayerHit } = get();
+        if (onPlayerHit) {
+          onPlayerHit();
+        }
+
         // 데미지 팝업 표시
         get().addDamagePopup(totalDamage, 'damage', 0, 0, 'player');
         get().dealDamageToPlayer(totalDamage);
 
         // 다음 적 공격 전 딜레이
-        if (i < enemies.length - 1) {
-          await new Promise(resolve => setTimeout(resolve, 400));
-        }
+        await new Promise(resolve => setTimeout(resolve, 600));
       } else if (enemy.intent.type === 'DEFEND') {
         enemy.block += enemy.intent.block || 0;
       } else if (enemy.intent.type === 'BUFF') {

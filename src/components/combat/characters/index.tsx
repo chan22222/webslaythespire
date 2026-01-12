@@ -24,9 +24,9 @@ const SPRITE_CONFIG = {
     },
     hurt: {
       multiRow: true,
-      startRow: 7, startFrame: 2,
-      endRow: 7, endFrame: 5,
-      speed: 100
+      startRow: 6, startFrame: 1,
+      endRow: 6, endFrame: 4,
+      speed: 150
     },
   },
 };

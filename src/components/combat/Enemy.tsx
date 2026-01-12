@@ -392,17 +392,26 @@ export function Enemy({ enemy, isTargetable = false }: EnemyProps) {
   const [showIntentTooltip, setShowIntentTooltip] = useState(false);
   const [isDying, setIsDying] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
+  const [isHurt, setIsHurt] = useState(false);
+  const [prevHp, setPrevHp] = useState(enemy.currentHp);
 
-  // 죽음 감지 및 이펙트 처리
+  // 피격 감지 (HP 감소 시)
   useEffect(() => {
-    if (enemy.currentHp <= 0 && !isDying) {
-      setIsDying(true);
-      // 딜레이 후 완전히 숨김
+    if (enemy.currentHp < prevHp) {
+      setIsHurt(true);
       setTimeout(() => {
-        setIsVisible(false);
-      }, 800);
+        setIsHurt(false);
+        // 피격 효과 끝난 후 죽음 처리
+        if (enemy.currentHp <= 0 && !isDying) {
+          setIsDying(true);
+          setTimeout(() => {
+            setIsVisible(false);
+          }, 800);
+        }
+      }, 300);
     }
-  }, [enemy.currentHp, isDying]);
+    setPrevHp(enemy.currentHp);
+  }, [enemy.currentHp, prevHp, isDying]);
 
   const getIntentTooltip = () => {
     switch (enemy.intent.type) {
@@ -502,16 +511,18 @@ export function Enemy({ enemy, isTargetable = false }: EnemyProps) {
 
         {/* 적 캐릭터 SVG */}
         <div
-          className={`relative transition-all duration-200 ${isTargetable ? 'drop-shadow-[0_0_20px_rgba(224,64,64,0.5)]' : ''}`}
+          className={`relative ${isTargetable ? 'drop-shadow-[0_0_20px_rgba(224,64,64,0.5)]' : ''}`}
           style={{
             filter: isDying
-              ? 'brightness(2) saturate(0) drop-shadow(0 0 20px rgba(255, 255, 255, 0.8))'
-              : isTargetable
-                ? 'drop-shadow(0 0 15px rgba(224, 64, 64, 0.6))'
-                : 'drop-shadow(0 5px 10px rgba(0, 0, 0, 0.5))',
+              ? 'grayscale(1)'
+              : isHurt
+                ? 'sepia(1) saturate(6) hue-rotate(-50deg) brightness(0.9) drop-shadow(0 5px 10px rgba(0, 0, 0, 0.5))'
+                : isTargetable
+                  ? 'drop-shadow(0 0 15px rgba(224, 64, 64, 0.6))'
+                  : 'drop-shadow(0 5px 10px rgba(0, 0, 0, 0.5))',
             opacity: isDying ? 0 : 1,
-            transform: isDying ? 'scale(1.2) translateY(-30px)' : 'scale(1)',
-            transition: 'all 0.8s ease-out',
+            transition: 'filter 0.6s ease-out, opacity 0.8s ease-out',
+            animation: isHurt ? 'shake 0.3s ease-in-out' : 'none',
           }}
         >
           {getEnemyCharacter(enemy.templateId, 100, isTargetable)}
