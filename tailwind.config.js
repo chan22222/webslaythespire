@@ -6,6 +6,9 @@ export default {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        'pixel': ['"Press Start 2P"', '"DotGothic16"', 'monospace'],
+      },
       colors: {
         // 게임 테마 색상
         'game-bg': '#1a1a2e',

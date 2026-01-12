@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&family=IM+Fell+English+SC&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&family=IM+Fell+English+SC&family=Press+Start+2P&family=DotGothic16&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -133,6 +133,10 @@ body {
 
 .font-card {
   font-family: 'Crimson Text', serif;
+}
+
+.font-pixel {
+  font-family: 'DotGothic16', 'Press Start 2P', monospace !important;
 }
 
 /* ============================================
@@ -535,4 +539,20 @@ body {
   40% { transform: translateX(8px); }
   60% { transform: translateX(-6px); }
   80% { transform: translateX(6px); }
+}
+
+/* 카드 드로우 애니메이션 - 아래에서 위로 올라오는 느낌 */
+@keyframes cardDraw {
+  0% {
+    opacity: 0;
+    transform: translateY(120px) scale(0.7);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(-10px) scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }

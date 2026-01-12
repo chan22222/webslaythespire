@@ -7,7 +7,7 @@ import { createStarterDeck } from '../data/cards';
 import { BURNING_BLOOD } from '../data/relics';
 import { generateMap } from '../utils/mapGenerator';
 
-export type GamePhase = 'MAIN_MENU' | 'MAP' | 'COMBAT' | 'REWARD' | 'SHOP' | 'REST' | 'EVENT' | 'CARD_REWARD' | 'GAME_OVER' | 'VICTORY';
+export type GamePhase = 'MAIN_MENU' | 'DECK_BUILDING' | 'MAP' | 'COMBAT' | 'REWARD' | 'SHOP' | 'REST' | 'EVENT' | 'CARD_REWARD' | 'GAME_OVER' | 'VICTORY';
 
 interface GameState {
   // 게임 상태
@@ -18,6 +18,9 @@ interface GameState {
 
   // 액션
   startNewGame: () => void;
+  startDeckBuilding: () => void;
+  setDeck: (deck: CardInstance[]) => void;
+  startGameWithDeck: () => void;
   setPhase: (phase: GamePhase) => void;
   moveToNode: (nodeId: string) => void;
   addCardToDeck: (card: Card) => void;
@@ -50,6 +53,37 @@ export const useGameStore = create<GameState>((set, get) => ({
       },
       map: newMap,
       currentAct: 1,
+    });
+  },
+
+  startDeckBuilding: () => {
+    set({
+      phase: 'DECK_BUILDING',
+      player: {
+        ...createInitialPlayer(),
+        deck: [],
+        relics: [BURNING_BLOOD],
+      },
+      map: { nodes: [], currentNodeId: null, floor: 1 },
+      currentAct: 1,
+    });
+  },
+
+  setDeck: (deck: CardInstance[]) => {
+    const { player } = get();
+    set({
+      player: {
+        ...player,
+        deck,
+      },
+    });
+  },
+
+  startGameWithDeck: () => {
+    const newMap = generateMap();
+    set({
+      phase: 'MAP',
+      map: newMap,
     });
   },
 

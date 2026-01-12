@@ -98,7 +98,9 @@ export function CombatScreen() {
   const pendingAttackRef = useRef<{
     cardInstanceId: string;
     targetEnemyId?: string;
-    damagePopups: { targetId: string; value: number; modifier?: number }[];
+    hits: { targetId: string; value: number; modifier?: number }[]; // 각 타격 정보
+    currentHit: number; // 현재 몇 번째 타격인지
+    totalHits: number; // 총 타격 횟수
   } | null>(null);
 
   useEffect(() => {
@@ -244,37 +246,42 @@ export function CombatScreen() {
       });
 
       if (targetEnemyId) {
-        const damageEffect = card.effects.find(e => e.type === 'DAMAGE');
-        if (damageEffect) {
+        const confirmedTargetId = targetEnemyId; // TypeScript를 위한 string 타입 확정
+        // 모든 DAMAGE 효과 찾기 (쌍둥이타격 등 다중 공격)
+        const damageEffects = card.effects.filter(e => e.type === 'DAMAGE' && e.target === 'SINGLE');
+        if (damageEffects.length > 0) {
           // 타겟 위치 저장
-          const targetEl = enemyRefs.current.get(targetEnemyId);
+          const targetEl = enemyRefs.current.get(confirmedTargetId);
           if (targetEl) {
             const rect = targetEl.getBoundingClientRect();
             setAttackTargetPos({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
           }
-          // 보정값 계산
-          const modifier = calculateDamageModifier(damageEffect.value, targetEnemyId);
-          // 공격 대기 상태로 저장 (기본 데미지와 보정값)
+          // 각 타격별 정보 저장
+          const hits = damageEffects.map(effect => ({
+            targetId: confirmedTargetId,
+            value: effect.value,
+            modifier: calculateDamageModifier(effect.value, confirmedTargetId)
+          }));
+          // 공격 대기 상태로 저장
           pendingAttackRef.current = {
             cardInstanceId,
-            targetEnemyId,
-            damagePopups: [{ targetId: targetEnemyId, value: damageEffect.value, modifier }]
+            targetEnemyId: confirmedTargetId,
+            hits,
+            currentHit: 0,
+            totalHits: hits.length
           };
           setIsAttacking(true);
           setPlayerAnimation('attack');
-          // 애니메이션 중간(600ms)에 데미지 적용
+          // 첫 번째 타격 데미지 팝업 (600ms 후)
           setTimeout(() => {
-            if (pendingAttackRef.current) {
-              pendingAttackRef.current.damagePopups.forEach(p => {
-                showDamagePopup(p.targetId, p.value, 'damage', p.modifier);
-              });
-              playCard(pendingAttackRef.current.cardInstanceId, pendingAttackRef.current.targetEnemyId);
-              pendingAttackRef.current = null;
+            if (pendingAttackRef.current && pendingAttackRef.current.currentHit === 0) {
+              const hit = pendingAttackRef.current.hits[0];
+              showDamagePopup(hit.targetId, hit.value, 'damage', hit.modifier);
             }
           }, 600);
         } else {
           // 데미지 없는 카드는 바로 실행
-          playCard(cardInstanceId, targetEnemyId);
+          playCard(cardInstanceId, confirmedTargetId);
         }
       }
     } else {
@@ -296,7 +303,7 @@ export function CombatScreen() {
             }
           }
           // 공격 대기 상태로 저장 (각 적별로 modifier 계산, 기본 데미지와 보정값)
-          const popups = enemies
+          const allEnemyHits = enemies
             .filter(e => e.currentHp > 0)
             .map(e => {
               const modifier = calculateDamageModifier(damageEffect.value, e.instanceId);
@@ -306,20 +313,22 @@ export function CombatScreen() {
                 modifier
               };
             });
+          // 전체 공격은 1회 모션에 모든 적에게 데미지
           pendingAttackRef.current = {
             cardInstanceId,
-            damagePopups: popups
+            targetEnemyId: undefined,
+            hits: allEnemyHits,
+            currentHit: 0,
+            totalHits: 1 // 전체 공격은 1회 모션
           };
           setIsAttacking(true);
           setPlayerAnimation('attack');
-          // 애니메이션 중간(600ms)에 데미지 적용
+          // 애니메이션 중간(600ms)에 모든 적에게 데미지 적용
           setTimeout(() => {
             if (pendingAttackRef.current) {
-              pendingAttackRef.current.damagePopups.forEach(p => {
-                showDamagePopup(p.targetId, p.value, 'damage', p.modifier);
+              pendingAttackRef.current.hits.forEach(hit => {
+                showDamagePopup(hit.targetId, hit.value, 'damage', hit.modifier);
               });
-              playCard(pendingAttackRef.current.cardInstanceId, pendingAttackRef.current.targetEnemyId);
-              pendingAttackRef.current = null;
             }
           }, 600);
         } else {
@@ -573,9 +582,38 @@ export function CombatScreen() {
               attackTargetPos={attackTargetPos}
               enemyCount={enemies.filter(e => e.currentHp > 0).length}
               onAnimationEnd={() => {
-                setPlayerAnimation('idle');
-                setAttackTargetPos(null);
-                setIsAttacking(false);
+                if (pendingAttackRef.current) {
+                  const { currentHit, totalHits, hits, cardInstanceId, targetEnemyId } = pendingAttackRef.current;
+                  const nextHit = currentHit + 1;
+
+                  if (nextHit < totalHits) {
+                    // 다음 타격이 있으면 다시 공격 모션
+                    pendingAttackRef.current.currentHit = nextHit;
+                    setPlayerAnimation('idle');
+                    // 약간의 딜레이 후 다음 공격
+                    setTimeout(() => {
+                      setPlayerAnimation('attack');
+                      // 데미지 팝업
+                      setTimeout(() => {
+                        if (pendingAttackRef.current && pendingAttackRef.current.currentHit === nextHit) {
+                          const hit = hits[nextHit];
+                          showDamagePopup(hit.targetId, hit.value, 'damage', hit.modifier);
+                        }
+                      }, 600);
+                    }, 100);
+                  } else {
+                    // 모든 타격 완료, 카드 실행
+                    playCard(cardInstanceId, targetEnemyId);
+                    pendingAttackRef.current = null;
+                    setPlayerAnimation('idle');
+                    setAttackTargetPos(null);
+                    setIsAttacking(false);
+                  }
+                } else {
+                  setPlayerAnimation('idle');
+                  setAttackTargetPos(null);
+                  setIsAttacking(false);
+                }
               }}
             />
           </div>

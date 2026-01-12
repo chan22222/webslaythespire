@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { CardInstance } from '../../types/card';
 import { DraggableCard } from './DraggableCard';
 
@@ -18,6 +18,42 @@ export function CardHand({
   onCardDragEnd,
 }: CardHandProps) {
   const [hoveredCardId, setHoveredCardId] = useState<string | null>(null);
+  // 새로 추가된 카드 추적
+  const [newCardIds, setNewCardIds] = useState<Set<string>>(new Set());
+  const [cardDelays, setCardDelays] = useState<Map<string, number>>(new Map());
+  const prevCardIdsRef = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    const currentIds = new Set(cards.map(c => c.instanceId));
+    const prevIds = prevCardIdsRef.current;
+
+    // 새로 추가된 카드 찾기
+    const newIds: string[] = [];
+    cards.forEach(card => {
+      if (!prevIds.has(card.instanceId)) {
+        newIds.push(card.instanceId);
+      }
+    });
+
+    if (newIds.length > 0) {
+      // 새 카드들에 순차적 딜레이 설정
+      const delays = new Map(cardDelays);
+      newIds.forEach((id, index) => {
+        delays.set(id, index * 80); // 80ms 간격으로 순차 등장
+      });
+      setCardDelays(delays);
+      setNewCardIds(new Set(newIds));
+
+      // 애니메이션 완료 후 상태 정리
+      const maxDelay = newIds.length * 80 + 300;
+      setTimeout(() => {
+        setNewCardIds(new Set());
+        setCardDelays(new Map());
+      }, maxDelay);
+    }
+
+    prevCardIdsRef.current = currentIds;
+  }, [cards]);
 
   // 슬더슬 스타일 부채꼴 배치 계산
   const getCardTransform = (index: number, total: number) => {
@@ -61,6 +97,8 @@ export function CardHand({
           const { rotation, offsetY, offsetX } = getCardTransform(index, cards.length);
           const isSelected = selectedCardId === card.instanceId;
           const isHovered = hoveredCardId === card.instanceId;
+          const isNewCard = newCardIds.has(card.instanceId);
+          const delay = cardDelays.get(card.instanceId) || 0;
 
           // z-index 계산: 기본 10 + index, 호버 시 50, 선택 시 100
           let zIndex = 10 + index;
@@ -81,21 +119,28 @@ export function CardHand({
                 zIndex,
               }}
             >
-              <DraggableCard
-                card={card}
-                isSelected={isSelected}
-                isPlayable={card.cost <= energy}
-                onSelect={() => onCardSelect(card.instanceId)}
-                onDragEnd={(x, y, dist) => onCardDragEnd(card.instanceId, x, y, dist)}
-                rotation={isSelected || isHovered ? 0 : rotation}
-                onHoverChange={(hovered) => {
-                  if (hovered) {
-                    setHoveredCardId(card.instanceId);
-                  } else if (hoveredCardId === card.instanceId) {
-                    setHoveredCardId(null);
-                  }
+              {/* 새 카드 등장 애니메이션 래퍼 */}
+              <div
+                style={{
+                  animation: isNewCard ? `cardDraw 0.35s ease-out ${delay}ms both` : undefined,
                 }}
-              />
+              >
+                <DraggableCard
+                  card={card}
+                  isSelected={isSelected}
+                  isPlayable={card.cost <= energy}
+                  onSelect={() => onCardSelect(card.instanceId)}
+                  onDragEnd={(x, y, dist) => onCardDragEnd(card.instanceId, x, y, dist)}
+                  rotation={isSelected || isHovered ? 0 : rotation}
+                  onHoverChange={(hovered) => {
+                    if (hovered) {
+                      setHoveredCardId(card.instanceId);
+                    } else if (hoveredCardId === card.instanceId) {
+                      setHoveredCardId(null);
+                    }
+                  }}
+                />
+              </div>
             </div>
           );
         })}

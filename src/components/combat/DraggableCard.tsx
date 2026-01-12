@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { CardInstance } from '../../types/card';
-import { SwordIcon, ShieldIcon, PowerIcon } from './icons';
 import { TargetingArrow } from './TargetingArrow';
 
 interface DraggableCardProps {
@@ -32,25 +31,39 @@ export function DraggableCard({
 
   const typeConfig = {
     ATTACK: {
-      frameClass: 'card-frame-attack',
-      bannerBg: 'linear-gradient(180deg, #5a2020 0%, #3a1010 100%)',
-      accentColor: '#e04040',
-      glowColor: 'rgba(184, 37, 37, 0.7)',
-      orbGradient: 'radial-gradient(circle at 30% 30%, #ff6b6b 0%, #b82525 50%, #7a1818 100%)',
+      cardImage: '/cards/attackcard.png',
+      accentColor: '#e8a040',
+      glowColor: 'rgba(232, 160, 64, 0.7)',
+      textColor: '#fff',
+      typeName: 'Attack',
     },
-    SKILL: {
-      frameClass: 'card-frame-skill',
-      bannerBg: 'linear-gradient(180deg, #204040 0%, #102a2a 100%)',
-      accentColor: '#32c4c4',
-      glowColor: 'rgba(30, 138, 138, 0.7)',
-      orbGradient: 'radial-gradient(circle at 30% 30%, #5eeaea 0%, #1e8a8a 50%, #145858 100%)',
+    SHIELD: {
+      cardImage: '/cards/shieldcard.png',
+      accentColor: '#40a8e8',
+      glowColor: 'rgba(64, 168, 232, 0.7)',
+      textColor: '#fff',
+      typeName: 'Shield',
     },
-    POWER: {
-      frameClass: 'card-frame-power',
-      bannerBg: 'linear-gradient(180deg, #4a3a15 0%, #2a2008 100%)',
-      accentColor: '#f5b840',
-      glowColor: 'rgba(201, 143, 40, 0.7)',
-      orbGradient: 'radial-gradient(circle at 30% 30%, #ffd666 0%, #c98f28 50%, #6b4f18 100%)',
+    GADGET: {
+      cardImage: '/cards/gadgetcard.png',
+      accentColor: '#40e8a0',
+      glowColor: 'rgba(64, 232, 160, 0.7)',
+      textColor: '#fff',
+      typeName: 'Gadget',
+    },
+    EFFECT: {
+      cardImage: '/cards/effectcard.png',
+      accentColor: '#a040e8',
+      glowColor: 'rgba(160, 64, 232, 0.7)',
+      textColor: '#fff',
+      typeName: 'Effect',
+    },
+    TERRAIN: {
+      cardImage: '/cards/terraincard.png',
+      accentColor: '#8b6914',
+      glowColor: 'rgba(139, 105, 20, 0.7)',
+      textColor: '#fff',
+      typeName: 'Terrain',
     },
   };
 
@@ -140,17 +153,15 @@ export function DraggableCard({
     return `rotate(${rotation}deg)`;
   };
 
-  const getBoxShadow = () => {
+  const getDropShadow = () => {
     if (dragState.isDragging || isSelected) {
-      return `0 0 50px ${config.glowColor}, 0 0 100px ${config.glowColor}, 0 30px 60px rgba(0,0,0,0.8)`;
+      return `drop-shadow(0 0 15px ${config.glowColor}) drop-shadow(0 0 30px ${config.glowColor})`;
     }
     if (isHovered && isPlayable) {
-      return `0 0 40px ${config.glowColor}, 0 25px 50px rgba(0,0,0,0.7)`;
+      return `drop-shadow(0 0 12px ${config.glowColor}) drop-shadow(0 0 25px ${config.glowColor})`;
     }
-    return '0 8px 25px rgba(0,0,0,0.5)';
+    return 'drop-shadow(0 4px 8px rgba(0,0,0,0.5))';
   };
-
-  const CardIcon = card.type === 'ATTACK' ? SwordIcon : card.type === 'SKILL' ? ShieldIcon : PowerIcon;
 
   // 타겟이 필요한 카드인지 확인
   const needsTarget = card.effects.some(e =>
@@ -186,176 +197,122 @@ export function DraggableCard({
           width: '140px',
           height: '195px',
           transform: getTransform(),
-          boxShadow: getBoxShadow(),
+          filter: getDropShadow(),
           zIndex: dragState.isDragging ? 1000 : isSelected ? 100 : isHovered ? 50 : undefined,
-          transition: dragState.isDragging ? 'none' : 'transform 0.15s ease-out, box-shadow 0.15s ease-out',
+          transition: dragState.isDragging ? 'none' : 'transform 0.15s ease-out, filter 0.15s ease-out',
         }}
       >
-        {/* 카드 외부 프레임 */}
-        <div
-          className={`absolute inset-0 rounded-xl ${config.frameClass}`}
-          style={{
-            background: 'linear-gradient(145deg, #2a2520 0%, #0a0805 100%)',
-            border: `3px solid ${config.accentColor}`,
-            borderRadius: '12px',
-          }}
-        >
-          {/* 프레임 장식 - 코너 */}
-          <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 140 195">
-            <path d="M8 4 L25 4 L25 8 L8 8 Z" fill={config.accentColor} opacity="0.6" />
-            <path d="M4 8 L8 8 L8 25 L4 25 Z" fill={config.accentColor} opacity="0.6" />
-            <path d="M115 4 L132 4 L132 8 L115 8 Z" fill={config.accentColor} opacity="0.6" />
-            <path d="M132 8 L136 8 L136 25 L132 25 Z" fill={config.accentColor} opacity="0.6" />
-            <path d="M8 187 L25 187 L25 191 L8 191 Z" fill={config.accentColor} opacity="0.6" />
-            <path d="M4 170 L8 170 L8 187 L4 187 Z" fill={config.accentColor} opacity="0.6" />
-            <path d="M115 187 L132 187 L132 191 L115 191 Z" fill={config.accentColor} opacity="0.6" />
-            <path d="M132 170 L136 170 L136 187 L132 187 Z" fill={config.accentColor} opacity="0.6" />
-          </svg>
-
-          {/* 내부 프레임 */}
-          <div
-            className="absolute rounded-lg"
-            style={{
-              inset: '6px',
-              background: 'linear-gradient(180deg, rgba(30,25,20,0.95) 0%, rgba(10,8,5,0.98) 100%)',
-              border: '1px solid rgba(255,255,255,0.08)',
-            }}
+        {/* 카드 아트 이미지 (프레임 뒤) */}
+        {card.image && (
+          <img
+            src={card.image}
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover rounded-lg pointer-events-none"
+            style={{ zIndex: 0 }}
+            draggable={false}
           />
+        )}
+
+        {/* 카드 프레임 이미지 배경 */}
+        <img
+          src={config.cardImage}
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover rounded-lg pointer-events-none"
+          style={{ zIndex: 1 }}
+          draggable={false}
+        />
+
+        {/* 카드 이름 - 더 위로, 더 크게 */}
+        <div
+          className="absolute left-2 right-2 z-20 text-center"
+          style={{ top: '14px' }}
+        >
+          <span
+            className="font-card"
+            style={{
+              fontSize: '9px',
+              color: config.textColor,
+              textShadow: '1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000',
+              fontWeight: 600,
+            }}
+          >
+            {card.name}
+          </span>
         </div>
 
-        {/* 비용 오브 */}
+        {/* 카드 타입 - 중앙 하단 (설명 위) */}
+        <div
+          className="absolute left-2 right-2 z-30 text-center"
+          style={{ bottom: '55px' }}
+        >
+          <span
+            className="font-card"
+            style={{
+              fontSize: '7px',
+              color: config.accentColor,
+              textShadow: '1px 1px 0 #000',
+            }}
+          >
+            {config.typeName}
+          </span>
+        </div>
+
+        {/* 카드 비용 - 좌상단 */}
         <div
           className="absolute z-30 flex items-center justify-center"
           style={{
-            width: '38px',
-            height: '38px',
-            top: '-6px',
-            left: '-6px',
-            borderRadius: '50%',
-            background: config.orbGradient,
-            border: '3px solid var(--gold)',
-            boxShadow: `0 0 15px ${config.glowColor}, inset 0 0 10px rgba(255,255,255,0.2)`,
+            width: '28px',
+            height: '28px',
+            top: '7px',
+            left: '9px',
           }}
         >
           <span
-            className="font-title text-lg font-bold"
             style={{
+              fontFamily: '"Press Start 2P", monospace',
+              fontSize: '14px',
               color: '#fff',
-              textShadow: '0 0 10px rgba(255,255,255,0.5), 0 2px 4px rgba(0,0,0,0.8)',
+              textShadow: '2px 2px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000',
+              width: '100%',
+              textAlign: 'center',
+              display: 'block',
             }}
           >
             {card.cost}
           </span>
         </div>
 
-        {/* 업그레이드 마크 */}
+        {/* 업그레이드 마크 - 우측 상단 */}
         {card.upgraded && (
           <div
             className="absolute z-30 flex items-center justify-center"
             style={{
-              width: '24px',
-              height: '24px',
-              top: '2px',
-              right: '8px',
+              width: '20px',
+              height: '20px',
+              top: '5px',
+              right: '5px',
               borderRadius: '50%',
               background: 'linear-gradient(135deg, #4ade80 0%, #16a34a 100%)',
               border: '2px solid #86efac',
-              boxShadow: '0 0 12px rgba(74, 222, 128, 0.6)',
+              boxShadow: '0 0 10px rgba(74, 222, 128, 0.6)',
             }}
           >
-            <span className="text-white text-sm font-bold">+</span>
+            <span className="text-white text-xs font-bold">+</span>
           </div>
         )}
 
-        {/* 카드 이름 배너 */}
+        {/* 설명 영역 (하단) */}
         <div
-          className="absolute left-2 right-2 z-20"
-          style={{
-            top: '38px',
-            height: '28px',
-            background: config.bannerBg,
-            borderTop: `2px solid ${config.accentColor}`,
-            borderBottom: `2px solid ${config.accentColor}`,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <div
-            className="absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-4"
-            style={{
-              background: config.accentColor,
-              clipPath: 'polygon(100% 0, 100% 100%, 0 50%)',
-            }}
-          />
-          <div
-            className="absolute -right-1 top-1/2 -translate-y-1/2 w-2 h-4"
-            style={{
-              background: config.accentColor,
-              clipPath: 'polygon(0 0, 0 100%, 100% 50%)',
-            }}
-          />
-          <span
-            className="font-title text-xs tracking-wide truncate px-2"
-            style={{ color: config.accentColor }}
-          >
-            {card.name}
-          </span>
-        </div>
-
-        {/* 카드 아트 영역 */}
-        <div
-          className="absolute left-3 right-3 overflow-hidden"
-          style={{
-            top: '70px',
-            height: '55px',
-            background: 'linear-gradient(180deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.7) 100%)',
-            border: `2px solid ${config.accentColor}`,
-            borderRadius: '6px',
-          }}
-        >
-          <div
-            className="absolute inset-0"
-            style={{
-              background: `radial-gradient(ellipse at 50% 50%, ${config.accentColor}20 0%, transparent 70%)`,
-            }}
-          />
-          <div className="absolute inset-0 flex items-center justify-center">
-            <CardIcon size={36} color={config.accentColor} />
-          </div>
-          <div
-            className="absolute bottom-0 left-0 right-0 h-1/2"
-            style={{
-              background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%)',
-            }}
-          />
-        </div>
-
-        {/* 타입 라벨 */}
-        <div className="absolute left-0 right-0 text-center" style={{ top: '128px' }}>
-          <span
-            className="font-display text-[9px] uppercase tracking-[0.2em]"
-            style={{ color: config.accentColor, opacity: 0.7 }}
-          >
-            {card.type === 'ATTACK' ? 'Attack' : card.type === 'SKILL' ? 'Skill' : 'Power'}
-          </span>
-        </div>
-
-        {/* 설명 영역 */}
-        <div
-          className="absolute left-2 right-2 bottom-2 rounded-md overflow-hidden"
-          style={{
-            height: '48px',
-            background: 'linear-gradient(180deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.9) 100%)',
-            border: '1px solid rgba(255,255,255,0.1)',
-            padding: '6px 8px',
-          }}
+          className="absolute z-20"
+          style={{ height: '45px', left: '10px', right: '10px', bottom: '8px' }}
         >
           <p
-            className="font-card text-[10px] text-gray-200 text-center leading-tight"
+            className="font-card text-[10px] text-center leading-tight"
             style={{
+              color: '#e0e0e0',
+              textShadow: '1px 1px 2px #000',
               display: '-webkit-box',
-              WebkitLineClamp: 3,
+              WebkitLineClamp: 4,
               WebkitBoxOrient: 'vertical',
               overflow: 'hidden',
             }}
@@ -367,7 +324,7 @@ export function DraggableCard({
         {/* 드래그 중 글로우 오버레이 */}
         {dragState.isDragging && (
           <div
-            className="absolute inset-0 rounded-xl pointer-events-none"
+            className="absolute inset-0 rounded-lg pointer-events-none"
             style={{
               background: `radial-gradient(ellipse at center, ${config.glowColor} 0%, transparent 70%)`,
               opacity: 0.5,
@@ -379,7 +336,7 @@ export function DraggableCard({
         {/* 플레이 불가 오버레이 */}
         {!isPlayable && (
           <div
-            className="absolute inset-0 rounded-xl pointer-events-none"
+            className="absolute inset-0 rounded-lg pointer-events-none"
             style={{ background: 'rgba(0,0,0,0.4)' }}
           />
         )}

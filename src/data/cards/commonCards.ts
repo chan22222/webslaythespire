@@ -41,7 +41,7 @@ export const POMMEL_STRIKE: Card = {
 export const SHRUG_IT_OFF: Card = {
   id: 'shrug_it_off',
   name: '어깨 으쓱',
-  type: 'SKILL',
+  type: 'SHIELD',
   rarity: 'COMMON',
   cost: 1,
   description: '8 방어도를 얻고 카드 1장을 뽑습니다.',
@@ -123,7 +123,7 @@ export const ANGER: Card = {
 export const ARMAMENTS: Card = {
   id: 'armaments',
   name: '무장',
-  type: 'SKILL',
+  type: 'SHIELD',
   rarity: 'COMMON',
   cost: 1,
   description: '5 방어도를 얻습니다. 손에 있는 카드 1장을 업그레이드합니다.',
@@ -161,7 +161,7 @@ export const CLOTHESLINE: Card = {
 export const FLEX: Card = {
   id: 'flex',
   name: '유연',
-  type: 'SKILL',
+  type: 'SHIELD',
   rarity: 'COMMON',
   cost: 0,
   description: '힘 2를 얻습니다. 턴 종료 시 힘 2를 잃습니다.',

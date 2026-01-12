@@ -19,7 +19,7 @@ export const STRIKE: Card = {
 export const DEFEND: Card = {
   id: 'defend',
   name: '수비',
-  type: 'SKILL',
+  type: 'SHIELD',
   rarity: 'BASIC',
   cost: 1,
   description: '5 방어도를 얻습니다.',

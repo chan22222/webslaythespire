@@ -5,7 +5,7 @@ interface TargetingArrowProps {
   startX: number;
   startY: number;
   isActive: boolean;
-  cardType: 'ATTACK' | 'SKILL' | 'POWER';
+  cardType: 'ATTACK' | 'SHIELD' | 'GADGET' | 'EFFECT' | 'TERRAIN';
   needsTarget: boolean;
 }
 
@@ -150,9 +150,11 @@ export function TargetingArrow({ startX, startY, isActive, cardType, needsTarget
 
   // 색상 설정
   const colors = {
-    ATTACK: { main: '#e04040', glow: 'rgba(224, 64, 64, 0.6)' },
-    SKILL: { main: '#32c4c4', glow: 'rgba(50, 196, 196, 0.6)' },
-    POWER: { main: '#f5b840', glow: 'rgba(245, 184, 64, 0.6)' },
+    ATTACK: { main: '#e8a040', glow: 'rgba(232, 160, 64, 0.6)' },
+    SHIELD: { main: '#40a8e8', glow: 'rgba(64, 168, 232, 0.6)' },
+    GADGET: { main: '#40e8a0', glow: 'rgba(64, 232, 160, 0.6)' },
+    EFFECT: { main: '#a040e8', glow: 'rgba(160, 64, 232, 0.6)' },
+    TERRAIN: { main: '#8b6914', glow: 'rgba(139, 105, 20, 0.6)' },
   };
 
   const color = colors[cardType];

@@ -3,12 +3,13 @@ import { Card } from '../../types/card';
 export const INFLAME: Card = {
   id: 'inflame',
   name: '불타오르다',
-  type: 'POWER',
+  type: 'EFFECT',
   rarity: 'UNCOMMON',
   cost: 1,
   description: '힘 2를 얻습니다.',
   effects: [{ type: 'APPLY_STATUS', value: 2, target: 'SELF', status: 'STRENGTH' }],
   upgraded: false,
+  image: '/cards/effect/fire.png',
   upgradeEffect: {
     name: '불타오르다+',
     description: '힘 3을 얻습니다.',
@@ -19,7 +20,7 @@ export const INFLAME: Card = {
 export const METALLICIZE: Card = {
   id: 'metallicize',
   name: '금속화',
-  type: 'POWER',
+  type: 'EFFECT',
   rarity: 'UNCOMMON',
   cost: 1,
   description: '매 턴 종료 시 3 방어도를 얻습니다.',
@@ -35,7 +36,7 @@ export const METALLICIZE: Card = {
 export const BLOODLETTING: Card = {
   id: 'bloodletting',
   name: '방혈',
-  type: 'SKILL',
+  type: 'SHIELD',
   rarity: 'UNCOMMON',
   cost: 0,
   description: 'HP를 3 잃고 에너지 2를 얻습니다.',
@@ -91,7 +92,7 @@ export const UPPERCUT: Card = {
 export const BATTLE_TRANCE: Card = {
   id: 'battle_trance',
   name: '전투 트랜스',
-  type: 'SKILL',
+  type: 'SHIELD',
   rarity: 'UNCOMMON',
   cost: 0,
   description: '카드 3장을 뽑습니다. 이 턴에 더 이상 카드를 뽑을 수 없습니다.',

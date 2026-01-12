@@ -1,7 +1,7 @@
 import { useGameStore } from '../stores/gameStore';
 
 export function MainMenu() {
-  const { startNewGame } = useGameStore();
+  const { startNewGame, startDeckBuilding } = useGameStore();
 
   return (
     <div className="w-full h-screen bg-[var(--bg-darkest)] texture-noise vignette flex flex-col items-center justify-center relative overflow-hidden">
@@ -65,6 +65,18 @@ export function MainMenu() {
             <span className="opacity-0 group-hover:opacity-100 transition-opacity">⚔</span>
             새로운 여정
             <span className="opacity-0 group-hover:opacity-100 transition-opacity">⚔</span>
+          </span>
+        </button>
+
+        {/* 덱 빌딩 버튼 */}
+        <button
+          onClick={startDeckBuilding}
+          className="btn-game min-w-[200px] sm:min-w-[280px] text-sm sm:text-lg group relative py-2 sm:py-3"
+        >
+          <span className="relative z-10 flex items-center justify-center gap-2 sm:gap-3">
+            <span className="opacity-0 group-hover:opacity-100 transition-opacity">🃏</span>
+            덱 빌딩 모드
+            <span className="opacity-0 group-hover:opacity-100 transition-opacity">🃏</span>
           </span>
         </button>
 

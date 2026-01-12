@@ -1,12 +1,97 @@
-import { CardInstance } from '../../types/card';
+import { Card as CardType, CardInstance } from '../../types/card';
+
+type CardSize = 'xs' | 'sm' | 'md' | 'lg';
 
 interface CardProps {
-  card: CardInstance;
+  card: CardType | CardInstance;
   onClick?: () => void;
   isSelected?: boolean;
   isPlayable?: boolean;
-  size?: 'sm' | 'md' | 'lg';
+  size?: CardSize;
+  showRemoveHint?: boolean;
 }
+
+const typeConfig = {
+  ATTACK: {
+    cardImage: '/cards/attackcard.png',
+    accentColor: '#e8a040',
+    glowColor: 'rgba(232, 160, 64, 0.6)',
+    typeName: 'Attack',
+  },
+  SHIELD: {
+    cardImage: '/cards/shieldcard.png',
+    accentColor: '#40a8e8',
+    glowColor: 'rgba(64, 168, 232, 0.6)',
+    typeName: 'Shield',
+  },
+  GADGET: {
+    cardImage: '/cards/gadgetcard.png',
+    accentColor: '#40e8a0',
+    glowColor: 'rgba(64, 232, 160, 0.6)',
+    typeName: 'Gadget',
+  },
+  EFFECT: {
+    cardImage: '/cards/effectcard.png',
+    accentColor: '#a040e8',
+    glowColor: 'rgba(160, 64, 232, 0.6)',
+    typeName: 'Effect',
+  },
+  TERRAIN: {
+    cardImage: '/cards/terraincard.png',
+    accentColor: '#8b6914',
+    glowColor: 'rgba(139, 105, 20, 0.6)',
+    typeName: 'Terrain',
+  },
+};
+
+// 기준: 전투 카드 140x195 (비율 1:1.393)
+const BASE_WIDTH = 140;
+const BASE_HEIGHT = 195;
+const RATIO = BASE_HEIGHT / BASE_WIDTH; // 1.392857
+
+const createSizeConfig = (width: number) => {
+  const scale = width / BASE_WIDTH;
+  const height = Math.round(width * RATIO);
+  return {
+    width,
+    height,
+    // 이름: 더 위로, 더 크게
+    nameTop: Math.round(14 * scale),
+    nameFontSize: Math.round(9 * scale),
+    // 타입: 중앙 하단 (설명 바로 위)
+    typeBottom: Math.round(55 * scale),
+    typeFontSize: Math.round(7 * scale),
+    // 코스트: 좌상단
+    costSize: Math.round(28 * scale),
+    costTop: Math.round(7 * scale),
+    costLeft: Math.round(9 * scale),
+    costFontSize: Math.round(14 * scale),
+    // 업그레이드
+    upgradeSize: Math.round(18 * scale),
+    upgradeTop: Math.round(5 * scale),
+    upgradeRight: Math.round(5 * scale),
+    upgradeFontSize: Math.round(10 * scale),
+    // 설명 (좌우 여백)
+    descHeight: Math.round(45 * scale),
+    descFontSize: Math.round(10 * scale),
+    descPadding: Math.round(10 * scale),
+    descBottom: Math.round(8 * scale),
+  };
+};
+
+const sizeConfig = {
+  xs: createSizeConfig(80),   // 80x111
+  sm: createSizeConfig(100),  // 100x139
+  md: createSizeConfig(140),  // 140x195 (기준)
+  lg: createSizeConfig(180),  // 180x251
+};
+
+const rarityGlow = {
+  BASIC: '',
+  COMMON: '',
+  UNCOMMON: '0 0 12px rgba(100, 150, 255, 0.5)',
+  RARE: '0 0 12px rgba(255, 200, 50, 0.5)',
+};
 
 export function Card({
   card,
@@ -14,78 +99,176 @@ export function Card({
   isSelected = false,
   isPlayable = true,
   size = 'md',
+  showRemoveHint = false,
 }: CardProps) {
-  const typeColors = {
-    ATTACK: 'from-red-600 to-red-800 border-red-400',
-    SKILL: 'from-blue-600 to-blue-800 border-blue-400',
-    POWER: 'from-yellow-600 to-yellow-800 border-yellow-400',
-  };
-
-  const rarityGlow = {
-    BASIC: '',
-    COMMON: '',
-    UNCOMMON: 'ring-2 ring-blue-400',
-    RARE: 'ring-2 ring-yellow-400',
-  };
-
-  const sizes = {
-    sm: 'w-24 h-36',
-    md: 'w-32 h-48',
-    lg: 'w-40 h-60',
-  };
-
-  const textSizes = {
-    sm: 'text-xs',
-    md: 'text-sm',
-    lg: 'text-base',
-  };
+  const config = typeConfig[card.type];
+  const s = sizeConfig[size];
 
   return (
     <div
       onClick={isPlayable ? onClick : undefined}
       className={`
-        ${sizes[size]}
-        relative rounded-lg border-2 overflow-hidden
-        bg-gradient-to-b ${typeColors[card.type]}
-        ${rarityGlow[card.rarity]}
-        ${isSelected ? 'ring-4 ring-white transform -translate-y-4 scale-110' : ''}
-        ${isPlayable ? 'cursor-pointer hover:-translate-y-2 hover:scale-105' : 'opacity-50 cursor-not-allowed'}
+        relative rounded-lg overflow-hidden
+        ${isSelected ? 'ring-2 ring-white transform -translate-y-2 scale-105' : ''}
+        ${isPlayable ? 'cursor-pointer hover:-translate-y-1 hover:scale-102' : 'opacity-50 cursor-not-allowed'}
         transition-all duration-200
-        shadow-lg
       `}
+      style={{
+        width: `${s.width}px`,
+        height: `${s.height}px`,
+        boxShadow: isSelected
+          ? `0 0 20px ${config.glowColor}, ${rarityGlow[card.rarity]}`
+          : `0 4px 12px rgba(0,0,0,0.4), ${rarityGlow[card.rarity]}`,
+      }}
     >
-      {/* 비용 */}
-      <div className="absolute top-1 left-1 w-8 h-8 bg-black rounded-full flex items-center justify-center border-2 border-yellow-400">
-        <span className="text-yellow-400 font-bold">{card.cost}</span>
-      </div>
-
-      {/* 업그레이드 표시 */}
-      {card.upgraded && (
-        <div className="absolute top-1 right-1 text-green-400 font-bold">+</div>
+      {/* 카드 아트 이미지 (프레임 뒤) */}
+      {card.image && (
+        <img
+          src={card.image}
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+          style={{ zIndex: 0 }}
+          draggable={false}
+        />
       )}
 
+      {/* 카드 프레임 이미지 배경 */}
+      <img
+        src={config.cardImage}
+        alt=""
+        className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+        style={{ zIndex: 1 }}
+        draggable={false}
+      />
+
       {/* 카드 이름 */}
-      <div className="absolute top-10 left-0 right-0 text-center">
-        <span className={`${textSizes[size]} font-bold text-white drop-shadow-md`}>
+      <div
+        className="absolute left-1 right-1 z-20 text-center"
+        style={{ top: `${s.nameTop}px` }}
+      >
+        <span
+          className="font-card"
+          style={{
+            fontSize: `${s.nameFontSize}px`,
+            color: '#fff',
+            textShadow: '1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000',
+            fontWeight: 600,
+          }}
+        >
           {card.name}
         </span>
       </div>
 
-      {/* 카드 타입 아이콘 영역 */}
-      <div className="absolute top-1/3 left-0 right-0 flex justify-center">
-        <div className="w-16 h-16 bg-black/30 rounded-full flex items-center justify-center">
-          <span className="text-3xl">
-            {card.type === 'ATTACK' ? '⚔️' : card.type === 'SKILL' ? '🛡️' : '✨'}
-          </span>
-        </div>
+      {/* 카드 타입 - 중앙 하단 (설명 위) */}
+      <div
+        className="absolute left-1 right-1 z-30 text-center"
+        style={{ bottom: `${s.typeBottom}px` }}
+      >
+        <span
+          className="font-card"
+          style={{
+            fontSize: `${s.typeFontSize}px`,
+            color: config.accentColor,
+            textShadow: '1px 1px 0 #000',
+          }}
+        >
+          {config.typeName}
+        </span>
       </div>
 
-      {/* 설명 */}
-      <div className="absolute bottom-2 left-2 right-2 bg-black/50 rounded p-1">
-        <p className={`${textSizes[size]} text-white text-center leading-tight`}>
+      {/* 카드 비용 - 좌상단 */}
+      <div
+        className="absolute z-30 flex items-center justify-center"
+        style={{
+          width: `${s.costSize}px`,
+          height: `${s.costSize}px`,
+          top: `${s.costTop}px`,
+          left: `${s.costLeft}px`,
+        }}
+      >
+        <span
+          style={{
+            fontFamily: '"Press Start 2P", monospace',
+            fontSize: `${s.costFontSize}px`,
+            color: '#fff',
+            textShadow: '2px 2px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000',
+            width: '100%',
+            textAlign: 'center',
+            display: 'block',
+          }}
+        >
+          {card.cost}
+        </span>
+      </div>
+
+      {/* 업그레이드 마크 - 우측 상단 */}
+      {card.upgraded && (
+        <div
+          className="absolute z-30 flex items-center justify-center"
+          style={{
+            width: `${s.upgradeSize}px`,
+            height: `${s.upgradeSize}px`,
+            top: `${s.upgradeTop}px`,
+            right: `${s.upgradeRight}px`,
+            borderRadius: '50%',
+            background: 'linear-gradient(135deg, #4ade80 0%, #16a34a 100%)',
+            border: '1px solid #86efac',
+            boxShadow: '0 0 8px rgba(74, 222, 128, 0.6)',
+          }}
+        >
+          <span
+            className="text-white font-bold"
+            style={{ fontSize: `${s.upgradeFontSize}px` }}
+          >
+            +
+          </span>
+        </div>
+      )}
+
+      {/* 설명 영역 */}
+      <div
+        className="absolute z-20"
+        style={{
+          height: `${s.descHeight}px`,
+          left: `${s.descPadding}px`,
+          right: `${s.descPadding}px`,
+          bottom: `${s.descBottom}px`,
+        }}
+      >
+        <p
+          className="font-card text-center leading-tight"
+          style={{
+            fontSize: `${s.descFontSize}px`,
+            color: '#e0e0e0',
+            textShadow: '1px 1px 2px #000',
+            display: '-webkit-box',
+            WebkitLineClamp: 4,
+            WebkitBoxOrient: 'vertical',
+            overflow: 'hidden',
+          }}
+        >
           {card.description}
         </p>
       </div>
+
+      {/* 제거 힌트 오버레이 */}
+      {showRemoveHint && (
+        <div
+          className="absolute inset-0 flex items-center justify-center rounded-lg opacity-0 hover:opacity-100 transition-opacity"
+          style={{ background: 'rgba(220, 38, 38, 0.7)' }}
+        >
+          <span
+            style={{
+              fontFamily: '"Press Start 2P", monospace',
+              fontSize: `${s.nameFontSize}px`,
+              color: '#fff',
+              textShadow: '1px 1px 0 #000',
+            }}
+          >
+            제거
+          </span>
+        </div>
+      )}
     </div>
   );
 }

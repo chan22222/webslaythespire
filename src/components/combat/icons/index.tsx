@@ -213,3 +213,39 @@ export function PoisonIcon({ size = 24, className = '', color = 'currentColor' }
     </svg>
   );
 }
+
+// 금속화 아이콘 (철 갑옷/금속 방패)
+export function MetallicizeIcon({ size = 24, className = '', color = 'currentColor' }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} fill="none">
+      {/* 금속 방패 기본 형태 */}
+      <path
+        d="M12 2L4 6V12C4 17 7.5 21 12 22C16.5 21 20 17 20 12V6L12 2Z"
+        fill={color}
+        opacity="0.9"
+      />
+      {/* 금속 광택 효과 */}
+      <path
+        d="M12 3L6 6.5V12C6 15.5 8.5 19 12 20"
+        stroke="rgba(255,255,255,0.5)"
+        strokeWidth="1.5"
+        fill="none"
+      />
+      {/* 리벳/볼트 장식 */}
+      <circle cx="8" cy="9" r="1.2" fill="rgba(255,255,255,0.6)" />
+      <circle cx="16" cy="9" r="1.2" fill="rgba(255,255,255,0.6)" />
+      <circle cx="12" cy="14" r="1.2" fill="rgba(255,255,255,0.6)" />
+      {/* 중앙 금속 엠블럼 */}
+      <path
+        d="M12 7L14 10H10L12 7Z"
+        fill="rgba(255,255,255,0.4)"
+      />
+      <path
+        d="M10 10L12 17L14 10"
+        stroke="rgba(255,255,255,0.3)"
+        strokeWidth="1"
+        fill="none"
+      />
+    </svg>
+  );
+}

@@ -6,6 +6,7 @@ import { CardRewardScreen } from './components/reward/CardRewardScreen';
 import { RestScreen } from './components/rest/RestScreen';
 import { ShopScreen } from './components/shop/ShopScreen';
 import { GameOver } from './components/GameOver';
+import { DeckBuildingScreen } from './components/deckbuilding/DeckBuildingScreen';
 
 function App() {
   const { phase } = useGameStore();
@@ -21,6 +22,7 @@ function App() {
 
       <div className="game-content w-full min-h-screen bg-gray-900">
       {phase === 'MAIN_MENU' && <MainMenu />}
+      {phase === 'DECK_BUILDING' && <DeckBuildingScreen />}
       {phase === 'MAP' && <MapScreen />}
       {phase === 'COMBAT' && <CombatScreen />}
       {phase === 'CARD_REWARD' && <CardRewardScreen />}

@@ -1,4 +1,4 @@
-export type CardType = 'ATTACK' | 'SKILL' | 'POWER';
+export type CardType = 'ATTACK' | 'SHIELD' | 'GADGET' | 'EFFECT' | 'TERRAIN';
 export type CardRarity = 'BASIC' | 'COMMON' | 'UNCOMMON' | 'RARE';
 export type TargetType = 'SINGLE' | 'ALL' | 'SELF' | 'RANDOM';
 export type StatusType = 'VULNERABLE' | 'WEAK' | 'STRENGTH' | 'DEXTERITY' | 'POISON' | 'BLOCK_NEXT_TURN' | 'METALLICIZE';
@@ -20,6 +20,7 @@ export interface Card {
   effects: CardEffect[];
   upgraded: boolean;
   upgradeEffect?: Partial<Card>;
+  image?: string;
 }
 
 export interface CardInstance extends Card {

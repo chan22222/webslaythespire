@@ -10,6 +10,7 @@ import {
   StrengthIcon,
   DexterityIcon,
   PoisonIcon,
+  MetallicizeIcon,
 } from './icons';
 
 interface PlayerStatusProps {
@@ -38,6 +39,8 @@ function StatusBadge({ status }: { status: Status }) {
         return <DexterityIcon size={14} color="#60a5fa" />;
       case 'POISON':
         return <PoisonIcon size={14} color="#84cc16" />;
+      case 'METALLICIZE':
+        return <MetallicizeIcon size={14} color="#94a3b8" />;
       default:
         return null;
     }
