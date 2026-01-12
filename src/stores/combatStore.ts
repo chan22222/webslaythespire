@@ -780,6 +780,23 @@ function getNextEnemyIntent(enemy: EnemyInstance, turn: number): EnemyInstance['
       : { type: 'ATTACK', damage: 35 };
   }
 
+  // 이스터에그 적: ㄹㅇ턱벌레
+  if (enemy.templateId === 'real_tukbug') {
+    return turn % 3 === 2
+      ? { type: 'DEFEND', block: 5 }
+      : { type: 'ATTACK', damage: 8 };
+  }
+
+  // 이스터에그 적: 꾸추
+  if (enemy.templateId === 'kkuchu') {
+    if (turn === 1) {
+      return { type: 'BUFF' };
+    }
+    return turn % 2 === 0
+      ? { type: 'DEBUFF' }
+      : { type: 'ATTACK', damage: 7 };
+  }
+
   // 기본
   return { type: 'ATTACK', damage: 6 };
 }

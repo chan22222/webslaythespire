@@ -611,6 +611,42 @@ export function SlimeBossSilhouette({ size = 180, className = '', isTargetable =
   );
 }
 
+// 이스터에그 적 - PNG 이미지 (1.5배 스케일)
+function EasterEggEnemy({ imageUrl, size, isTargetable }: { imageUrl: string; size: number; isTargetable: boolean }) {
+  const scaledSize = size * 1.5;
+
+  return (
+    <div
+      className="relative"
+      style={{
+        width: scaledSize,
+        height: scaledSize,
+      }}
+    >
+      <img
+        src={imageUrl}
+        alt="Easter Egg Enemy"
+        style={{
+          width: '100%',
+          height: '100%',
+          imageRendering: 'pixelated',
+          filter: isTargetable ? 'drop-shadow(0 0 15px rgba(224, 64, 64, 0.6))' : 'drop-shadow(0 5px 10px rgba(0, 0, 0, 0.5))',
+        }}
+      />
+      {isTargetable && (
+        <div
+          className="absolute inset-0 rounded-full"
+          style={{
+            border: '2px solid #e04040',
+            opacity: 0.6,
+            animation: 'pulse 1s ease-in-out infinite',
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
 // 캐릭터 매핑
 export function getEnemyCharacter(templateId: string, size: number, isTargetable: boolean) {
   switch (templateId) {
@@ -632,6 +668,11 @@ export function getEnemyCharacter(templateId: string, size: number, isTargetable
       return <GremlinNobSilhouette size={size * 1.2} isTargetable={isTargetable} />;
     case 'slime_boss':
       return <SlimeBossSilhouette size={size * 1.5} isTargetable={isTargetable} />;
+    // 이스터에그 적
+    case 'real_tukbug':
+      return <EasterEggEnemy imageUrl="/sprites/mob/easteregg/tukbug.png" size={size} isTargetable={isTargetable} />;
+    case 'kkuchu':
+      return <EasterEggEnemy imageUrl="/sprites/mob/easteregg/kkuchu.png" size={size} isTargetable={isTargetable} />;
     default:
       return <CultistSilhouette size={size} isTargetable={isTargetable} />;
   }

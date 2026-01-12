@@ -209,6 +209,74 @@ export const SLIME_BOSS: EnemyTemplate = {
   },
 };
 
+// ===== 이스터에그 적 =====
+
+// ㄹㅇ턱벌레 - 턱벌레 변형
+export const REAL_TUKBUG: EnemyTemplate = {
+  id: 'real_tukbug',
+  name: 'ㄹㅇ턱벌레',
+  minHp: 35,
+  maxHp: 40,
+  getNextIntent: (_enemy: Enemy, turn: number): EnemyIntent => {
+    if (turn === 1) {
+      return { type: 'ATTACK', damage: 8 };
+    }
+    const pattern = turn % 3;
+    if (pattern === 2) {
+      return { type: 'DEFEND', block: 5 };
+    }
+    return { type: 'ATTACK', damage: 8 };
+  },
+  executeIntent: (enemy: Enemy, dealDamageToPlayer: (damage: number) => void) => {
+    if (enemy.intent.type === 'ATTACK') {
+      dealDamageToPlayer(enemy.intent.damage || 8);
+    } else if (enemy.intent.type === 'DEFEND') {
+      enemy.block += enemy.intent.block || 5;
+      const strengthStatus = enemy.statuses.find(s => s.type === 'STRENGTH');
+      if (strengthStatus) {
+        strengthStatus.stacks += 2;
+      } else {
+        enemy.statuses.push({ type: 'STRENGTH', stacks: 2 });
+      }
+    }
+  },
+};
+
+// 꾸추 - 특별한 적
+export const KKUCHU: EnemyTemplate = {
+  id: 'kkuchu',
+  name: '꾸추',
+  minHp: 30,
+  maxHp: 35,
+  getNextIntent: (_enemy: Enemy, turn: number): EnemyIntent => {
+    if (turn === 1) {
+      return { type: 'BUFF' };
+    }
+    if (turn % 2 === 0) {
+      return { type: 'DEBUFF' };
+    }
+    return { type: 'ATTACK', damage: 7 };
+  },
+  executeIntent: (enemy: Enemy, dealDamageToPlayer: (damage: number) => void, applyStatusToPlayer: (status: Status) => void) => {
+    if (enemy.intent.type === 'BUFF') {
+      const strengthStatus = enemy.statuses.find(s => s.type === 'STRENGTH');
+      if (strengthStatus) {
+        strengthStatus.stacks += 2;
+      } else {
+        enemy.statuses.push({ type: 'STRENGTH', stacks: 2 });
+      }
+    } else if (enemy.intent.type === 'ATTACK') {
+      const strength = enemy.statuses.find(s => s.type === 'STRENGTH')?.stacks || 0;
+      dealDamageToPlayer((enemy.intent.damage || 7) + strength);
+    } else if (enemy.intent.type === 'DEBUFF') {
+      applyStatusToPlayer({ type: 'WEAK', stacks: 1 });
+    }
+  },
+};
+
+// 이스터에그 전투 (파추/권혁찬)
+export const EASTER_EGG_ENCOUNTER: EnemyTemplate[] = [REAL_TUKBUG, KKUCHU];
+
 // 적 템플릿 목록
 export const NORMAL_ENEMIES: EnemyTemplate[] = [
   CULTIST,

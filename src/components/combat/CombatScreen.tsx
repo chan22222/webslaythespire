@@ -7,7 +7,7 @@ import { Enemy } from './Enemy';
 import { EnergyOrb } from './EnergyOrb';
 import { PlayerStatus } from './PlayerStatus';
 import { DamagePopupManager } from './DamagePopup';
-import { generateNormalEncounter, ELITE_ENEMIES, BOSS_ENEMIES } from '../../data/enemies';
+import { generateNormalEncounter, ELITE_ENEMIES, BOSS_ENEMIES, EASTER_EGG_ENCOUNTER } from '../../data/enemies';
 
 // 전투 시작 인트로 화면
 function BattleIntro({
@@ -628,7 +628,16 @@ export function CombatScreen() {
         } else if (currentNode.type === 'ELITE') {
           enemyTemplates = [ELITE_ENEMIES[0]];
         } else {
-          enemyTemplates = generateNormalEncounter();
+          // 이스터에그: 첫 던전(row 0)에서 "파추" 또는 "권혁찬" 이름일 때
+          const playerName = useGameStore.getState().playerName;
+          const isFirstFloor = currentNode.row === 0;
+          const isEasterEggName = playerName === '파추' || playerName === '권혁찬';
+
+          if (isFirstFloor && isEasterEggName) {
+            enemyTemplates = EASTER_EGG_ENCOUNTER;
+          } else {
+            enemyTemplates = generateNormalEncounter();
+          }
         }
       } else {
         return; // 적 정보가 없으면 초기화하지 않음
