@@ -54,7 +54,7 @@ interface CombatStore extends CombatState {
 
   // 데미지 팝업
   damagePopups: DamagePopup[];
-  addDamagePopup: (value: number, type: DamagePopup['type'], x: number, y: number, targetId?: string, modifier?: number) => void;
+  addDamagePopup: (value: number, type: DamagePopup['type'], x: number, y: number, targetId?: string, modifier?: number, offsetX?: number, offsetY?: number) => void;
   removeDamagePopup: (id: string) => void;
 
   // 적 피격 효과 트리거 (애니메이션용)

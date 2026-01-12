@@ -9,6 +9,515 @@ import { PlayerStatus } from './PlayerStatus';
 import { DamagePopupManager } from './DamagePopup';
 import { generateNormalEncounter, ELITE_ENEMIES, BOSS_ENEMIES } from '../../data/enemies';
 
+// 전투 시작 인트로 화면
+function BattleIntro({
+  encounterType,
+  onComplete
+}: {
+  encounterType: 'ENEMY' | 'ELITE' | 'BOSS';
+  onComplete: () => void;
+}) {
+  const [phase, setPhase] = useState<'slash' | 'text' | 'fadeout'>('slash');
+
+  useEffect(() => {
+    // 슬래시 애니메이션 후 텍스트
+    const timer1 = setTimeout(() => setPhase('text'), 250);
+    // 텍스트 표시 후 페이드아웃
+    const timer2 = setTimeout(() => setPhase('fadeout'), 800);
+    // 완료
+    const timer3 = setTimeout(onComplete, 1100);
+
+    return () => {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+      clearTimeout(timer3);
+    };
+  }, [onComplete]);
+
+  const getEncounterText = () => {
+    switch (encounterType) {
+      case 'BOSS': return { main: 'BOSS BATTLE', sub: '강력한 적이 나타났다!' };
+      case 'ELITE': return { main: 'ELITE BATTLE', sub: '정예 적과 조우!' };
+      default: return { main: 'BATTLE START', sub: '적과 조우했다!' };
+    }
+  };
+
+  const getAccentColor = () => {
+    switch (encounterType) {
+      case 'BOSS': return { primary: '#dc2626', glow: 'rgba(220, 38, 38, 0.8)' };
+      case 'ELITE': return { primary: '#a855f7', glow: 'rgba(168, 85, 247, 0.8)' };
+      default: return { primary: '#d4a84b', glow: 'rgba(212, 168, 75, 0.8)' };
+    }
+  };
+
+  const text = getEncounterText();
+  const colors = getAccentColor();
+
+  return (
+    <div
+      className={`fixed inset-0 z-[9999] flex items-center justify-center overflow-hidden transition-opacity duration-300 ${
+        phase === 'fadeout' ? 'opacity-0' : 'opacity-100'
+      }`}
+      style={{
+        background: 'radial-gradient(ellipse at center, #1a1815 0%, #0d0c0a 50%, #000 100%)',
+      }}
+    >
+      {/* 배경 비네트 */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background: 'radial-gradient(circle at center, transparent 20%, rgba(0,0,0,0.8) 80%)',
+        }}
+      />
+
+      {/* 슬래시 라인들 */}
+      <div className="absolute inset-0 overflow-hidden">
+        {/* 메인 슬래시 - 왼쪽 위에서 오른쪽 아래로 */}
+        <div
+          className="absolute"
+          style={{
+            top: '30%',
+            left: '-10%',
+            width: '120%',
+            height: '4px',
+            background: `linear-gradient(90deg, transparent 0%, ${colors.primary} 30%, #fff 50%, ${colors.primary} 70%, transparent 100%)`,
+            transform: 'rotate(15deg)',
+            boxShadow: `0 0 30px ${colors.glow}, 0 0 60px ${colors.glow}`,
+            animation: 'slashIn 0.4s ease-out forwards',
+          }}
+        />
+        {/* 서브 슬래시 1 */}
+        <div
+          className="absolute"
+          style={{
+            top: '50%',
+            left: '-10%',
+            width: '120%',
+            height: '2px',
+            background: `linear-gradient(90deg, transparent 0%, ${colors.primary}88 40%, ${colors.primary} 50%, ${colors.primary}88 60%, transparent 100%)`,
+            transform: 'rotate(-8deg)',
+            boxShadow: `0 0 20px ${colors.glow}`,
+            animation: 'slashIn 0.35s ease-out 0.1s forwards',
+            opacity: 0,
+          }}
+        />
+        {/* 서브 슬래시 2 */}
+        <div
+          className="absolute"
+          style={{
+            top: '65%',
+            left: '-10%',
+            width: '120%',
+            height: '2px',
+            background: `linear-gradient(90deg, transparent 0%, ${colors.primary}66 30%, ${colors.primary}aa 50%, ${colors.primary}66 70%, transparent 100%)`,
+            transform: 'rotate(5deg)',
+            boxShadow: `0 0 15px ${colors.glow}`,
+            animation: 'slashIn 0.3s ease-out 0.15s forwards',
+            opacity: 0,
+          }}
+        />
+      </div>
+
+      {/* 스파크 파티클 */}
+      {phase !== 'slash' && (
+        <div className="absolute inset-0 pointer-events-none">
+          {[...Array(20)].map((_, i) => (
+            <div
+              key={i}
+              className="absolute rounded-full"
+              style={{
+                left: `${20 + Math.random() * 60}%`,
+                top: `${30 + Math.random() * 40}%`,
+                width: `${2 + Math.random() * 4}px`,
+                height: `${2 + Math.random() * 4}px`,
+                background: i % 3 === 0 ? '#fff' : colors.primary,
+                boxShadow: `0 0 ${4 + Math.random() * 8}px ${colors.glow}`,
+                animation: `sparkFly ${0.5 + Math.random() * 0.5}s ease-out forwards`,
+                animationDelay: `${Math.random() * 0.2}s`,
+              }}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* 메인 텍스트 */}
+      {phase !== 'slash' && (
+        <div className="relative z-10 text-center">
+          {/* 메인 타이틀 */}
+          <div
+            className="relative"
+            style={{
+              animation: 'textSlam 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
+            }}
+          >
+            {/* 텍스트 그림자 레이어 */}
+            <span
+              className="absolute inset-0 block text-5xl sm:text-6xl md:text-7xl tracking-wider"
+              style={{
+                fontFamily: '"Press Start 2P", monospace',
+                color: '#000',
+                transform: 'translate(4px, 4px)',
+              }}
+            >
+              {text.main}
+            </span>
+            {/* 글로우 레이어 */}
+            <span
+              className="absolute inset-0 block text-5xl sm:text-6xl md:text-7xl tracking-wider"
+              style={{
+                fontFamily: '"Press Start 2P", monospace',
+                color: colors.primary,
+                filter: 'blur(20px)',
+                opacity: 0.6,
+              }}
+            >
+              {text.main}
+            </span>
+            {/* 메인 텍스트 */}
+            <span
+              className="relative block text-5xl sm:text-6xl md:text-7xl tracking-wider"
+              style={{
+                fontFamily: '"Press Start 2P", monospace',
+                background: encounterType === 'ENEMY'
+                  ? 'linear-gradient(180deg, #fff8e0 0%, #ffd860 30%, #d4a84b 70%, #8b6914 100%)'
+                  : encounterType === 'ELITE'
+                  ? 'linear-gradient(180deg, #f3e8ff 0%, #c084fc 30%, #a855f7 70%, #7c3aed 100%)'
+                  : 'linear-gradient(180deg, #fecaca 0%, #f87171 30%, #dc2626 70%, #991b1b 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+                filter: `drop-shadow(0 0 10px ${colors.glow}) drop-shadow(2px 2px 0 #000)`,
+              }}
+            >
+              {text.main}
+            </span>
+          </div>
+
+          {/* 서브 텍스트 */}
+          <p
+            className="mt-6 text-lg sm:text-xl tracking-widest"
+            style={{
+              fontFamily: '"NeoDunggeunmo", cursive',
+              color: colors.primary,
+              textShadow: `0 0 20px ${colors.glow}, 2px 2px 0 #000`,
+              animation: 'fadeInUp 0.4s ease-out 0.2s forwards',
+              opacity: 0,
+            }}
+          >
+            {text.sub}
+          </p>
+
+          {/* 장식 라인 */}
+          <div
+            className="flex items-center justify-center gap-4 mt-6"
+            style={{
+              animation: 'fadeIn 0.3s ease-out 0.3s forwards',
+              opacity: 0,
+            }}
+          >
+            <div
+              className="h-[2px] w-20 sm:w-32"
+              style={{
+                background: `linear-gradient(90deg, transparent, ${colors.primary})`,
+              }}
+            />
+            <div
+              className="w-3 h-3 rotate-45"
+              style={{
+                background: colors.primary,
+                boxShadow: `0 0 15px ${colors.glow}`,
+              }}
+            />
+            <div
+              className="h-[2px] w-20 sm:w-32"
+              style={{
+                background: `linear-gradient(90deg, ${colors.primary}, transparent)`,
+              }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* CSS 애니메이션 */}
+      <style>{`
+        @keyframes slashIn {
+          0% {
+            transform: translateX(-100%) rotate(var(--rotation, 15deg));
+            opacity: 0;
+          }
+          50% {
+            opacity: 1;
+          }
+          100% {
+            transform: translateX(0) rotate(var(--rotation, 15deg));
+            opacity: 1;
+          }
+        }
+        @keyframes textSlam {
+          0% {
+            transform: scale(2) translateY(-20px);
+            opacity: 0;
+          }
+          60% {
+            transform: scale(0.95);
+            opacity: 1;
+          }
+          100% {
+            transform: scale(1) translateY(0);
+            opacity: 1;
+          }
+        }
+        @keyframes sparkFly {
+          0% {
+            transform: translate(0, 0) scale(1);
+            opacity: 1;
+          }
+          100% {
+            transform: translate(${Math.random() > 0.5 ? '' : '-'}${50 + Math.random() * 100}px, ${Math.random() > 0.5 ? '' : '-'}${50 + Math.random() * 100}px) scale(0);
+            opacity: 0;
+          }
+        }
+        @keyframes fadeInUp {
+          0% {
+            transform: translateY(20px);
+            opacity: 0;
+          }
+          100% {
+            transform: translateY(0);
+            opacity: 1;
+          }
+        }
+        @keyframes fadeIn {
+          0% { opacity: 0; }
+          100% { opacity: 1; }
+        }
+      `}</style>
+    </div>
+  );
+}
+
+// 승리 인트로 화면
+function VictoryIntro({ onComplete }: { onComplete: () => void }) {
+  const [phase, setPhase] = useState<'slash' | 'text' | 'fadeout'>('slash');
+
+  useEffect(() => {
+    // 슬래시 애니메이션 후 텍스트
+    const timer1 = setTimeout(() => setPhase('text'), 300);
+    // 텍스트 표시 후 페이드아웃
+    const timer2 = setTimeout(() => setPhase('fadeout'), 1100);
+    // 완료
+    const timer3 = setTimeout(onComplete, 1400);
+
+    return () => {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+      clearTimeout(timer3);
+    };
+  }, [onComplete]);
+
+  const colors = { primary: '#ffd700', glow: 'rgba(255, 215, 0, 0.8)' };
+
+  return (
+    <div
+      className={`fixed inset-0 z-[9999] flex items-center justify-center overflow-hidden transition-opacity duration-300 ${
+        phase === 'fadeout' ? 'opacity-0' : 'opacity-100'
+      }`}
+      style={{
+        background: 'radial-gradient(ellipse at center, #1a1610 0%, #0d0b08 50%, #000 100%)',
+      }}
+    >
+      {/* 배경 비네트 */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background: 'radial-gradient(circle at center, transparent 20%, rgba(0,0,0,0.8) 80%)',
+        }}
+      />
+
+      {/* 슬래시 라인들 */}
+      <div className="absolute inset-0 overflow-hidden">
+        {/* 메인 슬래시 - 왼쪽 위에서 오른쪽 아래로 */}
+        <div
+          className="absolute"
+          style={{
+            top: '30%',
+            left: '-10%',
+            width: '120%',
+            height: '4px',
+            background: `linear-gradient(90deg, transparent 0%, ${colors.primary} 30%, #fff 50%, ${colors.primary} 70%, transparent 100%)`,
+            transform: 'rotate(15deg)',
+            boxShadow: `0 0 30px ${colors.glow}, 0 0 60px ${colors.glow}`,
+            animation: 'victorySlashIn 0.4s ease-out forwards',
+          }}
+        />
+        {/* 서브 슬래시 1 */}
+        <div
+          className="absolute"
+          style={{
+            top: '50%',
+            left: '-10%',
+            width: '120%',
+            height: '2px',
+            background: `linear-gradient(90deg, transparent 0%, ${colors.primary}88 40%, ${colors.primary} 50%, ${colors.primary}88 60%, transparent 100%)`,
+            transform: 'rotate(-8deg)',
+            boxShadow: `0 0 20px ${colors.glow}`,
+            animation: 'victorySlashIn 0.35s ease-out 0.1s forwards',
+            opacity: 0,
+          }}
+        />
+        {/* 서브 슬래시 2 */}
+        <div
+          className="absolute"
+          style={{
+            top: '65%',
+            left: '-10%',
+            width: '120%',
+            height: '2px',
+            background: `linear-gradient(90deg, transparent 0%, ${colors.primary}66 30%, ${colors.primary}aa 50%, ${colors.primary}66 70%, transparent 100%)`,
+            transform: 'rotate(5deg)',
+            boxShadow: `0 0 15px ${colors.glow}`,
+            animation: 'victorySlashIn 0.3s ease-out 0.15s forwards',
+            opacity: 0,
+          }}
+        />
+      </div>
+
+      {/* 스파크 파티클 */}
+      {phase !== 'slash' && (
+        <div className="absolute inset-0 pointer-events-none">
+          {[...Array(20)].map((_, i) => (
+            <div
+              key={i}
+              className="absolute rounded-full"
+              style={{
+                left: `${20 + Math.random() * 60}%`,
+                top: `${30 + Math.random() * 40}%`,
+                width: `${2 + Math.random() * 4}px`,
+                height: `${2 + Math.random() * 4}px`,
+                background: i % 3 === 0 ? '#fff' : colors.primary,
+                boxShadow: `0 0 ${4 + Math.random() * 8}px ${colors.glow}`,
+                animation: `sparkFly ${0.5 + Math.random() * 0.5}s ease-out forwards`,
+                animationDelay: `${Math.random() * 0.2}s`,
+              }}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* 메인 텍스트 */}
+      {phase !== 'slash' && (
+        <div className="relative z-10 text-center">
+          {/* 메인 타이틀 */}
+          <div
+            className="relative"
+            style={{
+              animation: 'textSlam 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
+            }}
+          >
+            {/* 텍스트 그림자 레이어 */}
+            <span
+              className="absolute inset-0 block text-5xl sm:text-6xl md:text-7xl tracking-wider"
+              style={{
+                fontFamily: '"Press Start 2P", monospace',
+                color: '#000',
+                transform: 'translate(4px, 4px)',
+              }}
+            >
+              VICTORY
+            </span>
+            {/* 글로우 레이어 */}
+            <span
+              className="absolute inset-0 block text-5xl sm:text-6xl md:text-7xl tracking-wider"
+              style={{
+                fontFamily: '"Press Start 2P", monospace',
+                color: colors.primary,
+                filter: 'blur(20px)',
+                opacity: 0.6,
+              }}
+            >
+              VICTORY
+            </span>
+            {/* 메인 텍스트 */}
+            <span
+              className="relative block text-5xl sm:text-6xl md:text-7xl tracking-wider"
+              style={{
+                fontFamily: '"Press Start 2P", monospace',
+                background: 'linear-gradient(180deg, #fffef0 0%, #ffd860 30%, #d4a84b 70%, #8b6914 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+                filter: `drop-shadow(0 0 10px ${colors.glow}) drop-shadow(2px 2px 0 #000)`,
+              }}
+            >
+              VICTORY
+            </span>
+          </div>
+
+          {/* 서브 텍스트 */}
+          <p
+            className="mt-6 text-lg sm:text-xl tracking-widest"
+            style={{
+              fontFamily: '"NeoDunggeunmo", cursive',
+              color: colors.primary,
+              textShadow: `0 0 20px ${colors.glow}, 2px 2px 0 #000`,
+              animation: 'fadeInUp 0.4s ease-out 0.2s forwards',
+              opacity: 0,
+            }}
+          >
+            전투에서 승리했다!
+          </p>
+
+          {/* 장식 라인 */}
+          <div
+            className="flex items-center justify-center gap-4 mt-6"
+            style={{
+              animation: 'fadeIn 0.3s ease-out 0.3s forwards',
+              opacity: 0,
+            }}
+          >
+            <div
+              className="h-[2px] w-20 sm:w-32"
+              style={{
+                background: `linear-gradient(90deg, transparent, ${colors.primary})`,
+              }}
+            />
+            <div
+              className="w-3 h-3 rotate-45"
+              style={{
+                background: colors.primary,
+                boxShadow: `0 0 15px ${colors.glow}`,
+              }}
+            />
+            <div
+              className="h-[2px] w-20 sm:w-32"
+              style={{
+                background: `linear-gradient(90deg, ${colors.primary}, transparent)`,
+              }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* CSS 애니메이션 */}
+      <style>{`
+        @keyframes victorySlashIn {
+          0% {
+            transform: translateX(-100%) rotate(var(--rotation, 15deg));
+            opacity: 0;
+          }
+          50% {
+            opacity: 1;
+          }
+          100% {
+            transform: translateX(0) rotate(var(--rotation, 15deg));
+            opacity: 1;
+          }
+        }
+      `}</style>
+    </div>
+  );
+}
+
 // 간단한 툴팁 컴포넌트
 function SimpleTooltip({ show, text, position = 'bottom' }: {
   show: boolean;
@@ -75,6 +584,11 @@ export function CombatScreen() {
     }
   }, [combatLog]);
 
+  // 전투 인트로 상태
+  const [showIntro, setShowIntro] = useState(true);
+  const [introComplete, setIntroComplete] = useState(false);
+  // 승리 인트로 상태
+  const [showVictory, setShowVictory] = useState(false);
   // 툴팁 상태
   const [hoveredPile, setHoveredPile] = useState<'draw' | 'discard' | null>(null);
   const [showEndTurnTooltip, setShowEndTurnTooltip] = useState(false);
@@ -121,6 +635,7 @@ export function CombatScreen() {
     totalHits: number; // 총 타격 횟수
   } | null>(null);
 
+  // 전투 초기화 (인트로와 동시에 백그라운드에서 로드)
   useEffect(() => {
     if (enemies.length === 0 && currentNode) {
       let enemyTemplates;
@@ -136,14 +651,29 @@ export function CombatScreen() {
     }
   }, [currentNode, enemies.length, player.deck, initCombat, startPlayerTurn]);
 
+  // 인트로 완료 핸들러
+  const handleIntroComplete = useCallback(() => {
+    setShowIntro(false);
+    setIntroComplete(true);
+  }, []);
+
+  // 승리 인트로 완료 핸들러
+  const handleVictoryComplete = useCallback(() => {
+    setShowVictory(false);
+    setPhase('CARD_REWARD');
+  }, [setPhase]);
+
+  // 승리 체크 (인트로 완료 후에만)
   useEffect(() => {
+    if (!introComplete || showVictory) return;
     const result = checkCombatEnd();
     if (result === 'VICTORY') {
       const hasBurningBlood = player.relics.some(r => r.id === 'burning_blood');
       if (hasBurningBlood) healPlayer(6);
-      setTimeout(() => setPhase('CARD_REWARD'), 1000);
+      // 바로 CARD_REWARD로 가지 않고 승리 인트로 표시
+      setShowVictory(true);
     }
-  }, [enemies, checkCombatEnd, setPhase, player.relics, healPlayer]);
+  }, [introComplete, showVictory, enemies, checkCombatEnd, player.relics, healPlayer]);
 
   // 플레이어 사망 체크
   useEffect(() => {
@@ -397,16 +927,35 @@ export function CombatScreen() {
     selectCard(selectedCardId === cardInstanceId ? null : cardInstanceId);
   }, [selectedCardId, selectCard]);
 
+  // 적 타입 결정
+  const encounterType = currentNode?.type === 'BOSS' ? 'BOSS'
+    : currentNode?.type === 'ELITE' ? 'ELITE'
+    : 'ENEMY';
+
   return (
-    <div
-      ref={playAreaRef}
-      className="w-full h-screen combat-arena vignette flex flex-col relative overflow-hidden"
-    >
-      {/* 데미지 팝업 */}
-      <DamagePopupManager
-        popups={damagePopups}
-        onPopupComplete={removeDamagePopup}
-      />
+    <>
+      {/* 전투 시작 인트로 */}
+      {showIntro && (
+        <BattleIntro
+          encounterType={encounterType}
+          onComplete={handleIntroComplete}
+        />
+      )}
+
+      {/* 승리 인트로 */}
+      {showVictory && (
+        <VictoryIntro onComplete={handleVictoryComplete} />
+      )}
+
+      <div
+        ref={playAreaRef}
+        className="w-full h-screen combat-arena vignette flex flex-col relative overflow-hidden"
+      >
+        {/* 데미지 팝업 */}
+        <DamagePopupManager
+          popups={damagePopups}
+          onPopupComplete={removeDamagePopup}
+        />
 
       {/* 배경 파티클 효과 */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
@@ -882,6 +1431,7 @@ export function CombatScreen() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }

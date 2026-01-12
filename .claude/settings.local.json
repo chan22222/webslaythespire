@@ -21,7 +21,16 @@
       "Bash(git checkout:*)",
       "Bash(npm install:*)",
       "Bash(npm uninstall:*)",
-      "Bash(powershell:*)"
+      "Bash(powershell:*)",
+      "Bash(dir:*)",
+      "Bash(ls:*)",
+      "Bash(cwebp -version:*)",
+      "Bash(ffmpeg:*)",
+      "Bash(magick:*)",
+      "Bash(convert:*)",
+      "WebFetch(domain:neodgm.dalgona.dev)",
+      "WebSearch",
+      "Bash(git reset:*)"
     ]
   }
 }
