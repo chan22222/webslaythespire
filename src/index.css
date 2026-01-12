@@ -556,3 +556,15 @@ body {
     transform: translateY(0) scale(1);
   }
 }
+
+/* 카드 버리기 애니메이션 - 위에서 아래로 내려가는 느낌 */
+@keyframes cardDiscard {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(150px) scale(0.6);
+  }
+}

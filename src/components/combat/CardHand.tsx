@@ -21,11 +21,16 @@ export function CardHand({
   // 새로 추가된 카드 추적
   const [newCardIds, setNewCardIds] = useState<Set<string>>(new Set());
   const [cardDelays, setCardDelays] = useState<Map<string, number>>(new Map());
+  // 버려지는 카드 추적
+  const [discardingCards, setDiscardingCards] = useState<CardInstance[]>([]);
+  const [discardDelays, setDiscardDelays] = useState<Map<string, number>>(new Map());
+  const prevCardsRef = useRef<CardInstance[]>([]);
   const prevCardIdsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     const currentIds = new Set(cards.map(c => c.instanceId));
     const prevIds = prevCardIdsRef.current;
+    const prevCards = prevCardsRef.current;
 
     // 새로 추가된 카드 찾기
     const newIds: string[] = [];
@@ -52,7 +57,33 @@ export function CardHand({
       }, maxDelay);
     }
 
+    // 제거된 카드 찾기 (2장 이상 동시 제거 = 턴 종료 버리기)
+    const removedCards: CardInstance[] = [];
+    prevCards.forEach(card => {
+      if (!currentIds.has(card.instanceId)) {
+        removedCards.push(card);
+      }
+    });
+
+    if (removedCards.length > 1) {
+      // 여러 장 버리기: 순차 애니메이션
+      const delays = new Map<string, number>();
+      removedCards.forEach((card, index) => {
+        delays.set(card.instanceId, index * 60); // 60ms 간격
+      });
+      setDiscardDelays(delays);
+      setDiscardingCards(removedCards);
+
+      // 애니메이션 완료 후 정리
+      const maxDelay = removedCards.length * 60 + 350;
+      setTimeout(() => {
+        setDiscardingCards([]);
+        setDiscardDelays(new Map());
+      }, maxDelay);
+    }
+
     prevCardIdsRef.current = currentIds;
+    prevCardsRef.current = [...cards];
   }, [cards]);
 
   // 슬더슬 스타일 부채꼴 배치 계산
@@ -77,8 +108,8 @@ export function CardHand({
     return { rotation, offsetY, offsetX };
   };
 
-  // 카드가 없으면 빈 공간
-  if (cards.length === 0) {
+  // 카드가 없고 버려지는 카드도 없으면 빈 공간
+  if (cards.length === 0 && discardingCards.length === 0) {
     return <div className="h-64" />;
   }
 
@@ -139,6 +170,44 @@ export function CardHand({
                       setHoveredCardId(null);
                     }
                   }}
+                />
+              </div>
+            </div>
+          );
+        })}
+
+        {/* 버려지는 카드 애니메이션 */}
+        {discardingCards.map((card, index) => {
+          const total = discardingCards.length;
+          const { rotation, offsetY, offsetX } = getCardTransform(index, total);
+          const delay = discardDelays.get(card.instanceId) || 0;
+
+          return (
+            <div
+              key={`discard-${card.instanceId}`}
+              className="absolute pointer-events-none"
+              style={{
+                left: '50%',
+                bottom: '0',
+                transform: `
+                  translateX(calc(-50% + ${offsetX}px))
+                  translateY(${offsetY}px)
+                `,
+                zIndex: 5 + index,
+              }}
+            >
+              <div
+                style={{
+                  animation: `cardDiscard 0.3s ease-in ${delay}ms both`,
+                }}
+              >
+                <DraggableCard
+                  card={card}
+                  isSelected={false}
+                  isPlayable={false}
+                  onSelect={() => {}}
+                  onDragEnd={() => {}}
+                  rotation={rotation}
                 />
               </div>
             </div>

@@ -56,6 +56,10 @@ interface CombatStore extends CombatState {
   damagePopups: DamagePopup[];
   addDamagePopup: (value: number, type: DamagePopup['type'], x: number, y: number, targetId?: string, modifier?: number) => void;
   removeDamagePopup: (id: string) => void;
+
+  // 적 피격 효과 트리거 (애니메이션용)
+  enemyHitTriggers: Record<string, number>;
+  triggerEnemyHit: (enemyId: string) => void;
 }
 
 export const useCombatStore = create<CombatStore>((set, get) => ({
@@ -63,6 +67,7 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
   playerBlock: 0,
   playerStatuses: [],
   damagePopups: [],
+  enemyHitTriggers: {},
   onPlayerHit: null,
   setOnPlayerHit: (callback) => set({ onPlayerHit: callback }),
 
@@ -89,6 +94,15 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
   removeDamagePopup: (id: string) => {
     set(state => ({
       damagePopups: state.damagePopups.filter(p => p.id !== id),
+    }));
+  },
+
+  triggerEnemyHit: (enemyId: string) => {
+    set(state => ({
+      enemyHitTriggers: {
+        ...state.enemyHitTriggers,
+        [enemyId]: (state.enemyHitTriggers[enemyId] || 0) + 1,
+      },
     }));
   },
 

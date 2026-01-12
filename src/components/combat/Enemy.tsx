@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { EnemyInstance } from '../../types/enemy';
 import { HealthBar } from '../common/HealthBar';
 import { STATUS_INFO } from '../../types/status';
 import { getEnemyCharacter } from './characters';
+import { useCombatStore } from '../../stores/combatStore';
 import {
   VulnerableIcon,
   WeakIcon,
@@ -396,14 +397,34 @@ export function Enemy({ enemy, isTargetable = false }: EnemyProps) {
   const [isHurt, setIsHurt] = useState(false);
   const [prevHp, setPrevHp] = useState(enemy.currentHp);
 
-  // 피격 감지 (HP 감소 시)
+  // 피격 트리거 구독 (다중 타격용)
+  const hitTrigger = useCombatStore(state => state.enemyHitTriggers[enemy.instanceId] || 0);
+  const prevHitTriggerRef = useRef(hitTrigger);
+
+  // 피격 트리거 감지 (다중 타격 애니메이션)
   useEffect(() => {
-    if (enemy.currentHp < prevHp) {
+    if (hitTrigger > prevHitTriggerRef.current) {
       setIsHurt(true);
       setTimeout(() => {
         setIsHurt(false);
-        // 피격 효과 끝난 후 죽음 처리
-        if (enemy.currentHp <= 0 && !isDying) {
+      }, 300);
+    }
+    prevHitTriggerRef.current = hitTrigger;
+  }, [hitTrigger]);
+
+  // 피격 감지 (HP 감소 시) - 죽음 처리용
+  useEffect(() => {
+    if (enemy.currentHp < prevHp) {
+      // HP 감소 시에도 피격 효과 (단일 타격용)
+      if (hitTrigger === prevHitTriggerRef.current) {
+        setIsHurt(true);
+        setTimeout(() => {
+          setIsHurt(false);
+        }, 300);
+      }
+      // 죽음 처리
+      if (enemy.currentHp <= 0 && !isDying) {
+        setTimeout(() => {
           setIsDying(true);
           // 페이드아웃 후 공간 축소
           setTimeout(() => {
@@ -413,11 +434,11 @@ export function Enemy({ enemy, isTargetable = false }: EnemyProps) {
               setIsRemoved(true);
             }, 200);
           }, 400);
-        }
-      }, 300);
+        }, 300);
+      }
     }
     setPrevHp(enemy.currentHp);
-  }, [enemy.currentHp, prevHp, isDying]);
+  }, [enemy.currentHp, prevHp, isDying, hitTrigger]);
 
   const getIntentTooltip = () => {
     switch (enemy.intent.type) {

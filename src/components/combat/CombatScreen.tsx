@@ -59,6 +59,7 @@ export function CombatScreen() {
     addDamagePopup,
     removeDamagePopup,
     setOnPlayerHit,
+    triggerEnemyHit,
   } = useCombatStore();
 
   const currentNode = getCurrentNode();
@@ -143,8 +144,8 @@ export function CombatScreen() {
       delay: Math.random() * 5,
     })), []);
 
-  // 데미지 팝업을 위한 위치 계산
-  const showDamagePopup = useCallback((targetId: string | 'player', value: number, type: 'damage' | 'block', modifier?: number) => {
+  // 데미지 팝업을 위한 위치 계산 (hitIndex로 다중 타격 시 위치 오프셋)
+  const showDamagePopup = useCallback((targetId: string | 'player', value: number, type: 'damage' | 'block', modifier?: number, hitIndex?: number) => {
     let x = window.innerWidth / 2;
     let y = window.innerHeight / 2;
 
@@ -159,6 +160,12 @@ export function CombatScreen() {
         x = rect.left + rect.width / 2;
         y = rect.top + rect.height / 3;
       }
+    }
+
+    // 다중 타격 시 위치 오프셋 (겹침 방지)
+    if (hitIndex !== undefined && hitIndex > 0) {
+      x += (hitIndex % 2 === 0 ? -1 : 1) * 20 * hitIndex;
+      y -= 15 * hitIndex;
     }
 
     addDamagePopup(value, type, x, y, undefined, modifier);
@@ -272,12 +279,11 @@ export function CombatScreen() {
           };
           setIsAttacking(true);
           setPlayerAnimation('attack');
-          // 첫 번째 타격 데미지 팝업 (600ms 후)
+          // 첫 번째 타격 데미지 팝업 및 피격 효과 (600ms 후)
+          const firstHit = hits[0];
           setTimeout(() => {
-            if (pendingAttackRef.current && pendingAttackRef.current.currentHit === 0) {
-              const hit = pendingAttackRef.current.hits[0];
-              showDamagePopup(hit.targetId, hit.value, 'damage', hit.modifier);
-            }
+            triggerEnemyHit(firstHit.targetId);
+            showDamagePopup(firstHit.targetId, firstHit.value, 'damage', firstHit.modifier, 0);
           }, 600);
         } else {
           // 데미지 없는 카드는 바로 실행
@@ -589,16 +595,16 @@ export function CombatScreen() {
                   if (nextHit < totalHits) {
                     // 다음 타격이 있으면 다시 공격 모션
                     pendingAttackRef.current.currentHit = nextHit;
+                    const hitData = hits[nextHit];
+                    const hitIdx = nextHit;
                     setPlayerAnimation('idle');
                     // 약간의 딜레이 후 다음 공격
                     setTimeout(() => {
                       setPlayerAnimation('attack');
-                      // 데미지 팝업
+                      // 데미지 팝업 및 피격 효과
                       setTimeout(() => {
-                        if (pendingAttackRef.current && pendingAttackRef.current.currentHit === nextHit) {
-                          const hit = hits[nextHit];
-                          showDamagePopup(hit.targetId, hit.value, 'damage', hit.modifier);
-                        }
+                        triggerEnemyHit(hitData.targetId);
+                        showDamagePopup(hitData.targetId, hitData.value, 'damage', hitData.modifier, hitIdx);
                       }, 600);
                     }, 100);
                   } else {
