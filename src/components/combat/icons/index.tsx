@@ -1,4 +1,4 @@
-// Slay the Spire 스타일 SVG 아이콘 컴포넌트들
+// Shuffle & Slash 스타일 SVG 아이콘 컴포넌트들
 
 interface IconProps {
   size?: number;

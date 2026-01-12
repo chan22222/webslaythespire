@@ -141,8 +141,8 @@ export function MapScreen() {
         </div>
       </div>
 
-      {/* 맵 영역 */}
-      <div className="flex-1 overflow-auto p-4 relative">
+      {/* 맵 영역 - 가로 스크롤 */}
+      <div className="flex-1 overflow-x-auto overflow-y-hidden p-4 relative">
         {/* 배경 그라데이션 */}
         <div
           className="absolute inset-0 pointer-events-none"
@@ -151,7 +151,7 @@ export function MapScreen() {
           }}
         />
 
-        <div className="relative w-full" style={{ height: '1300px' }}>
+        <div className="relative h-full" style={{ width: '1900px', minHeight: '500px' }}>
           {/* 연결선 */}
           <svg className="absolute inset-0 w-full h-full pointer-events-none">
             {renderConnections()}

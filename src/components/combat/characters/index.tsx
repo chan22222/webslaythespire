@@ -1,4 +1,4 @@
-// Slay the Spire 스타일 실루엣 캐릭터 SVG
+// Shuffle & Slash 스타일 실루엣 캐릭터 SVG
 import { useEffect, useState, useRef } from 'react';
 
 interface CharacterProps {

@@ -1,70 +1,71 @@
 import { GameMap, MapNode, NodeType } from '../types/map';
 import { randomInt } from './shuffle';
 
-const MAP_HEIGHT = 15; // 층 수
-const MAP_WIDTH = 7; // 최대 경로 수
-const MIN_PATHS = 3; // 최소 경로 수
+const MAP_COLUMNS = 15; // 열(스테이지) 수
+const MAP_ROWS = 5; // 최대 경로 수 (세로)
+const MIN_PATHS = 2; // 최소 경로 수
 const MAX_PATHS = 4; // 최대 경로 수
 
 /**
  * 맵 생성 함수
- * 슬레이 더 스파이어 스타일의 분기 맵을 생성합니다.
+ * 가로 스크롤 방식의 분기 맵을 생성합니다.
+ * 왼쪽에서 시작해서 오른쪽으로 진행합니다.
  */
 export function generateMap(): GameMap {
   const nodes: MapNode[] = [];
   let nodeId = 0;
 
-  // 각 행의 노드 수 결정
-  const rowSizes: number[] = [];
-  for (let row = 0; row < MAP_HEIGHT; row++) {
-    if (row === 0) {
-      // 첫 행: 3-4개의 시작점
-      rowSizes.push(randomInt(MIN_PATHS, MAX_PATHS));
-    } else if (row === MAP_HEIGHT - 1) {
-      // 마지막 행: 보스 1개
-      rowSizes.push(1);
-    } else if (row === 8) {
-      // 8층: 보물
-      rowSizes.push(randomInt(2, 3));
+  // 각 열(스테이지)의 노드 수 결정
+  const colSizes: number[] = [];
+  for (let col = 0; col < MAP_COLUMNS; col++) {
+    if (col === 0) {
+      // 첫 열: 2-3개의 시작점
+      colSizes.push(randomInt(MIN_PATHS, 3));
+    } else if (col === MAP_COLUMNS - 1) {
+      // 마지막 열: 보스 1개
+      colSizes.push(1);
+    } else if (col === 8) {
+      // 8열: 보물
+      colSizes.push(randomInt(2, 3));
     } else {
       // 나머지: 2-4개
-      rowSizes.push(randomInt(2, 4));
+      colSizes.push(randomInt(2, MAX_PATHS));
     }
   }
 
-  // 노드 생성
-  for (let row = 0; row < MAP_HEIGHT; row++) {
-    const nodeCount = rowSizes[row];
-    const spacing = MAP_WIDTH / (nodeCount + 1);
+  // 노드 생성 (가로 배치)
+  for (let col = 0; col < MAP_COLUMNS; col++) {
+    const nodeCount = colSizes[col];
+    const spacing = MAP_ROWS / (nodeCount + 1);
 
     for (let i = 0; i < nodeCount; i++) {
-      const col = Math.round(spacing * (i + 1));
-      const nodeType = getNodeType(row);
+      const row = Math.round(spacing * (i + 1));
+      const nodeType = getNodeType(col);
 
-      // 약간의 x 오프셋 추가 (시각적 다양성)
-      const xOffset = randomInt(-20, 20);
+      // 약간의 y 오프셋 추가 (시각적 다양성)
+      const yOffset = randomInt(-15, 15);
 
       nodes.push({
         id: `node-${nodeId++}`,
         type: nodeType,
-        row,
-        col,
+        row: col, // 이제 row는 x축 위치 (스테이지)를 나타냄
+        col: row, // col은 y축 위치 (분기)를 나타냄
         connections: [],
         visited: false,
-        x: col * 100 + 50 + xOffset,
-        y: (MAP_HEIGHT - 1 - row) * 80 + 50, // 아래에서 위로
+        x: col * 120 + 80, // 왼쪽에서 오른쪽으로
+        y: row * 100 + 80 + yOffset, // 세로 분기
       });
     }
   }
 
-  // 연결 생성
-  for (let row = 0; row < MAP_HEIGHT - 1; row++) {
-    const currentRowNodes = nodes.filter(n => n.row === row);
-    const nextRowNodes = nodes.filter(n => n.row === row + 1);
+  // 연결 생성 (왼쪽에서 오른쪽으로)
+  for (let col = 0; col < MAP_COLUMNS - 1; col++) {
+    const currentColNodes = nodes.filter(n => n.row === col);
+    const nextColNodes = nodes.filter(n => n.row === col + 1);
 
-    currentRowNodes.forEach(currentNode => {
-      // 가장 가까운 다음 행 노드들과 연결
-      const sortedNextNodes = [...nextRowNodes].sort((a, b) => {
+    currentColNodes.forEach(currentNode => {
+      // 가장 가까운 다음 열 노드들과 연결
+      const sortedNextNodes = [...nextColNodes].sort((a, b) => {
         const distA = Math.abs(a.col - currentNode.col);
         const distB = Math.abs(b.col - currentNode.col);
         return distA - distB;
@@ -79,12 +80,12 @@ export function generateMap(): GameMap {
       }
     });
 
-    // 모든 다음 행 노드가 최소 하나의 연결을 가지도록 보장
-    nextRowNodes.forEach(nextNode => {
-      const hasConnection = currentRowNodes.some(n => n.connections.includes(nextNode.id));
+    // 모든 다음 열 노드가 최소 하나의 연결을 가지도록 보장
+    nextColNodes.forEach(nextNode => {
+      const hasConnection = currentColNodes.some(n => n.connections.includes(nextNode.id));
       if (!hasConnection) {
-        // 가장 가까운 현재 행 노드와 연결
-        const closestNode = currentRowNodes.reduce((closest, node) => {
+        // 가장 가까운 현재 열 노드와 연결
+        const closestNode = currentColNodes.reduce((closest, node) => {
           const distCurrent = Math.abs(node.col - nextNode.col);
           const distClosest = Math.abs(closest.col - nextNode.col);
           return distCurrent < distClosest ? node : closest;
@@ -102,26 +103,26 @@ export function generateMap(): GameMap {
 }
 
 /**
- * 행 번호에 따른 노드 타입 결정
+ * 열(스테이지) 번호에 따른 노드 타입 결정
  */
-function getNodeType(row: number): NodeType {
-  // 마지막 행: 보스
-  if (row === MAP_HEIGHT - 1) {
+function getNodeType(col: number): NodeType {
+  // 마지막 열: 보스
+  if (col === MAP_COLUMNS - 1) {
     return 'BOSS';
   }
 
-  // 8층: 보물
-  if (row === 8) {
+  // 8열: 보물
+  if (col === 8) {
     return 'TREASURE';
   }
 
-  // 6층 또는 13층: 엘리트 가능성 높음
-  if (row === 6 || row === 13) {
+  // 6열 또는 13열: 엘리트 가능성 높음
+  if (col === 6 || col === 13) {
     return Math.random() < 0.6 ? 'ELITE' : 'ENEMY';
   }
 
-  // 첫 3층: 일반 적만
-  if (row < 3) {
+  // 첫 3열: 일반 적만
+  if (col < 3) {
     return 'ENEMY';
   }
 
