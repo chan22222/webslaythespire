@@ -471,13 +471,13 @@ export function Enemy({ enemy, isTargetable = false }: EnemyProps) {
     // 적의 약화 적용 (25% 감소)
     const enemyWeak = enemy.statuses.find(s => s.type === 'WEAK');
     if (enemyWeak && enemyWeak.stacks > 0) {
-      damage = Math.floor(damage * 0.75);
+      damage = Math.round(damage * 0.75);
     }
 
     // 플레이어 취약 적용 (50% 추가)
     const playerVulnerable = playerStatuses.find(s => s.type === 'VULNERABLE');
     if (playerVulnerable && playerVulnerable.stacks > 0) {
-      damage = Math.floor(damage * 1.5);
+      damage = Math.round(damage * 1.5);
     }
 
     return Math.max(0, damage);
@@ -499,7 +499,7 @@ export function Enemy({ enemy, isTargetable = false }: EnemyProps) {
     const enemyWeak = enemy.statuses.find(s => s.type === 'WEAK');
     if (enemyWeak && enemyWeak.stacks > 0) {
       const damageAfterStr = baseDamage + enemyStrength;
-      const reduction = damageAfterStr - Math.floor(damageAfterStr * 0.75);
+      const reduction = damageAfterStr - Math.round(damageAfterStr * 0.75);
       if (reduction > 0) {
         parts.push(`-${reduction}`);
       }
@@ -510,9 +510,9 @@ export function Enemy({ enemy, isTargetable = false }: EnemyProps) {
     if (playerVulnerable && playerVulnerable.stacks > 0) {
       let damageBeforeVuln = baseDamage + enemyStrength;
       if (enemyWeak && enemyWeak.stacks > 0) {
-        damageBeforeVuln = Math.floor(damageBeforeVuln * 0.75);
+        damageBeforeVuln = Math.round(damageBeforeVuln * 0.75);
       }
-      const bonus = Math.floor(damageBeforeVuln * 1.5) - damageBeforeVuln;
+      const bonus = Math.round(damageBeforeVuln * 1.5) - damageBeforeVuln;
       if (bonus > 0) {
         parts.push(`+${bonus}`);
       }
@@ -598,7 +598,65 @@ export function Enemy({ enemy, isTargetable = false }: EnemyProps) {
           transition: 'opacity 0.3s ease-out',
         }}
       >
-        {getIntentDisplay()}
+        <div className="flex items-center gap-1">
+          {getIntentDisplay()}
+          {/* 힘 버프 있을 때 초록색 위 화살표 */}
+          {enemy.intent.type === 'ATTACK' && enemy.statuses.find(s => s.type === 'STRENGTH' && s.stacks > 0) && (
+            <div
+              className="flex items-center justify-center animate-pulse"
+              style={{
+                width: '20px',
+                height: '20px',
+              }}
+            >
+              <svg
+                viewBox="0 0 24 24"
+                width="18"
+                height="18"
+                style={{
+                  filter: 'drop-shadow(0 0 4px rgba(74, 222, 128, 0.8))',
+                }}
+              >
+                <path
+                  d="M12 20 L12 8 M6 12 L12 6 L18 12"
+                  stroke="#4ade80"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  fill="none"
+                />
+              </svg>
+            </div>
+          )}
+          {/* 약화 상태일 때 보라색 아래 화살표 */}
+          {enemy.intent.type === 'ATTACK' && enemy.statuses.find(s => s.type === 'WEAK' && s.stacks > 0) && (
+            <div
+              className="flex items-center justify-center animate-pulse"
+              style={{
+                width: '20px',
+                height: '20px',
+              }}
+            >
+              <svg
+                viewBox="0 0 24 24"
+                width="18"
+                height="18"
+                style={{
+                  filter: 'drop-shadow(0 0 4px rgba(168, 85, 247, 0.8))',
+                }}
+              >
+                <path
+                  d="M12 4 L12 16 M6 12 L12 18 L18 12"
+                  stroke="#a855f7"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  fill="none"
+                />
+              </svg>
+            </div>
+          )}
+        </div>
 
         {/* 인텐트 툴팁 */}
         {showIntentTooltip && (

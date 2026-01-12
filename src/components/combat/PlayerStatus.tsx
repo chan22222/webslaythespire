@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Player } from '../../types/player';
 import { Status } from '../../types/status';
 import { HealthBar } from '../common/HealthBar';
 import { STATUS_INFO } from '../../types/status';
 import { WarriorSprite } from './characters';
+import { useCombatStore } from '../../stores/combatStore';
 import {
   VulnerableIcon,
   WeakIcon,
@@ -100,6 +101,110 @@ export function SkillEffect({ isActive, color = 'cyan' }: { isActive: boolean; c
           }
         }
         @keyframes skillGlow {
+          0% {
+            opacity: 0;
+            transform: translateX(-50%) scale(0.8);
+          }
+          30% {
+            opacity: 1;
+            transform: translateX(-50%) scale(1);
+          }
+          100% {
+            opacity: 0;
+            transform: translateX(-50%) scale(1.3);
+          }
+        }
+      `}</style>
+    </div>
+  );
+}
+
+// 디버프 이펙트 컴포넌트 (아래 화살표)
+export function DebuffEffect({ isActive }: { isActive: boolean }) {
+  if (!isActive) return null;
+
+  // 고정된 화살표 위치들 (x: 가로, y: 세로 오프셋, delay: 지연시간)
+  const arrows = [
+    { x: -45, y: 60, delay: 0.02 },
+    { x: -22, y: 30, delay: 0.08 },
+    { x: 0, y: 50, delay: 0 },
+    { x: 22, y: 25, delay: 0.05 },
+    { x: 45, y: 45, delay: 0.1 },
+  ];
+
+  const colors = { fill: 'rgba(168, 85, 247, 0.9)', stroke: 'rgba(192, 132, 252, 1)', glow: 'rgba(147, 51, 234, 1)', glowBg: 'rgba(147, 51, 234, 0.5)' };
+
+  return (
+    <div
+      className="absolute pointer-events-none"
+      style={{
+        left: '40%',
+        top: '10%',
+        transform: 'translateX(-50%)',
+        zIndex: 100,
+        width: '120px',
+        height: '100px',
+      }}
+    >
+      {/* 아래쪽 화살표들 */}
+      {arrows.map((arrow, i) => (
+        <div
+          key={i}
+          className="absolute"
+          style={{
+            left: '50%',
+            top: `${arrow.y}px`,
+            marginLeft: `${arrow.x}px`,
+            animation: `debuffArrowFall 0.7s ease-out forwards`,
+            animationDelay: `${arrow.delay}s`,
+          }}
+        >
+          <svg
+            width="20"
+            height="28"
+            viewBox="0 0 20 28"
+            style={{
+              filter: `drop-shadow(0 0 8px ${colors.glow})`,
+              transform: 'rotate(180deg)',
+            }}
+          >
+            <path
+              d="M10 0 L18 12 L13 12 L13 28 L7 28 L7 12 L2 12 Z"
+              fill={colors.fill}
+              stroke={colors.stroke}
+              strokeWidth="1"
+            />
+          </svg>
+        </div>
+      ))}
+
+      {/* 중앙 글로우 이펙트 */}
+      <div
+        className="absolute left-1/2 top-1/2 -translate-x-1/2"
+        style={{
+          width: '100px',
+          height: '80px',
+          background: `radial-gradient(ellipse at center, ${colors.glowBg} 0%, transparent 70%)`,
+          animation: 'debuffGlow 0.5s ease-out forwards',
+        }}
+      />
+
+      <style>{`
+        @keyframes debuffArrowFall {
+          0% {
+            opacity: 0;
+            transform: translateY(-40px) scale(0.8);
+          }
+          20% {
+            opacity: 1;
+            transform: translateY(0px) scale(1);
+          }
+          100% {
+            opacity: 0;
+            transform: translateY(60px) scale(0.6);
+          }
+        }
+        @keyframes debuffGlow {
           0% {
             opacity: 0;
             transform: translateX(-50%) scale(0.8);
@@ -310,6 +415,21 @@ function BlockBadge({ block }: { block: number }) {
 }
 
 export function PlayerStatus({ player, block, statuses, animation = 'idle', attackTargetPos, enemyCount = 1, onAnimationEnd }: PlayerStatusProps) {
+  // 디버프 이펙트 상태
+  const [showDebuffEffect, setShowDebuffEffect] = useState(false);
+  const playerDebuffTrigger = useCombatStore(state => state.playerDebuffTrigger);
+  const prevDebuffTrigger = useRef(playerDebuffTrigger);
+
+  // 디버프 트리거 감지
+  useEffect(() => {
+    if (playerDebuffTrigger > prevDebuffTrigger.current) {
+      setShowDebuffEffect(true);
+      const timer = setTimeout(() => setShowDebuffEffect(false), 700);
+      prevDebuffTrigger.current = playerDebuffTrigger;
+      return () => clearTimeout(timer);
+    }
+  }, [playerDebuffTrigger]);
+
   // 공격 시 타겟 위치에 따라 이동 거리 계산
   const getAttackTransform = () => {
     if (animation !== 'attack') return 'translateX(0)';
@@ -343,6 +463,9 @@ export function PlayerStatus({ player, block, statuses, animation = 'idle', atta
 
         {/* 스킬 이펙트 */}
         <SkillEffect isActive={animation === 'skill'} />
+
+        {/* 디버프 이펙트 */}
+        <DebuffEffect isActive={showDebuffEffect} />
 
         {/* 플레이어 캐릭터 SVG */}
         <div

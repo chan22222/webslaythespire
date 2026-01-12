@@ -121,7 +121,7 @@ export function Card({
     // 약화 적용 (25% 감소)
     const weak = playerStatuses.find(s => s.type === 'WEAK');
     if (weak && weak.stacks > 0) {
-      damage = Math.floor(damage * 0.75);
+      damage = Math.round(damage * 0.75);
     }
 
     // 단일 타겟이고 취약한 적이 있으면 취약 보너스 표시 (참고용)

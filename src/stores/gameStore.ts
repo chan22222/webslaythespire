@@ -3,6 +3,7 @@ import { Player, createInitialPlayer } from '../types/player';
 import { GameMap, MapNode } from '../types/map';
 import { Card, CardInstance, createCardInstance } from '../types/card';
 import { Relic } from '../types/relic';
+import { EnemyTemplate } from '../types/enemy';
 import { createStarterDeck } from '../data/cards';
 import { BURNING_BLOOD } from '../data/relics';
 import { generateMap } from '../utils/mapGenerator';
@@ -15,6 +16,7 @@ interface GameState {
   player: Player;
   map: GameMap;
   currentAct: number;
+  testEnemies: EnemyTemplate[] | null; // 테스트 모드용 적
 
   // 액션
   startNewGame: () => void;
@@ -32,6 +34,8 @@ interface GameState {
   upgradeCard: (cardInstanceId: string) => void;
   getCurrentNode: () => MapNode | null;
   getAvailableNodes: () => MapNode[];
+  startTestBattle: (enemies: EnemyTemplate[]) => void;
+  clearTestEnemies: () => void;
 }
 
 export const useGameStore = create<GameState>((set, get) => ({
@@ -39,6 +43,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   player: createInitialPlayer(),
   map: { nodes: [], currentNodeId: null, floor: 1 },
   currentAct: 1,
+  testEnemies: null,
 
   startNewGame: () => {
     const starterDeck = createStarterDeck().map(card => createCardInstance(card));
@@ -246,5 +251,28 @@ export const useGameStore = create<GameState>((set, get) => ({
     if (!currentNode) return [];
 
     return map.nodes.filter(n => currentNode.connections.includes(n.id));
+  },
+
+  startTestBattle: (enemies: EnemyTemplate[]) => {
+    const { player } = get();
+    // 현재 덱이 있으면 유지, 없으면 스타터 덱 사용
+    const deck = player.deck.length > 0
+      ? player.deck
+      : createStarterDeck().map(card => createCardInstance(card));
+
+    set({
+      phase: 'COMBAT',
+      player: {
+        ...createInitialPlayer(),
+        deck,
+        relics: [BURNING_BLOOD],
+      },
+      testEnemies: enemies,
+      map: { nodes: [], currentNodeId: null, floor: 1 },
+    });
+  },
+
+  clearTestEnemies: () => {
+    set({ testEnemies: null });
   },
 }));

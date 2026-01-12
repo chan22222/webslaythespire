@@ -1,10 +1,33 @@
 import { useState, useMemo } from 'react';
 import { useGameStore } from '../../stores/gameStore';
 import { Card, CardInstance, createCardInstance } from '../../types/card';
+import { EnemyTemplate } from '../../types/enemy';
 import { Card as CardComponent } from '../combat/Card';
 import { STRIKE, DEFEND, BASH } from '../../data/cards/starterCards';
 import { COMMON_CARDS } from '../../data/cards/commonCards';
 import { UNCOMMON_CARDS } from '../../data/cards/uncommonCards';
+import {
+  CULTIST,
+  JAW_WORM,
+  LOUSE_RED,
+  LOUSE_GREEN,
+  ACID_SLIME_M,
+  SPIKE_SLIME_M,
+  GREMLIN_NOB,
+  SLIME_BOSS,
+} from '../../data/enemies/act1Enemies';
+
+// 선택 가능한 적 목록
+const ENEMY_OPTIONS: { template: EnemyTemplate; label: string; type: 'normal' | 'elite' | 'boss' }[] = [
+  { template: CULTIST, label: '컬티스트', type: 'normal' },
+  { template: JAW_WORM, label: '턱 벌레', type: 'normal' },
+  { template: LOUSE_RED, label: '붉은 이', type: 'normal' },
+  { template: LOUSE_GREEN, label: '녹색 이', type: 'normal' },
+  { template: ACID_SLIME_M, label: '산성 슬라임', type: 'normal' },
+  { template: SPIKE_SLIME_M, label: '가시 슬라임', type: 'normal' },
+  { template: GREMLIN_NOB, label: '고위 노블레스', type: 'elite' },
+  { template: SLIME_BOSS, label: '슬라임 보스', type: 'boss' },
+];
 
 const MIN_DECK_SIZE = 10;
 const MAX_DECK_SIZE = 30;
@@ -31,11 +54,12 @@ type SortBy = 'cost' | 'name' | 'type';
 type SortOrder = 'asc' | 'desc';
 
 export function DeckBuildingScreen() {
-  const { setDeck, startGameWithDeck, setPhase } = useGameStore();
+  const { setDeck, setPhase, startTestBattle, startGameWithDeck } = useGameStore();
   const [selectedCards, setSelectedCards] = useState<CardInstance[]>([]);
   const [filter, setFilter] = useState<'ALL' | 'ATTACK' | 'SHIELD' | 'GADGET' | 'EFFECT' | 'TERRAIN'>('ALL');
   const [sortBy, setSortBy] = useState<SortBy>('cost');
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
+  const [selectedEnemies, setSelectedEnemies] = useState<EnemyTemplate[]>([]);
 
   const filteredCards = useMemo(() => {
     let cards = filter === 'ALL' ? [...ALL_CARDS] : ALL_CARDS.filter(card => card.type === filter);
@@ -78,10 +102,26 @@ export function DeckBuildingScreen() {
     setSelectedCards(selectedCards.filter(c => c.instanceId !== instanceId));
   };
 
+  const toggleEnemy = (enemy: EnemyTemplate) => {
+    if (selectedEnemies.includes(enemy)) {
+      setSelectedEnemies(selectedEnemies.filter(e => e !== enemy));
+    } else if (selectedEnemies.length < 3) {
+      setSelectedEnemies([...selectedEnemies, enemy]);
+    }
+  };
+
   const startGame = () => {
     if (selectedCards.length < MIN_DECK_SIZE) return;
+
     setDeck(selectedCards);
-    startGameWithDeck();
+
+    if (selectedEnemies.length > 0) {
+      // 적 선택 시: 바로 테스트 전투 시작
+      startTestBattle(selectedEnemies);
+    } else {
+      // 적 미선택 시: 맵으로 이동
+      startGameWithDeck();
+    }
   };
 
   const goBack = () => {
@@ -170,7 +210,7 @@ export function DeckBuildingScreen() {
                 : 'none',
             }}
           >
-            게임 시작 →
+            {selectedEnemies.length > 0 ? '전투 시작' : '게임 시작'} →
           </button>
         </div>
       </div>
@@ -279,7 +319,7 @@ export function DeckBuildingScreen() {
           </div>
         </div>
 
-        {/* 오른쪽: 현재 덱 */}
+        {/* 오른쪽: 현재 덱 + 적 선택 */}
         <div
           className="w-72 flex flex-col overflow-hidden"
           style={{
@@ -340,13 +380,13 @@ export function DeckBuildingScreen() {
 
           {/* 덱 카드 목록 */}
           {selectedCards.length === 0 ? (
-            <div className="flex-1 flex items-center justify-center p-4">
+            <div className="flex-1 flex items-center justify-center p-4 min-h-[100px]">
               <p className="font-card text-xs text-gray-500 text-center">
                 왼쪽에서 카드를 클릭하여<br />덱에 추가하세요
               </p>
             </div>
           ) : (
-            <div className="flex-1 overflow-y-auto p-2">
+            <div className="flex-1 overflow-y-auto p-2 min-h-[100px]">
               {/* 그룹화된 카드 리스트 */}
               <div className="space-y-1">
                 {groupedCards.map(({ card, count, instances }) => (
@@ -409,6 +449,91 @@ export function DeckBuildingScreen() {
               </div>
             </div>
           )}
+
+          {/* 적 선택 섹션 */}
+          <div
+            className="p-3 border-t-2"
+            style={{ borderColor: 'var(--gold-dark)' }}
+          >
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="font-title text-base" style={{ color: 'var(--gold-light)' }}>
+                상대할 적
+              </h2>
+              <span className="text-xs text-gray-500">
+                {selectedEnemies.length}/3
+              </span>
+            </div>
+
+            {/* 적 그리드 */}
+            <div className="grid grid-cols-2 gap-1.5 mb-2">
+              {ENEMY_OPTIONS.map((enemy, idx) => {
+                const isSelected = selectedEnemies.includes(enemy.template);
+                const typeColor = enemy.type === 'boss' ? '#dc2626'
+                  : enemy.type === 'elite' ? '#a855f7'
+                  : 'var(--gold)';
+                const typeBg = enemy.type === 'boss' ? 'rgba(220, 38, 38, 0.15)'
+                  : enemy.type === 'elite' ? 'rgba(168, 85, 247, 0.15)'
+                  : 'rgba(212, 168, 75, 0.1)';
+
+                return (
+                  <button
+                    key={idx}
+                    onClick={() => toggleEnemy(enemy.template)}
+                    className={`p-1.5 rounded text-left transition-all text-[11px] ${
+                      isSelected ? 'scale-[1.02]' : 'opacity-70 hover:opacity-100'
+                    }`}
+                    style={{
+                      background: isSelected ? typeBg : 'rgba(0,0,0,0.3)',
+                      border: `1px solid ${isSelected ? typeColor : '#333'}`,
+                    }}
+                  >
+                    <div
+                      className="font-title truncate"
+                      style={{ color: isSelected ? typeColor : '#888' }}
+                    >
+                      {enemy.label}
+                    </div>
+                    {enemy.type !== 'normal' && (
+                      <span
+                        className="text-[9px] px-1 rounded"
+                        style={{
+                          background: typeBg,
+                          color: typeColor,
+                        }}
+                      >
+                        {enemy.type === 'elite' ? '엘리트' : '보스'}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* 선택된 적 표시 */}
+            {selectedEnemies.length > 0 && (
+              <div className="flex flex-wrap gap-1 pt-2 border-t border-gray-800">
+                {selectedEnemies.map((enemy, idx) => (
+                  <span
+                    key={idx}
+                    className="px-2 py-0.5 text-[10px] rounded"
+                    style={{
+                      background: 'rgba(212, 168, 75, 0.2)',
+                      color: 'var(--gold)',
+                      border: '1px solid var(--gold-dark)',
+                    }}
+                  >
+                    {enemy.name}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {selectedEnemies.length === 0 && (
+              <p className="text-[10px] text-gray-500 text-center py-1">
+                선택 안하면 맵으로 진행
+              </p>
+            )}
+          </div>
         </div>
       </div>
     </div>

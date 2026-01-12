@@ -518,7 +518,7 @@ function SimpleTooltip({ show, text, position = 'bottom' }: {
 }
 
 export function CombatScreen() {
-  const { player, getCurrentNode, setPhase, healPlayer } = useGameStore();
+  const { player, getCurrentNode, setPhase, healPlayer, testEnemies, clearTestEnemies } = useGameStore();
   const {
     enemies,
     hand,
@@ -578,6 +578,11 @@ export function CombatScreen() {
   const isPlayerDyingRef = useRef(false);
   // 턴 종료 버튼 딜레이
   const [isEndingTurn, setIsEndingTurn] = useState(false);
+  // 배틀로그 높이 (리사이즈 가능)
+  const [battleLogHeight, setBattleLogHeight] = useState(160);
+  const [isResizingLog, setIsResizingLog] = useState(false);
+  const resizeStartY = useRef(0);
+  const resizeStartHeight = useRef(0);
 
   // isPlayerDying 상태를 ref에 동기화
   useEffect(() => {
@@ -610,19 +615,29 @@ export function CombatScreen() {
 
   // 전투 초기화 (인트로와 동시에 백그라운드에서 로드)
   useEffect(() => {
-    if (enemies.length === 0 && currentNode) {
+    if (enemies.length === 0) {
       let enemyTemplates;
-      if (currentNode.type === 'BOSS') {
-        enemyTemplates = [BOSS_ENEMIES[0]];
-      } else if (currentNode.type === 'ELITE') {
-        enemyTemplates = [ELITE_ENEMIES[0]];
+
+      // 테스트 모드: testEnemies가 있으면 사용
+      if (testEnemies && testEnemies.length > 0) {
+        enemyTemplates = testEnemies;
+      } else if (currentNode) {
+        // 일반 모드: currentNode 기반으로 적 생성
+        if (currentNode.type === 'BOSS') {
+          enemyTemplates = [BOSS_ENEMIES[0]];
+        } else if (currentNode.type === 'ELITE') {
+          enemyTemplates = [ELITE_ENEMIES[0]];
+        } else {
+          enemyTemplates = generateNormalEncounter();
+        }
       } else {
-        enemyTemplates = generateNormalEncounter();
+        return; // 적 정보가 없으면 초기화하지 않음
       }
+
       initCombat(player.deck, enemyTemplates);
       startPlayerTurn();
     }
-  }, [currentNode, enemies.length, player.deck, initCombat, startPlayerTurn]);
+  }, [currentNode, enemies.length, player.deck, initCombat, startPlayerTurn, testEnemies]);
 
   // 인트로 완료 핸들러
   const handleIntroComplete = useCallback(() => {
@@ -632,8 +647,14 @@ export function CombatScreen() {
 
   // 승리 인트로 페이드 시작 핸들러 (백그라운드에서 다음 화면 로드)
   const handleVictoryFadeStart = useCallback(() => {
-    setPhase('CARD_REWARD');
-  }, [setPhase]);
+    // 테스트 모드면 메인 메뉴로, 아니면 카드 보상으로
+    if (testEnemies && testEnemies.length > 0) {
+      clearTestEnemies();
+      setPhase('MAIN_MENU');
+    } else {
+      setPhase('CARD_REWARD');
+    }
+  }, [setPhase, testEnemies, clearTestEnemies]);
 
   // 승리 인트로 완료 핸들러 (인트로 제거)
   const handleVictoryComplete = useCallback(() => {
@@ -671,6 +692,42 @@ export function CombatScreen() {
     if (el) enemyRefs.current.set(enemyId, el);
     else enemyRefs.current.delete(enemyId);
   }, []);
+
+  // 배틀로그 리사이즈 핸들러
+  const handleResizeStart = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault();
+    setIsResizingLog(true);
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    resizeStartY.current = clientY;
+    resizeStartHeight.current = battleLogHeight;
+  }, [battleLogHeight]);
+
+  useEffect(() => {
+    if (!isResizingLog) return;
+
+    const handleMouseMove = (e: MouseEvent | TouchEvent) => {
+      const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+      const deltaY = clientY - resizeStartY.current;
+      const newHeight = Math.max(80, Math.min(400, resizeStartHeight.current + deltaY));
+      setBattleLogHeight(newHeight);
+    };
+
+    const handleMouseUp = () => {
+      setIsResizingLog(false);
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    window.addEventListener('touchmove', handleMouseMove);
+    window.addEventListener('touchend', handleMouseUp);
+
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('touchmove', handleMouseMove);
+      window.removeEventListener('touchend', handleMouseUp);
+    };
+  }, [isResizingLog]);
 
   // 배경 파티클 데이터 (한 번만 생성)
   const particles = useMemo(() =>
@@ -723,7 +780,7 @@ export function CombatScreen() {
     // 약화 적용 (25% 감소) - 실제 계산과 동일하게
     const weak = playerStatuses.find(s => s.type === 'WEAK');
     if (weak && weak.stacks > 0) {
-      const damageAfterWeak = Math.floor(currentDamage * 0.75);
+      const damageAfterWeak = Math.round(currentDamage * 0.75);
       const weakReduction = currentDamage - damageAfterWeak;
       modifier -= weakReduction;
       currentDamage = damageAfterWeak;
@@ -735,7 +792,7 @@ export function CombatScreen() {
       if (enemy) {
         const vulnerable = enemy.statuses.find(s => s.type === 'VULNERABLE');
         if (vulnerable && vulnerable.stacks > 0) {
-          const damageAfterVulnerable = Math.floor(currentDamage * 1.5);
+          const damageAfterVulnerable = Math.round(currentDamage * 1.5);
           const vulnerableBonus = damageAfterVulnerable - currentDamage;
           modifier += vulnerableBonus;
         }
@@ -904,10 +961,19 @@ export function CombatScreen() {
     selectCard(selectedCardId === cardInstanceId ? null : cardInstanceId);
   }, [selectedCardId, selectCard]);
 
-  // 적 타입 결정
-  const encounterType = currentNode?.type === 'BOSS' ? 'BOSS'
-    : currentNode?.type === 'ELITE' ? 'ELITE'
-    : 'ENEMY';
+  // 적 타입 결정 (테스트 모드도 고려)
+  const encounterType = useMemo(() => {
+    // 테스트 모드: testEnemies에서 보스/엘리트 확인
+    if (testEnemies && testEnemies.length > 0) {
+      if (testEnemies.some(e => e.id === 'slime_boss')) return 'BOSS';
+      if (testEnemies.some(e => e.id === 'gremlin_nob')) return 'ELITE';
+      return 'ENEMY';
+    }
+    // 일반 모드: currentNode 타입 사용
+    if (currentNode?.type === 'BOSS') return 'BOSS';
+    if (currentNode?.type === 'ELITE') return 'ELITE';
+    return 'ENEMY';
+  }, [currentNode, testEnemies]);
 
   return (
     <>
@@ -1104,10 +1170,11 @@ export function CombatScreen() {
           <div className="absolute -bottom-1 right-0 w-2 h-2 border-r-2 border-b-2 border-[var(--gold)]" style={{ borderRadius: '0 0 4px 0' }} />
         </div>
 
-        {/* 전투 로그 - absolute로 우측 상단 고정 */}
+        {/* 전투 로그 - absolute로 우측 상단 고정 (리사이즈 가능) */}
         <div
-          className="absolute top-1 md:top-2 right-2 md:right-[5%] lg:right-[8%] w-72 h-28 md:w-80 md:h-32 lg:w-96 lg:h-40 overflow-hidden rounded-lg hidden md:block"
+          className="absolute top-1 md:top-2 right-2 md:right-[5%] lg:right-[8%] w-72 md:w-80 lg:w-96 overflow-hidden rounded-lg hidden md:block"
           style={{
+            height: `${battleLogHeight}px`,
             background: 'linear-gradient(180deg, rgba(20,18,15,0.98) 0%, rgba(8,6,5,0.99) 100%)',
             border: '2px solid rgba(212,168,75,0.4)',
             boxShadow: '0 4px 20px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.03)',
@@ -1128,7 +1195,7 @@ export function CombatScreen() {
           <div className="absolute top-1 right-1 w-2 h-2 border-r border-t border-[var(--gold)] opacity-50 z-20" />
           <div
             ref={combatLogRef}
-            className="px-3 pb-2 h-full overflow-y-auto text-xs md:text-sm font-card scroll-smooth"
+            className="px-3 pb-4 h-full overflow-y-auto text-xs md:text-sm font-card scroll-smooth"
             style={{ paddingTop: '28px' }}
           >
             {combatLog.map((log, i) => (
@@ -1144,6 +1211,22 @@ export function CombatScreen() {
                 {log}
               </div>
             ))}
+          </div>
+          {/* 리사이즈 핸들 (하단) */}
+          <div
+            className="absolute bottom-0 left-0 right-0 h-3 cursor-ns-resize z-30 flex items-center justify-center group"
+            onMouseDown={handleResizeStart}
+            onTouchStart={handleResizeStart}
+            style={{
+              background: 'linear-gradient(180deg, transparent 0%, rgba(212,168,75,0.2) 100%)',
+            }}
+          >
+            <div
+              className="w-10 h-1 rounded-full transition-all group-hover:w-16 group-hover:bg-[var(--gold)]"
+              style={{
+                background: isResizingLog ? 'var(--gold)' : 'rgba(212,168,75,0.5)',
+              }}
+            />
           </div>
         </div>
       </div>

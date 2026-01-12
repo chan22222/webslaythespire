@@ -64,6 +64,10 @@ interface CombatStore extends CombatState {
   // 적 스킬 효과 트리거 (BUFF/DEFEND 애니메이션용)
   enemySkillTriggers: Record<string, number>;
   triggerEnemySkill: (enemyId: string) => void;
+
+  // 플레이어 디버프 이펙트 트리거
+  playerDebuffTrigger: number;
+  triggerPlayerDebuff: () => void;
 }
 
 export const useCombatStore = create<CombatStore>((set, get) => ({
@@ -73,8 +77,13 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
   damagePopups: [],
   enemyHitTriggers: {},
   enemySkillTriggers: {},
+  playerDebuffTrigger: 0,
   onPlayerHit: null,
   setOnPlayerHit: (callback) => set({ onPlayerHit: callback }),
+
+  triggerPlayerDebuff: () => {
+    set(state => ({ playerDebuffTrigger: state.playerDebuffTrigger + 1 }));
+  },
 
   addDamagePopup: (value: number, type: DamagePopup['type'], x: number, y: number, targetId?: string, modifier?: number, offsetX?: number, offsetY?: number) => {
     let finalX = x;
@@ -305,7 +314,7 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
         get().addToCombatLog(`${enemy.name}이(가) 힘을 얻었습니다!`);
         await new Promise(resolve => setTimeout(resolve, 500));
       } else if (enemy.intent.type === 'DEBUFF') {
-        get().triggerEnemySkill(enemy.instanceId);
+        get().triggerPlayerDebuff(); // 플레이어 디버프 이펙트만 표시
         get().applyStatusToPlayer({ type: 'WEAK', stacks: 1 });
         get().addToCombatLog(`약화되었습니다!`);
         await new Promise(resolve => setTimeout(resolve, 500));
@@ -408,7 +417,7 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
           // 약화 적용
           const weak = get().playerStatuses.find(s => s.type === 'WEAK');
           if (weak && weak.stacks > 0) {
-            damage = Math.floor(damage * 0.75);
+            damage = Math.round(damage * 0.75);
           }
 
           if (effect.target === 'ALL') {
@@ -558,7 +567,7 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     const vulnerable = enemy.statuses.find(s => s.type === 'VULNERABLE');
     let finalDamage = damage;
     if (vulnerable && vulnerable.stacks > 0) {
-      finalDamage = Math.floor(damage * 1.5);
+      finalDamage = Math.round(damage * 1.5);
     }
 
     // 방어도 먼저 소모
@@ -594,7 +603,7 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     const vulnerable = playerStatuses.find(s => s.type === 'VULNERABLE');
     let finalDamage = damage;
     if (vulnerable && vulnerable.stacks > 0) {
-      finalDamage = Math.floor(damage * 1.5);
+      finalDamage = Math.round(damage * 1.5);
       get().addToCombatLog(`[취약: ${damage} → ${finalDamage}]`);
     }
 

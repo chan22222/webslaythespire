@@ -84,7 +84,7 @@ export function DraggableCard({
     // 약화 적용 (25% 감소)
     const weak = playerStatuses.find(s => s.type === 'WEAK');
     if (weak && weak.stacks > 0) {
-      damage = Math.floor(damage * 0.75);
+      damage = Math.round(damage * 0.75);
     }
 
     return Math.max(0, damage);
