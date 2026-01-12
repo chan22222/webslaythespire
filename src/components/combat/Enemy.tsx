@@ -399,6 +399,9 @@ export function Enemy({ enemy, isTargetable = false }: EnemyProps) {
   const [isSkillActive, setIsSkillActive] = useState(false);
   const [prevHp, setPrevHp] = useState(enemy.currentHp);
 
+  // 플레이어 상태 구독 (취약 확인용)
+  const playerStatuses = useCombatStore(state => state.playerStatuses);
+
   // 피격 트리거 구독 (다중 타격용)
   const hitTrigger = useCombatStore(state => state.enemyHitTriggers[enemy.instanceId] || 0);
   const prevHitTriggerRef = useRef(hitTrigger);
@@ -457,15 +460,84 @@ export function Enemy({ enemy, isTargetable = false }: EnemyProps) {
     setPrevHp(enemy.currentHp);
   }, [enemy.currentHp, prevHp, isDying, hitTrigger]);
 
+  // 적 공격 데미지 계산 (힘, 약화, 플레이어 취약 반영)
+  const calculateEnemyDamage = (baseDamage: number) => {
+    let damage = baseDamage;
+
+    // 적의 힘 적용
+    const enemyStrength = enemy.statuses.find(s => s.type === 'STRENGTH')?.stacks || 0;
+    damage += enemyStrength;
+
+    // 적의 약화 적용 (25% 감소)
+    const enemyWeak = enemy.statuses.find(s => s.type === 'WEAK');
+    if (enemyWeak && enemyWeak.stacks > 0) {
+      damage = Math.floor(damage * 0.75);
+    }
+
+    // 플레이어 취약 적용 (50% 추가)
+    const playerVulnerable = playerStatuses.find(s => s.type === 'VULNERABLE');
+    if (playerVulnerable && playerVulnerable.stacks > 0) {
+      damage = Math.floor(damage * 1.5);
+    }
+
+    return Math.max(0, damage);
+  };
+
+  // 데미지 계산 과정 문자열 생성 (예: "9+3" 또는 "9-2+4")
+  const getDamageBreakdown = (baseDamage: number) => {
+    const parts: string[] = [String(baseDamage)];
+
+    // 적의 힘
+    const enemyStrength = enemy.statuses.find(s => s.type === 'STRENGTH')?.stacks || 0;
+    if (enemyStrength > 0) {
+      parts.push(`+${enemyStrength}`);
+    } else if (enemyStrength < 0) {
+      parts.push(`${enemyStrength}`);
+    }
+
+    // 적의 약화 (25% 감소) - 힘 적용 후 계산
+    const enemyWeak = enemy.statuses.find(s => s.type === 'WEAK');
+    if (enemyWeak && enemyWeak.stacks > 0) {
+      const damageAfterStr = baseDamage + enemyStrength;
+      const reduction = damageAfterStr - Math.floor(damageAfterStr * 0.75);
+      if (reduction > 0) {
+        parts.push(`-${reduction}`);
+      }
+    }
+
+    // 플레이어 취약 (50% 추가)
+    const playerVulnerable = playerStatuses.find(s => s.type === 'VULNERABLE');
+    if (playerVulnerable && playerVulnerable.stacks > 0) {
+      let damageBeforeVuln = baseDamage + enemyStrength;
+      if (enemyWeak && enemyWeak.stacks > 0) {
+        damageBeforeVuln = Math.floor(damageBeforeVuln * 0.75);
+      }
+      const bonus = Math.floor(damageBeforeVuln * 1.5) - damageBeforeVuln;
+      if (bonus > 0) {
+        parts.push(`+${bonus}`);
+      }
+    }
+
+    return parts.length > 1 ? parts.join('') : null;
+  };
+
   const getIntentTooltip = () => {
     switch (enemy.intent.type) {
       case 'ATTACK':
-        const damage = enemy.intent.damage || 0;
+        const baseDamage = enemy.intent.damage || 0;
+        const calculatedDamage = calculateEnemyDamage(baseDamage);
+        const breakdown = getDamageBreakdown(baseDamage);
         const hits = enemy.intent.hits || 1;
-        const totalDamage = damage * hits;
+        const totalDamage = calculatedDamage * hits;
+
+        // 수정치가 있으면 "9+3=12" 형식, 없으면 "9" 형식
+        const damageText = breakdown
+          ? `${breakdown}=${calculatedDamage}`
+          : `${calculatedDamage}`;
+
         return hits > 1
-          ? `${damage} 데미지를 ${hits}회 가합니다. (총 ${totalDamage})`
-          : `${damage} 데미지를 가합니다.`;
+          ? `${damageText} 데미지를 ${hits}회 가합니다. (총 ${totalDamage})`
+          : `${damageText} 데미지를 가합니다.`;
       case 'DEFEND':
         const block = enemy.intent.block || 0;
         return `${block} 방어도를 획득합니다.`;
@@ -481,7 +553,9 @@ export function Enemy({ enemy, isTargetable = false }: EnemyProps) {
   const getIntentDisplay = () => {
     switch (enemy.intent.type) {
       case 'ATTACK':
-        return <AttackIntent damage={enemy.intent.damage || 0} hits={enemy.intent.hits} />;
+        const baseDamage = enemy.intent.damage || 0;
+        const calculatedDamage = calculateEnemyDamage(baseDamage);
+        return <AttackIntent damage={calculatedDamage} hits={enemy.intent.hits} />;
       case 'DEFEND':
         return <DefendIntent block={enemy.intent.block || 0} />;
       case 'BUFF':

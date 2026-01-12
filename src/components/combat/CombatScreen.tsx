@@ -297,23 +297,26 @@ function BattleIntro({
 }
 
 // 승리 인트로 화면
-function VictoryIntro({ onComplete }: { onComplete: () => void }) {
+function VictoryIntro({ onFadeStart, onComplete }: { onFadeStart: () => void; onComplete: () => void }) {
   const [phase, setPhase] = useState<'slash' | 'text' | 'fadeout'>('slash');
 
   useEffect(() => {
     // 슬래시 애니메이션 후 텍스트
     const timer1 = setTimeout(() => setPhase('text'), 300);
-    // 텍스트 표시 후 페이드아웃
-    const timer2 = setTimeout(() => setPhase('fadeout'), 1100);
-    // 완료
-    const timer3 = setTimeout(onComplete, 1400);
+    // 텍스트 표시 후 페이드아웃 시작 (동시에 다음 화면 로드)
+    const timer2 = setTimeout(() => {
+      setPhase('fadeout');
+      onFadeStart(); // 페이드아웃 시작과 동시에 다음 화면 로드
+    }, 1100);
+    // 완료 (페이드아웃 끝난 후 인트로 제거)
+    const timer3 = setTimeout(onComplete, 1500);
 
     return () => {
       clearTimeout(timer1);
       clearTimeout(timer2);
       clearTimeout(timer3);
     };
-  }, [onComplete]);
+  }, [onFadeStart, onComplete]);
 
   const colors = { primary: '#ffd700', glow: 'rgba(255, 215, 0, 0.8)' };
 
@@ -657,11 +660,15 @@ export function CombatScreen() {
     setIntroComplete(true);
   }, []);
 
-  // 승리 인트로 완료 핸들러
-  const handleVictoryComplete = useCallback(() => {
-    setShowVictory(false);
+  // 승리 인트로 페이드 시작 핸들러 (백그라운드에서 다음 화면 로드)
+  const handleVictoryFadeStart = useCallback(() => {
     setPhase('CARD_REWARD');
   }, [setPhase]);
+
+  // 승리 인트로 완료 핸들러 (인트로 제거)
+  const handleVictoryComplete = useCallback(() => {
+    setShowVictory(false);
+  }, []);
 
   // 승리 체크 (인트로 완료 후에만)
   useEffect(() => {
@@ -944,7 +951,7 @@ export function CombatScreen() {
 
       {/* 승리 인트로 */}
       {showVictory && (
-        <VictoryIntro onComplete={handleVictoryComplete} />
+        <VictoryIntro onFadeStart={handleVictoryFadeStart} onComplete={handleVictoryComplete} />
       )}
 
       <div

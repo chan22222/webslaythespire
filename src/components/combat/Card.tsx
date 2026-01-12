@@ -1,4 +1,5 @@
 import { Card as CardType, CardInstance } from '../../types/card';
+import { useCombatStore } from '../../stores/combatStore';
 
 type CardSize = 'xs' | 'sm' | 'md' | 'lg';
 
@@ -103,6 +104,93 @@ export function Card({
 }: CardProps) {
   const config = typeConfig[card.type];
   const s = sizeConfig[size];
+
+  // 전투 중인 경우에만 플레이어 상태 반영
+  const playerStatuses = useCombatStore(state => state.playerStatuses);
+  const enemies = useCombatStore(state => state.enemies);
+  const isInCombat = enemies.length > 0;
+
+  // 데미지 수정치 계산
+  const calculateModifiedDamage = (baseDamage: number) => {
+    let damage = baseDamage;
+
+    // 힘 적용
+    const strength = playerStatuses.find(s => s.type === 'STRENGTH')?.stacks || 0;
+    damage += strength;
+
+    // 약화 적용 (25% 감소)
+    const weak = playerStatuses.find(s => s.type === 'WEAK');
+    if (weak && weak.stacks > 0) {
+      damage = Math.floor(damage * 0.75);
+    }
+
+    // 단일 타겟이고 취약한 적이 있으면 취약 보너스 표시 (참고용)
+    // 실제 적용은 적마다 다르므로 여기선 기본 데미지만 계산
+
+    return Math.max(0, damage);
+  };
+
+  // 데미지가 수정되었는지 확인하고 설명 업데이트
+  const getModifiedDescription = () => {
+    let description = card.description;
+
+    // 전투 중이 아니면 원본 반환
+    if (!isInCombat) {
+      return description;
+    }
+
+    // effects가 없으면 원본 반환
+    if (!card.effects || card.effects.length === 0) {
+      return description;
+    }
+
+    // 힘이나 약화가 있는지 확인
+    const strength = playerStatuses.find(s => s.type === 'STRENGTH')?.stacks || 0;
+    const weak = playerStatuses.find(s => s.type === 'WEAK');
+    const hasModifier = strength !== 0 || (weak && weak.stacks > 0);
+
+    if (!hasModifier) {
+      return description;
+    }
+
+    // DAMAGE 효과 찾아서 수정된 값으로 교체
+    for (const effect of card.effects) {
+      if (effect.type === 'DAMAGE') {
+        const baseDamage = effect.value;
+        const modifiedDamage = calculateModifiedDamage(baseDamage);
+
+        if (baseDamage !== modifiedDamage) {
+          // "실제 (원래) 피해" 형식으로 표시
+          const pattern = new RegExp(`${baseDamage} 피해`, 'g');
+          if (pattern.test(description)) {
+            description = description.replace(pattern, `${modifiedDamage} (${baseDamage}) 피해`);
+          }
+        }
+      }
+    }
+
+    return description;
+  };
+
+  const modifiedDescription = getModifiedDescription();
+
+  // 데미지가 변경되었는지 확인 (색상 표시용)
+  const getDamageColor = () => {
+    if (!isInCombat || !card.effects) return null;
+
+    for (const effect of card.effects) {
+      if (effect.type === 'DAMAGE') {
+        const baseDamage = effect.value;
+        const modifiedDamage = calculateModifiedDamage(baseDamage);
+
+        if (modifiedDamage > baseDamage) return '#4ade80'; // 증가: 초록
+        if (modifiedDamage < baseDamage) return '#ff6b6b'; // 감소: 빨강
+      }
+    }
+    return null;
+  };
+
+  const damageColor = getDamageColor();
 
   return (
     <div
@@ -239,7 +327,7 @@ export function Card({
           className="font-card text-center leading-tight"
           style={{
             fontSize: `${s.descFontSize}px`,
-            color: '#e0e0e0',
+            color: damageColor || '#e0e0e0',
             textShadow: '1px 1px 2px #000',
             display: '-webkit-box',
             WebkitLineClamp: 4,
@@ -247,7 +335,7 @@ export function Card({
             overflow: 'hidden',
           }}
         >
-          {card.description}
+          {modifiedDescription}
         </p>
       </div>
 

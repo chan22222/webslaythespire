@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { CardInstance } from '../../types/card';
 import { TargetingArrow } from './TargetingArrow';
+import { useCombatStore } from '../../stores/combatStore';
 
 interface DraggableCardProps {
   card: CardInstance;
@@ -68,6 +69,80 @@ export function DraggableCard({
   };
 
   const config = typeConfig[card.type];
+
+  // 전투 중인 경우 플레이어 상태 가져오기
+  const playerStatuses = useCombatStore(state => state.playerStatuses);
+
+  // 데미지 수정치 계산
+  const calculateModifiedDamage = (baseDamage: number) => {
+    let damage = baseDamage;
+
+    // 힘 적용
+    const strength = playerStatuses.find(s => s.type === 'STRENGTH')?.stacks || 0;
+    damage += strength;
+
+    // 약화 적용 (25% 감소)
+    const weak = playerStatuses.find(s => s.type === 'WEAK');
+    if (weak && weak.stacks > 0) {
+      damage = Math.floor(damage * 0.75);
+    }
+
+    return Math.max(0, damage);
+  };
+
+  // 데미지가 수정되었는지 확인하고 설명 업데이트
+  const getModifiedDescription = () => {
+    let description = card.description;
+
+    if (!card.effects || card.effects.length === 0) {
+      return description;
+    }
+
+    const strength = playerStatuses.find(s => s.type === 'STRENGTH')?.stacks || 0;
+    const weak = playerStatuses.find(s => s.type === 'WEAK');
+    const hasModifier = strength !== 0 || (weak && weak.stacks > 0);
+
+    if (!hasModifier) {
+      return description;
+    }
+
+    for (const effect of card.effects) {
+      if (effect.type === 'DAMAGE') {
+        const baseDamage = effect.value;
+        const modifiedDamage = calculateModifiedDamage(baseDamage);
+
+        if (baseDamage !== modifiedDamage) {
+          const pattern = new RegExp(`${baseDamage} 피해`, 'g');
+          if (pattern.test(description)) {
+            // "실제 (원래) 피해" 형식으로 표시
+            description = description.replace(pattern, `${modifiedDamage} (${baseDamage}) 피해`);
+          }
+        }
+      }
+    }
+
+    return description;
+  };
+
+  const modifiedDescription = getModifiedDescription();
+
+  // 데미지 색상 (증가: 초록, 감소: 빨강)
+  const getDamageColor = () => {
+    if (!card.effects) return null;
+
+    for (const effect of card.effects) {
+      if (effect.type === 'DAMAGE') {
+        const baseDamage = effect.value;
+        const modifiedDamage = calculateModifiedDamage(baseDamage);
+
+        if (modifiedDamage > baseDamage) return '#4ade80';
+        if (modifiedDamage < baseDamage) return '#ff6b6b';
+      }
+    }
+    return null;
+  };
+
+  const damageColor = getDamageColor();
 
   const startDrag = () => {
     if (!isPlayable) return;
@@ -309,7 +384,7 @@ export function DraggableCard({
           <p
             className="font-card text-[10px] text-center leading-tight"
             style={{
-              color: '#e0e0e0',
+              color: damageColor || '#e0e0e0',
               textShadow: '1px 1px 2px #000',
               display: '-webkit-box',
               WebkitLineClamp: 4,
@@ -317,7 +392,7 @@ export function DraggableCard({
               overflow: 'hidden',
             }}
           >
-            {card.description}
+            {modifiedDescription}
           </p>
         </div>
 
