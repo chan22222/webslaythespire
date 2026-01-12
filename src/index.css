@@ -568,3 +568,212 @@ body {
     transform: translateY(150px) scale(0.6);
   }
 }
+
+/* ============================================
+   메인 타이틀 애니메이션
+   ============================================ */
+
+@keyframes title-glow {
+  0%, 100% {
+    text-shadow:
+      0 0 10px var(--gold-glow),
+      0 0 20px var(--gold-glow),
+      0 0 40px var(--gold-glow),
+      4px 4px 0 #000;
+    filter: brightness(1);
+  }
+  50% {
+    text-shadow:
+      0 0 20px var(--gold-glow),
+      0 0 40px var(--gold-glow),
+      0 0 60px var(--gold-glow),
+      0 0 80px rgba(255, 200, 50, 0.3),
+      4px 4px 0 #000;
+    filter: brightness(1.2);
+  }
+}
+
+@keyframes title-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes title-char-appear {
+  0% {
+    opacity: 0;
+    transform: translateY(-30px) scale(0.5);
+    filter: blur(8px);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(5px) scale(1.1);
+    filter: blur(0);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+@keyframes slash-swing {
+  0% {
+    transform: rotate(-45deg) scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: rotate(15deg) scale(1.2);
+    opacity: 1;
+  }
+  100% {
+    transform: rotate(0deg) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes card-flip {
+  0% {
+    transform: rotateY(90deg) scale(0.5);
+    opacity: 0;
+  }
+  100% {
+    transform: rotateY(0deg) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes sparkle {
+  0%, 100% {
+    opacity: 0;
+    transform: scale(0) rotate(0deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1) rotate(180deg);
+  }
+}
+
+@keyframes subtitle-slide {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+    letter-spacing: 0.5em;
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    letter-spacing: 0.2em;
+  }
+}
+
+.title-char {
+  display: inline-block;
+  animation: title-char-appear 0.6s ease-out forwards, title-float 3s ease-in-out infinite;
+  opacity: 0;
+}
+
+.title-glow {
+  animation: title-glow 2s ease-in-out infinite;
+}
+
+.title-ampersand {
+  color: var(--attack-light);
+  text-shadow:
+    0 0 10px var(--attack-glow),
+    0 0 20px var(--attack-glow),
+    3px 3px 0 #000;
+}
+
+.title-slash {
+  background: linear-gradient(180deg, var(--attack-bright) 0%, var(--attack) 50%, var(--attack-dark) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(3px 3px 0 #000) drop-shadow(0 0 10px var(--attack-glow));
+}
+
+.title-decoration {
+  position: absolute;
+  font-size: 2rem;
+  animation: sparkle 2s ease-in-out infinite;
+}
+
+/* 심플 페이드 애니메이션 */
+@keyframes fadeInDown {
+  0% {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+/* 타이틀 슬램 애니메이션 */
+@keyframes titleSlam {
+  0% {
+    opacity: 0;
+    transform: scale(1.5) translateY(-30px);
+    filter: blur(10px);
+  }
+  60% {
+    opacity: 1;
+    transform: scale(0.95) translateY(5px);
+    filter: blur(0);
+  }
+  80% {
+    transform: scale(1.02) translateY(-2px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    filter: blur(0);
+  }
+}
+
+/* 타이틀 펄스 글로우 */
+@keyframes titlePulse {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.05);
+  }
+}
+
+/* 파티클 떠오르기 애니메이션 */
+@keyframes floatUp {
+  0% {
+    transform: translateY(100vh) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-100px) rotate(360deg);
+    opacity: 0;
+  }
+}
