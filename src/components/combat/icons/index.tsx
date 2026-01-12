@@ -127,52 +127,57 @@ export function VulnerableIcon({ size = 24, className = '', color = 'currentColo
   );
 }
 
-// 약화 아이콘
+// 약화 아이콘 (깨진 검 형태)
 export function WeakIcon({ size = 24, className = '', color = 'currentColor' }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" className={className} fill="none">
+      {/* 역삼각형 - 불안정함 표현 */}
       <path
-        d="M12 2C12 2 8 6 8 10C8 14 12 18 12 18C12 18 16 14 16 10C16 6 12 2 12 2Z"
+        d="M12 22 L3 8 L7 3 L12 5 L17 3 L21 8 Z"
         fill={color}
-        opacity="0.3"
+        opacity="0.9"
       />
+      {/* 금간 자국 */}
       <path
-        d="M12 6V14M9 11L15 11"
-        stroke={color}
-        strokeWidth="2"
+        d="M12 6 L11 10 L9 11 L10.5 14 L8 17 L10 18 L12 21"
+        stroke="rgba(0,0,0,0.5)"
+        strokeWidth="1.5"
+        fill="none"
         strokeLinecap="round"
       />
-      <path d="M7 19L17 19" stroke={color} strokeWidth="2" strokeLinecap="round" />
-      <path d="M9 22L15 22" stroke={color} strokeWidth="2" strokeLinecap="round" />
+      <path
+        d="M12 6 L13 9 L15 10.5 L13.5 13 L16 16 L14 17.5 L12 21"
+        stroke="rgba(0,0,0,0.4)"
+        strokeWidth="1"
+        fill="none"
+        strokeLinecap="round"
+      />
+      {/* 하강 화살표 */}
+      <path
+        d="M12 9 L10 13 L11 13 L11 16 L13 16 L13 13 L14 13 Z"
+        fill="rgba(255,255,255,0.9)"
+      />
     </svg>
   );
 }
 
-// 힘 아이콘 (주먹)
+// 힘 아이콘 (상승 불꽃 - BuffIntent와 동일 스타일)
 export function StrengthIcon({ size = 24, className = '', color = 'currentColor' }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" className={className} fill="none">
+      {/* 불꽃 형태 */}
       <path
-        d="M5 12V18C5 19.1 5.9 20 7 20H8C9.1 20 10 19.1 10 18V14"
+        d="M12 2 L15 8 L18 6 L16 12 L20 14 L15 17 L17 22 L12 19 L7 22 L9 17 L4 14 L8 12 L6 6 L9 8 Z"
         fill={color}
+        opacity="0.9"
       />
+      {/* 내부 코어 */}
+      <ellipse cx="12" cy="13" rx="3" ry="4" fill="rgba(255,255,255,0.4)" />
+      {/* 상승 화살표 */}
       <path
-        d="M10 10V8C10 6.9 10.9 6 12 6C13.1 6 14 6.9 14 8V10"
-        fill={color}
+        d="M12 8 L14.5 12 L13 12 L13 16 L11 16 L11 12 L9.5 12 Z"
+        fill="rgba(255,255,255,0.95)"
       />
-      <path
-        d="M14 10V7C14 5.9 14.9 5 16 5C17.1 5 18 5.9 18 7V12"
-        fill={color}
-      />
-      <path
-        d="M18 12V8C18 6.9 18.9 6 20 6C21.1 6 22 6.9 22 8V16C22 19.3 19.3 22 16 22H10C7.2 22 5 19.8 5 17"
-        stroke={color}
-        strokeWidth="2"
-        fill="none"
-      />
-      <circle cx="8" cy="4" r="2" fill={color} />
-      <path d="M6 6L4 8" stroke={color} strokeWidth="1.5" strokeLinecap="round" />
-      <path d="M10 4L12 2" stroke={color} strokeWidth="1.5" strokeLinecap="round" />
     </svg>
   );
 }

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { EnemyInstance } from '../../types/enemy';
 import { HealthBar } from '../common/HealthBar';
 import { STATUS_INFO } from '../../types/status';
@@ -19,54 +19,70 @@ interface EnemyProps {
 
 function AttackIntent({ damage, hits }: { damage: number; hits?: number }) {
   return (
-    <div className="relative flex items-center justify-center" style={{ width: '48px', height: '56px' }}>
+    <div className="relative flex items-center justify-center" style={{ width: '52px', height: '56px' }}>
       {/* 배경 글로우 */}
       <div
         className="absolute inset-0"
         style={{
-          background: 'radial-gradient(circle, rgba(184, 37, 37, 0.5) 0%, transparent 70%)',
-          filter: 'blur(6px)',
+          background: 'radial-gradient(ellipse at center, rgba(239, 68, 68, 0.6) 0%, rgba(185, 28, 28, 0.3) 40%, transparent 70%)',
+          filter: 'blur(10px)',
         }}
       />
-      {/* 검 모양 뱃지 (방패의 뒤집힌 형태) */}
-      <svg viewBox="0 0 48 56" className="absolute inset-0 w-full h-full" style={{ filter: 'drop-shadow(0 0 10px rgba(184, 37, 37, 0.8))' }}>
+      {/* 다이아몬드 형태 SVG */}
+      <svg viewBox="0 0 52 56" className="absolute inset-0 w-full h-full" style={{ filter: 'drop-shadow(0 0 12px rgba(239, 68, 68, 0.9))' }}>
         <defs>
           <linearGradient id="attackGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#e04040" />
-            <stop offset="50%" stopColor="#b82525" />
-            <stop offset="100%" stopColor="#7a1818" />
+            <stop offset="0%" stopColor="#fca5a5" />
+            <stop offset="40%" stopColor="#ef4444" />
+            <stop offset="100%" stopColor="#991b1b" />
           </linearGradient>
-          <linearGradient id="attackHighlight" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="rgba(255,255,255,0.35)" />
-            <stop offset="50%" stopColor="rgba(255,255,255,0)" />
+          <linearGradient id="attackHighlight" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="rgba(255,255,255,0.4)" />
+            <stop offset="100%" stopColor="rgba(255,255,255,0)" />
+          </linearGradient>
+          <linearGradient id="attackCrack" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#450a0a" />
+            <stop offset="100%" stopColor="#1c0505" />
           </linearGradient>
         </defs>
-        {/* 검 형태 외곽 (위가 뾰족한 형태) */}
+        {/* 다이아몬드 */}
         <path
-          d="M24 2 L44 16 L44 38 L24 54 L4 38 L4 16 Z"
+          d="M26 4 L48 28 L26 52 L4 28 Z"
           fill="url(#attackGrad)"
-          stroke="#ff6b6b"
-          strokeWidth="2.5"
+          stroke="#fca5a5"
+          strokeWidth="2"
         />
         {/* 하이라이트 */}
         <path
-          d="M24 6 L40 18 L40 36 L24 50 L8 36 L8 18 Z"
+          d="M26 8 L44 28 L26 48 L8 28 Z"
           fill="url(#attackHighlight)"
         />
-        {/* 내부 검 장식 */}
+        {/* 십자 장식 라인 */}
         <path
-          d="M24 12 L28 20 L28 40 L24 46 L20 40 L20 20 Z"
+          d="M26 10 L26 46"
+          stroke="url(#attackCrack)"
+          strokeWidth="2"
           fill="none"
-          stroke="rgba(255,255,255,0.2)"
-          strokeWidth="1"
+          strokeLinecap="round"
         />
-        <line x1="16" y1="28" x2="32" y2="28" stroke="rgba(255,255,255,0.2)" strokeWidth="1" />
+        <path
+          d="M12 28 L40 28"
+          stroke="url(#attackCrack)"
+          strokeWidth="2"
+          fill="none"
+          strokeLinecap="round"
+        />
+        {/* 작은 파편들 */}
+        <path d="M10 18 L6 20 L8 24" fill="#ef4444" opacity="0.8" />
+        <path d="M42 18 L46 20 L44 24" fill="#ef4444" opacity="0.8" />
+        <circle cx="14" cy="38" r="2" fill="#fca5a5" opacity="0.6" />
+        <circle cx="38" cy="38" r="1.5" fill="#fca5a5" opacity="0.6" />
       </svg>
       {/* 데미지 숫자 */}
-      <div className="relative z-10 flex flex-col items-center" style={{ marginTop: '-2px' }}>
+      <div className="relative z-10 flex flex-col items-center">
         <span
           className="font-title text-xl font-bold text-white"
-          style={{ textShadow: '0 0 10px rgba(255, 107, 107, 0.8), 0 2px 4px rgba(0,0,0,0.8)' }}
+          style={{ textShadow: '0 0 10px rgba(239, 68, 68, 0.8), 0 2px 4px rgba(0,0,0,0.8)' }}
         >
           {damage}
         </span>
@@ -136,44 +152,55 @@ function DefendIntent({ block }: { block: number }) {
 
 function BuffIntent() {
   return (
-    <div className="relative flex items-center justify-center" style={{ width: '52px', height: '52px' }}>
+    <div className="relative flex items-center justify-center" style={{ width: '52px', height: '56px' }}>
       {/* 배경 글로우 */}
       <div
-        className="absolute inset-0 animate-pulse"
+        className="absolute inset-0"
         style={{
-          background: 'radial-gradient(circle, rgba(74, 222, 128, 0.5) 0%, transparent 70%)',
-          filter: 'blur(8px)',
+          background: 'radial-gradient(ellipse at center, rgba(74, 222, 128, 0.6) 0%, rgba(22, 163, 74, 0.3) 40%, transparent 70%)',
+          filter: 'blur(10px)',
         }}
       />
-      {/* 육각형 + 화살표 SVG */}
-      <svg viewBox="0 0 52 52" className="absolute inset-0 w-full h-full" style={{ filter: 'drop-shadow(0 0 10px rgba(74, 222, 128, 0.8))' }}>
+      {/* 상승 불꽃/에너지 형태 SVG */}
+      <svg viewBox="0 0 52 56" className="absolute inset-0 w-full h-full" style={{ filter: 'drop-shadow(0 0 12px rgba(74, 222, 128, 0.9))' }}>
         <defs>
-          <linearGradient id="buffGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#4ade80" />
-            <stop offset="50%" stopColor="#22c55e" />
-            <stop offset="100%" stopColor="#166534" />
+          <linearGradient id="buffGrad" x1="50%" y1="100%" x2="50%" y2="0%">
+            <stop offset="0%" stopColor="#166534" />
+            <stop offset="40%" stopColor="#22c55e" />
+            <stop offset="80%" stopColor="#4ade80" />
+            <stop offset="100%" stopColor="#bbf7d0" />
           </linearGradient>
-          <linearGradient id="buffInner" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="rgba(255,255,255,0.3)" />
-            <stop offset="100%" stopColor="rgba(255,255,255,0)" />
+          <linearGradient id="buffHighlight" x1="50%" y1="100%" x2="50%" y2="0%">
+            <stop offset="0%" stopColor="rgba(255,255,255,0)" />
+            <stop offset="100%" stopColor="rgba(255,255,255,0.5)" />
           </linearGradient>
         </defs>
-        {/* 육각형 배경 */}
-        <polygon
-          points="26,3 46,15 46,37 26,49 6,37 6,15"
-          fill="url(#buffGradient)"
+        {/* 중앙 불꽃 */}
+        <path
+          d="M26 4 L32 18 L38 14 L34 28 L42 32 L32 38 L36 48 L26 42 L16 48 L20 38 L10 32 L18 28 L14 14 L20 18 Z"
+          fill="url(#buffGrad)"
           stroke="#86efac"
           strokeWidth="2"
         />
-        {/* 내부 하이라이트 */}
-        <polygon
-          points="26,8 42,18 42,34 26,44 10,34 10,18"
-          fill="url(#buffInner)"
+        {/* 하이라이트 */}
+        <path
+          d="M26 8 L30 18 L34 16 L31 26 L36 30 L30 34 L32 42 L26 38 L20 42 L22 34 L16 30 L21 26 L18 16 L22 18 Z"
+          fill="url(#buffHighlight)"
         />
+        {/* 내부 에너지 코어 */}
+        <ellipse cx="26" cy="28" rx="6" ry="8" fill="#bbf7d0" opacity="0.6" />
+        <ellipse cx="26" cy="26" rx="3" ry="4" fill="rgba(255,255,255,0.8)" />
+        {/* 스파크 이펙트 */}
+        <circle cx="8" cy="24" r="2" fill="#4ade80" opacity="0.8" />
+        <circle cx="44" cy="24" r="2" fill="#4ade80" opacity="0.8" />
+        <circle cx="14" cy="44" r="1.5" fill="#86efac" opacity="0.6" />
+        <circle cx="38" cy="44" r="1.5" fill="#86efac" opacity="0.6" />
         {/* 상승 화살표 */}
         <path
-          d="M26 14 L34 26 L29 26 L29 38 L23 38 L23 26 L18 26 Z"
+          d="M26 14 L32 26 L28 26 L28 40 L24 40 L24 26 L20 26 Z"
           fill="rgba(255,255,255,0.95)"
+          stroke="rgba(0,0,0,0.3)"
+          strokeWidth="1"
         />
       </svg>
     </div>
@@ -182,41 +209,73 @@ function BuffIntent() {
 
 function DebuffIntent() {
   return (
-    <div className="relative flex items-center justify-center" style={{ width: '52px', height: '52px' }}>
-      {/* 배경 글로우 */}
+    <div className="relative flex items-center justify-center" style={{ width: '52px', height: '56px' }}>
+      {/* 배경 글로우 - 어두운 보라 연기 효과 */}
       <div
-        className="absolute inset-0 animate-pulse"
+        className="absolute inset-0"
         style={{
-          background: 'radial-gradient(circle, rgba(168, 85, 247, 0.5) 0%, transparent 70%)',
-          filter: 'blur(8px)',
+          background: 'radial-gradient(ellipse at center, rgba(139, 92, 246, 0.6) 0%, rgba(91, 33, 182, 0.3) 40%, transparent 70%)',
+          filter: 'blur(10px)',
+          animation: 'pulse 2.5s ease-in-out infinite',
         }}
       />
-      {/* 톱니 형태 SVG */}
-      <svg viewBox="0 0 52 52" className="absolute inset-0 w-full h-full" style={{ filter: 'drop-shadow(0 0 10px rgba(168, 85, 247, 0.8))' }}>
+      {/* 깨진 검 형태 SVG */}
+      <svg viewBox="0 0 52 56" className="absolute inset-0 w-full h-full" style={{ filter: 'drop-shadow(0 0 12px rgba(139, 92, 246, 0.9))' }}>
         <defs>
-          <linearGradient id="debuffGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#c084fc" />
-            <stop offset="50%" stopColor="#a855f7" />
-            <stop offset="100%" stopColor="#7c3aed" />
+          <linearGradient id="debuffGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#a78bfa" />
+            <stop offset="40%" stopColor="#8b5cf6" />
+            <stop offset="100%" stopColor="#5b21b6" />
           </linearGradient>
-          <linearGradient id="debuffInner" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="rgba(255,255,255,0.25)" />
+          <linearGradient id="debuffHighlight" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="rgba(255,255,255,0.4)" />
             <stop offset="100%" stopColor="rgba(255,255,255,0)" />
           </linearGradient>
+          <linearGradient id="crackGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#1e1b4b" />
+            <stop offset="100%" stopColor="#0f0a1e" />
+          </linearGradient>
         </defs>
-        {/* 톱니 원형 */}
+        {/* 역삼각형 기반 - 방패의 반대, 불안정한 형태 */}
         <path
-          d="M26 3 L30 10 L38 6 L36 14 L46 15 L40 22 L48 26 L40 30 L46 37 L36 38 L38 46 L30 42 L26 49 L22 42 L14 46 L16 38 L6 37 L12 30 L4 26 L12 22 L6 15 L16 14 L14 6 L22 10 Z"
-          fill="url(#debuffGradient)"
-          stroke="#d8b4fe"
-          strokeWidth="1.5"
+          d="M26 54 L4 18 L14 4 L26 8 L38 4 L48 18 Z"
+          fill="url(#debuffGrad)"
+          stroke="#c4b5fd"
+          strokeWidth="2"
         />
-        {/* 내부 원 */}
-        <circle cx="26" cy="26" r="14" fill="url(#debuffInner)" />
-        {/* 하강 화살표 */}
+        {/* 하이라이트 */}
         <path
-          d="M26 36 L20 26 L24 26 L24 16 L28 16 L28 26 L32 26 Z"
-          fill="rgba(255,255,255,0.9)"
+          d="M26 50 L8 20 L16 8 L26 11 L36 8 L44 20 Z"
+          fill="url(#debuffHighlight)"
+        />
+        {/* 금간 자국 - 깨짐 표현 */}
+        <path
+          d="M26 12 L24 22 L20 24 L23 30 L18 36 L22 38 L26 50"
+          stroke="url(#crackGrad)"
+          strokeWidth="3"
+          fill="none"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M26 12 L28 20 L32 23 L29 28 L34 34 L30 37 L26 50"
+          stroke="url(#crackGrad)"
+          strokeWidth="2.5"
+          fill="none"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        {/* 작은 파편들 */}
+        <path d="M12 26 L8 28 L10 32" fill="#8b5cf6" opacity="0.8" />
+        <path d="M40 26 L44 28 L42 32" fill="#8b5cf6" opacity="0.8" />
+        <circle cx="16" cy="38" r="2" fill="#a78bfa" opacity="0.6" />
+        <circle cx="36" cy="40" r="1.5" fill="#a78bfa" opacity="0.6" />
+        {/* 중앙 하강 심볼 */}
+        <path
+          d="M26 38 L20 28 L23 28 L23 18 L29 18 L29 28 L32 28 Z"
+          fill="rgba(255,255,255,0.95)"
+          stroke="rgba(0,0,0,0.3)"
+          strokeWidth="1"
         />
       </svg>
     </div>
@@ -331,6 +390,19 @@ function EnemyStatusBadge({ status }: { status: { type: string; stacks: number }
 
 export function Enemy({ enemy, isTargetable = false }: EnemyProps) {
   const [showIntentTooltip, setShowIntentTooltip] = useState(false);
+  const [isDying, setIsDying] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
+
+  // 죽음 감지 및 이펙트 처리
+  useEffect(() => {
+    if (enemy.currentHp <= 0 && !isDying) {
+      setIsDying(true);
+      // 딜레이 후 완전히 숨김
+      setTimeout(() => {
+        setIsVisible(false);
+      }, 800);
+    }
+  }, [enemy.currentHp, isDying]);
 
   const getIntentTooltip = () => {
     switch (enemy.intent.type) {
@@ -368,7 +440,7 @@ export function Enemy({ enemy, isTargetable = false }: EnemyProps) {
     }
   };
 
-  if (enemy.currentHp <= 0) return null;
+  if (!isVisible) return null;
 
   return (
     <div
@@ -380,6 +452,10 @@ export function Enemy({ enemy, isTargetable = false }: EnemyProps) {
         className="mb-6 animate-float relative cursor-help"
         onMouseEnter={() => setShowIntentTooltip(true)}
         onMouseLeave={() => setShowIntentTooltip(false)}
+        style={{
+          opacity: isDying ? 0 : 1,
+          transition: 'opacity 0.3s ease-out',
+        }}
       >
         {getIntentDisplay()}
 
@@ -428,9 +504,14 @@ export function Enemy({ enemy, isTargetable = false }: EnemyProps) {
         <div
           className={`relative transition-all duration-200 ${isTargetable ? 'drop-shadow-[0_0_20px_rgba(224,64,64,0.5)]' : ''}`}
           style={{
-            filter: isTargetable
-              ? 'drop-shadow(0 0 15px rgba(224, 64, 64, 0.6))'
-              : 'drop-shadow(0 5px 10px rgba(0, 0, 0, 0.5))',
+            filter: isDying
+              ? 'brightness(2) saturate(0) drop-shadow(0 0 20px rgba(255, 255, 255, 0.8))'
+              : isTargetable
+                ? 'drop-shadow(0 0 15px rgba(224, 64, 64, 0.6))'
+                : 'drop-shadow(0 5px 10px rgba(0, 0, 0, 0.5))',
+            opacity: isDying ? 0 : 1,
+            transform: isDying ? 'scale(1.2) translateY(-30px)' : 'scale(1)',
+            transition: 'all 0.8s ease-out',
           }}
         >
           {getEnemyCharacter(enemy.templateId, 100, isTargetable)}
@@ -480,6 +561,8 @@ export function Enemy({ enemy, isTargetable = false }: EnemyProps) {
         style={{
           background: 'linear-gradient(180deg, rgba(30,25,20,0.9) 0%, rgba(15,12,10,0.95) 100%)',
           border: '1px solid var(--gold-dark)',
+          opacity: isDying ? 0 : 1,
+          transition: 'opacity 0.3s ease-out',
         }}
       >
         <span className="font-title text-sm text-[var(--gold-light)] tracking-wide">
@@ -488,7 +571,13 @@ export function Enemy({ enemy, isTargetable = false }: EnemyProps) {
       </div>
 
       {/* 체력바 */}
-      <div className="w-40 mt-3">
+      <div
+        className="w-40 mt-3"
+        style={{
+          opacity: isDying ? 0 : 1,
+          transition: 'opacity 0.3s ease-out',
+        }}
+      >
         <HealthBar
           current={enemy.currentHp}
           max={enemy.maxHp}
@@ -499,7 +588,13 @@ export function Enemy({ enemy, isTargetable = false }: EnemyProps) {
       </div>
 
       {/* 상태 효과 - 고정 높이로 레이아웃 안정화 */}
-      <div className="flex gap-2 mt-3 flex-wrap justify-center max-w-40 min-h-[32px]">
+      <div
+        className="flex gap-2 mt-3 flex-wrap justify-center max-w-40 min-h-[32px]"
+        style={{
+          opacity: isDying ? 0 : 1,
+          transition: 'opacity 0.3s ease-out',
+        }}
+      >
         {enemy.statuses.map((status, index) => (
           <EnemyStatusBadge key={index} status={status} />
         ))}

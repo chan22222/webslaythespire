@@ -17,6 +17,8 @@ interface PlayerStatusProps {
   block: number;
   statuses: Status[];
   animation?: 'idle' | 'attack' | 'hurt';
+  attackTargetPos?: { x: number; y: number } | null;
+  enemyCount?: number;
   onAnimationEnd?: () => void;
 }
 
@@ -199,7 +201,23 @@ function BlockBadge({ block }: { block: number }) {
   );
 }
 
-export function PlayerStatus({ player, block, statuses, animation = 'idle', onAnimationEnd }: PlayerStatusProps) {
+export function PlayerStatus({ player, block, statuses, animation = 'idle', attackTargetPos, enemyCount = 1, onAnimationEnd }: PlayerStatusProps) {
+  // 공격 시 타겟 위치에 따라 이동 거리 계산
+  const getAttackTransform = () => {
+    if (animation !== 'attack') return 'translateX(0)';
+    if (!attackTargetPos) return 'translateX(200px)'; // 기본값
+
+    // 플레이어 기준 위치 (화면 왼쪽 1/3 지점 정도)
+    const baseX = window.innerWidth * 0.35;
+    const dx = attackTargetPos.x - baseX;
+
+    // 몹 마릿수에 따라 이동 비율 조절
+    const ratio = enemyCount === 1 ? 0.55 : enemyCount === 2 ? 0.65 : 0.75;
+    const moveX = dx * ratio;
+
+    return `translateX(${moveX}px)`;
+  };
+
   return (
     <div data-player className="flex flex-col items-center">
       {/* 플레이어 캐릭터 프레임 */}
@@ -217,11 +235,12 @@ export function PlayerStatus({ player, block, statuses, animation = 'idle', onAn
 
         {/* 플레이어 캐릭터 SVG */}
         <div
-          className="relative transition-all duration-300"
+          className="relative transition-transform duration-200"
           style={{
             filter: block > 0
               ? 'drop-shadow(0 0 15px rgba(40, 102, 168, 0.6))'
               : 'drop-shadow(0 5px 15px rgba(0, 0, 0, 0.6))',
+            transform: getAttackTransform(),
           }}
         >
           <WarriorSprite size={180} animation={animation} onAnimationEnd={onAnimationEnd} />

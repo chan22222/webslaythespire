@@ -78,6 +78,16 @@ export function CombatScreen() {
   const [showEndTurnTooltip, setShowEndTurnTooltip] = useState(false);
   // 카드 목록 모달 상태
   const [viewingPile, setViewingPile] = useState<'draw' | 'discard' | null>(null);
+  // 플레이어 애니메이션 상태
+  const [playerAnimation, setPlayerAnimation] = useState<'idle' | 'attack' | 'hurt'>('idle');
+  // 공격 타겟 위치
+  const [attackTargetPos, setAttackTargetPos] = useState<{ x: number; y: number } | null>(null);
+  // 대기 중인 공격 (애니메이션 중간에 실행)
+  const pendingAttackRef = useRef<{
+    cardInstanceId: string;
+    targetEnemyId?: string;
+    damagePopups: { targetId: string; value: number }[];
+  } | null>(null);
 
   useEffect(() => {
     if (enemies.length === 0 && currentNode) {
@@ -183,9 +193,33 @@ export function CombatScreen() {
       if (targetEnemyId) {
         const damageEffect = card.effects.find(e => e.type === 'DAMAGE');
         if (damageEffect) {
-          showDamagePopup(targetEnemyId, damageEffect.value, 'damage');
+          // 타겟 위치 저장
+          const targetEl = enemyRefs.current.get(targetEnemyId);
+          if (targetEl) {
+            const rect = targetEl.getBoundingClientRect();
+            setAttackTargetPos({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
+          }
+          // 공격 대기 상태로 저장
+          pendingAttackRef.current = {
+            cardInstanceId,
+            targetEnemyId,
+            damagePopups: [{ targetId: targetEnemyId, value: damageEffect.value }]
+          };
+          setPlayerAnimation('attack');
+          // 애니메이션 중간(600ms)에 데미지 적용
+          setTimeout(() => {
+            if (pendingAttackRef.current) {
+              pendingAttackRef.current.damagePopups.forEach(p => {
+                showDamagePopup(p.targetId, p.value, 'damage');
+              });
+              playCard(pendingAttackRef.current.cardInstanceId, pendingAttackRef.current.targetEnemyId);
+              pendingAttackRef.current = null;
+            }
+          }, 600);
+        } else {
+          // 데미지 없는 카드는 바로 실행
+          playCard(cardInstanceId, targetEnemyId);
         }
-        playCard(cardInstanceId, targetEnemyId);
       }
     } else {
       // 논타겟 카드는 화면 상단 절반에 놓으면 사용
@@ -196,13 +230,38 @@ export function CombatScreen() {
         }
         const damageEffect = card.effects.find(e => e.type === 'DAMAGE' && e.target === 'ALL');
         if (damageEffect) {
-          enemies.forEach(enemy => {
-            if (enemy.currentHp > 0) {
-              showDamagePopup(enemy.instanceId, damageEffect.value, 'damage');
+          // 전체 공격 시 첫 번째 살아있는 적 위치로 이동
+          const firstAliveEnemy = enemies.find(e => e.currentHp > 0);
+          if (firstAliveEnemy) {
+            const targetEl = enemyRefs.current.get(firstAliveEnemy.instanceId);
+            if (targetEl) {
+              const rect = targetEl.getBoundingClientRect();
+              setAttackTargetPos({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
             }
-          });
+          }
+          // 공격 대기 상태로 저장
+          const popups = enemies
+            .filter(e => e.currentHp > 0)
+            .map(e => ({ targetId: e.instanceId, value: damageEffect.value }));
+          pendingAttackRef.current = {
+            cardInstanceId,
+            damagePopups: popups
+          };
+          setPlayerAnimation('attack');
+          // 애니메이션 중간(600ms)에 데미지 적용
+          setTimeout(() => {
+            if (pendingAttackRef.current) {
+              pendingAttackRef.current.damagePopups.forEach(p => {
+                showDamagePopup(p.targetId, p.value, 'damage');
+              });
+              playCard(pendingAttackRef.current.cardInstanceId, pendingAttackRef.current.targetEnemyId);
+              pendingAttackRef.current = null;
+            }
+          }, 600);
+        } else {
+          // 데미지 없는 카드는 바로 실행
+          playCard(cardInstanceId);
         }
-        playCard(cardInstanceId);
       }
     }
     selectCard(null);
@@ -242,98 +301,183 @@ export function CombatScreen() {
 
       {/* ===== 상단 UI ===== */}
       <div className="relative z-20 flex justify-between items-start px-2 md:px-[5%] lg:px-[8%] pt-1 md:pt-2">
-        {/* 덱 더미들 */}
+        {/* 덱 더미들 - 카드 스타일 유지 */}
         <div className="flex gap-2 md:gap-4 scale-[0.6] md:scale-100 lg:scale-110 origin-top-left">
           {/* 뽑기 더미 */}
           <button
-            className="group relative transition-transform active:scale-95"
+            className="group relative transition-all duration-200 active:scale-95 hover:scale-105"
             onMouseEnter={() => setHoveredPile('draw')}
             onMouseLeave={() => setHoveredPile(null)}
             onClick={() => setViewingPile('draw')}
           >
-            <div className="relative">
-              <div
-                className="absolute w-10 h-14 md:w-12 md:h-16 rounded"
-                style={{
-                  background: 'linear-gradient(135deg, var(--bg-light) 0%, var(--bg-darkest) 100%)',
-                  border: '1px solid var(--gold-dark)',
-                  transform: 'rotate(-6deg) translate(-1px, 2px)',
-                }}
-              />
-              <div
-                className="relative w-10 h-14 md:w-12 md:h-16 rounded"
-                style={{
-                  background: 'linear-gradient(135deg, var(--bg-medium) 0%, var(--bg-dark) 100%)',
-                  border: '2px solid var(--gold)',
-                }}
-              />
-            </div>
+            {/* 글로우 효과 */}
             <div
-              className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full"
+              className="absolute -inset-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300"
               style={{
-                background: 'linear-gradient(180deg, var(--bg-medium) 0%, var(--bg-darkest) 100%)',
+                background: 'radial-gradient(ellipse, rgba(212, 168, 75, 0.4) 0%, transparent 70%)',
+                filter: 'blur(8px)',
+              }}
+            />
+            <div className="relative">
+              {/* 뒤쪽 카드들 (쌓인 효과) */}
+              <div
+                className="absolute w-10 h-14 md:w-12 md:h-16 rounded-sm"
+                style={{
+                  background: 'linear-gradient(135deg, #2a2520 0%, #0a0805 100%)',
+                  border: '1px solid rgba(212, 168, 75, 0.3)',
+                  transform: 'rotate(-8deg) translate(-2px, 3px)',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.5)',
+                }}
+              />
+              <div
+                className="absolute w-10 h-14 md:w-12 md:h-16 rounded-sm"
+                style={{
+                  background: 'linear-gradient(135deg, #252015 0%, #0a0805 100%)',
+                  border: '1px solid rgba(212, 168, 75, 0.4)',
+                  transform: 'rotate(-4deg) translate(-1px, 1px)',
+                  boxShadow: '0 2px 4px rgba(0,0,0,0.5)',
+                }}
+              />
+              {/* 맨 위 카드 */}
+              <div
+                className="relative w-10 h-14 md:w-12 md:h-16 rounded-sm overflow-hidden"
+                style={{
+                  background: 'linear-gradient(135deg, #3a3025 0%, #1a1510 50%, #0a0805 100%)',
+                  border: '2px solid var(--gold)',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.1)',
+                }}
+              >
+                {/* 카드 무늬 */}
+                <div className="absolute inset-2 rounded-sm opacity-20" style={{
+                  border: '1px solid var(--gold)',
+                  background: 'repeating-linear-gradient(45deg, transparent, transparent 3px, rgba(212,168,75,0.1) 3px, rgba(212,168,75,0.1) 6px)',
+                }} />
+              </div>
+            </div>
+            {/* 카드 수 뱃지 */}
+            <div
+              className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full"
+              style={{
+                background: 'linear-gradient(180deg, #2a2520 0%, #0a0805 100%)',
                 border: '2px solid var(--gold)',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.5), 0 0 10px rgba(212, 168, 75, 0.2)',
               }}
             >
-              <span className="font-title text-xs md:text-sm text-[var(--gold-light)]">{drawPile.length}</span>
+              <span className="font-title text-xs md:text-sm text-[var(--gold-light)]" style={{ textShadow: '0 0 6px rgba(212, 168, 75, 0.5)' }}>
+                {drawPile.length}
+              </span>
             </div>
             <SimpleTooltip show={hoveredPile === 'draw'} text="뽑기 더미" />
           </button>
 
           {/* 버린 더미 */}
           <button
-            className="group relative transition-transform active:scale-95"
+            className="group relative transition-all duration-200 active:scale-95 hover:scale-105"
             onMouseEnter={() => setHoveredPile('discard')}
             onMouseLeave={() => setHoveredPile(null)}
             onClick={() => setViewingPile('discard')}
           >
+            {/* 글로우 효과 */}
             <div
-              className="relative w-10 h-14 md:w-12 md:h-16 rounded"
+              className="absolute -inset-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300"
               style={{
-                background: 'linear-gradient(135deg, var(--attack-deep) 0%, var(--bg-darkest) 100%)',
-                border: '2px solid var(--attack-dark)',
+                background: 'radial-gradient(ellipse, rgba(220, 80, 80, 0.4) 0%, transparent 70%)',
+                filter: 'blur(8px)',
               }}
             />
+            {/* 카드 (버린 더미는 한 장만) */}
             <div
-              className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full"
+              className="relative w-10 h-14 md:w-12 md:h-16 rounded-sm overflow-hidden"
               style={{
-                background: 'linear-gradient(180deg, var(--attack-dark) 0%, var(--bg-darkest) 100%)',
+                background: 'linear-gradient(135deg, #3a2020 0%, #1a0a0a 50%, #0a0505 100%)',
                 border: '2px solid var(--attack)',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05)',
               }}
             >
-              <span className="font-title text-xs md:text-sm text-[var(--attack-light)]">{discardPile.length}</span>
+              {/* 카드 무늬 */}
+              <div className="absolute inset-2 rounded-sm opacity-15" style={{
+                border: '1px solid var(--attack)',
+                background: 'repeating-linear-gradient(-45deg, transparent, transparent 3px, rgba(220,80,80,0.1) 3px, rgba(220,80,80,0.1) 6px)',
+              }} />
+            </div>
+            {/* 카드 수 뱃지 */}
+            <div
+              className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full"
+              style={{
+                background: 'linear-gradient(180deg, #2a1515 0%, #0a0505 100%)',
+                border: '2px solid var(--attack)',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.5), 0 0 10px rgba(220, 80, 80, 0.2)',
+              }}
+            >
+              <span className="font-title text-xs md:text-sm text-[var(--attack-light)]" style={{ textShadow: '0 0 6px rgba(220, 80, 80, 0.5)' }}>
+                {discardPile.length}
+              </span>
             </div>
             <SimpleTooltip show={hoveredPile === 'discard'} text="버린 더미" />
           </button>
         </div>
 
-        {/* 턴 표시 */}
+        {/* 턴 표시 - 기존 스타일 업그레이드 */}
         <div
-          className="px-3 md:px-5 py-1 md:py-2 rounded-b-lg scale-[0.8] md:scale-100 lg:scale-110"
+          className="relative px-4 md:px-6 py-1.5 md:py-2 rounded-b-lg scale-[0.8] md:scale-100 lg:scale-110"
           style={{
-            background: 'linear-gradient(180deg, var(--bg-medium) 0%, var(--bg-darkest) 100%)',
+            background: 'linear-gradient(180deg, #252020 0%, #0a0808 100%)',
             borderLeft: '2px solid var(--gold)',
             borderRight: '2px solid var(--gold)',
-            borderBottom: '2px solid var(--gold)',
+            borderBottom: '3px solid var(--gold)',
+            boxShadow: '0 4px 15px rgba(0,0,0,0.6), 0 0 20px rgba(212, 168, 75, 0.15)',
           }}
         >
+          {/* 상단 장식 라인 */}
+          <div
+            className="absolute top-0 left-2 right-2 h-px"
+            style={{ background: 'linear-gradient(90deg, transparent, var(--gold-dark), transparent)' }}
+          />
           <div className="flex items-center gap-2">
-            <span className="font-display text-xs md:text-sm tracking-wider text-[var(--gold-dark)]">TURN</span>
-            <span className="font-title text-lg md:text-xl text-white">{turn}</span>
+            <span
+              className="font-display text-[10px] md:text-xs tracking-widest"
+              style={{ color: 'var(--gold-dark)' }}
+            >
+              TURN
+            </span>
+            <span
+              className="font-title text-xl md:text-2xl text-white"
+              style={{ textShadow: '0 0 15px rgba(212, 168, 75, 0.4), 0 2px 4px rgba(0,0,0,0.8)' }}
+            >
+              {turn}
+            </span>
           </div>
+          {/* 코너 장식 */}
+          <div className="absolute -bottom-1 left-0 w-2 h-2 border-l-2 border-b-2 border-[var(--gold)]" style={{ borderRadius: '0 0 0 4px' }} />
+          <div className="absolute -bottom-1 right-0 w-2 h-2 border-r-2 border-b-2 border-[var(--gold)]" style={{ borderRadius: '0 0 4px 0' }} />
         </div>
 
-        {/* 전투 로그 - 모바일에서 숨김 */}
+        {/* 전투 로그 - 기존 스타일 업그레이드 */}
         <div
-          className="w-48 h-20 md:w-56 md:h-24 lg:w-64 lg:h-28 overflow-hidden rounded hidden md:block scale-100 lg:scale-110 origin-top-right"
+          className="relative w-48 h-20 md:w-56 md:h-24 lg:w-64 lg:h-28 overflow-hidden rounded-lg hidden md:block scale-100 lg:scale-110 origin-top-right"
           style={{
-            background: 'linear-gradient(180deg, rgba(10,10,15,0.95) 0%, rgba(5,5,8,0.98) 100%)',
-            border: '2px solid rgba(212,168,75,0.3)',
+            background: 'linear-gradient(180deg, rgba(20,18,15,0.98) 0%, rgba(8,6,5,0.99) 100%)',
+            border: '2px solid rgba(212,168,75,0.4)',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.03)',
           }}
         >
+          {/* 헤더 라인 */}
+          <div
+            className="absolute top-0 left-0 right-0 h-5 flex items-center justify-center z-10"
+            style={{
+              background: 'linear-gradient(180deg, rgba(20,18,15,1) 0%, rgba(15,12,10,0.98) 100%)',
+              borderBottom: '1px solid rgba(212,168,75,0.3)',
+            }}
+          >
+            <span className="font-display text-[8px] tracking-widest text-[var(--gold-dark)] opacity-70">BATTLE LOG</span>
+          </div>
+          {/* 코너 장식 */}
+          <div className="absolute top-1 left-1 w-2 h-2 border-l border-t border-[var(--gold)] opacity-50 z-20" />
+          <div className="absolute top-1 right-1 w-2 h-2 border-r border-t border-[var(--gold)] opacity-50 z-20" />
           <div
             ref={combatLogRef}
-            className="p-2 h-full overflow-y-auto text-[10px] md:text-[11px] lg:text-xs font-card scroll-smooth"
+            className="px-2 pb-2 h-full overflow-y-auto text-[10px] md:text-[11px] lg:text-xs font-card scroll-smooth"
+            style={{ paddingTop: '24px' }}
           >
             {combatLog.map((log, i) => (
               <div
@@ -342,7 +486,7 @@ export function CombatScreen() {
                 style={{
                   color: log.includes('피해') ? 'var(--attack-light)' :
                          log.includes('방어') ? 'var(--block-light)' :
-                         log.includes('승리') ? 'var(--gold-light)' : '#888',
+                         log.includes('승리') ? 'var(--gold-light)' : '#777',
                 }}
               >
                 {log}
@@ -356,11 +500,18 @@ export function CombatScreen() {
       <div className="flex-1 relative z-10 flex items-center justify-center">
         <div className="flex items-center justify-center gap-8 md:gap-20 lg:gap-32">
           {/* 플레이어 영역 - 좌측 */}
-          <div className="flex flex-col items-center scale-[0.45] md:scale-90 lg:scale-110" ref={playerRef}>
+          <div className="flex flex-col items-center scale-[0.45] md:scale-90 lg:scale-110 z-10" ref={playerRef}>
             <PlayerStatus
               player={player}
               block={playerBlock}
               statuses={playerStatuses}
+              animation={playerAnimation}
+              attackTargetPos={attackTargetPos}
+              enemyCount={enemies.filter(e => e.currentHp > 0).length}
+              onAnimationEnd={() => {
+                setPlayerAnimation('idle');
+                setAttackTargetPos(null);
+              }}
             />
           </div>
 
@@ -413,7 +564,7 @@ export function CombatScreen() {
           </div>
         </div>
 
-        {/* 턴 종료 버튼 - 우측 하단 (안쪽으로) */}
+        {/* 턴 종료 버튼 - 우측 하단 */}
         <div
           className="absolute right-2 md:right-[6%] lg:right-[10%] bottom-2 md:bottom-8 lg:bottom-10 z-30"
           onMouseEnter={() => setShowEndTurnTooltip(true)}
@@ -421,43 +572,33 @@ export function CombatScreen() {
         >
           <button
             onClick={endPlayerTurn}
-            className={`group relative overflow-hidden active:scale-95 transition-all duration-300 px-2 py-1 md:px-5 md:py-3 lg:px-6 lg:py-3 ${energy === 0 ? 'animate-pulse-glow' : ''}`}
+            className={`group relative overflow-hidden active:scale-95 transition-all duration-300 px-3 py-2 md:px-5 md:py-3 lg:px-6 lg:py-3 rounded-full ${energy === 0 ? 'animate-pulse-glow' : ''}`}
             style={{
               background: energy === 0
-                ? 'linear-gradient(180deg, #4a3020 0%, #2a1810 100%)'
-                : 'linear-gradient(180deg, #3a2820 0%, #1a1410 100%)',
-              border: `2px solid ${energy === 0 ? 'var(--energy)' : 'var(--gold)'}`,
-              borderRadius: '8px',
+                ? 'linear-gradient(180deg, #3a2515 0%, #1a0d08 100%)'
+                : 'linear-gradient(180deg, #2a2015 0%, #0a0805 100%)',
+              border: `2px solid ${energy === 0 ? 'var(--gold)' : 'var(--gold-dark)'}`,
               boxShadow: energy === 0
-                ? '0 4px 15px rgba(0,0,0,0.6), 0 0 25px var(--energy-glow), 0 0 50px rgba(230, 126, 34, 0.3)'
-                : '0 4px 15px rgba(0,0,0,0.6), 0 0 15px var(--gold-glow)',
+                ? '0 4px 15px rgba(0,0,0,0.6), 0 0 20px rgba(212, 168, 75, 0.4), inset 0 1px 0 rgba(255,255,255,0.1)'
+                : '0 4px 15px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05)',
             }}
           >
-            {/* 에너지 0일 때 빛나는 오버레이 */}
+            {/* 에너지 0일 때 내부 글로우 */}
             {energy === 0 && (
-              <>
-                <div
-                  className="absolute inset-0 rounded-md"
-                  style={{
-                    background: 'radial-gradient(circle at center, rgba(230, 126, 34, 0.3) 0%, transparent 70%)',
-                    animation: 'pulse 1.5s ease-in-out infinite',
-                  }}
-                />
-                <div
-                  className="absolute inset-0 rounded-md overflow-hidden"
-                  style={{
-                    background: 'conic-gradient(from 0deg, transparent 0%, rgba(255,150,80,0.2) 25%, transparent 50%)',
-                    animation: 'spin 3s linear infinite',
-                  }}
-                />
-              </>
+              <div
+                className="absolute inset-0 rounded-full"
+                style={{
+                  background: 'radial-gradient(ellipse at center, rgba(212, 168, 75, 0.15) 0%, transparent 70%)',
+                  animation: 'pulse 2s ease-in-out infinite',
+                }}
+              />
             )}
             <span
-              className="font-title text-[9px] md:text-base lg:text-lg tracking-wider relative z-10 transition-colors duration-300"
+              className="font-title text-[10px] md:text-sm lg:text-base tracking-wider relative z-10 transition-colors duration-300"
               style={{
-                color: energy === 0 ? 'var(--energy-light)' : 'var(--gold-light)',
+                color: energy === 0 ? 'var(--gold-light)' : 'var(--gold)',
                 textShadow: energy === 0
-                  ? '0 0 10px var(--energy-glow), 0 0 20px rgba(230, 126, 34, 0.5)'
+                  ? '0 0 8px rgba(212, 168, 75, 0.6)'
                   : 'none',
               }}
             >

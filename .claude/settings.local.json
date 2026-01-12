@@ -18,7 +18,10 @@
       "Bash(git -C \"C:\\\\Users\\\\CHAN2\\\\Music\\\\cord\\\\etc\\\\slaythespire\" add src/components/combat/CardHand.tsx src/components/combat/CombatScreen.tsx src/components/combat/DraggableCard.tsx src/components/combat/Enemy.tsx src/components/combat/EnergyOrb.tsx src/components/combat/PlayerStatus.tsx src/components/common/HealthBar.tsx src/stores/combatStore.ts src/components/combat/DamagePopup.tsx src/components/combat/TargetingArrow.tsx src/components/combat/characters/ src/components/combat/icons/)",
       "Bash(git -C \"C:\\\\Users\\\\CHAN2\\\\Music\\\\cord\\\\etc\\\\slaythespire\" commit -m \"$\\(cat <<''EOF''\nCombat UI 개선: SVG 아이콘, 캐릭터 실루엣, 데미지 팝업, 타겟팅 화살표\n\n- SVG 아이콘으로 이모지 대체 \\(검, 방패, 파워 등\\)\n- 다크 판타지 스타일 캐릭터 실루엣 추가\n- 데미지/블록 팝업 시스템 구현\n- 카드 드래그 시 화살표 타겟팅 시스템\n- 에너지 오브 디자인 개선\n- 체력바 심장 아이콘 추가\n- 플레이어-적 마주보는 레이아웃\nEOF\n\\)\")",
       "Bash(git -C \"C:\\\\Users\\\\CHAN2\\\\Music\\\\cord\\\\etc\\\\slaythespire\" push)",
-      "Bash(git checkout:*)"
+      "Bash(git checkout:*)",
+      "Bash(npm install:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(powershell:*)"
     ]
   }
 }
