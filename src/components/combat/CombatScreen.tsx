@@ -164,17 +164,21 @@ export function CombatScreen() {
 
   // 데미지 보정값 계산 (힘, 약화, 취약)
   const calculateDamageModifier = useCallback((baseDamage: number, targetEnemyId?: string) => {
+    let currentDamage = baseDamage;
     let modifier = 0;
 
     // 힘 적용
     const strength = playerStatuses.find(s => s.type === 'STRENGTH')?.stacks || 0;
+    currentDamage += strength;
     modifier += strength;
 
-    // 약화 적용 (25% 감소)
+    // 약화 적용 (25% 감소) - 실제 계산과 동일하게
     const weak = playerStatuses.find(s => s.type === 'WEAK');
     if (weak && weak.stacks > 0) {
-      const weakReduction = Math.floor((baseDamage + strength) * 0.25);
+      const damageAfterWeak = Math.floor(currentDamage * 0.75);
+      const weakReduction = currentDamage - damageAfterWeak;
       modifier -= weakReduction;
+      currentDamage = damageAfterWeak;
     }
 
     // 취약 적용 (50% 추가) - 적 상태 확인
@@ -183,8 +187,8 @@ export function CombatScreen() {
       if (enemy) {
         const vulnerable = enemy.statuses.find(s => s.type === 'VULNERABLE');
         if (vulnerable && vulnerable.stacks > 0) {
-          const currentDamage = baseDamage + strength - (weak && weak.stacks > 0 ? Math.floor((baseDamage + strength) * 0.25) : 0);
-          const vulnerableBonus = Math.floor(currentDamage * 0.5);
+          const damageAfterVulnerable = Math.floor(currentDamage * 1.5);
+          const vulnerableBonus = damageAfterVulnerable - currentDamage;
           modifier += vulnerableBonus;
         }
       }

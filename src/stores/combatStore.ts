@@ -421,23 +421,26 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
 
     // 방어도 먼저 소모
     let remainingDamage = finalDamage;
-    if (enemy.block > 0) {
-      if (enemy.block >= remainingDamage) {
-        enemy.block -= remainingDamage;
+    let newBlock = enemy.block;
+    if (newBlock > 0) {
+      if (newBlock >= remainingDamage) {
+        newBlock -= remainingDamage;
         remainingDamage = 0;
       } else {
-        remainingDamage -= enemy.block;
-        enemy.block = 0;
+        remainingDamage -= newBlock;
+        newBlock = 0;
       }
     }
 
     // HP 감소
-    enemy.currentHp = Math.max(0, enemy.currentHp - remainingDamage);
+    const newHp = Math.max(0, enemy.currentHp - remainingDamage);
 
-    get().addToCombatLog(`${enemy.name}에게 ${finalDamage} 피해! (남은 HP: ${enemy.currentHp})`);
+    get().addToCombatLog(`${enemy.name}에게 ${finalDamage} 피해! (남은 HP: ${newHp})`);
 
+    // 새로운 enemy 객체 생성
+    const updatedEnemy = { ...enemy, currentHp: newHp, block: newBlock };
     const updatedEnemies = [...enemies];
-    updatedEnemies[enemyIndex] = enemy;
+    updatedEnemies[enemyIndex] = updatedEnemy;
 
     set({ enemies: updatedEnemies });
   },
@@ -492,14 +495,20 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     const enemy = enemies[enemyIndex];
     const existingStatus = enemy.statuses.find(s => s.type === status.type);
 
+    // 새로운 statuses 배열 생성
+    let newStatuses: Status[];
     if (existingStatus) {
-      existingStatus.stacks += status.stacks;
+      newStatuses = enemy.statuses.map(s =>
+        s.type === status.type ? { ...s, stacks: s.stacks + status.stacks } : s
+      );
     } else {
-      enemy.statuses.push({ ...status });
+      newStatuses = [...enemy.statuses, { ...status }];
     }
 
+    // enemy 객체도 새로 생성해야 Zustand가 변경 감지
+    const updatedEnemy = { ...enemy, statuses: newStatuses };
     const updatedEnemies = [...enemies];
-    updatedEnemies[enemyIndex] = enemy;
+    updatedEnemies[enemyIndex] = updatedEnemy;
 
     set({ enemies: updatedEnemies });
     get().addToCombatLog(`${enemy.name}에게 ${status.type} ${status.stacks} 부여!`);

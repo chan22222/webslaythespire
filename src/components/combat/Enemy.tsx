@@ -411,8 +411,8 @@ export function Enemy({ enemy, isTargetable = false }: EnemyProps) {
             // 공간 축소 후 완전히 제거
             setTimeout(() => {
               setIsRemoved(true);
-            }, 500);
-          }, 800);
+            }, 200);
+          }, 400);
         }
       }, 300);
     }
@@ -459,19 +459,23 @@ export function Enemy({ enemy, isTargetable = false }: EnemyProps) {
 
   return (
     <div
-      data-enemy-id={enemy.instanceId}
-      className={`flex flex-col items-center transition-all ${isTargetable ? 'scale-105' : ''}`}
+      className="transition-all"
       style={{
-        width: isCollapsed ? 0 : 'auto',
-        marginLeft: isCollapsed ? 0 : undefined,
-        marginRight: isCollapsed ? 0 : undefined,
+        maxWidth: isCollapsed ? 0 : '200px',
         opacity: isCollapsed ? 0 : 1,
-        transform: isCollapsed ? 'scale(0.8)' : 'scale(1)',
-        transitionDuration: isCollapsed ? '500ms' : '300ms',
+        transitionDuration: '150ms',
         transitionTimingFunction: 'ease-out',
-        overflow: 'hidden',
+        overflow: isCollapsed ? 'hidden' : 'visible',
       }}
     >
+      <div
+        data-enemy-id={enemy.instanceId}
+        className={`flex flex-col items-center transition-transform ${isTargetable ? 'scale-105' : ''}`}
+        style={{
+          transform: isCollapsed ? 'scale(0)' : 'scale(1)',
+          transitionDuration: '150ms',
+        }}
+      >
       {/* 인텐트 표시 */}
       <div
         className="mb-6 animate-float relative cursor-help"
@@ -625,6 +629,7 @@ export function Enemy({ enemy, isTargetable = false }: EnemyProps) {
         {enemy.statuses.map((status, index) => (
           <EnemyStatusBadge key={index} status={status} />
         ))}
+      </div>
       </div>
     </div>
   );
