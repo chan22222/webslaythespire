@@ -13,6 +13,7 @@ export interface DamagePopup {
   type: 'damage' | 'block' | 'heal' | 'buff' | 'debuff';
   x: number;
   y: number;
+  modifier?: number; // 버프/디버프로 인한 보정값
 }
 
 interface CombatStore extends CombatState {
@@ -53,7 +54,7 @@ interface CombatStore extends CombatState {
 
   // 데미지 팝업
   damagePopups: DamagePopup[];
-  addDamagePopup: (value: number, type: DamagePopup['type'], x: number, y: number, targetId?: string) => void;
+  addDamagePopup: (value: number, type: DamagePopup['type'], x: number, y: number, targetId?: string, modifier?: number) => void;
   removeDamagePopup: (id: string) => void;
 }
 
@@ -65,7 +66,7 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
   onPlayerHit: null,
   setOnPlayerHit: (callback) => set({ onPlayerHit: callback }),
 
-  addDamagePopup: (value: number, type: DamagePopup['type'], x: number, y: number, targetId?: string) => {
+  addDamagePopup: (value: number, type: DamagePopup['type'], x: number, y: number, targetId?: string, modifier?: number) => {
     let finalX = x;
     let finalY = y;
 
@@ -81,7 +82,7 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
 
     const id = `popup-${Date.now()}-${Math.random()}`;
     set(state => ({
-      damagePopups: [...state.damagePopups, { id, value, type, x: finalX, y: finalY }],
+      damagePopups: [...state.damagePopups, { id, value, type, x: finalX, y: finalY, modifier }],
     }));
   },
 
@@ -146,11 +147,18 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
   },
 
   endPlayerTurn: () => {
+    // 금속화 효과: 턴 종료 시 방어도 획득
+    const { playerStatuses } = get();
+    const metallicize = playerStatuses.find(s => s.type === 'METALLICIZE');
+    if (metallicize && metallicize.stacks > 0) {
+      get().gainPlayerBlock(metallicize.stacks);
+      get().addToCombatLog(`금속화로 방어도 ${metallicize.stacks} 획득!`);
+    }
+
     // 손패 버리기
     get().discardHand();
 
     // 상태 효과 지속시간 감소
-    const { playerStatuses } = get();
     const updatedStatuses = playerStatuses
       .map(s => ({
         ...s,
@@ -362,8 +370,9 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       }
     });
 
-    // 카드 사용 후 처리
-    const newHand = hand.filter(c => c.instanceId !== cardInstanceId);
+    // 카드 사용 후 처리 (DRAW 효과로 hand가 변경되었을 수 있으므로 다시 가져옴)
+    const currentHand = get().hand;
+    const newHand = currentHand.filter(c => c.instanceId !== cardInstanceId);
     const { discardPile } = get();
 
     set({

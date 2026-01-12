@@ -391,7 +391,8 @@ function EnemyStatusBadge({ status }: { status: { type: string; stacks: number }
 export function Enemy({ enemy, isTargetable = false }: EnemyProps) {
   const [showIntentTooltip, setShowIntentTooltip] = useState(false);
   const [isDying, setIsDying] = useState(false);
-  const [isVisible, setIsVisible] = useState(true);
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isRemoved, setIsRemoved] = useState(false);
   const [isHurt, setIsHurt] = useState(false);
   const [prevHp, setPrevHp] = useState(enemy.currentHp);
 
@@ -404,8 +405,13 @@ export function Enemy({ enemy, isTargetable = false }: EnemyProps) {
         // 피격 효과 끝난 후 죽음 처리
         if (enemy.currentHp <= 0 && !isDying) {
           setIsDying(true);
+          // 페이드아웃 후 공간 축소
           setTimeout(() => {
-            setIsVisible(false);
+            setIsCollapsed(true);
+            // 공간 축소 후 완전히 제거
+            setTimeout(() => {
+              setIsRemoved(true);
+            }, 500);
           }, 800);
         }
       }, 300);
@@ -449,12 +455,22 @@ export function Enemy({ enemy, isTargetable = false }: EnemyProps) {
     }
   };
 
-  if (!isVisible) return null;
+  if (isRemoved) return null;
 
   return (
     <div
       data-enemy-id={enemy.instanceId}
-      className={`flex flex-col items-center transition-all duration-300 ${isTargetable ? 'scale-105' : ''}`}
+      className={`flex flex-col items-center transition-all ${isTargetable ? 'scale-105' : ''}`}
+      style={{
+        width: isCollapsed ? 0 : 'auto',
+        marginLeft: isCollapsed ? 0 : undefined,
+        marginRight: isCollapsed ? 0 : undefined,
+        opacity: isCollapsed ? 0 : 1,
+        transform: isCollapsed ? 'scale(0.8)' : 'scale(1)',
+        transitionDuration: isCollapsed ? '500ms' : '300ms',
+        transitionTimingFunction: 'ease-out',
+        overflow: 'hidden',
+      }}
     >
       {/* 인텐트 표시 */}
       <div

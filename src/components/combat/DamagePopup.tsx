@@ -6,6 +6,7 @@ export interface DamagePopupData {
   type: 'damage' | 'block' | 'heal' | 'buff' | 'debuff';
   x: number;
   y: number;
+  modifier?: number; // 버프/디버프로 인한 보정값 (+힘, -약화 등)
 }
 
 interface DamagePopupProps {
@@ -68,6 +69,20 @@ export function DamagePopup({ popup, onComplete }: DamagePopupProps) {
 
   const styles = getStyles();
 
+  // 데미지 타입일 때 modifier 부호 반전 (힘 +3 → -3 추가 데미지, 약화 -2 → +2 덜 깎임)
+  const getDisplayModifier = () => {
+    if (!popup.modifier || popup.type !== 'damage') return popup.modifier;
+    return -popup.modifier;
+  };
+
+  const displayModifier = getDisplayModifier();
+
+  const getModifierColor = () => {
+    if (!displayModifier) return '#fff';
+    // 데미지 타입: 마이너스(추가 데미지)는 빨간색, 플러스(덜 깎임)는 초록색
+    return displayModifier < 0 ? '#ff6b6b' : '#4ade80';
+  };
+
   return (
     <div
       className="fixed pointer-events-none font-title font-bold z-[9999]"
@@ -83,6 +98,22 @@ export function DamagePopup({ popup, onComplete }: DamagePopupProps) {
       }}
     >
       {styles.text}
+      {/* 보정값 표시 (우상단에 작게) */}
+      {displayModifier !== undefined && displayModifier !== 0 && (
+        <span
+          style={{
+            position: 'absolute',
+            top: '-8px',
+            right: '-24px',
+            fontSize: '14px',
+            color: getModifierColor(),
+            textShadow: '0 0 8px rgba(0,0,0,0.8), 1px 1px 2px rgba(0,0,0,0.9)',
+            fontWeight: 'bold',
+          }}
+        >
+          {displayModifier > 0 ? `+${displayModifier}` : displayModifier}
+        </span>
+      )}
     </div>
   );
 }

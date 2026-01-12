@@ -1,7 +1,7 @@
 export type CardType = 'ATTACK' | 'SKILL' | 'POWER';
 export type CardRarity = 'BASIC' | 'COMMON' | 'UNCOMMON' | 'RARE';
 export type TargetType = 'SINGLE' | 'ALL' | 'SELF' | 'RANDOM';
-export type StatusType = 'VULNERABLE' | 'WEAK' | 'STRENGTH' | 'DEXTERITY' | 'POISON' | 'BLOCK_NEXT_TURN';
+export type StatusType = 'VULNERABLE' | 'WEAK' | 'STRENGTH' | 'DEXTERITY' | 'POISON' | 'BLOCK_NEXT_TURN' | 'METALLICIZE';
 
 export interface CardEffect {
   type: 'DAMAGE' | 'BLOCK' | 'DRAW' | 'APPLY_STATUS' | 'GAIN_ENERGY' | 'HEAL';

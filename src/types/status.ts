@@ -37,4 +37,9 @@ export const STATUS_INFO: Record<StatusType, { name: string; description: string
     description: '다음 턴 시작 시 방어력을 얻습니다.',
     isDebuff: false,
   },
+  METALLICIZE: {
+    name: '금속화',
+    description: '매 턴 종료 시 방어도를 얻습니다.',
+    isDebuff: false,
+  },
 };

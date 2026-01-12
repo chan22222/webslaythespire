@@ -23,12 +23,12 @@ export const METALLICIZE: Card = {
   rarity: 'UNCOMMON',
   cost: 1,
   description: '매 턴 종료 시 3 방어도를 얻습니다.',
-  effects: [{ type: 'BLOCK_NEXT_TURN' as never, value: 3 }],
+  effects: [{ type: 'APPLY_STATUS', value: 3, target: 'SELF', status: 'METALLICIZE' }],
   upgraded: false,
   upgradeEffect: {
     name: '금속화+',
     description: '매 턴 종료 시 4 방어도를 얻습니다.',
-    effects: [{ type: 'BLOCK_NEXT_TURN' as never, value: 4 }],
+    effects: [{ type: 'APPLY_STATUS', value: 4, target: 'SELF', status: 'METALLICIZE' }],
   },
 };
 

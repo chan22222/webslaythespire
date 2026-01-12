@@ -98,7 +98,7 @@ export function CombatScreen() {
   const pendingAttackRef = useRef<{
     cardInstanceId: string;
     targetEnemyId?: string;
-    damagePopups: { targetId: string; value: number }[];
+    damagePopups: { targetId: string; value: number; modifier?: number }[];
   } | null>(null);
 
   useEffect(() => {
@@ -142,7 +142,7 @@ export function CombatScreen() {
     })), []);
 
   // 데미지 팝업을 위한 위치 계산
-  const showDamagePopup = useCallback((targetId: string | 'player', value: number, type: 'damage' | 'block') => {
+  const showDamagePopup = useCallback((targetId: string | 'player', value: number, type: 'damage' | 'block', modifier?: number) => {
     let x = window.innerWidth / 2;
     let y = window.innerHeight / 2;
 
@@ -159,8 +159,39 @@ export function CombatScreen() {
       }
     }
 
-    addDamagePopup(value, type, x, y);
+    addDamagePopup(value, type, x, y, undefined, modifier);
   }, [addDamagePopup]);
+
+  // 데미지 보정값 계산 (힘, 약화, 취약)
+  const calculateDamageModifier = useCallback((baseDamage: number, targetEnemyId?: string) => {
+    let modifier = 0;
+
+    // 힘 적용
+    const strength = playerStatuses.find(s => s.type === 'STRENGTH')?.stacks || 0;
+    modifier += strength;
+
+    // 약화 적용 (25% 감소)
+    const weak = playerStatuses.find(s => s.type === 'WEAK');
+    if (weak && weak.stacks > 0) {
+      const weakReduction = Math.floor((baseDamage + strength) * 0.25);
+      modifier -= weakReduction;
+    }
+
+    // 취약 적용 (50% 추가) - 적 상태 확인
+    if (targetEnemyId) {
+      const enemy = enemies.find(e => e.instanceId === targetEnemyId);
+      if (enemy) {
+        const vulnerable = enemy.statuses.find(s => s.type === 'VULNERABLE');
+        if (vulnerable && vulnerable.stacks > 0) {
+          const currentDamage = baseDamage + strength - (weak && weak.stacks > 0 ? Math.floor((baseDamage + strength) * 0.25) : 0);
+          const vulnerableBonus = Math.floor(currentDamage * 0.5);
+          modifier += vulnerableBonus;
+        }
+      }
+    }
+
+    return modifier;
+  }, [playerStatuses, enemies]);
 
   const handleCardDragEnd = useCallback((cardInstanceId: string, x: number, y: number, dragDistance: number) => {
     // 공격 중이면 카드 사용 불가
@@ -217,11 +248,13 @@ export function CombatScreen() {
             const rect = targetEl.getBoundingClientRect();
             setAttackTargetPos({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
           }
-          // 공격 대기 상태로 저장
+          // 보정값 계산
+          const modifier = calculateDamageModifier(damageEffect.value, targetEnemyId);
+          // 공격 대기 상태로 저장 (기본 데미지와 보정값)
           pendingAttackRef.current = {
             cardInstanceId,
             targetEnemyId,
-            damagePopups: [{ targetId: targetEnemyId, value: damageEffect.value }]
+            damagePopups: [{ targetId: targetEnemyId, value: damageEffect.value, modifier }]
           };
           setIsAttacking(true);
           setPlayerAnimation('attack');
@@ -229,7 +262,7 @@ export function CombatScreen() {
           setTimeout(() => {
             if (pendingAttackRef.current) {
               pendingAttackRef.current.damagePopups.forEach(p => {
-                showDamagePopup(p.targetId, p.value, 'damage');
+                showDamagePopup(p.targetId, p.value, 'damage', p.modifier);
               });
               playCard(pendingAttackRef.current.cardInstanceId, pendingAttackRef.current.targetEnemyId);
               pendingAttackRef.current = null;
@@ -258,10 +291,17 @@ export function CombatScreen() {
               setAttackTargetPos({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
             }
           }
-          // 공격 대기 상태로 저장
+          // 공격 대기 상태로 저장 (각 적별로 modifier 계산, 기본 데미지와 보정값)
           const popups = enemies
             .filter(e => e.currentHp > 0)
-            .map(e => ({ targetId: e.instanceId, value: damageEffect.value }));
+            .map(e => {
+              const modifier = calculateDamageModifier(damageEffect.value, e.instanceId);
+              return {
+                targetId: e.instanceId,
+                value: damageEffect.value,
+                modifier
+              };
+            });
           pendingAttackRef.current = {
             cardInstanceId,
             damagePopups: popups
@@ -272,7 +312,7 @@ export function CombatScreen() {
           setTimeout(() => {
             if (pendingAttackRef.current) {
               pendingAttackRef.current.damagePopups.forEach(p => {
-                showDamagePopup(p.targetId, p.value, 'damage');
+                showDamagePopup(p.targetId, p.value, 'damage', p.modifier);
               });
               playCard(pendingAttackRef.current.cardInstanceId, pendingAttackRef.current.targetEnemyId);
               pendingAttackRef.current = null;
@@ -285,7 +325,7 @@ export function CombatScreen() {
       }
     }
     selectCard(null);
-  }, [hand, energy, enemies, playCard, selectCard, showDamagePopup, isAttacking]);
+  }, [hand, energy, enemies, playCard, selectCard, showDamagePopup, isAttacking, calculateDamageModifier]);
 
   const handleCardSelect = useCallback((cardInstanceId: string) => {
     selectCard(selectedCardId === cardInstanceId ? null : cardInstanceId);
