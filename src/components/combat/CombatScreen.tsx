@@ -86,22 +86,7 @@ function BattleIntro({
             animation: 'slashIn 0.4s ease-out forwards',
           }}
         />
-        {/* 서브 슬래시 1 */}
-        <div
-          className="absolute"
-          style={{
-            top: '50%',
-            left: '-10%',
-            width: '120%',
-            height: '2px',
-            background: `linear-gradient(90deg, transparent 0%, ${colors.primary}88 40%, ${colors.primary} 50%, ${colors.primary}88 60%, transparent 100%)`,
-            transform: 'rotate(-8deg)',
-            boxShadow: `0 0 20px ${colors.glow}`,
-            animation: 'slashIn 0.35s ease-out 0.1s forwards',
-            opacity: 0,
-          }}
-        />
-        {/* 서브 슬래시 2 */}
+        {/* 서브 슬래시 */}
         <div
           className="absolute"
           style={{
@@ -353,22 +338,7 @@ function VictoryIntro({ onFadeStart, onComplete }: { onFadeStart: () => void; on
             animation: 'victorySlashIn 0.4s ease-out forwards',
           }}
         />
-        {/* 서브 슬래시 1 */}
-        <div
-          className="absolute"
-          style={{
-            top: '50%',
-            left: '-10%',
-            width: '120%',
-            height: '2px',
-            background: `linear-gradient(90deg, transparent 0%, ${colors.primary}88 40%, ${colors.primary} 50%, ${colors.primary}88 60%, transparent 100%)`,
-            transform: 'rotate(-8deg)',
-            boxShadow: `0 0 20px ${colors.glow}`,
-            animation: 'victorySlashIn 0.35s ease-out 0.1s forwards',
-            opacity: 0,
-          }}
-        />
-        {/* 서브 슬래시 2 */}
+        {/* 서브 슬래시 */}
         <div
           className="absolute"
           style={{
@@ -982,7 +952,7 @@ export function CombatScreen() {
       </div>
 
       {/* ===== 상단 UI ===== */}
-      <div className="relative z-20 flex justify-between items-start px-2 md:px-[5%] lg:px-[8%] pt-1 md:pt-2">
+      <div className="relative z-20 flex justify-between items-start px-2 md:px-[5%] lg:px-[8%] pt-1 md:pt-2 h-20 md:h-24 lg:h-28">
         {/* 덱 더미들 - 카드 스타일 유지 */}
         <div className="flex gap-2 md:gap-4 scale-[0.6] md:scale-100 lg:scale-110 origin-top-left">
           {/* 뽑기 더미 */}
@@ -1099,9 +1069,9 @@ export function CombatScreen() {
           </button>
         </div>
 
-        {/* 턴 표시 - 기존 스타일 업그레이드 */}
+        {/* 턴 표시 - 중앙 고정 */}
         <div
-          className="relative px-4 md:px-6 py-1.5 md:py-2 rounded-b-lg scale-[0.8] md:scale-100 lg:scale-110"
+          className="absolute left-1/2 -translate-x-1/2 px-4 md:px-6 py-1.5 md:py-2 rounded-b-lg scale-[0.8] md:scale-100 lg:scale-110"
           style={{
             background: 'linear-gradient(180deg, #252020 0%, #0a0808 100%)',
             borderLeft: '2px solid var(--gold)',
@@ -1134,9 +1104,9 @@ export function CombatScreen() {
           <div className="absolute -bottom-1 right-0 w-2 h-2 border-r-2 border-b-2 border-[var(--gold)]" style={{ borderRadius: '0 0 4px 0' }} />
         </div>
 
-        {/* 전투 로그 - 기존 스타일 업그레이드 */}
+        {/* 전투 로그 - absolute로 우측 상단 고정 */}
         <div
-          className="relative w-48 h-20 md:w-56 md:h-24 lg:w-64 lg:h-28 overflow-hidden rounded-lg hidden md:block scale-100 lg:scale-110 origin-top-right"
+          className="absolute top-1 md:top-2 right-2 md:right-[5%] lg:right-[8%] w-72 h-28 md:w-80 md:h-32 lg:w-96 lg:h-40 overflow-hidden rounded-lg hidden md:block"
           style={{
             background: 'linear-gradient(180deg, rgba(20,18,15,0.98) 0%, rgba(8,6,5,0.99) 100%)',
             border: '2px solid rgba(212,168,75,0.4)',
@@ -1145,21 +1115,21 @@ export function CombatScreen() {
         >
           {/* 헤더 라인 */}
           <div
-            className="absolute top-0 left-0 right-0 h-5 flex items-center justify-center z-10"
+            className="absolute top-0 left-0 right-0 h-6 flex items-center justify-center z-10"
             style={{
               background: 'linear-gradient(180deg, rgba(20,18,15,1) 0%, rgba(15,12,10,0.98) 100%)',
               borderBottom: '1px solid rgba(212,168,75,0.3)',
             }}
           >
-            <span className="font-display text-[8px] tracking-widest text-[var(--gold-dark)] opacity-70">BATTLE LOG</span>
+            <span className="font-display text-[10px] tracking-widest text-[var(--gold-dark)]">BATTLE LOG</span>
           </div>
           {/* 코너 장식 */}
           <div className="absolute top-1 left-1 w-2 h-2 border-l border-t border-[var(--gold)] opacity-50 z-20" />
           <div className="absolute top-1 right-1 w-2 h-2 border-r border-t border-[var(--gold)] opacity-50 z-20" />
           <div
             ref={combatLogRef}
-            className="px-2 pb-2 h-full overflow-y-auto text-[10px] md:text-[11px] lg:text-xs font-card scroll-smooth"
-            style={{ paddingTop: '24px' }}
+            className="px-3 pb-2 h-full overflow-y-auto text-xs md:text-sm font-card scroll-smooth"
+            style={{ paddingTop: '28px' }}
           >
             {combatLog.map((log, i) => (
               <div

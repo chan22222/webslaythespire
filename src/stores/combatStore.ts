@@ -274,6 +274,11 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
         const strength = enemy.statuses.find(s => s.type === 'STRENGTH')?.stacks || 0;
         const totalDamage = damage + strength;
 
+        // 디버그: 공격 상세 로그
+        if (strength > 0) {
+          get().addToCombatLog(`[${enemy.name}: 기본 ${damage} + 힘 ${strength} = ${totalDamage}]`);
+        }
+
         // 피격 콜백 호출
         const { onPlayerHit } = get();
         if (onPlayerHit) {
@@ -590,6 +595,7 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     let finalDamage = damage;
     if (vulnerable && vulnerable.stacks > 0) {
       finalDamage = Math.floor(damage * 1.5);
+      get().addToCombatLog(`[취약: ${damage} → ${finalDamage}]`);
     }
 
     // 방어도 먼저 소모
@@ -614,6 +620,7 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     // 방어도가 흡수한 데미지 팝업 (회색) - 왼쪽 위
     if (blockedAmount > 0) {
       get().addDamagePopup(blockedAmount, 'blocked', 0, 0, 'player', undefined, -40, -20);
+      get().addToCombatLog(`[방어도 ${blockedAmount} 흡수, 남은 방어도: ${newBlock}]`);
     }
 
     // 실제 HP 데미지 팝업 (빨간색) - 오른쪽 아래, 약간 딜레이
