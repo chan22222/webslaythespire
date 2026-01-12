@@ -127,12 +127,18 @@ export const ARMAMENTS: Card = {
   rarity: 'COMMON',
   cost: 1,
   description: '5 방어도를 얻습니다. 손에 있는 카드 1장을 업그레이드합니다.',
-  effects: [{ type: 'BLOCK', value: 5 }],
+  effects: [
+    { type: 'BLOCK', value: 5 },
+    { type: 'UPGRADE_HAND', value: 1 },
+  ],
   upgraded: false,
   upgradeEffect: {
     name: '무장+',
     description: '5 방어도를 얻습니다. 손에 있는 모든 카드를 업그레이드합니다.',
-    effects: [{ type: 'BLOCK', value: 5 }],
+    effects: [
+      { type: 'BLOCK', value: 5 },
+      { type: 'UPGRADE_ALL_HAND', value: 0 },
+    ],
   },
 };
 

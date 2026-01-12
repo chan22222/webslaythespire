@@ -81,7 +81,7 @@ export function CombatScreen() {
   // 카드 목록 모달 상태
   const [viewingPile, setViewingPile] = useState<'draw' | 'discard' | null>(null);
   // 플레이어 애니메이션 상태
-  const [playerAnimation, setPlayerAnimation] = useState<'idle' | 'attack' | 'hurt'>('idle');
+  const [playerAnimation, setPlayerAnimation] = useState<'idle' | 'attack' | 'hurt' | 'skill'>('idle');
   // 공격 타겟 위치
   const [attackTargetPos, setAttackTargetPos] = useState<{ x: number; y: number } | null>(null);
   // 공격 중 여부 (카드 사용 불가)
@@ -145,7 +145,7 @@ export function CombatScreen() {
     })), []);
 
   // 데미지 팝업을 위한 위치 계산 (hitIndex로 다중 타격 시 위치 오프셋)
-  const showDamagePopup = useCallback((targetId: string | 'player', value: number, type: 'damage' | 'block', modifier?: number, hitIndex?: number) => {
+  const showDamagePopup = useCallback((targetId: string | 'player', value: number, type: 'damage' | 'block' | 'skill', modifier?: number, hitIndex?: number) => {
     let x = window.innerWidth / 2;
     let y = window.innerHeight / 2;
 
@@ -286,8 +286,17 @@ export function CombatScreen() {
             showDamagePopup(firstHit.targetId, firstHit.value, 'damage', firstHit.modifier, 0);
           }, 600);
         } else {
-          // 데미지 없는 카드는 바로 실행
-          playCard(cardInstanceId, confirmedTargetId);
+          // 데미지 없는 타겟 카드는 스킬 애니메이션 후 실행
+          const hasLoseHpTarget = card.effects.some(e => e.type === 'LOSE_HP');
+          setPlayerAnimation('skill');
+          // 스킬 이펙트 팝업 표시
+          showDamagePopup('player', 0, 'skill');
+          setTimeout(() => {
+            playCard(cardInstanceId, confirmedTargetId);
+            if (!hasLoseHpTarget) {
+              setPlayerAnimation('idle');
+            }
+          }, 550);
         }
       }
     } else {
@@ -338,8 +347,18 @@ export function CombatScreen() {
             }
           }, 600);
         } else {
-          // 데미지 없는 카드는 바로 실행
-          playCard(cardInstanceId);
+          // 데미지 없는 카드는 스킬 애니메이션 후 실행
+          const hasLoseHp = card.effects.some(e => e.type === 'LOSE_HP');
+          setPlayerAnimation('skill');
+          // 스킬 이펙트 팝업 표시
+          showDamagePopup('player', 0, 'skill');
+          setTimeout(() => {
+            playCard(cardInstanceId);
+            // LOSE_HP가 있으면 hurt 애니메이션이 실행되므로 idle 설정 안함
+            if (!hasLoseHp) {
+              setPlayerAnimation('idle');
+            }
+          }, 550);
         }
       }
     }

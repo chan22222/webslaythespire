@@ -36,16 +36,22 @@ export const METALLICIZE: Card = {
 export const BLOODLETTING: Card = {
   id: 'bloodletting',
   name: '방혈',
-  type: 'SHIELD',
+  type: 'EFFECT',
   rarity: 'UNCOMMON',
   cost: 0,
   description: 'HP를 3 잃고 에너지 2를 얻습니다.',
-  effects: [{ type: 'GAIN_ENERGY', value: 2 }],
+  effects: [
+    { type: 'LOSE_HP', value: 3 },
+    { type: 'GAIN_ENERGY', value: 2 },
+  ],
   upgraded: false,
   upgradeEffect: {
     name: '방혈+',
     description: 'HP를 3 잃고 에너지 3을 얻습니다.',
-    effects: [{ type: 'GAIN_ENERGY', value: 3 }],
+    effects: [
+      { type: 'LOSE_HP', value: 3 },
+      { type: 'GAIN_ENERGY', value: 3 },
+    ],
   },
 };
 

@@ -10,7 +10,7 @@ import { useGameStore } from './gameStore';
 export interface DamagePopup {
   id: string;
   value: number;
-  type: 'damage' | 'block' | 'heal' | 'buff' | 'debuff';
+  type: 'damage' | 'block' | 'heal' | 'buff' | 'debuff' | 'skill';
   x: number;
   y: number;
   modifier?: number; // 버프/디버프로 인한 보정값
@@ -125,17 +125,67 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       playerBlock: 0,
       playerStatuses: [],
     });
-    // startPlayerTurn에서 드로우 처리됨
+
+    // 유물 효과 트리거 (ON_COMBAT_START)
+    const gameState = useGameStore.getState();
+    const relics = gameState.player.relics;
+    let startingBlock = 0;
+    let startingEnergy = 0;
+    let startingStrength = 0;
+    let extraDraw = 0;
+
+    relics.forEach(relic => {
+      relic.effects.forEach(effect => {
+        if (effect.trigger === 'ON_COMBAT_START') {
+          // 유물 효과를 컨텍스트로 실행
+          const context = {
+            gainBlock: (amount: number) => { startingBlock += amount; },
+            gainEnergy: (amount: number) => { startingEnergy += amount; },
+            gainStrength: (amount: number) => { startingStrength += amount; },
+            drawCards: (count: number) => { extraDraw += count; },
+            heal: () => {},
+          };
+          effect.execute(context);
+        }
+      });
+    });
+
+    // 전투 시작 효과 적용
+    if (startingBlock > 0) {
+      set({ playerBlock: startingBlock });
+      get().addToCombatLog(`유물 효과로 방어도 ${startingBlock} 획득!`);
+    }
+    if (startingEnergy > 0) {
+      set(state => ({ maxEnergy: state.maxEnergy + startingEnergy }));
+      get().addToCombatLog(`유물 효과로 에너지 +${startingEnergy}!`);
+    }
+    if (startingStrength > 0) {
+      get().applyStatusToPlayer({ type: 'STRENGTH', stacks: startingStrength });
+      get().addToCombatLog(`유물 효과로 힘 ${startingStrength} 획득!`);
+    }
+    // extraDraw는 startPlayerTurn에서 처리
+    if (extraDraw > 0) {
+      set({ extraDrawNextTurn: extraDraw });
+    }
   },
 
   startPlayerTurn: () => {
-    const { turn, maxEnergy, playerStatuses } = get();
+    const { turn, maxEnergy, playerStatuses, extraDrawNextTurn } = get();
 
-    // 방어도 리셋
-    set({ playerBlock: 0 });
+    // 첫 턴이 아니면 방어도 리셋 (첫 턴은 유물 효과로 받은 방어도 유지)
+    if (turn > 1) {
+      set({ playerBlock: 0 });
+    }
 
     // 에너지 리셋
     set({ energy: maxEnergy });
+
+    // 금속화 효과: 턴 시작 시 방어도 획득
+    const metallicize = playerStatuses.find(s => s.type === 'METALLICIZE');
+    if (metallicize && metallicize.stacks > 0) {
+      get().gainPlayerBlock(metallicize.stacks);
+      get().addToCombatLog(`금속화로 방어도 ${metallicize.stacks} 획득!`);
+    }
 
     // 독 피해 처리
     const poisonStatus = playerStatuses.find(s => s.type === 'POISON');
@@ -149,25 +199,22 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       });
     }
 
-    // 카드 5장 드로우
-    get().drawCards(5);
+    // 카드 5장 드로우 + 추가 드로우 (유물 효과)
+    const totalDraw = 5 + extraDrawNextTurn;
+    get().drawCards(totalDraw);
 
+    // 추가 드로우 리셋
     set({
       turn: turn,
       isPlayerTurn: true,
+      extraDrawNextTurn: 0,
     });
 
     get().addToCombatLog(`--- 턴 ${turn} 시작 ---`);
   },
 
   endPlayerTurn: () => {
-    // 금속화 효과: 턴 종료 시 방어도 획득
     const { playerStatuses } = get();
-    const metallicize = playerStatuses.find(s => s.type === 'METALLICIZE');
-    if (metallicize && metallicize.stacks > 0) {
-      get().gainPlayerBlock(metallicize.stacks);
-      get().addToCombatLog(`금속화로 방어도 ${metallicize.stacks} 획득!`);
-    }
 
     // 손패 버리기
     get().discardHand();
@@ -377,22 +424,75 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
           break;
         case 'GAIN_ENERGY':
           get().gainEnergy(effect.value);
+          get().addToCombatLog(`에너지 ${effect.value} 획득!`);
           break;
+        case 'LOSE_HP': {
+          // HP 직접 감소 (방어도 무시)
+          useGameStore.getState().modifyHp(-effect.value);
+          get().addDamagePopup(effect.value, 'damage', 0, 0, 'player');
+          // 피격 애니메이션 트리거
+          const { onPlayerHit } = get();
+          if (onPlayerHit) {
+            onPlayerHit();
+          }
+          get().addToCombatLog(`HP ${effect.value} 감소!`);
+          break;
+        }
         case 'HEAL':
           // 힐은 gameStore에서 처리
           break;
+        case 'UPGRADE_HAND': {
+          // 손에 있는 업그레이드 가능한 카드 중 랜덤 1장 업그레이드
+          const currentHand = get().hand;
+          const upgradableCards = currentHand.filter(c => !c.upgraded && c.upgradeEffect);
+          if (upgradableCards.length > 0) {
+            const randomCard = upgradableCards[Math.floor(Math.random() * upgradableCards.length)];
+            const upgradedCard = {
+              ...randomCard,
+              ...randomCard.upgradeEffect,
+              upgraded: true,
+            };
+            const newHand = currentHand.map(c =>
+              c.instanceId === randomCard.instanceId ? upgradedCard : c
+            );
+            set({ hand: newHand });
+            get().addToCombatLog(`${randomCard.name}을(를) 업그레이드!`);
+          }
+          break;
+        }
+        case 'UPGRADE_ALL_HAND': {
+          // 손에 있는 모든 카드 업그레이드
+          const currentHandAll = get().hand;
+          let upgradedCount = 0;
+          const newHandAll = currentHandAll.map(c => {
+            if (!c.upgraded && c.upgradeEffect) {
+              upgradedCount++;
+              return {
+                ...c,
+                ...c.upgradeEffect,
+                upgraded: true,
+              };
+            }
+            return c;
+          });
+          set({ hand: newHandAll });
+          if (upgradedCount > 0) {
+            get().addToCombatLog(`${upgradedCount}장의 카드를 업그레이드!`);
+          }
+          break;
+        }
       }
     });
 
     // 카드 사용 후 처리 (DRAW 효과로 hand가 변경되었을 수 있으므로 다시 가져옴)
     const currentHand = get().hand;
     const newHand = currentHand.filter(c => c.instanceId !== cardInstanceId);
-    const { discardPile } = get();
+    const { discardPile, energy: currentEnergy } = get();
 
     set({
       hand: newHand,
       discardPile: [...discardPile, card],
-      energy: energy - card.cost,
+      energy: currentEnergy - card.cost,
       selectedCardId: null,
       targetingMode: false,
     });
@@ -533,11 +633,17 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     const existingStatus = playerStatuses.find(s => s.type === status.type);
 
     if (existingStatus) {
-      existingStatus.stacks += status.stacks;
-      set({ playerStatuses: [...playerStatuses] });
+      // 뮤테이션 없이 새 객체 생성
+      const updatedStatuses = playerStatuses.map(s =>
+        s.type === status.type
+          ? { ...s, stacks: s.stacks + status.stacks }
+          : s
+      );
+      set({ playerStatuses: updatedStatuses });
     } else {
       set({ playerStatuses: [...playerStatuses, { ...status }] });
     }
+    get().addToCombatLog(`${status.type} ${status.stacks} 획득!`);
   },
 
   gainEnergy: (amount: number) => {

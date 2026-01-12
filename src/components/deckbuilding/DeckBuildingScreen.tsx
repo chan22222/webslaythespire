@@ -257,19 +257,19 @@ export function DeckBuildingScreen() {
 
           {/* 카드 목록 */}
           <div className="flex-1 overflow-y-auto pr-2">
-            <div className="flex flex-wrap gap-4 justify-start">
+            <div className="flex flex-wrap gap-4 justify-start pt-4">
               {filteredCards.map((card, index) => (
                 <div
                   key={`${card.id}-${index}`}
-                  className="cursor-pointer transition-transform hover:scale-105 hover:z-10 relative inline-block"
+                  className="cursor-pointer transition-transform hover:scale-105 hover:z-10 relative inline-block group"
                   style={{ width: '180px', height: '251px' }}
                   onClick={() => addCard(card)}
                 >
                   <CardComponent card={card} size="lg" />
                   {/* 추가 힌트 */}
                   <div
-                    className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity rounded-lg"
-                    style={{ background: 'rgba(74, 222, 128, 0.5)', width: '180px', height: '251px' }}
+                    className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-lg pointer-events-none"
+                    style={{ background: 'rgba(74, 222, 128, 0.5)' }}
                   >
                     <span className="text-white text-2xl font-bold">+</span>
                   </div>

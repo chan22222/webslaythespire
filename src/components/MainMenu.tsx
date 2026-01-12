@@ -314,7 +314,7 @@ export function MainMenu() {
               textShadow: '2px 2px 0 #000',
             }}
           >
-            덱 빌딩
+            커스텀 모드
           </span>
         </button>
 

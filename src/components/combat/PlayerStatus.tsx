@@ -17,7 +17,7 @@ interface PlayerStatusProps {
   player: Player;
   block: number;
   statuses: Status[];
-  animation?: 'idle' | 'attack' | 'hurt';
+  animation?: 'idle' | 'attack' | 'hurt' | 'skill';
   attackTargetPos?: { x: number; y: number } | null;
   enemyCount?: number;
   onAnimationEnd?: () => void;
@@ -105,7 +105,7 @@ function BlockBadge({ block }: { block: number }) {
 
   return (
     <div
-      className="absolute -right-4 top-1/2 -translate-y-1/2 flex items-center justify-center cursor-help"
+      className="absolute -left-2 top-1/2 -translate-y-1/2 flex items-center justify-center cursor-help"
       style={{
         width: '44px',
         height: '52px',
@@ -162,15 +162,15 @@ function BlockBadge({ block }: { block: number }) {
         {block}
       </span>
 
-      {/* 툴팁 - 왼쪽에 표시 (적 이미지에 가려지지 않게) */}
+      {/* 툴팁 - 오른쪽에 표시 */}
       {showTooltip && (
         <div
           className="absolute z-[9999] px-3 py-2 rounded-lg whitespace-nowrap pointer-events-none"
           style={{
-            right: '100%',
+            left: '100%',
             top: '50%',
             transform: 'translateY(-50%)',
-            marginRight: '12px',
+            marginLeft: '12px',
             background: 'rgba(0, 0, 0, 0.95)',
             border: '2px solid var(--block-bright)',
             boxShadow: '0 4px 20px rgba(0, 0, 0, 0.8)',
@@ -184,18 +184,18 @@ function BlockBadge({ block }: { block: number }) {
             <br />
             턴이 끝나면 방어도가 0이 됩니다.
           </div>
-          {/* 화살표 - 오른쪽으로 */}
+          {/* 화살표 - 왼쪽으로 */}
           <div
             style={{
               position: 'absolute',
-              left: '100%',
+              right: '100%',
               top: '50%',
               transform: 'translateY(-50%)',
               width: 0,
               height: 0,
               borderTop: '8px solid transparent',
               borderBottom: '8px solid transparent',
-              borderLeft: '8px solid var(--block-bright)',
+              borderRight: '8px solid var(--block-bright)',
             }}
           />
         </div>

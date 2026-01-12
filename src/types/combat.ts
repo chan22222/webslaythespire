@@ -14,6 +14,7 @@ export interface CombatState {
   selectedCardId: string | null;
   targetingMode: boolean;
   combatLog: string[];
+  extraDrawNextTurn: number;
 }
 
 export const createInitialCombatState = (): CombatState => ({
@@ -29,4 +30,5 @@ export const createInitialCombatState = (): CombatState => ({
   selectedCardId: null,
   targetingMode: false,
   combatLog: [],
+  extraDrawNextTurn: 0,
 });

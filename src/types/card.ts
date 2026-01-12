@@ -4,7 +4,7 @@ export type TargetType = 'SINGLE' | 'ALL' | 'SELF' | 'RANDOM';
 export type StatusType = 'VULNERABLE' | 'WEAK' | 'STRENGTH' | 'DEXTERITY' | 'POISON' | 'BLOCK_NEXT_TURN' | 'METALLICIZE';
 
 export interface CardEffect {
-  type: 'DAMAGE' | 'BLOCK' | 'DRAW' | 'APPLY_STATUS' | 'GAIN_ENERGY' | 'HEAL';
+  type: 'DAMAGE' | 'BLOCK' | 'DRAW' | 'APPLY_STATUS' | 'GAIN_ENERGY' | 'HEAL' | 'LOSE_HP' | 'UPGRADE_HAND' | 'UPGRADE_ALL_HAND';
   value: number;
   target?: TargetType;
   status?: StatusType;

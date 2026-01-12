@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 export interface DamagePopupData {
   id: string;
   value: number;
-  type: 'damage' | 'block' | 'heal' | 'buff' | 'debuff';
+  type: 'damage' | 'block' | 'heal' | 'buff' | 'debuff' | 'skill';
   x: number;
   y: number;
   modifier?: number; // 버프/디버프로 인한 보정값 (+힘, -약화 등)
@@ -58,6 +58,12 @@ export function DamagePopup({ popup, onComplete }: DamagePopupProps) {
           text: `${popup.value}`,
           shadow: '0 0 20px rgba(168, 85, 247, 0.8)',
         };
+      case 'skill':
+        return {
+          color: '#7dd3fc',
+          text: '✦ ✦ ✦',
+          shadow: '0 0 25px rgba(125, 211, 252, 0.9), 0 0 50px rgba(56, 189, 248, 0.5)',
+        };
       default:
         return {
           color: '#fff',
@@ -83,6 +89,17 @@ export function DamagePopup({ popup, onComplete }: DamagePopupProps) {
     return displayModifier < 0 ? '#ff6b6b' : '#4ade80';
   };
 
+  const getFontSize = () => {
+    if (popup.type === 'damage') return '32px';
+    if (popup.type === 'skill') return '28px';
+    return '24px';
+  };
+
+  const getAnimation = () => {
+    if (popup.type === 'skill') return 'skillPopup 1s ease-out forwards';
+    return 'damagePopup 0.8s ease-out forwards';
+  };
+
   return (
     <div
       className="fixed pointer-events-none font-title font-bold z-[9999]"
@@ -90,11 +107,11 @@ export function DamagePopup({ popup, onComplete }: DamagePopupProps) {
         left: popup.x,
         top: popup.y,
         color: styles.color,
-        fontSize: popup.type === 'damage' ? '32px' : '24px',
+        fontSize: getFontSize(),
         textShadow: `${styles.shadow}, 2px 2px 4px rgba(0,0,0,0.8)`,
         transform: 'translate(-50%, -50%)',
         opacity: isVisible ? 1 : 0,
-        animation: isVisible ? 'damagePopup 0.8s ease-out forwards' : 'none',
+        animation: isVisible ? getAnimation() : 'none',
       }}
     >
       {styles.text}
@@ -147,6 +164,31 @@ export function DamagePopupManager({ popups, onPopupComplete }: DamagePopupManag
           100% {
             transform: translate(-50%, -120%) scale(0.8);
             opacity: 0;
+          }
+        }
+        @keyframes skillPopup {
+          0% {
+            transform: translate(-50%, -50%) scale(0.3);
+            opacity: 0;
+            filter: blur(4px);
+          }
+          15% {
+            transform: translate(-50%, -50%) scale(1.4);
+            opacity: 1;
+            filter: blur(0);
+          }
+          30% {
+            transform: translate(-50%, -60%) scale(1.1);
+            opacity: 1;
+          }
+          50% {
+            transform: translate(-50%, -70%) scale(1.2);
+            opacity: 1;
+          }
+          100% {
+            transform: translate(-50%, -100%) scale(0.6);
+            opacity: 0;
+            filter: blur(2px);
           }
         }
       `}</style>

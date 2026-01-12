@@ -28,10 +28,16 @@ const SPRITE_CONFIG = {
       endRow: 6, endFrame: 4,
       speed: 150
     },
+    skill: {
+      multiRow: true,
+      startRow: 2, startFrame: 2,
+      endRow: 3, endFrame: 3,
+      speed: 60
+    },
   },
 };
 
-type AnimationState = 'idle' | 'attack' | 'hurt';
+type AnimationState = 'idle' | 'attack' | 'hurt' | 'skill';
 
 interface WarriorSpriteProps {
   size?: number;
