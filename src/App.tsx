@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { useGameStore } from './stores/gameStore';
 import { MainMenu } from './components/MainMenu';
 import { MapScreen } from './components/map/MapScreen';
@@ -8,11 +9,393 @@ import { ShopScreen } from './components/shop/ShopScreen';
 import { GameOver } from './components/GameOver';
 import { DeckBuildingScreen } from './components/deckbuilding/DeckBuildingScreen';
 
+// 로딩 화면 컴포넌트 - 던전 러너 스타일
+function LoadingScreen({ onLoadComplete }: { onLoadComplete: () => void }) {
+  const [progress, setProgress] = useState(0);
+  const [fadeOut, setFadeOut] = useState(false);
+  const [runFrame, setRunFrame] = useState(0);
+
+  // 도착 애니메이션 상태
+  const [isArrived, setIsArrived] = useState(false);
+  const [arrivalFrame, setArrivalFrame] = useState(0);
+  const [arrivalLoopCount, setArrivalLoopCount] = useState(0);
+
+  // 도착 애니메이션 프레임 (10,3 ~ 11,1 = 5프레임)
+  const ARRIVAL_FRAMES = 5;
+  const ARRIVAL_START_ROW = 10;
+  const ARRIVAL_START_COL = 3;
+
+  // 배경 파티클 위치 고정 (초기화 시 한번만 생성)
+  const [bgParticles] = useState(() =>
+    [...Array(15)].map((_, i) => ({
+      id: i,
+      size: 4 + (i % 3) * 2,
+      left: 5 + (i * 7) % 90,
+      top: 10 + (i * 11) % 80,
+      duration: 2.5 + (i % 4),
+      delay: (i * 0.25) % 2,
+      opacity: 0.7 + (i % 3) * 0.15,
+    }))
+  );
+
+  // 스프라이트 설정
+  const RUN_FRAMES = 8;
+  const SPRITE_WIDTH = 69;
+  const SPRITE_HEIGHT = 44;
+  const SPRITE_SCALE = 2.2;
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setProgress(prev => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          return 100;
+        }
+        const increment = Math.random() * 12 + 4;
+        return Math.min(100, prev + increment);
+      });
+    }, 180);
+    return () => clearInterval(interval);
+  }, []);
+
+  // 캐릭터 뛰기 애니메이션 (도착 전까지만)
+  useEffect(() => {
+    if (isArrived) return;
+    const runInterval = setInterval(() => {
+      setRunFrame(prev => (prev + 1) % RUN_FRAMES);
+    }, 90);
+    return () => clearInterval(runInterval);
+  }, [isArrived]);
+
+  // 50%쯤 되면 도착 애니메이션 시작 (로딩 트릭)
+  useEffect(() => {
+    if (progress >= 50 && !isArrived) {
+      setIsArrived(true);
+    }
+  }, [progress, isArrived]);
+
+  // 도착 애니메이션 재생 (2번 반복)
+  useEffect(() => {
+    if (!isArrived || arrivalLoopCount >= 2) return;
+
+    const arrivalInterval = setInterval(() => {
+      setArrivalFrame(prev => {
+        const nextFrame = prev + 1;
+        if (nextFrame >= ARRIVAL_FRAMES) {
+          setArrivalLoopCount(count => count + 1);
+          return 0;
+        }
+        return nextFrame;
+      });
+    }, 100);
+
+    return () => clearInterval(arrivalInterval);
+  }, [isArrived, arrivalLoopCount]);
+
+
+  // 도착 애니메이션 2번 완료 AND 로딩 100% 후 페이드아웃
+  useEffect(() => {
+    if (arrivalLoopCount >= 2 && progress >= 100) {
+      setTimeout(() => {
+        setFadeOut(true);
+        setTimeout(onLoadComplete, 600);
+      }, 200);
+    }
+  }, [arrivalLoopCount, progress, onLoadComplete]);
+
+  // 바운스 효과 (달리는 프레임에 따라, 도착 후에는 없음)
+  const bounceY = isArrived ? 0 : Math.sin(runFrame * 0.8) * 3;
+
+  // 표시용 progress (실제의 2배, 최대 100)
+  const displayProgress = Math.min(progress * 2, 100);
+
+  return (
+    <div
+      className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center transition-opacity duration-600 ${
+        fadeOut ? 'opacity-0' : 'opacity-100'
+      }`}
+    >
+      {/* 깊은 던전 배경 */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background: `
+            radial-gradient(ellipse 80% 50% at 50% 100%, rgba(139, 90, 43, 0.15) 0%, transparent 50%),
+            radial-gradient(ellipse at center, #12100f 0%, #0a0908 40%, #050404 100%)
+          `,
+        }}
+      />
+
+      {/* 떠다니는 골드 파티클 */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {bgParticles.map((p) => (
+          <div
+            key={p.id}
+            className="absolute rounded-full"
+            style={{
+              width: p.size,
+              height: p.size,
+              left: `${p.left}%`,
+              top: `${p.top}%`,
+              background: `radial-gradient(circle, rgba(255, 200, 80, ${p.opacity}) 0%, transparent 70%)`,
+              animation: `floatParticle ${p.duration}s ease-in-out infinite`,
+              animationDelay: `${p.delay}s`,
+            }}
+          />
+        ))}
+      </div>
+
+      {/* 타이틀 */}
+      <div className="z-10 text-center px-4 mb-1">
+        <div className="relative">
+          <span
+            className="absolute inset-0 block text-xl sm:text-2xl md:text-3xl tracking-[0.08em]"
+            style={{
+              fontFamily: '"Press Start 2P", monospace',
+              color: '#1a1205',
+              transform: 'translate(3px, 3px)',
+            }}
+          >
+            SHUFFLE & SLASH
+          </span>
+          <span
+            className="absolute inset-0 block text-xl sm:text-2xl md:text-3xl tracking-[0.08em]"
+            style={{
+              fontFamily: '"Press Start 2P", monospace',
+              color: '#ffc830',
+              filter: 'blur(12px)',
+              opacity: 0.4,
+            }}
+          >
+            SHUFFLE & SLASH
+          </span>
+          <span
+            className="relative block text-xl sm:text-2xl md:text-3xl tracking-[0.08em]"
+            style={{
+              fontFamily: '"Press Start 2P", monospace',
+              background: 'linear-gradient(175deg, #fff4d0 0%, #ffd860 15%, #ffca28 35%, #e5a820 55%, #c48c18 75%, #a06a10 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+              filter: 'drop-shadow(0 0 8px rgba(255, 200, 48, 0.5)) drop-shadow(2px 2px 0 #3d2a08)',
+            }}
+          >
+            SHUFFLE & SLASH
+          </span>
+        </div>
+      </div>
+
+      {/* 메인 로딩 영역 */}
+      <div className="w-[320px] sm:w-[400px] md:w-[500px] lg:w-[600px] z-10 relative">
+
+        {/* 캐릭터 러닝 존 */}
+        <div className="relative h-32 mb-2">
+          {/* 뛰는 캐릭터 */}
+          <div
+            className="absolute"
+            style={{
+              left: isArrived ? '95%' : `${Math.min(progress * 2, 95)}%`,
+              bottom: '12px',
+              transform: `translateX(-50%) translateY(${bounceY}px)`,
+              transition: 'left 0.18s ease-out',
+            }}
+          >
+            {/* 하트 파티클 (도착 시) */}
+            {isArrived && (
+              <div
+                className="absolute pointer-events-none text-lg"
+                style={{
+                  left: '35%',
+                  bottom: '50%',
+                  opacity: 0,
+                  animation: 'heartFloat 1.6s ease-out infinite',
+                  animationDelay: '0.4s',
+                  animationFillMode: 'forwards',
+                }}
+              >
+                ❤️
+              </div>
+            )}
+
+            {/* 캐릭터 글로우 */}
+            <div
+              className="absolute inset-0 rounded-full"
+              style={{
+                background: isArrived
+                  ? 'radial-gradient(ellipse at center bottom, rgba(255, 100, 100, 0.4) 0%, transparent 60%)'
+                  : 'radial-gradient(ellipse at center bottom, rgba(255, 180, 50, 0.4) 0%, transparent 60%)',
+                transform: 'scale(1.8) translateY(20%)',
+                filter: 'blur(8px)',
+              }}
+            />
+            {/* 스프라이트 */}
+            <div
+              style={{
+                width: SPRITE_WIDTH * SPRITE_SCALE,
+                height: SPRITE_HEIGHT * SPRITE_SCALE,
+                backgroundImage: 'url(/sprites/warrior.png)',
+                backgroundSize: `${SPRITE_WIDTH * 6 * SPRITE_SCALE}px auto`,
+                backgroundPosition: (() => {
+                  if (isArrived) {
+                    // 도착 애니메이션 완료 후 마지막 프레임 고정
+                    const frame = arrivalLoopCount >= 2 ? ARRIVAL_FRAMES - 1 : arrivalFrame;
+                    const frameIndex = ARRIVAL_START_ROW * 6 + ARRIVAL_START_COL + frame;
+                    const row = Math.floor(frameIndex / 6);
+                    const col = frameIndex % 6;
+                    return `-${col * SPRITE_WIDTH * SPRITE_SCALE}px -${row * SPRITE_HEIGHT * SPRITE_SCALE}px`;
+                  } else {
+                    // 달리기 애니메이션 (1,0 ~ 2,1)
+                    const startRow = 1;
+                    const col = runFrame < 6 ? runFrame : runFrame - 6;
+                    const row = runFrame < 6 ? startRow : startRow + 1;
+                    return `-${col * SPRITE_WIDTH * SPRITE_SCALE}px -${row * SPRITE_HEIGHT * SPRITE_SCALE}px`;
+                  }
+                })(),
+                imageRendering: 'pixelated',
+                filter: 'drop-shadow(0 4px 8px rgba(0, 0, 0, 0.8)) drop-shadow(0 0 20px rgba(255, 180, 50, 0.3))',
+              }}
+            />
+          </div>
+
+          {/* 도착 지점 보물 아이콘 */}
+          <div
+            className="absolute right-0 bottom-3"
+            style={{
+              opacity: progress > 70 ? 1 : 0.3,
+              transition: 'opacity 0.3s',
+            }}
+          >
+            <div
+              className="relative"
+              style={{
+                animation: progress > 90 ? 'treasurePulse 0.5s ease-in-out infinite' : 'none',
+              }}
+            >
+              {/* 보물 글로우 */}
+              <div
+                className="absolute inset-0 rounded-full"
+                style={{
+                  background: 'radial-gradient(circle, rgba(255, 215, 0, 0.6) 0%, transparent 70%)',
+                  transform: 'scale(2.5)',
+                  filter: 'blur(10px)',
+                }}
+              />
+              {/* 보물 아이콘 */}
+              <div
+                className="relative text-3xl"
+                style={{
+                  filter: 'drop-shadow(0 0 10px rgba(255, 200, 0, 0.8))',
+                }}
+              >
+                💎
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 로딩바 */}
+        <div className="relative">
+          {/* 로딩바 외곽 프레임 */}
+          <div
+            className="relative h-5 rounded-sm overflow-hidden"
+            style={{
+              background: 'linear-gradient(180deg, #1a1612 0%, #0d0b09 100%)',
+              border: '2px solid #3d3225',
+              boxShadow: 'inset 0 2px 6px rgba(0,0,0,0.8), 0 0 20px rgba(0,0,0,0.5)',
+            }}
+          >
+            {/* 프로그레스 바 */}
+            <div
+              className="absolute inset-y-0 left-0 transition-all duration-150"
+              style={{
+                width: `${displayProgress}%`,
+                background: 'linear-gradient(180deg, #ffd860 0%, #c9a227 50%, #8b7320 100%)',
+                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.3), 0 0 12px rgba(255, 200, 80, 0.5)',
+              }}
+            />
+
+            {/* 하이라이트 라인 */}
+            <div
+              className="absolute top-0 left-0 right-0 h-[2px]"
+              style={{
+                background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.1) 20%, rgba(255,255,255,0.1) 80%, transparent)',
+              }}
+            />
+          </div>
+        </div>
+
+        {/* 로딩 정보 */}
+        <div className="flex justify-between items-center mt-3 px-1">
+          <span
+            className="text-[8px] sm:text-[10px]"
+            style={{
+              fontFamily: '"Press Start 2P", monospace',
+              color: '#807060',
+            }}
+          >
+            {displayProgress < 100 ? 'NOW LOADING' : 'COMPLETE!'}
+          </span>
+          <span
+            className="text-[10px] sm:text-xs"
+            style={{
+              fontFamily: '"Press Start 2P", monospace',
+              color: '#ffd860',
+              textShadow: '0 0 8px rgba(255, 200, 80, 0.5)',
+            }}
+          >
+            {Math.floor(displayProgress)}%
+          </span>
+        </div>
+      </div>
+
+      {/* CSS 애니메이션 */}
+      <style>{`
+        @keyframes floatParticle {
+          0%, 100% {
+            transform: translateY(0) scale(1);
+            opacity: 0.4;
+          }
+          50% {
+            transform: translateY(-20px) scale(1.2);
+            opacity: 0.8;
+          }
+        }
+        @keyframes treasurePulse {
+          0%, 100% {
+            transform: scale(1);
+          }
+          50% {
+            transform: scale(1.2);
+          }
+        }
+        @keyframes heartFloat {
+          0% {
+            transform: translateY(0) scale(0.5);
+            opacity: 0;
+          }
+          20% {
+            opacity: 1;
+            transform: translateY(-10px) scale(1);
+          }
+          100% {
+            transform: translateY(-50px) scale(0.8);
+            opacity: 0;
+          }
+        }
+      `}</style>
+    </div>
+  );
+}
+
 function App() {
   const { phase } = useGameStore();
+  const [isLoading, setIsLoading] = useState(true);
 
   return (
     <>
+      {/* 로딩 화면 */}
+      {isLoading && <LoadingScreen onLoadComplete={() => setIsLoading(false)} />}
+
       {/* 세로 모드 회전 안내 */}
       <div className="rotate-device-overlay">
         <div className="text-6xl mb-6 animate-bounce">📱</div>
@@ -21,7 +404,7 @@ function App() {
       </div>
 
       <div className="game-content w-full min-h-screen bg-gray-900">
-      {phase === 'MAIN_MENU' && <MainMenu />}
+      {phase === 'MAIN_MENU' && !isLoading && <MainMenu />}
       {phase === 'DECK_BUILDING' && <DeckBuildingScreen />}
       {phase === 'MAP' && <MapScreen />}
       {phase === 'COMBAT' && <CombatScreen />}

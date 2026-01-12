@@ -81,17 +81,34 @@ export function CombatScreen() {
   // 카드 목록 모달 상태
   const [viewingPile, setViewingPile] = useState<'draw' | 'discard' | null>(null);
   // 플레이어 애니메이션 상태
-  const [playerAnimation, setPlayerAnimation] = useState<'idle' | 'attack' | 'hurt' | 'skill'>('idle');
+  const [playerAnimation, setPlayerAnimation] = useState<'idle' | 'attack' | 'hurt' | 'skill' | 'death'>('idle');
   // 공격 타겟 위치
   const [attackTargetPos, setAttackTargetPos] = useState<{ x: number; y: number } | null>(null);
   // 공격 중 여부 (카드 사용 불가)
   const [isAttacking, setIsAttacking] = useState(false);
+  // 플레이어 사망 처리 중
+  const [isPlayerDying, setIsPlayerDying] = useState(false);
+  const isPlayerDyingRef = useRef(false);
+  // 턴 종료 버튼 딜레이
+  const [isEndingTurn, setIsEndingTurn] = useState(false);
+
+  // isPlayerDying 상태를 ref에 동기화
+  useEffect(() => {
+    isPlayerDyingRef.current = isPlayerDying;
+  }, [isPlayerDying]);
 
   // 피격 콜백 설정
   useEffect(() => {
     setOnPlayerHit(() => {
+      // 이미 사망 중이면 애니메이션 변경하지 않음
+      if (isPlayerDyingRef.current) return;
       setPlayerAnimation('hurt');
-      setTimeout(() => setPlayerAnimation('idle'), 400);
+      setTimeout(() => {
+        // 사망 중이 아닐 때만 idle로 복귀
+        if (!isPlayerDyingRef.current) {
+          setPlayerAnimation('idle');
+        }
+      }, 400);
     });
     return () => setOnPlayerHit(null);
   }, [setOnPlayerHit]);
@@ -127,6 +144,21 @@ export function CombatScreen() {
       setTimeout(() => setPhase('CARD_REWARD'), 1000);
     }
   }, [enemies, checkCombatEnd, setPhase, player.relics, healPlayer]);
+
+  // 플레이어 사망 체크
+  useEffect(() => {
+    if (player.currentHp <= 0 && !isPlayerDying) {
+      setIsPlayerDying(true);
+      setPlayerAnimation('death');
+    }
+  }, [player.currentHp, isPlayerDying]);
+
+  // 사망 애니메이션 완료 후 게임오버
+  const handleDeathAnimationEnd = useCallback(() => {
+    if (playerAnimation === 'death') {
+      setTimeout(() => setPhase('GAME_OVER'), 500);
+    }
+  }, [playerAnimation, setPhase]);
 
   const setEnemyRef = useCallback((enemyId: string, el: HTMLDivElement | null) => {
     if (el) enemyRefs.current.set(enemyId, el);
@@ -603,6 +635,11 @@ export function CombatScreen() {
               attackTargetPos={attackTargetPos}
               enemyCount={enemies.filter(e => e.currentHp > 0).length}
               onAnimationEnd={() => {
+                // 사망 애니메이션 완료 시
+                if (playerAnimation === 'death') {
+                  handleDeathAnimationEnd();
+                  return;
+                }
                 if (pendingAttackRef.current) {
                   const { currentHit, totalHits, hits, cardInstanceId, targetEnemyId } = pendingAttackRef.current;
                   const nextHit = currentHit + 1;
@@ -695,8 +732,14 @@ export function CombatScreen() {
           onMouseLeave={() => setShowEndTurnTooltip(false)}
         >
           <button
-            onClick={endPlayerTurn}
-            className={`group relative overflow-hidden active:scale-95 transition-all duration-300 px-3 py-2 md:px-5 md:py-3 lg:px-6 lg:py-3 rounded-full ${energy === 0 ? 'animate-pulse-glow' : ''}`}
+            onClick={() => {
+              if (isEndingTurn || isPlayerDying) return;
+              setIsEndingTurn(true);
+              endPlayerTurn();
+              setTimeout(() => setIsEndingTurn(false), 2500);
+            }}
+            disabled={isEndingTurn || isPlayerDying}
+            className={`group relative overflow-hidden active:scale-95 transition-all duration-300 px-3 py-2 md:px-5 md:py-3 lg:px-6 lg:py-3 rounded-full ${energy === 0 && !isEndingTurn ? 'animate-pulse-glow' : ''} ${isEndingTurn ? 'opacity-50 cursor-not-allowed' : ''}`}
             style={{
               background: energy === 0
                 ? 'linear-gradient(180deg, #3a2515 0%, #1a0d08 100%)'

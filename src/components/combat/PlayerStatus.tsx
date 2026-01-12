@@ -13,8 +13,8 @@ import {
   MetallicizeIcon,
 } from './icons';
 
-// 스킬 이펙트 컴포넌트
-function SkillEffect({ isActive }: { isActive: boolean }) {
+// 스킬 이펙트 컴포넌트 (export해서 Enemy에서도 사용)
+export function SkillEffect({ isActive, color = 'cyan' }: { isActive: boolean; color?: 'cyan' | 'green' }) {
   if (!isActive) return null;
 
   // 고정된 화살표 위치들 (x: 가로, y: 세로 오프셋, delay: 지연시간)
@@ -26,15 +26,19 @@ function SkillEffect({ isActive }: { isActive: boolean }) {
     { x: 45, y: 5, delay: 0.1 },
   ];
 
+  const colors = color === 'green'
+    ? { fill: 'rgba(74, 222, 128, 0.9)', stroke: 'rgba(134, 239, 172, 1)', glow: 'rgba(34, 197, 94, 1)', glowBg: 'rgba(34, 197, 94, 0.5)' }
+    : { fill: 'rgba(125, 211, 252, 0.9)', stroke: 'rgba(186, 230, 253, 1)', glow: 'rgba(56, 189, 248, 1)', glowBg: 'rgba(56, 189, 248, 0.5)' };
+
   return (
     <div
       className="absolute pointer-events-none"
       style={{
-        left: '38%',
-        top: '35%',
+        left: '50%',
+        top: '30%',
         transform: 'translateX(-50%)',
         zIndex: 100,
-        width: '150px',
+        width: '120px',
         height: '100px',
       }}
     >
@@ -56,13 +60,13 @@ function SkillEffect({ isActive }: { isActive: boolean }) {
             height="28"
             viewBox="0 0 20 28"
             style={{
-              filter: 'drop-shadow(0 0 8px rgba(56, 189, 248, 1))',
+              filter: `drop-shadow(0 0 8px ${colors.glow})`,
             }}
           >
             <path
               d="M10 0 L18 12 L13 12 L13 28 L7 28 L7 12 L2 12 Z"
-              fill="rgba(125, 211, 252, 0.9)"
-              stroke="rgba(186, 230, 253, 1)"
+              fill={colors.fill}
+              stroke={colors.stroke}
               strokeWidth="1"
             />
           </svg>
@@ -75,7 +79,7 @@ function SkillEffect({ isActive }: { isActive: boolean }) {
         style={{
           width: '100px',
           height: '80px',
-          background: 'radial-gradient(ellipse at center bottom, rgba(56, 189, 248, 0.5) 0%, transparent 70%)',
+          background: `radial-gradient(ellipse at center bottom, ${colors.glowBg} 0%, transparent 70%)`,
           animation: 'skillGlow 0.5s ease-out forwards',
         }}
       />
@@ -118,7 +122,7 @@ interface PlayerStatusProps {
   player: Player;
   block: number;
   statuses: Status[];
-  animation?: 'idle' | 'attack' | 'hurt' | 'skill';
+  animation?: 'idle' | 'attack' | 'hurt' | 'skill' | 'death';
   attackTargetPos?: { x: number; y: number } | null;
   enemyCount?: number;
   onAnimationEnd?: () => void;

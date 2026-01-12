@@ -60,6 +60,10 @@ interface CombatStore extends CombatState {
   // 적 피격 효과 트리거 (애니메이션용)
   enemyHitTriggers: Record<string, number>;
   triggerEnemyHit: (enemyId: string) => void;
+
+  // 적 스킬 효과 트리거 (BUFF/DEFEND 애니메이션용)
+  enemySkillTriggers: Record<string, number>;
+  triggerEnemySkill: (enemyId: string) => void;
 }
 
 export const useCombatStore = create<CombatStore>((set, get) => ({
@@ -68,6 +72,7 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
   playerStatuses: [],
   damagePopups: [],
   enemyHitTriggers: {},
+  enemySkillTriggers: {},
   onPlayerHit: null,
   setOnPlayerHit: (callback) => set({ onPlayerHit: callback }),
 
@@ -102,6 +107,15 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       enemyHitTriggers: {
         ...state.enemyHitTriggers,
         [enemyId]: (state.enemyHitTriggers[enemyId] || 0) + 1,
+      },
+    }));
+  },
+
+  triggerEnemySkill: (enemyId: string) => {
+    set(state => ({
+      enemySkillTriggers: {
+        ...state.enemySkillTriggers,
+        [enemyId]: (state.enemySkillTriggers[enemyId] || 0) + 1,
       },
     }));
   },
@@ -269,8 +283,11 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
         // 다음 적 공격 전 딜레이
         await new Promise(resolve => setTimeout(resolve, 600));
       } else if (enemy.intent.type === 'DEFEND') {
+        get().triggerEnemySkill(enemy.instanceId);
         enemy.block += enemy.intent.block || 0;
+        await new Promise(resolve => setTimeout(resolve, 500));
       } else if (enemy.intent.type === 'BUFF') {
+        get().triggerEnemySkill(enemy.instanceId);
         const strengthStatus = enemy.statuses.find(s => s.type === 'STRENGTH');
         if (strengthStatus) {
           strengthStatus.stacks += 3;
@@ -278,9 +295,12 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
           enemy.statuses.push({ type: 'STRENGTH', stacks: 3 });
         }
         get().addToCombatLog(`${enemy.name}이(가) 힘을 얻었습니다!`);
+        await new Promise(resolve => setTimeout(resolve, 500));
       } else if (enemy.intent.type === 'DEBUFF') {
+        get().triggerEnemySkill(enemy.instanceId);
         get().applyStatusToPlayer({ type: 'WEAK', stacks: 1 });
         get().addToCombatLog(`약화되었습니다!`);
+        await new Promise(resolve => setTimeout(resolve, 500));
       }
 
       // 상태 효과 감소

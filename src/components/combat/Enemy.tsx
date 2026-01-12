@@ -4,6 +4,7 @@ import { HealthBar } from '../common/HealthBar';
 import { STATUS_INFO } from '../../types/status';
 import { getEnemyCharacter } from './characters';
 import { useCombatStore } from '../../stores/combatStore';
+import { SkillEffect } from './PlayerStatus';
 import {
   VulnerableIcon,
   WeakIcon,
@@ -395,11 +396,16 @@ export function Enemy({ enemy, isTargetable = false }: EnemyProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isRemoved, setIsRemoved] = useState(false);
   const [isHurt, setIsHurt] = useState(false);
+  const [isSkillActive, setIsSkillActive] = useState(false);
   const [prevHp, setPrevHp] = useState(enemy.currentHp);
 
   // 피격 트리거 구독 (다중 타격용)
   const hitTrigger = useCombatStore(state => state.enemyHitTriggers[enemy.instanceId] || 0);
   const prevHitTriggerRef = useRef(hitTrigger);
+
+  // 스킬 트리거 구독 (BUFF/DEFEND 애니메이션용)
+  const skillTrigger = useCombatStore(state => state.enemySkillTriggers[enemy.instanceId] || 0);
+  const prevSkillTriggerRef = useRef(skillTrigger);
 
   // 피격 트리거 감지 (다중 타격 애니메이션)
   useEffect(() => {
@@ -411,6 +417,17 @@ export function Enemy({ enemy, isTargetable = false }: EnemyProps) {
     }
     prevHitTriggerRef.current = hitTrigger;
   }, [hitTrigger]);
+
+  // 스킬 트리거 감지 (BUFF/DEFEND 애니메이션)
+  useEffect(() => {
+    if (skillTrigger > prevSkillTriggerRef.current) {
+      setIsSkillActive(true);
+      setTimeout(() => {
+        setIsSkillActive(false);
+      }, 700);
+    }
+    prevSkillTriggerRef.current = skillTrigger;
+  }, [skillTrigger]);
 
   // 피격 감지 (HP 감소 시) - 죽음 처리용
   useEffect(() => {
@@ -549,6 +566,9 @@ export function Enemy({ enemy, isTargetable = false }: EnemyProps) {
             }}
           />
         )}
+
+        {/* 스킬 이펙트 (BUFF/DEFEND 시) */}
+        <SkillEffect isActive={isSkillActive} color="green" />
 
         {/* 적 캐릭터 SVG */}
         <div

@@ -191,10 +191,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       },
     });
 
-    // 사망 체크
-    if (newHp <= 0) {
-      set({ phase: 'GAME_OVER' });
-    }
+    // 사망 체크는 CombatScreen에서 애니메이션 후 처리
   },
 
   healPlayer: (amount: number) => {
