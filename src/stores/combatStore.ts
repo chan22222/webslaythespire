@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { CombatState, createInitialCombatState } from '../types/combat';
 import { CardInstance, createCardInstance } from '../types/card';
 import { EnemyInstance, EnemyTemplate, createEnemyInstance } from '../types/enemy';
-import { Status } from '../types/status';
+import { Status, STATUS_INFO } from '../types/status';
 import { shuffle } from '../utils/shuffle';
 import { useGameStore } from './gameStore';
 
@@ -316,7 +316,8 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       } else if (enemy.intent.type === 'DEBUFF') {
         get().triggerPlayerDebuff(); // 플레이어 디버프 이펙트만 표시
         get().applyStatusToPlayer({ type: 'WEAK', stacks: 1 });
-        get().addToCombatLog(`약화되었습니다!`);
+        const pName = useGameStore.getState().playerName;
+        get().addToCombatLog(`${pName}(이)가 약화되었습니다!`);
         await new Promise(resolve => setTimeout(resolve, 500));
       }
 
@@ -403,7 +404,8 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     }
 
     // 카드 효과 실행
-    get().addToCombatLog(`${card.name} 사용!`);
+    const pName = useGameStore.getState().playerName;
+    get().addToCombatLog(`${pName}(이)가 ${card.name} 사용!`);
 
     card.effects.forEach(effect => {
       switch (effect.type) {
@@ -637,7 +639,8 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       setTimeout(() => {
         get().addDamagePopup(remainingDamage, 'damage', 0, 0, 'player', undefined, 30, 10);
       }, blockedAmount > 0 ? 150 : 0);
-      get().addToCombatLog(`${remainingDamage} 피해를 받았습니다!`);
+      const pName = useGameStore.getState().playerName;
+      get().addToCombatLog(`${pName}(이)가 ${remainingDamage} 피해를 입었습니다!`);
       // gameStore의 HP를 실제로 감소
       useGameStore.getState().modifyHp(-remainingDamage);
     }
@@ -648,7 +651,8 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
   gainPlayerBlock: (amount: number) => {
     const { playerBlock } = get();
     set({ playerBlock: playerBlock + amount });
-    get().addToCombatLog(`방어도 ${amount} 획득!`);
+    const pName = useGameStore.getState().playerName;
+    get().addToCombatLog(`${pName}(이)가 방어도 ${amount} 획득!`);
   },
 
   applyStatusToEnemy: (enemyId: string, status: Status) => {
@@ -676,7 +680,8 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     updatedEnemies[enemyIndex] = updatedEnemy;
 
     set({ enemies: updatedEnemies });
-    get().addToCombatLog(`${enemy.name}에게 ${status.type} ${status.stacks} 부여!`);
+    const statusName = STATUS_INFO[status.type]?.name || status.type;
+    get().addToCombatLog(`${enemy.name}에게 ${statusName} ${status.stacks} 부여!`);
   },
 
   applyStatusToPlayer: (status: Status) => {
@@ -694,7 +699,9 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     } else {
       set({ playerStatuses: [...playerStatuses, { ...status }] });
     }
-    get().addToCombatLog(`${status.type} ${status.stacks} 획득!`);
+    const pName = useGameStore.getState().playerName;
+    const statusName = STATUS_INFO[status.type]?.name || status.type;
+    get().addToCombatLog(`${pName}(이)가 ${statusName} ${status.stacks} 획득!`);
   },
 
   gainEnergy: (amount: number) => {

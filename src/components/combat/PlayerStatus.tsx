@@ -5,6 +5,7 @@ import { HealthBar } from '../common/HealthBar';
 import { STATUS_INFO } from '../../types/status';
 import { WarriorSprite } from './characters';
 import { useCombatStore } from '../../stores/combatStore';
+import { useGameStore } from '../../stores/gameStore';
 import {
   VulnerableIcon,
   WeakIcon,
@@ -415,6 +416,9 @@ function BlockBadge({ block }: { block: number }) {
 }
 
 export function PlayerStatus({ player, block, statuses, animation = 'idle', attackTargetPos, enemyCount = 1, onAnimationEnd }: PlayerStatusProps) {
+  // 플레이어 이름
+  const playerName = useGameStore(state => state.playerName);
+
   // 디버프 이펙트 상태
   const [showDebuffEffect, setShowDebuffEffect] = useState(false);
   const playerDebuffTrigger = useCombatStore(state => state.playerDebuffTrigger);
@@ -486,8 +490,21 @@ export function PlayerStatus({ player, block, statuses, animation = 'idle', atta
         )}
       </div>
 
+      {/* 플레이어 이름 */}
+      <div
+        className="mt-4 px-4 py-1 rounded-full -ml-14"
+        style={{
+          background: 'linear-gradient(rgba(30, 25, 20, 0.9) 0%, rgba(15, 12, 10, 0.95) 100%)',
+          border: '1px solid var(--gold-dark)',
+        }}
+      >
+        <span className="font-title text-sm text-[var(--gold-light)] tracking-wide">
+          {playerName}
+        </span>
+      </div>
+
       {/* 체력바 */}
-      <div className="w-36 mt-4 -ml-14">
+      <div className="w-36 mt-2 -ml-14">
         <HealthBar
           current={player.currentHp}
           max={player.maxHp}

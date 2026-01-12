@@ -1,4 +1,15 @@
+import { useState } from 'react';
 import { useGameStore } from '../stores/gameStore';
+
+// 파티클 데이터를 컴포넌트 외부에서 한 번만 생성
+const PARTICLES = Array.from({ length: 25 }, (_, i) => ({
+  id: i,
+  size: Math.random() * 4 + 2,
+  left: Math.random() * 100,
+  delay: Math.random() * 10,
+  duration: Math.random() * 10 + 15,
+  opacity: Math.random() * 0.3 + 0.1,
+}));
 
 // 타이틀 컴포넌트 - 아케이드 스타일
 function AnimatedTitle() {
@@ -189,16 +200,6 @@ function AnimatedTitle() {
 
 // 블랙홀 소용돌이 배경
 function BlackholeBackground() {
-  // 떠다니는 파티클들
-  const particles = Array.from({ length: 25 }, (_, i) => ({
-    id: i,
-    size: Math.random() * 4 + 2,
-    left: Math.random() * 100,
-    delay: Math.random() * 10,
-    duration: Math.random() * 10 + 15,
-    opacity: Math.random() * 0.3 + 0.1,
-  }));
-
   return (
     <div className="absolute inset-0 overflow-hidden">
       {/* 깊은 우주 배경 */}
@@ -235,9 +236,9 @@ function BlackholeBackground() {
         }}
       />
 
-      {/* 떠오르는 파티클들 */}
+      {/* 떠오르는 파티클들 - 외부에서 정의된 PARTICLES 사용 */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {particles.map((p) => (
+        {PARTICLES.map((p) => (
           <div
             key={p.id}
             className="absolute rounded-full bg-[var(--gold)]"
@@ -264,7 +265,9 @@ function BlackholeBackground() {
 }
 
 export function MainMenu() {
-  const { startNewGame, startDeckBuilding } = useGameStore();
+  const { startNewGame, startDeckBuilding, playerName, setPlayerName } = useGameStore();
+  const [isEditing, setIsEditing] = useState(false);
+  const [tempName, setTempName] = useState(playerName);
 
   return (
     <div className="w-full h-screen bg-black flex flex-col items-center justify-center relative overflow-hidden">
@@ -274,16 +277,102 @@ export function MainMenu() {
       {/* 타이틀 텍스트 */}
       <div className="absolute top-[15%] sm:top-[18%] z-10 text-center px-4">
         <AnimatedTitle />
+
+        {/* 캐릭터 이름 입력 - 장식 라인 바로 아래 */}
+        <div
+          className="relative cursor-pointer mt-5 group inline-block"
+          style={{
+            animation: 'fadeIn 0.5s ease-out 0.9s forwards',
+            opacity: 0,
+          }}
+          onClick={() => {
+            if (!isEditing) {
+              setTempName(playerName === '모험가' ? '' : playerName);
+              setIsEditing(true);
+            }
+          }}
+        >
+          {/* 양옆 그라데이션 페이드 효과가 있는 배경 */}
+          <div
+            className={`relative flex items-center justify-center py-2 transition-all duration-300 ease-out ${isEditing ? 'px-32' : 'px-12'}`}
+            style={{
+              background: 'linear-gradient(90deg, transparent 0%, rgba(20, 18, 12, 0.5) 10%, rgba(20, 18, 12, 0.5) 90%, transparent 100%)',
+            }}
+          >
+            {/* 호버 시 글로우 효과 */}
+            <div
+              className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+              style={{
+                background: 'radial-gradient(ellipse at center, rgba(212, 168, 75, 0.15) 0%, transparent 70%)',
+                filter: 'blur(4px)',
+              }}
+            />
+            {/* 상단/하단 라인 - 그라데이션 */}
+            <div
+              className="absolute top-0 left-0 right-0 h-[1px] transition-all duration-300 group-hover:shadow-[0_0_8px_var(--gold-glow)]"
+              style={{
+                background: 'linear-gradient(90deg, transparent 0%, var(--gold-dark) 20%, var(--gold-dark) 80%, transparent 100%)',
+                opacity: 0.4,
+              }}
+            />
+            <div
+              className="absolute bottom-0 left-0 right-0 h-[1px] transition-all duration-300 group-hover:shadow-[0_0_8px_var(--gold-glow)]"
+              style={{
+                background: 'linear-gradient(90deg, transparent 0%, var(--gold-dark) 20%, var(--gold-dark) 80%, transparent 100%)',
+                opacity: 0.4,
+              }}
+            />
+
+            {isEditing ? (
+              <input
+                type="text"
+                value={tempName}
+                onChange={(e) => setTempName(e.target.value)}
+                onBlur={() => {
+                  setPlayerName(tempName);
+                  setIsEditing(false);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    setPlayerName(tempName);
+                    setIsEditing(false);
+                  }
+                }}
+                autoFocus
+                maxLength={10}
+                className="bg-transparent text-center text-[var(--gold-light)] text-sm outline-none w-24"
+                style={{
+                  fontFamily: '"NeoDunggeunmo", "Neo둥근모", cursive',
+                  textShadow: '0 0 6px var(--gold-glow)',
+                  caretColor: 'var(--gold)',
+                }}
+              />
+            ) : (
+              <span
+                className={`text-sm transition-all duration-300 group-hover:text-[var(--gold)] relative z-10 ${playerName === '모험가' ? 'opacity-60' : ''}`}
+                style={{
+                  fontFamily: '"NeoDunggeunmo", "Neo둥근모", cursive',
+                  color: 'var(--gold-light)',
+                  textShadow: '0 0 6px var(--gold-glow)',
+                }}
+              >
+                <span className="group-hover:drop-shadow-[0_0_8px_var(--gold-glow)] transition-all duration-300">
+                  {playerName === '모험가' ? '당신의 이름을 알려주세요' : playerName}
+                </span>
+              </span>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* 메인 메뉴 버튼들 - 하단 배치 */}
-      <div className="absolute bottom-24 sm:bottom-32 flex flex-col gap-2 sm:gap-3 z-10">
+      <div className="absolute bottom-32 sm:bottom-40 flex flex-col gap-2 sm:gap-3 z-10 items-center">
         {/* 새 게임 버튼 */}
         <button
           onClick={startNewGame}
           className="relative transition-all duration-150 hover:scale-105 hover:brightness-125"
           style={{
-            animation: 'buttonFadeIn 0.5s ease-out 0.6s forwards',
+            animation: 'buttonFadeIn 0.5s ease-out 0.5s forwards',
             opacity: 0,
           }}
         >
@@ -309,7 +398,7 @@ export function MainMenu() {
           onClick={startDeckBuilding}
           className="relative transition-all duration-150 hover:scale-105 hover:brightness-125"
           style={{
-            animation: 'buttonFadeIn 0.5s ease-out 0.7s forwards',
+            animation: 'buttonFadeIn 0.5s ease-out 0.6s forwards',
             opacity: 0,
           }}
         >
@@ -335,7 +424,7 @@ export function MainMenu() {
           disabled
           className="relative cursor-not-allowed"
           style={{
-            animation: 'buttonFadeIn 0.5s ease-out 0.8s forwards',
+            animation: 'buttonFadeIn 0.5s ease-out 0.7s forwards',
             opacity: 0,
           }}
         >
@@ -353,32 +442,6 @@ export function MainMenu() {
             }}
           >
             이어하기
-          </span>
-        </button>
-
-        {/* 설정 버튼 */}
-        <button
-          disabled
-          className="relative cursor-not-allowed"
-          style={{
-            animation: 'buttonFadeIn 0.5s ease-out 0.9s forwards',
-            opacity: 0,
-          }}
-        >
-          <img
-            src="/button_long.png"
-            alt=""
-            className="w-[160px] sm:w-[200px] h-auto opacity-50"
-            style={{ imageRendering: 'pixelated' }}
-          />
-          <span
-            className="absolute inset-0 flex items-center justify-center text-[var(--gold-light)] text-sm sm:text-base opacity-50"
-            style={{
-              fontFamily: '"NeoDunggeunmo", "Neo둥근모", cursive',
-              textShadow: '2px 2px 0 #000',
-            }}
-          >
-            설정
           </span>
         </button>
       </div>

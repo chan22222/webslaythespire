@@ -17,8 +17,10 @@ interface GameState {
   map: GameMap;
   currentAct: number;
   testEnemies: EnemyTemplate[] | null; // 테스트 모드용 적
+  playerName: string; // 캐릭터 이름
 
   // 액션
+  setPlayerName: (name: string) => void;
   startNewGame: () => void;
   startDeckBuilding: () => void;
   setDeck: (deck: CardInstance[]) => void;
@@ -44,6 +46,11 @@ export const useGameStore = create<GameState>((set, get) => ({
   map: { nodes: [], currentNodeId: null, floor: 1 },
   currentAct: 1,
   testEnemies: null,
+  playerName: '모험가',
+
+  setPlayerName: (name: string) => {
+    set({ playerName: name || '모험가' });
+  },
 
   startNewGame: () => {
     const starterDeck = createStarterDeck().map(card => createCardInstance(card));
