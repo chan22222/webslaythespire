@@ -74,9 +74,9 @@ function LoadingScreen({ onLoadComplete }: { onLoadComplete: () => void }) {
     }
   }, [progress, isArrived]);
 
-  // 도착 애니메이션 재생 (2번 반복)
+  // 도착 애니메이션 재생 (1번 반복)
   useEffect(() => {
-    if (!isArrived || arrivalLoopCount >= 2) return;
+    if (!isArrived || arrivalLoopCount >= 1) return;
 
     const arrivalInterval = setInterval(() => {
       setArrivalFrame(prev => {
@@ -93,9 +93,9 @@ function LoadingScreen({ onLoadComplete }: { onLoadComplete: () => void }) {
   }, [isArrived, arrivalLoopCount]);
 
 
-  // 도착 애니메이션 2번 완료 AND 로딩 100% 후 페이드아웃
+  // 도착 애니메이션 1번 완료 AND 로딩 100% 후 페이드아웃
   useEffect(() => {
-    if (arrivalLoopCount >= 2 && progress >= 100) {
+    if (arrivalLoopCount >= 1 && progress >= 100) {
       setTimeout(() => {
         setFadeOut(true);
         setTimeout(onLoadComplete, 600);
@@ -238,7 +238,7 @@ function LoadingScreen({ onLoadComplete }: { onLoadComplete: () => void }) {
                 backgroundPosition: (() => {
                   if (isArrived) {
                     // 도착 애니메이션 완료 후 마지막 프레임 고정
-                    const frame = arrivalLoopCount >= 2 ? ARRIVAL_FRAMES - 1 : arrivalFrame;
+                    const frame = arrivalLoopCount >= 1 ? ARRIVAL_FRAMES - 1 : arrivalFrame;
                     const frameIndex = ARRIVAL_START_ROW * 6 + ARRIVAL_START_COL + frame;
                     const row = Math.floor(frameIndex / 6);
                     const col = frameIndex % 6;

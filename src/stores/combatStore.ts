@@ -10,7 +10,7 @@ import { useGameStore } from './gameStore';
 export interface DamagePopup {
   id: string;
   value: number;
-  type: 'damage' | 'block' | 'heal' | 'buff' | 'debuff' | 'skill';
+  type: 'damage' | 'block' | 'heal' | 'buff' | 'debuff' | 'skill' | 'blocked';
   x: number;
   y: number;
   modifier?: number; // 버프/디버프로 인한 보정값
@@ -76,7 +76,7 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
   onPlayerHit: null,
   setOnPlayerHit: (callback) => set({ onPlayerHit: callback }),
 
-  addDamagePopup: (value: number, type: DamagePopup['type'], x: number, y: number, targetId?: string, modifier?: number) => {
+  addDamagePopup: (value: number, type: DamagePopup['type'], x: number, y: number, targetId?: string, modifier?: number, offsetX?: number, offsetY?: number) => {
     let finalX = x;
     let finalY = y;
 
@@ -89,6 +89,10 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
         finalY = rect.top + rect.height / 3;
       }
     }
+
+    // 오프셋 적용
+    if (offsetX) finalX += offsetX;
+    if (offsetY) finalY += offsetY;
 
     const id = `popup-${Date.now()}-${Math.random()}`;
     set(state => ({
@@ -276,8 +280,7 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
           onPlayerHit();
         }
 
-        // 데미지 팝업 표시
-        get().addDamagePopup(totalDamage, 'damage', 0, 0, 'player');
+        // 데미지 처리 (팝업은 dealDamageToPlayer에서 표시)
         get().dealDamageToPlayer(totalDamage);
 
         // 다음 적 공격 전 딜레이
@@ -592,12 +595,15 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     // 방어도 먼저 소모
     let remainingDamage = finalDamage;
     let newBlock = playerBlock;
+    let blockedAmount = 0;
 
     if (newBlock > 0) {
       if (newBlock >= remainingDamage) {
+        blockedAmount = remainingDamage;
         newBlock -= remainingDamage;
         remainingDamage = 0;
       } else {
+        blockedAmount = newBlock;
         remainingDamage -= newBlock;
         newBlock = 0;
       }
@@ -605,7 +611,16 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
 
     set({ playerBlock: newBlock });
 
+    // 방어도가 흡수한 데미지 팝업 (회색) - 왼쪽 위
+    if (blockedAmount > 0) {
+      get().addDamagePopup(blockedAmount, 'blocked', 0, 0, 'player', undefined, -40, -20);
+    }
+
+    // 실제 HP 데미지 팝업 (빨간색) - 오른쪽 아래, 약간 딜레이
     if (remainingDamage > 0) {
+      setTimeout(() => {
+        get().addDamagePopup(remainingDamage, 'damage', 0, 0, 'player', undefined, 30, 10);
+      }, blockedAmount > 0 ? 150 : 0);
       get().addToCombatLog(`${remainingDamage} 피해를 받았습니다!`);
       // gameStore의 HP를 실제로 감소
       useGameStore.getState().modifyHp(-remainingDamage);

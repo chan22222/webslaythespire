@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 export interface DamagePopupData {
   id: string;
   value: number;
-  type: 'damage' | 'block' | 'heal' | 'buff' | 'debuff' | 'skill';
+  type: 'damage' | 'block' | 'heal' | 'buff' | 'debuff' | 'skill' | 'blocked';
   x: number;
   y: number;
   modifier?: number; // 버프/디버프로 인한 보정값 (+힘, -약화 등)
@@ -64,6 +64,12 @@ export function DamagePopup({ popup, onComplete }: DamagePopupProps) {
           text: '✦ ✦ ✦',
           shadow: '0 0 25px rgba(125, 211, 252, 0.9), 0 0 50px rgba(56, 189, 248, 0.5)',
         };
+      case 'blocked':
+        return {
+          color: '#9ca3af',
+          text: `-${popup.value}`,
+          shadow: '0 0 15px rgba(156, 163, 175, 0.6), 0 0 30px rgba(156, 163, 175, 0.3)',
+        };
       default:
         return {
           color: '#fff',
@@ -91,6 +97,7 @@ export function DamagePopup({ popup, onComplete }: DamagePopupProps) {
 
   const getFontSize = () => {
     if (popup.type === 'damage') return '32px';
+    if (popup.type === 'blocked') return '26px';
     if (popup.type === 'skill') return '28px';
     return '24px';
   };

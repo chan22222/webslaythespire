@@ -34,7 +34,7 @@ export function SkillEffect({ isActive, color = 'cyan' }: { isActive: boolean; c
     <div
       className="absolute pointer-events-none"
       style={{
-        left: '50%',
+        left: '40%',
         top: '30%',
         transform: 'translateX(-50%)',
         zIndex: 100,
