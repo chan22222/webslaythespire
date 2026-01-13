@@ -483,16 +483,16 @@ export function DeckBuildingScreen() {
             <div className="grid grid-cols-2 gap-1.5 mb-2 max-h-32 overflow-y-auto">
               {ALL_RELICS.map((relic) => {
                 const isSelected = selectedRelics.some(r => r.id === relic.id);
-                const rarityColor = relic.rarity === 'STARTER' ? '#60a5fa'
+                const rarityColor = relic.rarity === 'STARTER' ? '#4ade80'
                   : relic.rarity === 'COMMON' ? '#a3a3a3'
-                  : relic.rarity === 'UNCOMMON' ? '#4ade80'
-                  : relic.rarity === 'RARE' ? '#facc15'
-                  : '#f472b6';
-                const rarityBg = relic.rarity === 'STARTER' ? 'rgba(96, 165, 250, 0.15)'
+                  : relic.rarity === 'UNCOMMON' ? '#4a9eff'
+                  : relic.rarity === 'RARE' ? '#c084fc'
+                  : '#e879f9';
+                const rarityBg = relic.rarity === 'STARTER' ? 'rgba(74, 222, 128, 0.15)'
                   : relic.rarity === 'COMMON' ? 'rgba(163, 163, 163, 0.15)'
-                  : relic.rarity === 'UNCOMMON' ? 'rgba(74, 222, 128, 0.15)'
-                  : relic.rarity === 'RARE' ? 'rgba(250, 204, 21, 0.15)'
-                  : 'rgba(244, 114, 182, 0.15)';
+                  : relic.rarity === 'UNCOMMON' ? 'rgba(74, 158, 255, 0.15)'
+                  : relic.rarity === 'RARE' ? 'rgba(192, 132, 252, 0.15)'
+                  : 'rgba(232, 121, 249, 0.15)';
 
                 return (
                   <button

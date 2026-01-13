@@ -302,12 +302,12 @@ export const VAMPIRE_FANG: Relic = {
   ],
 };
 
-// ==================== BOSS 유물 ====================
+// ==================== UNIQUE 유물 ====================
 export const DEVILS_CONTRACT: Relic = {
   id: 'devils_contract',
   name: '악마의 계약',
   description: '매 턴 에너지 +3. 매 턴 종료 시 HP 8 손실.',
-  rarity: 'BOSS',
+  rarity: 'UNIQUE',
   effects: [
     {
       trigger: 'ON_TURN_START',
@@ -330,7 +330,7 @@ export const ANGELS_TOUCH: Relic = {
   id: 'angels_touch',
   name: '천사의 손길',
   description: '매 턴 시작 시 HP 7을 회복합니다.',
-  rarity: 'BOSS',
+  rarity: 'UNIQUE',
   effects: [
     {
       trigger: 'ON_TURN_START',
@@ -351,14 +351,14 @@ export const UNCOMMON_RELICS: Relic[] = [LANTERN, GAMBLERS_DICE, BLOOD_PACT, STR
 
 export const RARE_RELICS: Relic[] = [CURSED_COIN, MAGIC_RING, MYSTIC_ORB, ELIXIR, VAMPIRE_FANG];
 
-export const BOSS_RELICS: Relic[] = [DEVILS_CONTRACT, ANGELS_TOUCH];
+export const UNIQUE_RELICS: Relic[] = [DEVILS_CONTRACT, ANGELS_TOUCH];
 
 export const ALL_RELICS: Relic[] = [
   ...STARTER_RELICS,
   ...COMMON_RELICS,
   ...UNCOMMON_RELICS,
   ...RARE_RELICS,
-  ...BOSS_RELICS,
+  ...UNIQUE_RELICS,
 ];
 
 // 랜덤 유물 보상 생성

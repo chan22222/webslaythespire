@@ -1,4 +1,4 @@
-export type RelicRarity = 'STARTER' | 'COMMON' | 'UNCOMMON' | 'RARE' | 'BOSS' | 'SHOP';
+export type RelicRarity = 'STARTER' | 'COMMON' | 'UNCOMMON' | 'RARE' | 'UNIQUE' | 'SHOP';
 
 export type RelicTrigger =
   | 'ON_COMBAT_START'

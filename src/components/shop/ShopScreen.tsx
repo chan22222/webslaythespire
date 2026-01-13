@@ -38,7 +38,7 @@ export function ShopScreen() {
         case 'COMMON': return randomInt(140, 160);
         case 'UNCOMMON': return randomInt(200, 240);
         case 'RARE': return randomInt(280, 320);
-        case 'BOSS': return randomInt(350, 400);
+        case 'UNIQUE': return randomInt(350, 400);
         default: return randomInt(180, 220);
       }
     };
@@ -216,7 +216,7 @@ export function ShopScreen() {
                   className="w-10 h-10 sm:w-16 sm:h-16 rounded-lg flex items-center justify-center mb-1 sm:mb-2"
                   style={{
                     background: 'linear-gradient(135deg, var(--bg-light) 0%, var(--bg-dark) 100%)',
-                    border: `2px solid ${relic.rarity === 'RARE' ? '#facc15' : relic.rarity === 'BOSS' ? '#f472b6' : 'var(--gold)'}`,
+                    border: `2px solid ${relic.rarity === 'RARE' ? '#c084fc' : relic.rarity === 'UNIQUE' ? '#e879f9' : 'var(--gold)'}`,
                     boxShadow: 'inset 0 0 15px rgba(0,0,0,0.5)',
                   }}
                 >
