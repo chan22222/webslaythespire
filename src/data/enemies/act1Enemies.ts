@@ -5,13 +5,13 @@ import { Status } from '../../types/status';
 export const CULTIST: EnemyTemplate = {
   id: 'cultist',
   name: '컬티스트',
-  minHp: 48,
-  maxHp: 54,
+  minHp: 28,
+  maxHp: 34,
   getNextIntent: (_enemy: Enemy, turn: number): EnemyIntent => {
     if (turn === 1) {
       return { type: 'BUFF' };
     }
-    return { type: 'ATTACK', damage: 6 };
+    return { type: 'ATTACK', damage: 9 + Math.floor(Math.random() * 3) }; // 9-11
   },
   executeIntent: (enemy: Enemy, dealDamageToPlayer: (damage: number) => void) => {
     if (enemy.intent.type === 'BUFF') {
@@ -24,7 +24,7 @@ export const CULTIST: EnemyTemplate = {
       }
     } else if (enemy.intent.type === 'ATTACK') {
       const strength = enemy.statuses.find(s => s.type === 'STRENGTH')?.stacks || 0;
-      dealDamageToPlayer(6 + strength);
+      dealDamageToPlayer((enemy.intent.damage || 10) + strength);
     }
   },
 };
@@ -33,51 +33,40 @@ export const CULTIST: EnemyTemplate = {
 export const JAW_WORM: EnemyTemplate = {
   id: 'jaw_worm',
   name: '턱 벌레',
-  minHp: 40,
-  maxHp: 44,
+  minHp: 34,
+  maxHp: 38,
   getNextIntent: (_enemy: Enemy, turn: number): EnemyIntent => {
-    if (turn === 1) {
-      return { type: 'ATTACK', damage: 11 };
+    if (turn % 2 === 1) {
+      return { type: 'DEFEND', block: 7 };
     }
-    const pattern = turn % 3;
-    if (pattern === 2) {
-      return { type: 'DEFEND', block: 6 };
-    }
-    return { type: 'ATTACK', damage: 11 };
+    return { type: 'ATTACK', damage: 7 + Math.floor(Math.random() * 5) }; // 7-11
   },
   executeIntent: (enemy: Enemy, dealDamageToPlayer: (damage: number) => void) => {
     if (enemy.intent.type === 'ATTACK') {
-      dealDamageToPlayer(enemy.intent.damage || 11);
+      const strength = enemy.statuses.find(s => s.type === 'STRENGTH')?.stacks || 0;
+      dealDamageToPlayer((enemy.intent.damage || 9) + strength);
     } else if (enemy.intent.type === 'DEFEND') {
-      enemy.block += enemy.intent.block || 6;
-      // 힘도 얻음
-      const strengthStatus = enemy.statuses.find(s => s.type === 'STRENGTH');
-      if (strengthStatus) {
-        strengthStatus.stacks += 3;
-      } else {
-        enemy.statuses.push({ type: 'STRENGTH', stacks: 3 });
-      }
+      enemy.block += enemy.intent.block || 7;
     }
   },
 };
 
-// 이 - 약한 적
+// 붉은 이 - 약한 적
 export const LOUSE_RED: EnemyTemplate = {
   id: 'louse_red',
   name: '붉은 이',
   minHp: 10,
   maxHp: 15,
-  getNextIntent: (): EnemyIntent => {
-    const roll = Math.random();
-    if (roll < 0.75) {
-      return { type: 'ATTACK', damage: 5 + Math.floor(Math.random() * 3) };
+  getNextIntent: (_enemy: Enemy, turn: number): EnemyIntent => {
+    if (turn % 2 === 1) {
+      return { type: 'ATTACK', damage: 4 + Math.floor(Math.random() * 3) }; // 4-6
     }
     return { type: 'BUFF' };
   },
   executeIntent: (enemy: Enemy, dealDamageToPlayer: (damage: number) => void) => {
     if (enemy.intent.type === 'ATTACK') {
       const strength = enemy.statuses.find(s => s.type === 'STRENGTH')?.stacks || 0;
-      dealDamageToPlayer((enemy.intent.damage || 6) + strength);
+      dealDamageToPlayer((enemy.intent.damage || 5) + strength);
     } else if (enemy.intent.type === 'BUFF') {
       const strengthStatus = enemy.statuses.find(s => s.type === 'STRENGTH');
       if (strengthStatus) {
@@ -89,51 +78,53 @@ export const LOUSE_RED: EnemyTemplate = {
   },
 };
 
+// 녹색 이 - 공격 → 약화 → 공격 패턴
 export const LOUSE_GREEN: EnemyTemplate = {
   id: 'louse_green',
   name: '녹색 이',
   minHp: 11,
   maxHp: 17,
-  getNextIntent: (): EnemyIntent => {
-    const roll = Math.random();
-    if (roll < 0.75) {
-      return { type: 'ATTACK', damage: 5 + Math.floor(Math.random() * 3) };
+  getNextIntent: (_enemy: Enemy, turn: number): EnemyIntent => {
+    const pattern = turn % 3;
+    if (pattern === 1) {
+      return { type: 'ATTACK', damage: 4 + Math.floor(Math.random() * 3) }; // 4-6
+    } else if (pattern === 2) {
+      return { type: 'DEBUFF' };
     }
-    return { type: 'DEBUFF' };
+    return { type: 'ATTACK', damage: 4 + Math.floor(Math.random() * 3) }; // 4-6
   },
   executeIntent: (enemy: Enemy, dealDamageToPlayer: (damage: number) => void, applyStatusToPlayer: (status: Status) => void) => {
     if (enemy.intent.type === 'ATTACK') {
       const strength = enemy.statuses.find(s => s.type === 'STRENGTH')?.stacks || 0;
-      dealDamageToPlayer((enemy.intent.damage || 6) + strength);
-    } else if (enemy.intent.type === 'DEBUFF') {
-      applyStatusToPlayer({ type: 'WEAK', stacks: 2 });
-    }
-  },
-};
-
-// 슬라임 - 기본 적
-export const ACID_SLIME_M: EnemyTemplate = {
-  id: 'acid_slime_m',
-  name: '산성 슬라임 (중)',
-  minHp: 28,
-  maxHp: 32,
-  getNextIntent: (_enemy: Enemy, turn: number): EnemyIntent => {
-    if (turn % 3 === 1) {
-      return { type: 'ATTACK', damage: 7 };
-    } else if (turn % 3 === 2) {
-      return { type: 'DEBUFF' };
-    }
-    return { type: 'ATTACK', damage: 7 };
-  },
-  executeIntent: (enemy: Enemy, dealDamageToPlayer: (damage: number) => void, applyStatusToPlayer: (status: Status) => void) => {
-    if (enemy.intent.type === 'ATTACK') {
-      dealDamageToPlayer(enemy.intent.damage || 7);
+      dealDamageToPlayer((enemy.intent.damage || 5) + strength);
     } else if (enemy.intent.type === 'DEBUFF') {
       applyStatusToPlayer({ type: 'WEAK', stacks: 1 });
     }
   },
 };
 
+// 산성 슬라임 - 중독 → 공격 패턴
+export const ACID_SLIME_M: EnemyTemplate = {
+  id: 'acid_slime_m',
+  name: '산성 슬라임 (중)',
+  minHp: 28,
+  maxHp: 32,
+  getNextIntent: (_enemy: Enemy, turn: number): EnemyIntent => {
+    if (turn % 2 === 1) {
+      return { type: 'DEBUFF' }; // 중독
+    }
+    return { type: 'ATTACK', damage: 10 + Math.floor(Math.random() * 3) }; // 10-12
+  },
+  executeIntent: (enemy: Enemy, dealDamageToPlayer: (damage: number) => void, applyStatusToPlayer: (status: Status) => void) => {
+    if (enemy.intent.type === 'ATTACK') {
+      dealDamageToPlayer(enemy.intent.damage || 11);
+    } else if (enemy.intent.type === 'DEBUFF') {
+      applyStatusToPlayer({ type: 'POISON', stacks: 5 });
+    }
+  },
+};
+
+// 가시 슬라임 - 공격 → 방어 패턴
 export const SPIKE_SLIME_M: EnemyTemplate = {
   id: 'spike_slime_m',
   name: '가시 슬라임 (중)',
@@ -141,13 +132,13 @@ export const SPIKE_SLIME_M: EnemyTemplate = {
   maxHp: 32,
   getNextIntent: (_enemy: Enemy, turn: number): EnemyIntent => {
     if (turn % 2 === 1) {
-      return { type: 'ATTACK', damage: 8 };
+      return { type: 'ATTACK', damage: 9 + Math.floor(Math.random() * 3) }; // 9-11
     }
     return { type: 'DEFEND', block: 5 };
   },
   executeIntent: (enemy: Enemy, dealDamageToPlayer: (damage: number) => void) => {
     if (enemy.intent.type === 'ATTACK') {
-      dealDamageToPlayer(enemy.intent.damage || 8);
+      dealDamageToPlayer(enemy.intent.damage || 10);
     } else if (enemy.intent.type === 'DEFEND') {
       enemy.block += enemy.intent.block || 5;
     }
@@ -164,19 +155,16 @@ export const GREMLIN_NOB: EnemyTemplate = {
     if (turn === 1) {
       return { type: 'BUFF' };
     }
-    if (turn % 3 === 0) {
-      return { type: 'ATTACK', damage: 14 };
-    }
-    return { type: 'ATTACK', damage: 14 };
+    return { type: 'ATTACK', damage: 13 + Math.floor(Math.random() * 3) }; // 13-15
   },
   executeIntent: (enemy: Enemy, dealDamageToPlayer: (damage: number) => void) => {
     if (enemy.intent.type === 'BUFF') {
-      // 분노: 힘 +2, 플레이어가 스킬 사용시 힘 +2
+      // 분노: 힘 +5
       const strengthStatus = enemy.statuses.find(s => s.type === 'STRENGTH');
       if (strengthStatus) {
-        strengthStatus.stacks += 2;
+        strengthStatus.stacks += 5;
       } else {
-        enemy.statuses.push({ type: 'STRENGTH', stacks: 2 });
+        enemy.statuses.push({ type: 'STRENGTH', stacks: 5 });
       }
     } else if (enemy.intent.type === 'ATTACK') {
       const strength = enemy.statuses.find(s => s.type === 'STRENGTH')?.stacks || 0;
@@ -185,26 +173,28 @@ export const GREMLIN_NOB: EnemyTemplate = {
   },
 };
 
-// 보스: 슬라임 보스
+// 보스: 슬라임 보스 - 공격 → 중독 5 → 취약 2 패턴 (3턴 주기)
 export const SLIME_BOSS: EnemyTemplate = {
   id: 'slime_boss',
   name: '슬라임 보스',
   minHp: 140,
-  maxHp: 140,
+  maxHp: 150,
   getNextIntent: (_enemy: Enemy, turn: number): EnemyIntent => {
-    if (turn % 3 === 1) {
-      return { type: 'ATTACK', damage: 35 };
-    } else if (turn % 3 === 2) {
-      return { type: 'DEBUFF' };
+    const pattern = turn % 3;
+    if (pattern === 1) {
+      return { type: 'ATTACK', damage: 25 + Math.floor(Math.random() * 6) }; // 25-30
+    } else if (pattern === 2) {
+      return { type: 'DEBUFF', statusType: 'POISON', statusStacks: 5 }; // 중독 5
     }
-    return { type: 'ATTACK', damage: 35 };
+    return { type: 'DEBUFF', statusType: 'VULNERABLE', statusStacks: 2 }; // 취약 2
   },
   executeIntent: (enemy: Enemy, dealDamageToPlayer: (damage: number) => void, applyStatusToPlayer: (status: Status) => void) => {
     if (enemy.intent.type === 'ATTACK') {
-      dealDamageToPlayer(enemy.intent.damage || 35);
+      dealDamageToPlayer(enemy.intent.damage || 27);
     } else if (enemy.intent.type === 'DEBUFF') {
-      applyStatusToPlayer({ type: 'WEAK', stacks: 2 });
-      applyStatusToPlayer({ type: 'VULNERABLE', stacks: 2 });
+      const statusType = enemy.intent.statusType || 'POISON';
+      const stacks = enemy.intent.statusStacks || 5;
+      applyStatusToPlayer({ type: statusType, stacks });
     }
   },
 };

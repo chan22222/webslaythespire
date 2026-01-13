@@ -152,7 +152,7 @@ function DefendIntent({ block }: { block: number }) {
   );
 }
 
-function BuffIntent() {
+function BuffIntent({ stacks }: { stacks?: number }) {
   return (
     <div className="relative flex items-center justify-center" style={{ width: '52px', height: '56px' }}>
       {/* 배경 글로우 */}
@@ -205,55 +205,162 @@ function BuffIntent() {
           strokeWidth="1"
         />
       </svg>
+      {/* 스택 수 표시 */}
+      {stacks && stacks > 1 && (
+        <div className="absolute bottom-1 right-1 z-10">
+          <span
+            className="font-title text-xs font-bold text-white"
+            style={{ textShadow: '0 0 4px rgba(0,0,0,0.8)' }}
+          >
+            +{stacks}
+          </span>
+        </div>
+      )}
     </div>
   );
 }
 
-function DebuffIntent() {
+function DebuffIntent({ statusType, stacks }: { statusType?: string; stacks?: number }) {
+  // 상태 타입에 따라 색상 결정
+  const getColors = () => {
+    switch (statusType) {
+      case 'POISON':
+        return {
+          glow: 'rgba(132, 204, 22, 0.6)',
+          glowDark: 'rgba(63, 98, 18, 0.3)',
+          gradStart: '#bef264',
+          gradMid: '#84cc16',
+          gradEnd: '#3f6212',
+          stroke: '#d9f99d',
+          accent: '#84cc16',
+          accentLight: '#bef264',
+          shadow: 'rgba(132, 204, 22, 0.9)',
+        };
+      case 'VULNERABLE':
+        return {
+          glow: 'rgba(239, 68, 68, 0.6)',
+          glowDark: 'rgba(153, 27, 27, 0.3)',
+          gradStart: '#fca5a5',
+          gradMid: '#ef4444',
+          gradEnd: '#991b1b',
+          stroke: '#fecaca',
+          accent: '#ef4444',
+          accentLight: '#fca5a5',
+          shadow: 'rgba(239, 68, 68, 0.9)',
+        };
+      default: // WEAK
+        return {
+          glow: 'rgba(139, 92, 246, 0.6)',
+          glowDark: 'rgba(91, 33, 182, 0.3)',
+          gradStart: '#a78bfa',
+          gradMid: '#8b5cf6',
+          gradEnd: '#5b21b6',
+          stroke: '#c4b5fd',
+          accent: '#8b5cf6',
+          accentLight: '#a78bfa',
+          shadow: 'rgba(139, 92, 246, 0.9)',
+        };
+    }
+  };
+
+  const colors = getColors();
+  const gradientId = `debuffGrad_${statusType || 'weak'}`;
+  const highlightId = `debuffHighlight_${statusType || 'weak'}`;
+  const crackId = `crackGrad_${statusType || 'weak'}`;
+
+  // 독 전용 물약병 아이콘
+  if (statusType === 'POISON') {
+    return (
+      <div className="relative flex items-center justify-center" style={{ width: '56px', height: '60px' }}>
+        <div
+          className="absolute inset-0"
+          style={{
+            background: `radial-gradient(ellipse at center, ${colors.glow} 0%, ${colors.glowDark} 40%, transparent 70%)`,
+            filter: 'blur(12px)',
+            animation: 'pulse 2.5s ease-in-out infinite',
+          }}
+        />
+        <svg viewBox="0 0 56 60" className="absolute inset-0 w-full h-full" style={{ filter: `drop-shadow(0 0 14px ${colors.shadow})` }}>
+          <defs>
+            <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor={colors.gradStart} />
+              <stop offset="40%" stopColor={colors.gradMid} />
+              <stop offset="100%" stopColor={colors.gradEnd} />
+            </linearGradient>
+          </defs>
+          <g transform="rotate(45 28 30)">
+            {/* 물약병 목 */}
+            <rect x="23" y="4" width="10" height="10" fill={`url(#${gradientId})`} rx="1.5" />
+            {/* 물약병 마개 */}
+            <rect x="22" y="0" width="12" height="5" fill={colors.gradMid} opacity="0.7" rx="2" />
+            {/* 동그란 물약병 몸체 */}
+            <circle cx="28" cy="32" r="20" fill={`url(#${gradientId})`} opacity="0.9" />
+            {/* 물약 내용물 하이라이트 */}
+            <ellipse cx="22" cy="26" rx="6" ry="5" fill="rgba(255,255,255,0.3)" />
+            {/* 거품 */}
+            <circle cx="34" cy="24" r="2.5" fill="rgba(255,255,255,0.4)" />
+            <circle cx="38" cy="30" r="1.8" fill="rgba(255,255,255,0.3)" />
+            <circle cx="20" cy="36" r="1.2" fill="rgba(255,255,255,0.25)" />
+          </g>
+        </svg>
+        {/* 중앙 숫자 - 공격처럼 흰색 */}
+        <div className="relative z-10 flex flex-col items-center">
+          <span
+            className="font-title text-xl font-bold text-white"
+            style={{ textShadow: '0 0 10px rgba(132, 204, 22, 0.8), 0 2px 4px rgba(0,0,0,0.8)' }}
+          >
+            {stacks || 1}
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  // 기본 디버프 아이콘 (약화/취약)
   return (
     <div className="relative flex items-center justify-center" style={{ width: '52px', height: '56px' }}>
-      {/* 배경 글로우 - 어두운 보라 연기 효과 */}
+      {/* 배경 글로우 */}
       <div
         className="absolute inset-0"
         style={{
-          background: 'radial-gradient(ellipse at center, rgba(139, 92, 246, 0.6) 0%, rgba(91, 33, 182, 0.3) 40%, transparent 70%)',
+          background: `radial-gradient(ellipse at center, ${colors.glow} 0%, ${colors.glowDark} 40%, transparent 70%)`,
           filter: 'blur(10px)',
           animation: 'pulse 2.5s ease-in-out infinite',
         }}
       />
-      {/* 깨진 검 형태 SVG */}
-      <svg viewBox="0 0 52 56" className="absolute inset-0 w-full h-full" style={{ filter: 'drop-shadow(0 0 12px rgba(139, 92, 246, 0.9))' }}>
+      {/* 깨진 형태 SVG */}
+      <svg viewBox="0 0 52 56" className="absolute inset-0 w-full h-full" style={{ filter: `drop-shadow(0 0 12px ${colors.shadow})` }}>
         <defs>
-          <linearGradient id="debuffGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#a78bfa" />
-            <stop offset="40%" stopColor="#8b5cf6" />
-            <stop offset="100%" stopColor="#5b21b6" />
+          <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor={colors.gradStart} />
+            <stop offset="40%" stopColor={colors.gradMid} />
+            <stop offset="100%" stopColor={colors.gradEnd} />
           </linearGradient>
-          <linearGradient id="debuffHighlight" x1="0%" y1="0%" x2="100%" y2="100%">
+          <linearGradient id={highlightId} x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="rgba(255,255,255,0.4)" />
             <stop offset="100%" stopColor="rgba(255,255,255,0)" />
           </linearGradient>
-          <linearGradient id="crackGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#1e1b4b" />
-            <stop offset="100%" stopColor="#0f0a1e" />
+          <linearGradient id={crackId} x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="rgba(0,0,0,0.5)" />
+            <stop offset="100%" stopColor="rgba(0,0,0,0.8)" />
           </linearGradient>
         </defs>
         {/* 역삼각형 기반 - 방패의 반대, 불안정한 형태 */}
         <path
           d="M26 54 L4 18 L14 4 L26 8 L38 4 L48 18 Z"
-          fill="url(#debuffGrad)"
-          stroke="#c4b5fd"
+          fill={`url(#${gradientId})`}
+          stroke={colors.stroke}
           strokeWidth="2"
         />
         {/* 하이라이트 */}
         <path
           d="M26 50 L8 20 L16 8 L26 11 L36 8 L44 20 Z"
-          fill="url(#debuffHighlight)"
+          fill={`url(#${highlightId})`}
         />
         {/* 금간 자국 - 깨짐 표현 */}
         <path
           d="M26 12 L24 22 L20 24 L23 30 L18 36 L22 38 L26 50"
-          stroke="url(#crackGrad)"
+          stroke={`url(#${crackId})`}
           strokeWidth="3"
           fill="none"
           strokeLinecap="round"
@@ -261,17 +368,17 @@ function DebuffIntent() {
         />
         <path
           d="M26 12 L28 20 L32 23 L29 28 L34 34 L30 37 L26 50"
-          stroke="url(#crackGrad)"
+          stroke={`url(#${crackId})`}
           strokeWidth="2.5"
           fill="none"
           strokeLinecap="round"
           strokeLinejoin="round"
         />
         {/* 작은 파편들 */}
-        <path d="M12 26 L8 28 L10 32" fill="#8b5cf6" opacity="0.8" />
-        <path d="M40 26 L44 28 L42 32" fill="#8b5cf6" opacity="0.8" />
-        <circle cx="16" cy="38" r="2" fill="#a78bfa" opacity="0.6" />
-        <circle cx="36" cy="40" r="1.5" fill="#a78bfa" opacity="0.6" />
+        <path d="M12 26 L8 28 L10 32" fill={colors.accent} opacity="0.8" />
+        <path d="M40 26 L44 28 L42 32" fill={colors.accent} opacity="0.8" />
+        <circle cx="16" cy="38" r="2" fill={colors.accentLight} opacity="0.6" />
+        <circle cx="36" cy="40" r="1.5" fill={colors.accentLight} opacity="0.6" />
         {/* 중앙 하강 심볼 */}
         <path
           d="M26 38 L20 28 L23 28 L23 18 L29 18 L29 28 L32 28 Z"
@@ -280,6 +387,17 @@ function DebuffIntent() {
           strokeWidth="1"
         />
       </svg>
+      {/* 스택 수 표시 */}
+      {stacks && (
+        <div className="absolute bottom-0 right-0 z-10">
+          <span
+            className="font-title text-sm font-bold"
+            style={{ color: colors.gradStart, textShadow: '0 0 4px rgba(0,0,0,0.8)' }}
+          >
+            {stacks}
+          </span>
+        </div>
+      )}
     </div>
   );
 }
@@ -542,9 +660,23 @@ export function Enemy({ enemy, isTargetable = false }: EnemyProps) {
         const block = enemy.intent.block || 0;
         return `${block} 방어도를 획득합니다.`;
       case 'BUFF':
-        return '자신을 강화합니다. (힘 +3)';
+        const buffType = enemy.intent.statusType || 'STRENGTH';
+        const buffStacks = enemy.intent.statusStacks || 3;
+        if (buffType === 'STRENGTH') {
+          return `자신을 강화합니다. (힘 +${buffStacks})`;
+        }
+        return `버프를 사용합니다.`;
       case 'DEBUFF':
-        return '약화를 부여합니다. (피해량 25% 감소)';
+        const debuffType = enemy.intent.statusType || 'WEAK';
+        const debuffStacks = enemy.intent.statusStacks || 1;
+        if (debuffType === 'POISON') {
+          return `중독 ${debuffStacks}을 부여합니다. (매 턴 피해)`;
+        } else if (debuffType === 'WEAK') {
+          return `약화 ${debuffStacks}을 부여합니다. (피해량 25% 감소)`;
+        } else if (debuffType === 'VULNERABLE') {
+          return `취약 ${debuffStacks}을 부여합니다. (받는 피해 50% 증가)`;
+        }
+        return `디버프를 부여합니다.`;
       default:
         return '알 수 없는 행동';
     }
@@ -559,9 +691,9 @@ export function Enemy({ enemy, isTargetable = false }: EnemyProps) {
       case 'DEFEND':
         return <DefendIntent block={enemy.intent.block || 0} />;
       case 'BUFF':
-        return <BuffIntent />;
+        return <BuffIntent stacks={enemy.intent.statusStacks} />;
       case 'DEBUFF':
-        return <DebuffIntent />;
+        return <DebuffIntent statusType={enemy.intent.statusType} stacks={enemy.intent.statusStacks} />;
       default:
         return <UnknownIntent />;
     }

@@ -10,7 +10,7 @@ import { useGameStore } from './gameStore';
 export interface DamagePopup {
   id: string;
   value: number;
-  type: 'damage' | 'block' | 'heal' | 'buff' | 'debuff' | 'skill' | 'blocked';
+  type: 'damage' | 'block' | 'heal' | 'buff' | 'debuff' | 'skill' | 'blocked' | 'poison';
   x: number;
   y: number;
   modifier?: number; // 버프/디버프로 인한 보정값
@@ -225,6 +225,7 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     let turnExtraEnergy = 0;
     let turnExtraDraw = 0;
     let turnDamageToPlayer = 0;
+    let turnHealAmount = 0;
 
     relics.forEach(relic => {
       relic.effects.forEach(effect => {
@@ -233,10 +234,10 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
             gainEnergy: (amount: number) => { turnExtraEnergy += amount; },
             drawCards: (count: number) => { turnExtraDraw += count; },
             damagePlayer: (amount: number) => { turnDamageToPlayer += amount; },
+            heal: (amount: number) => { turnHealAmount += amount; },
             gainBlock: () => {},
             gainStrength: () => {},
             gainDexterity: () => {},
-            heal: () => {},
           };
           effect.execute(context);
         }
@@ -244,6 +245,10 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     });
 
     // 턴 시작 유물 효과 적용
+    if (turnHealAmount > 0) {
+      useGameStore.getState().healPlayer(turnHealAmount);
+      get().addToCombatLog(`유물 효과로 HP ${turnHealAmount} 회복!`);
+    }
     if (turnDamageToPlayer > 0) {
       get().dealDamageToPlayer(turnDamageToPlayer);
       get().addToCombatLog(`유물 효과로 HP ${turnDamageToPlayer} 손실!`);
@@ -262,10 +267,18 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       get().addToCombatLog(`금속화로 방어도 ${metallicize.stacks} 획득!`);
     }
 
-    // 독 피해 처리
+    // 독 피해 처리 (방어도 무시, 직접 HP 감소)
     const poisonStatus = playerStatuses.find(s => s.type === 'POISON');
     if (poisonStatus && poisonStatus.stacks > 0) {
-      get().dealDamageToPlayer(poisonStatus.stacks);
+      const poisonDamage = poisonStatus.stacks;
+      get().addToCombatLog(`중독으로 ${poisonDamage} 피해!`);
+
+      // 직접 HP 감소 (방어도 무시)
+      useGameStore.getState().takeDamage(poisonDamage);
+
+      // 초록색 팝업 표시
+      get().addDamagePopup(poisonDamage, 'poison', 0, 0, 'player');
+
       poisonStatus.stacks -= 1;
       set({
         playerStatuses: poisonStatus.stacks > 0
@@ -394,19 +407,22 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
         await new Promise(resolve => setTimeout(resolve, 500));
       } else if (enemy.intent.type === 'BUFF') {
         get().triggerEnemySkill(enemy.instanceId);
-        const strengthStatus = enemy.statuses.find(s => s.type === 'STRENGTH');
-        if (strengthStatus) {
-          strengthStatus.stacks += 3;
+        // intent에 정의된 statusType과 stacks 사용 (기본: 힘 +3)
+        const statusType = enemy.intent.statusType || 'STRENGTH';
+        const stacks = enemy.intent.statusStacks || 3;
+        const existingStatus = enemy.statuses.find(s => s.type === statusType);
+        if (existingStatus) {
+          existingStatus.stacks += stacks;
         } else {
-          enemy.statuses.push({ type: 'STRENGTH', stacks: 3 });
+          enemy.statuses.push({ type: statusType, stacks });
         }
         get().addToCombatLog(`${enemy.name}이(가) 힘을 얻었습니다!`);
         await new Promise(resolve => setTimeout(resolve, 500));
       } else if (enemy.intent.type === 'DEBUFF') {
-        get().triggerPlayerDebuff(); // 플레이어 디버프 이펙트만 표시
-        get().applyStatusToPlayer({ type: 'WEAK', stacks: 1 });
-        const pName = useGameStore.getState().playerName;
-        get().addToCombatLog(`${pName}(이)가 약화되었습니다!`);
+        // intent에 정의된 statusType과 stacks 사용
+        const statusType = enemy.intent.statusType || 'WEAK';
+        const stacks = enemy.intent.statusStacks || 1;
+        get().applyStatusToPlayer({ type: statusType, stacks });
         await new Promise(resolve => setTimeout(resolve, 500));
       }
 
@@ -812,6 +828,12 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     const { playerStatuses } = get();
     const existingStatus = playerStatuses.find(s => s.type === status.type);
 
+    // 디버프(약화, 취약, 중독)일 경우 이펙트 트리거
+    const debuffTypes = ['WEAK', 'VULNERABLE', 'POISON'];
+    if (debuffTypes.includes(status.type)) {
+      get().triggerPlayerDebuff();
+    }
+
     if (existingStatus) {
       // 뮤테이션 없이 새 객체 생성
       const updatedStatuses = playerStatuses.map(s =>
@@ -867,41 +889,62 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
 
 // 간소화된 적 의도 결정 함수
 function getNextEnemyIntent(enemy: EnemyInstance, turn: number): EnemyInstance['intent'] {
-  // 간단한 패턴 기반 의도
+  // 컬티스트: 힘+3 → 공격 → 공격...
   if (enemy.templateId === 'cultist') {
     return turn === 1
-      ? { type: 'BUFF' }
-      : { type: 'ATTACK', damage: 6 };
+      ? { type: 'BUFF', statusType: 'STRENGTH', statusStacks: 3 }
+      : { type: 'ATTACK', damage: 9 + Math.floor(Math.random() * 3) };
   }
 
+  // 턱 벌레: 방어 7 → 공격 (2턴 주기)
   if (enemy.templateId === 'jaw_worm') {
-    return turn % 3 === 2
-      ? { type: 'DEFEND', block: 6 }
-      : { type: 'ATTACK', damage: 11 };
-  }
-
-  if (enemy.templateId.includes('louse')) {
-    return Math.random() < 0.75
-      ? { type: 'ATTACK', damage: 5 + Math.floor(Math.random() * 3) }
-      : { type: 'BUFF' };
-  }
-
-  if (enemy.templateId.includes('slime')) {
     return turn % 2 === 1
-      ? { type: 'ATTACK', damage: 8 }
-      : { type: 'DEBUFF' };
+      ? { type: 'DEFEND', block: 7 }
+      : { type: 'ATTACK', damage: 7 + Math.floor(Math.random() * 5) };
   }
 
+  // 붉은 이: 공격 → 힘+3 (2턴 주기)
+  if (enemy.templateId === 'louse_red') {
+    return turn % 2 === 1
+      ? { type: 'ATTACK', damage: 4 + Math.floor(Math.random() * 3) }
+      : { type: 'BUFF', statusType: 'STRENGTH', statusStacks: 3 };
+  }
+
+  // 녹색 이: 공격 → 약화 1 → 공격 (3턴 주기)
+  if (enemy.templateId === 'louse_green') {
+    const pattern = turn % 3;
+    if (pattern === 1) return { type: 'ATTACK', damage: 4 + Math.floor(Math.random() * 3) };
+    if (pattern === 2) return { type: 'DEBUFF', statusType: 'WEAK', statusStacks: 1 };
+    return { type: 'ATTACK', damage: 4 + Math.floor(Math.random() * 3) };
+  }
+
+  // 산성 슬라임: 중독 5 → 공격 패턴
+  if (enemy.templateId === 'acid_slime_m') {
+    return turn % 2 === 1
+      ? { type: 'DEBUFF', statusType: 'POISON', statusStacks: 5 }
+      : { type: 'ATTACK', damage: 10 + Math.floor(Math.random() * 3) };
+  }
+
+  // 가시 슬라임: 공격 → 방어 패턴
+  if (enemy.templateId === 'spike_slime_m') {
+    return turn % 2 === 1
+      ? { type: 'ATTACK', damage: 9 + Math.floor(Math.random() * 3) }
+      : { type: 'DEFEND', block: 5 };
+  }
+
+  // 고위 노블레스: 힘+5 → 공격...
   if (enemy.templateId === 'gremlin_nob') {
     return turn === 1
-      ? { type: 'BUFF' }
-      : { type: 'ATTACK', damage: 14 };
+      ? { type: 'BUFF', statusType: 'STRENGTH', statusStacks: 5 }
+      : { type: 'ATTACK', damage: 13 + Math.floor(Math.random() * 3) };
   }
 
+  // 슬라임 보스: 공격 → 중독 5 → 취약 2 (3턴 주기)
   if (enemy.templateId === 'slime_boss') {
-    return turn % 3 === 2
-      ? { type: 'DEBUFF' }
-      : { type: 'ATTACK', damage: 35 };
+    const pattern = turn % 3;
+    if (pattern === 1) return { type: 'ATTACK', damage: 25 + Math.floor(Math.random() * 6) };
+    if (pattern === 2) return { type: 'DEBUFF', statusType: 'POISON', statusStacks: 5 };
+    return { type: 'DEBUFF', statusType: 'VULNERABLE', statusStacks: 2 };
   }
 
   // 이스터에그 적: ㄹㅇ턱벌레
@@ -911,13 +954,13 @@ function getNextEnemyIntent(enemy: EnemyInstance, turn: number): EnemyInstance['
       : { type: 'ATTACK', damage: 8 };
   }
 
-  // 이스터에그 적: 꾸추
+  // 이스터에그 적: 꾸추 - 힘+2 → 약화 1 → 공격...
   if (enemy.templateId === 'kkuchu') {
     if (turn === 1) {
-      return { type: 'BUFF' };
+      return { type: 'BUFF', statusType: 'STRENGTH', statusStacks: 2 };
     }
     return turn % 2 === 0
-      ? { type: 'DEBUFF' }
+      ? { type: 'DEBUFF', statusType: 'WEAK', statusStacks: 1 }
       : { type: 'ATTACK', damage: 7 };
   }
 

@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 export interface DamagePopupData {
   id: string;
   value: number;
-  type: 'damage' | 'block' | 'heal' | 'buff' | 'debuff' | 'skill' | 'blocked';
+  type: 'damage' | 'block' | 'heal' | 'buff' | 'debuff' | 'skill' | 'blocked' | 'poison';
   x: number;
   y: number;
   modifier?: number; // 버프/디버프로 인한 보정값 (+힘, -약화 등)
@@ -69,6 +69,12 @@ export function DamagePopup({ popup, onComplete }: DamagePopupProps) {
           color: '#9ca3af',
           text: `-${popup.value}`,
           shadow: '0 0 15px rgba(156, 163, 175, 0.6), 0 0 30px rgba(156, 163, 175, 0.3)',
+        };
+      case 'poison':
+        return {
+          color: '#84cc16',
+          text: `-${popup.value}`,
+          shadow: '0 0 20px rgba(132, 204, 22, 0.8), 0 0 40px rgba(132, 204, 22, 0.4)',
         };
       default:
         return {

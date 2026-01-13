@@ -1,4 +1,5 @@
 import { StatusType } from './card';
+export type { StatusType };
 
 export interface Status {
   type: StatusType;

@@ -221,18 +221,21 @@ export function ShopScreen() {
                   }}
                 >
                   <span className="text-xl sm:text-3xl">
-                    {relic.id === 'anchor' && '⚓'}
+                    {relic.id === 'spell_shield' && '🛡️'}
+                    {relic.id === 'thorn_armor' && '🌿'}
                     {relic.id === 'vajra' && '💪'}
+                    {relic.id === 'swift_potion' && '💨'}
+                    {relic.id === 'healing_potion' && '❤️'}
                     {relic.id === 'lantern' && '🏮'}
-                    {relic.id === 'bag_of_marbles' && '🔮'}
-                    {relic.id === 'bronze_scales' && '🛡️'}
                     {relic.id === 'gamblers_dice' && '🎲'}
                     {relic.id === 'blood_pact' && '🩸'}
                     {relic.id === 'strange_pill' && '💊'}
-                    {relic.id === 'cursed_coin' && '🪙'}
                     {relic.id === 'berserker_helm' && '⚔️'}
-                    {relic.id === 'ring_of_pain' && '💍'}
-                    {relic.id === 'devils_contract' && '📜'}
+                    {relic.id === 'cursed_coin' && '🪙'}
+                    {relic.id === 'magic_ring' && '💍'}
+                    {relic.id === 'mystic_orb' && '🔮'}
+                    {relic.id === 'elixir' && '🧪'}
+                    {relic.id === 'vampire_fang' && '🧛'}
                   </span>
                 </div>
                 <span className="font-title text-xs sm:text-base text-[var(--gold-light)]">{relic.name}</span>

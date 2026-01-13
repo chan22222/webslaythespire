@@ -33,6 +33,7 @@ interface GameState {
   modifyGold: (amount: number) => void;
   modifyHp: (amount: number) => void;
   healPlayer: (amount: number) => void;
+  takeDamage: (amount: number) => void;
   upgradeCard: (cardInstanceId: string) => void;
   getCurrentNode: () => MapNode | null;
   getAvailableNodes: () => MapNode[];
@@ -214,6 +215,17 @@ export const useGameStore = create<GameState>((set, get) => ({
       player: {
         ...player,
         currentHp: Math.min(player.maxHp, player.currentHp + amount),
+      },
+    });
+  },
+
+  takeDamage: (amount: number) => {
+    const { player } = get();
+
+    set({
+      player: {
+        ...player,
+        currentHp: Math.max(0, player.currentHp - amount),
       },
     });
   },

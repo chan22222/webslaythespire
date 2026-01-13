@@ -1,4 +1,4 @@
-import { Status } from './status';
+import { Status, StatusType } from './status';
 
 export type EnemyIntentType = 'ATTACK' | 'DEFEND' | 'BUFF' | 'DEBUFF' | 'UNKNOWN';
 
@@ -7,6 +7,9 @@ export interface EnemyIntent {
   damage?: number;
   hits?: number;
   block?: number;
+  // 버프/디버프 상세 정보
+  statusType?: StatusType;
+  statusStacks?: number;
 }
 
 export interface EnemyAction {
