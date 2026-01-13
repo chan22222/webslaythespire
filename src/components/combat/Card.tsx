@@ -49,8 +49,8 @@ const rarityConfig = {
   BASIC: { name: 'Basic', color: '#a0a0a0' },
   COMMON: { name: 'Common', color: '#a0a0a0' },
   UNCOMMON: { name: 'Uncommon', color: '#4a9eff' },
-  RARE: { name: 'Rare', color: '#ffd700' },
-  BOSS: { name: 'Unique', color: '#c084fc' },
+  RARE: { name: 'Rare', color: '#c084fc' },
+  UNIQUE: { name: 'Unique', color: '#e879f9' },
 };
 
 // 기준: 전투 카드 140x195 (비율 1:1.393)
@@ -98,9 +98,9 @@ const sizeConfig = {
 const rarityGlow = {
   BASIC: '',
   COMMON: '',
-  UNCOMMON: '0 0 12px rgba(100, 150, 255, 0.5)',
-  RARE: '0 0 12px rgba(255, 200, 50, 0.5)',
-  BOSS: '0 0 20px rgba(255, 50, 50, 0.7)',
+  UNCOMMON: '0 0 12px rgba(74, 158, 255, 0.5)',
+  RARE: '0 0 12px rgba(192, 132, 252, 0.5)',
+  UNIQUE: '0 0 20px rgba(232, 121, 249, 0.7)',
 };
 
 export function Card({
@@ -270,11 +270,9 @@ export function Card({
           }}
         >
           {config.typeName}
-          {card.rarity !== 'BASIC' && card.rarity !== 'COMMON' && (
-            <span style={{ color: rarityConfig[card.rarity].color }}>
-              {' '}- {rarityConfig[card.rarity].name}
-            </span>
-          )}
+          <span style={{ color: rarityConfig[card.rarity].color }}>
+            {' '}- {rarityConfig[card.rarity].name}
+          </span>
         </span>
       </div>
 

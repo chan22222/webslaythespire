@@ -8,7 +8,7 @@ import { STRIKE, DEFEND, BASH } from '../../data/cards/starterCards';
 import { COMMON_CARDS } from '../../data/cards/commonCards';
 import { UNCOMMON_CARDS } from '../../data/cards/uncommonCards';
 import { RARE_CARDS } from '../../data/cards/rareCards';
-import { BOSS_CARDS } from '../../data/cards/bossCards';
+import { UNIQUE_CARDS } from '../../data/cards/bossCards';
 import {
   CULTIST,
   JAW_WORM,
@@ -44,7 +44,7 @@ const ALL_CARDS: Card[] = [
   ...COMMON_CARDS,
   ...UNCOMMON_CARDS,
   ...RARE_CARDS,
-  ...BOSS_CARDS,
+  ...UNIQUE_CARDS,
 ];
 
 const typeStyles = {

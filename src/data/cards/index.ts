@@ -3,13 +3,13 @@ import { createStarterDeck, STRIKE, DEFEND, BASH, BASIC_CARDS } from './starterC
 import { COMMON_CARDS } from './commonCards';
 import { UNCOMMON_CARDS } from './uncommonCards';
 import { RARE_CARDS } from './rareCards';
-import { BOSS_CARDS } from './bossCards';
+import { UNIQUE_CARDS } from './bossCards';
 
 export { createStarterDeck, STRIKE, DEFEND, BASH, BASIC_CARDS };
 export { COMMON_CARDS };
 export { UNCOMMON_CARDS };
 export { RARE_CARDS };
-export { BOSS_CARDS };
+export { UNIQUE_CARDS };
 
 // 모든 획득 가능한 카드 (BASIC 제외)
 export const ALL_OBTAINABLE_CARDS: Card[] = [
@@ -18,11 +18,11 @@ export const ALL_OBTAINABLE_CARDS: Card[] = [
   ...RARE_CARDS,
 ];
 
-// 모든 카드 (보스 카드 포함)
+// 모든 카드 (유니크 카드 포함)
 export const ALL_CARDS: Card[] = [
   ...BASIC_CARDS,
   ...ALL_OBTAINABLE_CARDS,
-  ...BOSS_CARDS,
+  ...UNIQUE_CARDS,
 ];
 
 // 희귀도별 카드 풀

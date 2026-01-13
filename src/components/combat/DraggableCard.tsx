@@ -72,8 +72,8 @@ export function DraggableCard({
     BASIC: { name: 'Basic', color: '#a0a0a0' },
     COMMON: { name: 'Common', color: '#a0a0a0' },
     UNCOMMON: { name: 'Uncommon', color: '#4a9eff' },
-    RARE: { name: 'Rare', color: '#ffd700' },
-    BOSS: { name: 'Unique', color: '#c084fc' },
+    RARE: { name: 'Rare', color: '#c084fc' },
+    UNIQUE: { name: 'Unique', color: '#e879f9' },
   };
 
   const config = typeConfig[card.type];
@@ -337,11 +337,9 @@ export function DraggableCard({
             }}
           >
             {config.typeName}
-            {card.rarity !== 'BASIC' && card.rarity !== 'COMMON' && (
-              <span style={{ color: rarityConfig[card.rarity].color }}>
-                {' '}- {rarityConfig[card.rarity].name}
-              </span>
-            )}
+            <span style={{ color: rarityConfig[card.rarity].color }}>
+              {' '}- {rarityConfig[card.rarity].name}
+            </span>
           </span>
         </div>
 

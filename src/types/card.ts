@@ -1,5 +1,5 @@
 export type CardType = 'ATTACK' | 'SHIELD' | 'EFFECT' | 'GADGET' | 'TERRAIN';
-export type CardRarity = 'BASIC' | 'COMMON' | 'UNCOMMON' | 'RARE' | 'BOSS';
+export type CardRarity = 'BASIC' | 'COMMON' | 'UNCOMMON' | 'RARE' | 'UNIQUE';
 export type TargetType = 'SINGLE' | 'ALL' | 'SELF' | 'RANDOM';
 export type StatusType = 'VULNERABLE' | 'WEAK' | 'STRENGTH' | 'DEXTERITY' | 'POISON' | 'BLOCK_NEXT_TURN' | 'METALLICIZE' | 'STRENGTH_DOWN';
 
