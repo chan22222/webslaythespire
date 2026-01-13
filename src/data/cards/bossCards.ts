@@ -51,7 +51,7 @@ export const ABSOLUTE_DEFENSE: Card = {
 export const DIVINE_POWER: Card = {
   id: 'divine_power',
   name: '신의 권능',
-  type: 'EFFECT',
+  type: 'ATTACK',
   rarity: 'BOSS',
   cost: 4,
   description: '적의 현재 체력을 절반으로 줄입니다. (최대 100)',
