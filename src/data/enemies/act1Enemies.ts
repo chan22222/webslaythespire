@@ -9,7 +9,7 @@ export const CULTIST: EnemyTemplate = {
   maxHp: 34,
   getNextIntent: (_enemy: Enemy, turn: number): EnemyIntent => {
     if (turn === 1) {
-      return { type: 'BUFF' };
+      return { type: 'BUFF', statusType: 'STRENGTH', statusStacks: 3 }; // 힘 +3
     }
     return { type: 'ATTACK', damage: 9 + Math.floor(Math.random() * 3) }; // 9-11
   },
@@ -61,7 +61,7 @@ export const LOUSE_RED: EnemyTemplate = {
     if (turn % 2 === 1) {
       return { type: 'ATTACK', damage: 4 + Math.floor(Math.random() * 3) }; // 4-6
     }
-    return { type: 'BUFF' };
+    return { type: 'BUFF', statusType: 'STRENGTH', statusStacks: 3 }; // 힘 +3
   },
   executeIntent: (enemy: Enemy, dealDamageToPlayer: (damage: number) => void) => {
     if (enemy.intent.type === 'ATTACK') {
@@ -89,7 +89,7 @@ export const LOUSE_GREEN: EnemyTemplate = {
     if (pattern === 1) {
       return { type: 'ATTACK', damage: 4 + Math.floor(Math.random() * 3) }; // 4-6
     } else if (pattern === 2) {
-      return { type: 'DEBUFF' };
+      return { type: 'DEBUFF', statusType: 'WEAK', statusStacks: 1 }; // 약화 1
     }
     return { type: 'ATTACK', damage: 4 + Math.floor(Math.random() * 3) }; // 4-6
   },
@@ -111,7 +111,7 @@ export const ACID_SLIME_M: EnemyTemplate = {
   maxHp: 32,
   getNextIntent: (_enemy: Enemy, turn: number): EnemyIntent => {
     if (turn % 2 === 1) {
-      return { type: 'DEBUFF' }; // 중독
+      return { type: 'DEBUFF', statusType: 'POISON', statusStacks: 5 }; // 중독 5
     }
     return { type: 'ATTACK', damage: 10 + Math.floor(Math.random() * 3) }; // 10-12
   },
@@ -153,7 +153,7 @@ export const GREMLIN_NOB: EnemyTemplate = {
   maxHp: 86,
   getNextIntent: (_enemy: Enemy, turn: number): EnemyIntent => {
     if (turn === 1) {
-      return { type: 'BUFF' };
+      return { type: 'BUFF', statusType: 'STRENGTH', statusStacks: 5 }; // 힘 +5
     }
     return { type: 'ATTACK', damage: 13 + Math.floor(Math.random() * 3) }; // 13-15
   },
@@ -240,10 +240,10 @@ export const KKUCHU: EnemyTemplate = {
   maxHp: 35,
   getNextIntent: (_enemy: Enemy, turn: number): EnemyIntent => {
     if (turn === 1) {
-      return { type: 'BUFF' };
+      return { type: 'BUFF', statusType: 'STRENGTH', statusStacks: 2 }; // 힘 +2
     }
     if (turn % 2 === 0) {
-      return { type: 'DEBUFF' };
+      return { type: 'DEBUFF', statusType: 'WEAK', statusStacks: 1 }; // 약화 1
     }
     return { type: 'ATTACK', damage: 7 };
   },
