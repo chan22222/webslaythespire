@@ -50,7 +50,7 @@ const rarityConfig = {
   COMMON: { name: 'Common', color: '#a0a0a0' },
   UNCOMMON: { name: 'Uncommon', color: '#4a9eff' },
   RARE: { name: 'Rare', color: '#ffd700' },
-  BOSS: { name: 'Boss', color: '#ff4a4a' },
+  BOSS: { name: 'Unique', color: '#c084fc' },
 };
 
 // 기준: 전투 카드 140x195 (비율 1:1.393)
@@ -69,7 +69,7 @@ const createSizeConfig = (width: number) => {
     nameFontSize: Math.round(9 * scale),
     // 타입: 중앙 하단 (설명 바로 위)
     typeBottom: Math.round(55 * scale),
-    typeFontSize: Math.round(7 * scale),
+    typeFontSize: Math.round(9 * scale),
     // 코스트: 좌상단
     costSize: Math.round(28 * scale),
     costTop: Math.round(7 * scale),

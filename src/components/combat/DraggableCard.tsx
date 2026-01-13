@@ -73,7 +73,7 @@ export function DraggableCard({
     COMMON: { name: 'Common', color: '#a0a0a0' },
     UNCOMMON: { name: 'Uncommon', color: '#4a9eff' },
     RARE: { name: 'Rare', color: '#ffd700' },
-    BOSS: { name: 'Boss', color: '#ff4a4a' },
+    BOSS: { name: 'Unique', color: '#c084fc' },
   };
 
   const config = typeConfig[card.type];
@@ -331,7 +331,7 @@ export function DraggableCard({
           <span
             className="font-card"
             style={{
-              fontSize: '7px',
+              fontSize: '9px',
               color: config.accentColor,
               textShadow: '1px 1px 0 #000',
             }}
