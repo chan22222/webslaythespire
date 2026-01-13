@@ -25,12 +25,6 @@ const typeConfig = {
     glowColor: 'rgba(64, 168, 232, 0.6)',
     typeName: 'Shield',
   },
-  SKILL: {
-    cardImage: '/cards/skillcard.png',
-    accentColor: '#4ade80',
-    glowColor: 'rgba(74, 222, 128, 0.6)',
-    typeName: 'Skill',
-  },
   GADGET: {
     cardImage: '/cards/gadgetcard.png',
     accentColor: '#40e8a0',

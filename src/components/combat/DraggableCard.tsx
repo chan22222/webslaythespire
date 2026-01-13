@@ -45,13 +45,6 @@ export function DraggableCard({
       textColor: '#fff',
       typeName: 'Shield',
     },
-    SKILL: {
-      cardImage: '/cards/skillcard.png',
-      accentColor: '#4ade80',
-      glowColor: 'rgba(74, 222, 128, 0.7)',
-      textColor: '#fff',
-      typeName: 'Skill',
-    },
     GADGET: {
       cardImage: '/cards/gadgetcard.png',
       accentColor: '#40e8a0',

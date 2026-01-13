@@ -3,7 +3,7 @@ import { Card } from '../../types/card';
 export const LIMIT_BREAK: Card = {
   id: 'limit_break',
   name: '한계 돌파',
-  type: 'SKILL',
+  type: 'EFFECT',
   rarity: 'RARE',
   cost: 2,
   description: '현재 보유한 힘을 1.5배로 늘립니다.',
@@ -19,7 +19,7 @@ export const LIMIT_BREAK: Card = {
 export const IRON_FORTRESS: Card = {
   id: 'iron_fortress',
   name: '철벽의 요새',
-  type: 'EFFECT',
+  type: 'SHIELD',
   rarity: 'RARE',
   cost: 1,
   description: '1턴 간 방어도가 사라지지 않습니다.',
@@ -51,7 +51,7 @@ export const ON_THE_EDGE: Card = {
 export const TACTICAL_COMMAND: Card = {
   id: 'tactical_command',
   name: '전술 지휘',
-  type: 'SKILL',
+  type: 'EFFECT',
   rarity: 'RARE',
   cost: 1,
   description: '카드 2장을 뽑습니다. 뽑은 카드가 공격 카드면 코스트를 2 감소 시킵니다.',
@@ -95,7 +95,7 @@ export const BLOOD_FESTIVAL: Card = {
 export const FULL_ARMAMENT: Card = {
   id: 'full_armament',
   name: '완전 무장',
-  type: 'SKILL',
+  type: 'EFFECT',
   rarity: 'RARE',
   cost: 0,
   description: '힘과 민첩 2를 얻습니다.',

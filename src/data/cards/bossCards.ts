@@ -19,7 +19,7 @@ export const FINAL_STRIKE: Card = {
 export const INFINITE_VORTEX: Card = {
   id: 'infinite_vortex',
   name: '무한의 소용돌이',
-  type: 'SKILL',
+  type: 'EFFECT',
   rarity: 'BOSS',
   cost: 1,
   description: '이번 턴에 사용한 카드 5장을 다시 손으로 가져옵니다.',
@@ -35,7 +35,7 @@ export const INFINITE_VORTEX: Card = {
 export const ABSOLUTE_DEFENSE: Card = {
   id: 'absolute_defense',
   name: '절대 방어 영역',
-  type: 'EFFECT',
+  type: 'SHIELD',
   rarity: 'BOSS',
   cost: 3,
   description: '2턴 동안 플레이어가 입는 모든 피해를 무효화합니다.',
@@ -51,7 +51,7 @@ export const ABSOLUTE_DEFENSE: Card = {
 export const DIVINE_POWER: Card = {
   id: 'divine_power',
   name: '신의 권능',
-  type: 'SKILL',
+  type: 'EFFECT',
   rarity: 'BOSS',
   cost: 4,
   description: '적의 현재 체력을 절반으로 줄입니다. (최대 100)',
@@ -67,7 +67,7 @@ export const DIVINE_POWER: Card = {
 export const TIME_WARP: Card = {
   id: 'time_warp',
   name: '시간 왜곡',
-  type: 'SKILL',
+  type: 'EFFECT',
   rarity: 'BOSS',
   cost: 3,
   description: '턴을 종료하고, 즉시 자신의 턴을 다시 시작합니다.',

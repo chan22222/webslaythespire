@@ -69,7 +69,7 @@ export const DOUBLE_STRIKE: Card = {
 export const EQUIPMENT_CHECK: Card = {
   id: 'equipment_check',
   name: '장비 점검',
-  type: 'SKILL',
+  type: 'SHIELD',
   rarity: 'COMMON',
   cost: 1,
   description: '4 방어도를 얻습니다. 손에 있는 카드 1장을 업그레이드합니다.',
@@ -113,7 +113,7 @@ export const NEUTRALIZE: Card = {
 export const INSTANT_FOCUS: Card = {
   id: 'instant_focus',
   name: '순간 집중',
-  type: 'SKILL',
+  type: 'EFFECT',
   rarity: 'COMMON',
   cost: 0,
   description: '힘 2를 얻습니다. 턴 종료 시 힘 2를 잃습니다.',
