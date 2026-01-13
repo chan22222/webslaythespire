@@ -45,6 +45,14 @@ const typeConfig = {
   },
 };
 
+const rarityConfig = {
+  BASIC: { name: 'Basic', color: '#a0a0a0' },
+  COMMON: { name: 'Common', color: '#a0a0a0' },
+  UNCOMMON: { name: 'Uncommon', color: '#4a9eff' },
+  RARE: { name: 'Rare', color: '#ffd700' },
+  BOSS: { name: 'Boss', color: '#ff4a4a' },
+};
+
 // 기준: 전투 카드 140x195 (비율 1:1.393)
 const BASE_WIDTH = 140;
 const BASE_HEIGHT = 195;
@@ -262,6 +270,11 @@ export function Card({
           }}
         >
           {config.typeName}
+          {card.rarity !== 'BASIC' && card.rarity !== 'COMMON' && (
+            <span style={{ color: rarityConfig[card.rarity].color }}>
+              {' '}- {rarityConfig[card.rarity].name}
+            </span>
+          )}
         </span>
       </div>
 

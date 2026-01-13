@@ -68,6 +68,14 @@ export function DraggableCard({
     },
   };
 
+  const rarityConfig = {
+    BASIC: { name: 'Basic', color: '#a0a0a0' },
+    COMMON: { name: 'Common', color: '#a0a0a0' },
+    UNCOMMON: { name: 'Uncommon', color: '#4a9eff' },
+    RARE: { name: 'Rare', color: '#ffd700' },
+    BOSS: { name: 'Boss', color: '#ff4a4a' },
+  };
+
   const config = typeConfig[card.type];
 
   // 전투 중인 경우 플레이어 상태 가져오기
@@ -329,6 +337,11 @@ export function DraggableCard({
             }}
           >
             {config.typeName}
+            {card.rarity !== 'BASIC' && card.rarity !== 'COMMON' && (
+              <span style={{ color: rarityConfig[card.rarity].color }}>
+                {' '}- {rarityConfig[card.rarity].name}
+              </span>
+            )}
           </span>
         </div>
 
