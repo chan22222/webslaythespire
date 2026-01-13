@@ -30,7 +30,9 @@
       "Bash(convert:*)",
       "WebFetch(domain:neodgm.dalgona.dev)",
       "WebSearch",
-      "Bash(git reset:*)"
+      "Bash(git reset:*)",
+      "Bash(git filter-branch:*)",
+      "Bash(git stash:*)"
     ]
   }
 }

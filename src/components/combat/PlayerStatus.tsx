@@ -246,6 +246,8 @@ function StatusBadge({ status }: { status: Status }) {
         return <WeakIcon size={14} color="#a78bfa" />;
       case 'STRENGTH':
         return <StrengthIcon size={14} color="#4ade80" />;
+      case 'STRENGTH_DOWN':
+        return <StrengthIcon size={14} color="#ff6b6b" />;
       case 'DEXTERITY':
         return <DexterityIcon size={14} color="#60a5fa" />;
       case 'POISON':

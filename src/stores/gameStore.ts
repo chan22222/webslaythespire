@@ -36,7 +36,8 @@ interface GameState {
   upgradeCard: (cardInstanceId: string) => void;
   getCurrentNode: () => MapNode | null;
   getAvailableNodes: () => MapNode[];
-  startTestBattle: (enemies: EnemyTemplate[]) => void;
+  startTestBattle: (enemies: EnemyTemplate[], relics?: Relic[]) => void;
+  startGameWithDeckAndRelics: (relics: Relic[]) => void;
   clearTestEnemies: () => void;
 }
 
@@ -260,7 +261,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     return map.nodes.filter(n => currentNode.connections.includes(n.id));
   },
 
-  startTestBattle: (enemies: EnemyTemplate[]) => {
+  startTestBattle: (enemies: EnemyTemplate[], relics?: Relic[]) => {
     const { player } = get();
     // 현재 덱이 있으면 유지, 없으면 스타터 덱 사용
     const deck = player.deck.length > 0
@@ -272,10 +273,23 @@ export const useGameStore = create<GameState>((set, get) => ({
       player: {
         ...createInitialPlayer(),
         deck,
-        relics: [BURNING_BLOOD],
+        relics: relics && relics.length > 0 ? relics : [BURNING_BLOOD],
       },
       testEnemies: enemies,
       map: { nodes: [], currentNodeId: null, floor: 1 },
+    });
+  },
+
+  startGameWithDeckAndRelics: (relics: Relic[]) => {
+    const { player } = get();
+    const newMap = generateMap();
+    set({
+      phase: 'MAP',
+      map: newMap,
+      player: {
+        ...player,
+        relics: relics.length > 0 ? relics : [BURNING_BLOOD],
+      },
     });
   },
 

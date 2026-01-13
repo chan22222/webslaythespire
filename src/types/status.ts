@@ -42,4 +42,9 @@ export const STATUS_INFO: Record<StatusType, { name: string; description: string
     description: '매 턴 종료 시 방어도를 얻습니다.',
     isDebuff: false,
   },
+  STRENGTH_DOWN: {
+    name: '힘 감소',
+    description: '턴 종료 시 힘이 감소합니다.',
+    isDebuff: true,
+  },
 };

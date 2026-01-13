@@ -171,12 +171,18 @@ export const FLEX: Card = {
   rarity: 'COMMON',
   cost: 0,
   description: '힘 2를 얻습니다. 턴 종료 시 힘 2를 잃습니다.',
-  effects: [{ type: 'APPLY_STATUS', value: 2, target: 'SELF', status: 'STRENGTH' }],
+  effects: [
+    { type: 'APPLY_STATUS', value: 2, target: 'SELF', status: 'STRENGTH' },
+    { type: 'APPLY_STATUS', value: 2, target: 'SELF', status: 'STRENGTH_DOWN' },
+  ],
   upgraded: false,
   upgradeEffect: {
     name: '유연+',
     description: '힘 4를 얻습니다. 턴 종료 시 힘 4를 잃습니다.',
-    effects: [{ type: 'APPLY_STATUS', value: 4, target: 'SELF', status: 'STRENGTH' }],
+    effects: [
+      { type: 'APPLY_STATUS', value: 4, target: 'SELF', status: 'STRENGTH' },
+      { type: 'APPLY_STATUS', value: 4, target: 'SELF', status: 'STRENGTH_DOWN' },
+    ],
   },
 };
 

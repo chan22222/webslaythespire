@@ -1,5 +1,3 @@
-import { HeartIcon } from '../combat/icons';
-
 interface HealthBarProps {
   current: number;
   max: number;
@@ -20,124 +18,93 @@ export function HealthBar({
   const isCritical = percentage < 15;
 
   const heights = {
-    sm: 'h-5',
-    md: 'h-7',
-    lg: 'h-9',
+    sm: 16,
+    md: 22,
+    lg: 28,
   };
 
   const textSizes = {
-    sm: 'text-xs',
-    md: 'text-sm',
-    lg: 'text-base',
+    sm: 'text-[10px]',
+    md: 'text-xs',
+    lg: 'text-sm',
+  };
+
+  const height = heights[size];
+
+  // HP 색상 결정
+  const getBarColor = () => {
+    if (isCritical) return '#dc2626';
+    if (isLowHealth) return '#ef4444';
+    return '#b91c1c';
   };
 
   return (
     <div className="w-full relative">
-      {/* 체력바 외부 프레임 */}
+      {/* 체력바 컨테이너 */}
       <div
-        className={`relative ${heights[size]} rounded-md overflow-hidden`}
         style={{
-          background: 'linear-gradient(180deg, #1a0808 0%, #0a0404 100%)',
-          border: '2px solid #4a2020',
-          boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.8), 0 2px 4px rgba(0,0,0,0.5)',
+          height: `${height}px`,
+          background: 'rgba(0, 0, 0, 0.6)',
+          borderRadius: '3px',
+          border: '1px solid rgba(255, 255, 255, 0.15)',
+          overflow: 'hidden',
+          position: 'relative',
         }}
       >
-        {/* 배경 그라데이션 */}
-        <div
-          className="absolute inset-0"
-          style={{
-            background: 'linear-gradient(180deg, rgba(0,0,0,0.3) 0%, transparent 50%, rgba(0,0,0,0.2) 100%)',
-          }}
-        />
-
         {/* HP 바 */}
         <div
-          className={`absolute inset-y-0 left-0 transition-all duration-300 ${isCritical ? 'animate-pulse' : ''}`}
+          className={`h-full transition-all duration-300 ${isCritical ? 'animate-pulse' : ''}`}
           style={{
             width: `${percentage}%`,
-            background: isLowHealth
-              ? 'linear-gradient(180deg, #ff5555 0%, #cc3333 30%, #aa2222 70%, #881818 100%)'
-              : 'linear-gradient(180deg, #ff7070 0%, #e04545 30%, #b32828 70%, #8a1a1a 100%)',
-            boxShadow: isLowHealth
-              ? '0 0 15px rgba(255, 80, 80, 0.6), inset 0 0 10px rgba(255,255,255,0.2)'
-              : '0 0 10px rgba(180, 40, 40, 0.5), inset 0 0 10px rgba(255,255,255,0.15)',
+            background: getBarColor(),
+            boxShadow: isCritical ? '0 0 8px rgba(220, 38, 38, 0.5)' : 'none',
           }}
         >
-          {/* 광택 효과 */}
+          {/* 상단 하이라이트 */}
           <div
-            className="absolute inset-0"
             style={{
-              background: 'linear-gradient(180deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.1) 30%, transparent 50%)',
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              height: '40%',
+              background: 'linear-gradient(180deg, rgba(255,255,255,0.2) 0%, transparent 100%)',
+              pointerEvents: 'none',
             }}
           />
-
-          {/* 하이라이트 라인 */}
-          <div
-            className="absolute top-0 left-0 right-0 h-px"
-            style={{
-              background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.5) 50%, transparent 100%)',
-            }}
-          />
-        </div>
-
-        {/* 눈금 표시 */}
-        <div className="absolute inset-0 flex pointer-events-none">
-          {[...Array(10)].map((_, i) => (
-            <div
-              key={i}
-              className="flex-1 border-r last:border-r-0"
-              style={{ borderColor: 'rgba(0,0,0,0.3)' }}
-            />
-          ))}
         </div>
 
         {/* 숫자 표시 */}
         {showNumbers && (
-          <div className={`absolute inset-0 flex items-center justify-center gap-1 ${textSizes[size]} font-title font-bold`}>
-            {/* 하트 아이콘 */}
-            <HeartIcon
-              size={size === 'sm' ? 12 : size === 'md' ? 14 : 16}
-              color={isLowHealth ? '#ff6b6b' : '#ff8888'}
-            />
-            <span
-              style={{
-                color: isCritical ? '#ff6b6b' : isLowHealth ? '#ffaaaa' : '#fff',
-                textShadow: '0 1px 3px rgba(0,0,0,0.9), 0 0 10px rgba(0,0,0,0.5)',
-              }}
-            >
+          <div
+            className={`absolute inset-0 flex items-center justify-center ${textSizes[size]} font-bold`}
+            style={{ letterSpacing: '0.05em' }}
+          >
+            <span style={{ color: '#fff', textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}>
               {current}
             </span>
-            <span style={{ color: 'rgba(255,255,255,0.5)' }}>/</span>
-            <span style={{ color: 'rgba(255,255,255,0.7)' }}>{max}</span>
+            <span style={{ color: 'rgba(255,255,255,0.4)', margin: '0 2px' }}>/</span>
+            <span style={{ color: 'rgba(255,255,255,0.6)' }}>{max}</span>
           </div>
-        )}
-
-        {/* 위험 표시 오버레이 */}
-        {isCritical && (
-          <div
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              background: 'linear-gradient(90deg, rgba(255,0,0,0.2) 0%, transparent 50%, rgba(255,0,0,0.2) 100%)',
-              animation: 'pulse 0.5s ease-in-out infinite',
-            }}
-          />
         )}
       </div>
 
-      {/* 블록 표시 (HP 바 아래) */}
+      {/* 블록 표시 */}
       {block > 0 && (
         <div
-          className="absolute -right-2 -top-2 flex items-center justify-center"
+          className="absolute -right-1 -top-1 flex items-center justify-center"
           style={{
-            width: size === 'sm' ? '24px' : size === 'md' ? '28px' : '32px',
-            height: size === 'sm' ? '24px' : size === 'md' ? '28px' : '32px',
-            borderRadius: '50%',
-            background: 'linear-gradient(135deg, var(--block-light) 0%, var(--block-dark) 100%)',
-            border: '2px solid var(--block-bright)',
-            boxShadow: '0 0 12px rgba(40, 102, 168, 0.6)',
+            width: size === 'sm' ? 18 : size === 'md' ? 22 : 26,
+            height: size === 'sm' ? 18 : size === 'md' ? 22 : 26,
+            borderRadius: '4px',
+            background: '#2563eb',
+            border: '1px solid rgba(255, 255, 255, 0.3)',
+            boxShadow: '0 2px 6px rgba(0, 0, 0, 0.4)',
           }}
         >
-          <span className={`font-title font-bold text-white ${size === 'sm' ? 'text-xs' : 'text-sm'}`}>
+          <span
+            className={`font-bold text-white ${size === 'sm' ? 'text-[9px]' : 'text-[11px]'}`}
+          >
             {block}
           </span>
         </div>

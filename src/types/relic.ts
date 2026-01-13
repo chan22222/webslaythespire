@@ -25,6 +25,7 @@ export interface RelicContext {
   gainStrength?: (amount: number) => void;
   gainDexterity?: (amount: number) => void;
   gainBlock?: (amount: number) => void;
+  damagePlayer?: (amount: number) => void;
   damageDealt?: number;
   damageTaken?: number;
 }

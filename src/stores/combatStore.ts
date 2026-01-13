@@ -37,7 +37,7 @@ interface CombatStore extends CombatState {
 
   // 데미지 및 효과
   dealDamageToEnemy: (enemyId: string, damage: number) => void;
-  dealDamageToPlayer: (damage: number) => void;
+  dealDamageToPlayer: (baseDamage: number, attackerEnemyId?: string) => void;
   gainPlayerBlock: (amount: number) => void;
   applyStatusToEnemy: (enemyId: string, status: Status) => void;
   applyStatusToPlayer: (status: Status) => void;
@@ -159,7 +159,9 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     let startingBlock = 0;
     let startingEnergy = 0;
     let startingStrength = 0;
+    let startingDexterity = 0;
     let extraDraw = 0;
+    let damageToPlayer = 0;
 
     relics.forEach(relic => {
       relic.effects.forEach(effect => {
@@ -169,7 +171,9 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
             gainBlock: (amount: number) => { startingBlock += amount; },
             gainEnergy: (amount: number) => { startingEnergy += amount; },
             gainStrength: (amount: number) => { startingStrength += amount; },
+            gainDexterity: (amount: number) => { startingDexterity += amount; },
             drawCards: (count: number) => { extraDraw += count; },
+            damagePlayer: (amount: number) => { damageToPlayer += amount; },
             heal: () => {},
           };
           effect.execute(context);
@@ -178,6 +182,10 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     });
 
     // 전투 시작 효과 적용
+    if (damageToPlayer > 0) {
+      get().dealDamageToPlayer(damageToPlayer);
+      get().addToCombatLog(`유물 효과로 HP ${damageToPlayer} 손실!`);
+    }
     if (startingBlock > 0) {
       set({ playerBlock: startingBlock });
       get().addToCombatLog(`유물 효과로 방어도 ${startingBlock} 획득!`);
@@ -189,6 +197,10 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     if (startingStrength > 0) {
       get().applyStatusToPlayer({ type: 'STRENGTH', stacks: startingStrength });
       get().addToCombatLog(`유물 효과로 힘 ${startingStrength} 획득!`);
+    }
+    if (startingDexterity !== 0) {
+      get().applyStatusToPlayer({ type: 'DEXTERITY', stacks: startingDexterity });
+      get().addToCombatLog(`유물 효과로 민첩 ${startingDexterity > 0 ? '+' : ''}${startingDexterity}!`);
     }
     // extraDraw는 startPlayerTurn에서 처리
     if (extraDraw > 0) {
@@ -206,6 +218,42 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
 
     // 에너지 리셋
     set({ energy: maxEnergy });
+
+    // 유물 효과 트리거 (ON_TURN_START)
+    const gameState = useGameStore.getState();
+    const relics = gameState.player.relics;
+    let turnExtraEnergy = 0;
+    let turnExtraDraw = 0;
+    let turnDamageToPlayer = 0;
+
+    relics.forEach(relic => {
+      relic.effects.forEach(effect => {
+        if (effect.trigger === 'ON_TURN_START') {
+          const context = {
+            gainEnergy: (amount: number) => { turnExtraEnergy += amount; },
+            drawCards: (count: number) => { turnExtraDraw += count; },
+            damagePlayer: (amount: number) => { turnDamageToPlayer += amount; },
+            gainBlock: () => {},
+            gainStrength: () => {},
+            gainDexterity: () => {},
+            heal: () => {},
+          };
+          effect.execute(context);
+        }
+      });
+    });
+
+    // 턴 시작 유물 효과 적용
+    if (turnDamageToPlayer > 0) {
+      get().dealDamageToPlayer(turnDamageToPlayer);
+      get().addToCombatLog(`유물 효과로 HP ${turnDamageToPlayer} 손실!`);
+    }
+    if (turnExtraEnergy !== 0) {
+      set(state => ({ energy: state.energy + turnExtraEnergy }));
+      if (turnExtraEnergy > 0) {
+        get().addToCombatLog(`유물 효과로 에너지 +${turnExtraEnergy}!`);
+      }
+    }
 
     // 금속화 효과: 턴 시작 시 방어도 획득
     const metallicize = playerStatuses.find(s => s.type === 'METALLICIZE');
@@ -227,7 +275,7 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     }
 
     // 카드 5장 드로우 + 추가 드로우 (유물 효과)
-    const totalDraw = 5 + extraDrawNextTurn;
+    const totalDraw = 5 + extraDrawNextTurn + turnExtraDraw;
     get().drawCards(totalDraw);
 
     // 추가 드로우 리셋
@@ -246,8 +294,49 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     // 손패 버리기
     get().discardHand();
 
+    // 유물 효과 트리거 (ON_TURN_END)
+    const gameState = useGameStore.getState();
+    const relics = gameState.player.relics;
+    let turnEndDamage = 0;
+
+    relics.forEach(relic => {
+      relic.effects.forEach(effect => {
+        if (effect.trigger === 'ON_TURN_END') {
+          const context = {
+            damagePlayer: (amount: number) => { turnEndDamage += amount; },
+            gainEnergy: () => {},
+            drawCards: () => {},
+            gainBlock: () => {},
+            gainStrength: () => {},
+            gainDexterity: () => {},
+            heal: () => {},
+          };
+          effect.execute(context);
+        }
+      });
+    });
+
+    if (turnEndDamage > 0) {
+      get().dealDamageToPlayer(turnEndDamage);
+      get().addToCombatLog(`유물 효과로 HP ${turnEndDamage} 손실!`);
+    }
+
+    // STRENGTH_DOWN 처리: 힘 감소 후 제거
+    const strengthDown = playerStatuses.find(s => s.type === 'STRENGTH_DOWN');
+    let processedStatuses = [...playerStatuses];
+
+    if (strengthDown && strengthDown.stacks > 0) {
+      const strengthStatus = processedStatuses.find(s => s.type === 'STRENGTH');
+      if (strengthStatus) {
+        strengthStatus.stacks -= strengthDown.stacks;
+        get().addToCombatLog(`힘이 ${strengthDown.stacks} 감소했습니다.`);
+      }
+      // STRENGTH_DOWN 제거
+      processedStatuses = processedStatuses.filter(s => s.type !== 'STRENGTH_DOWN');
+    }
+
     // 상태 효과 지속시간 감소
-    const updatedStatuses = playerStatuses
+    const updatedStatuses = processedStatuses
       .map(s => ({
         ...s,
         stacks: s.type === 'WEAK' || s.type === 'VULNERABLE' ? s.stacks - 1 : s.stacks,
@@ -281,11 +370,11 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       if (enemy.intent.type === 'ATTACK') {
         const damage = enemy.intent.damage || 0;
         const strength = enemy.statuses.find(s => s.type === 'STRENGTH')?.stacks || 0;
-        const totalDamage = damage + strength;
+        const baseDamage = damage + strength;
 
-        // 디버그: 공격 상세 로그
+        // 디버그: 기본 공격력 로그
         if (strength > 0) {
-          get().addToCombatLog(`[${enemy.name}: 기본 ${damage} + 힘 ${strength} = ${totalDamage}]`);
+          get().addToCombatLog(`[${enemy.name}: 기본 ${damage} + 힘 ${strength} = ${baseDamage}]`);
         }
 
         // 피격 콜백 호출
@@ -294,8 +383,8 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
           onPlayerHit();
         }
 
-        // 데미지 처리 (팝업은 dealDamageToPlayer에서 표시)
-        get().dealDamageToPlayer(totalDamage);
+        // 데미지 처리 (약화/취약은 dealDamageToPlayer에서 합연산 처리)
+        get().dealDamageToPlayer(baseDamage, enemy.instanceId);
 
         // 다음 적 공격 전 딜레이
         await new Promise(resolve => setTimeout(resolve, 600));
@@ -410,26 +499,19 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     card.effects.forEach(effect => {
       switch (effect.type) {
         case 'DAMAGE': {
-          let damage = effect.value;
-
-          // 힘 적용
+          // 기본 데미지 + 힘만 계산 (약화/취약은 dealDamageToEnemy에서 합연산 처리)
+          let baseDamage = effect.value;
           const strength = get().playerStatuses.find(s => s.type === 'STRENGTH')?.stacks || 0;
-          damage += strength;
-
-          // 약화 적용
-          const weak = get().playerStatuses.find(s => s.type === 'WEAK');
-          if (weak && weak.stacks > 0) {
-            damage = Math.round(damage * 0.75);
-          }
+          baseDamage += strength;
 
           if (effect.target === 'ALL') {
             enemies.forEach(enemy => {
               if (enemy.currentHp > 0) {
-                get().dealDamageToEnemy(enemy.instanceId, damage);
+                get().dealDamageToEnemy(enemy.instanceId, baseDamage);
               }
             });
           } else if (targetEnemyId) {
-            get().dealDamageToEnemy(targetEnemyId, damage);
+            get().dealDamageToEnemy(targetEnemyId, baseDamage);
           }
           break;
         }
@@ -557,20 +639,34 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     }
   },
 
-  dealDamageToEnemy: (enemyId: string, damage: number) => {
-    const { enemies } = get();
+  dealDamageToEnemy: (enemyId: string, baseDamage: number) => {
+    const { enemies, playerStatuses } = get();
     const enemyIndex = enemies.findIndex(e => e.instanceId === enemyId);
 
     if (enemyIndex === -1) return;
 
     const enemy = enemies[enemyIndex];
 
-    // 취약 상태면 50% 추가 피해
-    const vulnerable = enemy.statuses.find(s => s.type === 'VULNERABLE');
-    let finalDamage = damage;
-    if (vulnerable && vulnerable.stacks > 0) {
-      finalDamage = Math.round(damage * 1.5);
+    // 합연산 방식으로 배수 계산 (기본 1.0 + 취약 0.5 - 약화 0.25)
+    let damageMultiplier = 1.0;
+    const modifiers: string[] = [];
+
+    // 플레이어 약화: -25% 데미지
+    const weak = playerStatuses.find(s => s.type === 'WEAK');
+    if (weak && weak.stacks > 0) {
+      damageMultiplier -= 0.25;
+      modifiers.push('약화-25%');
     }
+
+    // 적 취약: +50% 데미지
+    const vulnerable = enemy.statuses.find(s => s.type === 'VULNERABLE');
+    if (vulnerable && vulnerable.stacks > 0) {
+      damageMultiplier += 0.5;
+      modifiers.push('취약+50%');
+    }
+
+    // 최종 데미지 계산 (버림 사용)
+    const finalDamage = Math.floor(baseDamage * damageMultiplier);
 
     // 방어도 먼저 소모
     let remainingDamage = finalDamage;
@@ -588,7 +684,12 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     // HP 감소
     const newHp = Math.max(0, enemy.currentHp - remainingDamage);
 
-    get().addToCombatLog(`${enemy.name}에게 ${finalDamage} 피해! (남은 HP: ${newHp})`);
+    // 로그 출력 (배수 적용 시 상세 표시)
+    if (modifiers.length > 0) {
+      get().addToCombatLog(`${enemy.name}에게 ${finalDamage} 피해! [${baseDamage} × ${damageMultiplier.toFixed(2)} (${modifiers.join(', ')})]`);
+    } else {
+      get().addToCombatLog(`${enemy.name}에게 ${finalDamage} 피해! (남은 HP: ${newHp})`);
+    }
 
     // 새로운 enemy 객체 생성
     const updatedEnemy = { ...enemy, currentHp: newHp, block: newBlock };
@@ -598,15 +699,38 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     set({ enemies: updatedEnemies });
   },
 
-  dealDamageToPlayer: (damage: number) => {
-    const { playerBlock, playerStatuses } = get();
+  dealDamageToPlayer: (baseDamage: number, attackerEnemyId?: string) => {
+    const { playerBlock, playerStatuses, enemies } = get();
 
-    // 취약 상태면 50% 추가 피해
+    // 합연산 방식으로 배수 계산 (기본 1.0 + 취약 0.5 - 약화 0.25)
+    let damageMultiplier = 1.0;
+    const modifiers: string[] = [];
+
+    // 공격자(적)의 약화: -25% 데미지
+    if (attackerEnemyId) {
+      const attacker = enemies.find(e => e.instanceId === attackerEnemyId);
+      if (attacker) {
+        const attackerWeak = attacker.statuses.find(s => s.type === 'WEAK');
+        if (attackerWeak && attackerWeak.stacks > 0) {
+          damageMultiplier -= 0.25;
+          modifiers.push('약화-25%');
+        }
+      }
+    }
+
+    // 플레이어 취약: +50% 데미지
     const vulnerable = playerStatuses.find(s => s.type === 'VULNERABLE');
-    let finalDamage = damage;
     if (vulnerable && vulnerable.stacks > 0) {
-      finalDamage = Math.round(damage * 1.5);
-      get().addToCombatLog(`[취약: ${damage} → ${finalDamage}]`);
+      damageMultiplier += 0.5;
+      modifiers.push('취약+50%');
+    }
+
+    // 최종 데미지 계산 (버림 사용)
+    const finalDamage = Math.floor(baseDamage * damageMultiplier);
+
+    // 로그 출력 (배수 적용 시 상세 표시)
+    if (modifiers.length > 0) {
+      get().addToCombatLog(`[${baseDamage} × ${damageMultiplier.toFixed(2)} = ${finalDamage} (${modifiers.join(', ')})]`);
     }
 
     // 방어도 먼저 소모

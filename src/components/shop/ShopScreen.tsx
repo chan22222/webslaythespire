@@ -21,7 +21,27 @@ export function ShopScreen() {
 
   useEffect(() => {
     const cards = generateCardRewards(5);
-    const relic = generateRelicReward();
+
+    // 5개의 유물 생성 (중복 방지)
+    const relics: Relic[] = [];
+    const usedIds = new Set<string>();
+    while (relics.length < 5) {
+      const relic = generateRelicReward();
+      if (!usedIds.has(relic.id)) {
+        relics.push(relic);
+        usedIds.add(relic.id);
+      }
+    }
+
+    const getRelicPrice = (relic: Relic) => {
+      switch (relic.rarity) {
+        case 'COMMON': return randomInt(140, 160);
+        case 'UNCOMMON': return randomInt(200, 240);
+        case 'RARE': return randomInt(280, 320);
+        case 'BOSS': return randomInt(350, 400);
+        default: return randomInt(180, 220);
+      }
+    };
 
     const items: ShopItem[] = [
       ...cards.map(card => ({
@@ -31,12 +51,12 @@ export function ShopScreen() {
           card.rarity === 'UNCOMMON' ? randomInt(68, 82) : randomInt(135, 165),
         sold: false,
       })),
-      {
+      ...relics.map(relic => ({
         type: 'relic' as const,
         item: relic,
-        price: relic.rarity === 'COMMON' ? randomInt(140, 160) : randomInt(230, 270),
+        price: getRelicPrice(relic),
         sold: false,
-      },
+      })),
       {
         type: 'remove' as const,
         price: 75,
@@ -196,7 +216,7 @@ export function ShopScreen() {
                   className="w-10 h-10 sm:w-16 sm:h-16 rounded-lg flex items-center justify-center mb-1 sm:mb-2"
                   style={{
                     background: 'linear-gradient(135deg, var(--bg-light) 0%, var(--bg-dark) 100%)',
-                    border: '2px solid var(--gold)',
+                    border: `2px solid ${relic.rarity === 'RARE' ? '#facc15' : relic.rarity === 'BOSS' ? '#f472b6' : 'var(--gold)'}`,
                     boxShadow: 'inset 0 0 15px rgba(0,0,0,0.5)',
                   }}
                 >
@@ -206,6 +226,13 @@ export function ShopScreen() {
                     {relic.id === 'lantern' && '🏮'}
                     {relic.id === 'bag_of_marbles' && '🔮'}
                     {relic.id === 'bronze_scales' && '🛡️'}
+                    {relic.id === 'gamblers_dice' && '🎲'}
+                    {relic.id === 'blood_pact' && '🩸'}
+                    {relic.id === 'strange_pill' && '💊'}
+                    {relic.id === 'cursed_coin' && '🪙'}
+                    {relic.id === 'berserker_helm' && '⚔️'}
+                    {relic.id === 'ring_of_pain' && '💍'}
+                    {relic.id === 'devils_contract' && '📜'}
                   </span>
                 </div>
                 <span className="font-title text-xs sm:text-base text-[var(--gold-light)]">{relic.name}</span>

@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { useGameStore } from '../../stores/gameStore';
 import { Card, CardInstance, createCardInstance } from '../../types/card';
 import { EnemyTemplate } from '../../types/enemy';
+import { Relic } from '../../types/relic';
 import { Card as CardComponent } from '../combat/Card';
 import { STRIKE, DEFEND, BASH } from '../../data/cards/starterCards';
 import { COMMON_CARDS } from '../../data/cards/commonCards';
@@ -16,6 +17,7 @@ import {
   GREMLIN_NOB,
   SLIME_BOSS,
 } from '../../data/enemies/act1Enemies';
+import { ALL_RELICS } from '../../data/relics';
 
 // 선택 가능한 적 목록
 const ENEMY_OPTIONS: { template: EnemyTemplate; label: string; type: 'normal' | 'elite' | 'boss' }[] = [
@@ -54,12 +56,13 @@ type SortBy = 'cost' | 'name' | 'type';
 type SortOrder = 'asc' | 'desc';
 
 export function DeckBuildingScreen() {
-  const { setDeck, setPhase, startTestBattle, startGameWithDeck } = useGameStore();
+  const { setDeck, setPhase, startTestBattle, startGameWithDeckAndRelics } = useGameStore();
   const [selectedCards, setSelectedCards] = useState<CardInstance[]>([]);
   const [filter, setFilter] = useState<'ALL' | 'ATTACK' | 'SHIELD' | 'GADGET' | 'EFFECT' | 'TERRAIN'>('ALL');
   const [sortBy, setSortBy] = useState<SortBy>('cost');
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
   const [selectedEnemies, setSelectedEnemies] = useState<EnemyTemplate[]>([]);
+  const [selectedRelics, setSelectedRelics] = useState<Relic[]>([]);
 
   const filteredCards = useMemo(() => {
     let cards = filter === 'ALL' ? [...ALL_CARDS] : ALL_CARDS.filter(card => card.type === filter);
@@ -110,6 +113,14 @@ export function DeckBuildingScreen() {
     }
   };
 
+  const toggleRelic = (relic: Relic) => {
+    if (selectedRelics.some(r => r.id === relic.id)) {
+      setSelectedRelics(selectedRelics.filter(r => r.id !== relic.id));
+    } else if (selectedRelics.length < 5) {
+      setSelectedRelics([...selectedRelics, relic]);
+    }
+  };
+
   const startGame = () => {
     if (selectedCards.length < MIN_DECK_SIZE) return;
 
@@ -117,10 +128,10 @@ export function DeckBuildingScreen() {
 
     if (selectedEnemies.length > 0) {
       // 적 선택 시: 바로 테스트 전투 시작
-      startTestBattle(selectedEnemies);
+      startTestBattle(selectedEnemies, selectedRelics);
     } else {
       // 적 미선택 시: 맵으로 이동
-      startGameWithDeck();
+      startGameWithDeckAndRelics(selectedRelics);
     }
   };
 
@@ -449,6 +460,87 @@ export function DeckBuildingScreen() {
               </div>
             </div>
           )}
+
+          {/* 유물 선택 섹션 */}
+          <div
+            className="p-3 border-t-2"
+            style={{ borderColor: 'var(--gold-dark)' }}
+          >
+            <div className="flex items-center justify-between mb-2">
+              <h2 className="font-title text-base" style={{ color: 'var(--gold-light)' }}>
+                유물
+              </h2>
+              <span className="text-xs text-gray-500">
+                {selectedRelics.length}/5
+              </span>
+            </div>
+
+            {/* 유물 그리드 */}
+            <div className="grid grid-cols-2 gap-1.5 mb-2 max-h-32 overflow-y-auto">
+              {ALL_RELICS.map((relic) => {
+                const isSelected = selectedRelics.some(r => r.id === relic.id);
+                const rarityColor = relic.rarity === 'STARTER' ? '#60a5fa'
+                  : relic.rarity === 'COMMON' ? '#a3a3a3'
+                  : relic.rarity === 'UNCOMMON' ? '#4ade80'
+                  : relic.rarity === 'RARE' ? '#facc15'
+                  : '#f472b6';
+                const rarityBg = relic.rarity === 'STARTER' ? 'rgba(96, 165, 250, 0.15)'
+                  : relic.rarity === 'COMMON' ? 'rgba(163, 163, 163, 0.15)'
+                  : relic.rarity === 'UNCOMMON' ? 'rgba(74, 222, 128, 0.15)'
+                  : relic.rarity === 'RARE' ? 'rgba(250, 204, 21, 0.15)'
+                  : 'rgba(244, 114, 182, 0.15)';
+
+                return (
+                  <button
+                    key={relic.id}
+                    onClick={() => toggleRelic(relic)}
+                    className={`p-1.5 rounded text-left transition-all text-[11px] ${
+                      isSelected ? 'scale-[1.02]' : 'opacity-70 hover:opacity-100'
+                    }`}
+                    style={{
+                      background: isSelected ? rarityBg : 'rgba(0,0,0,0.3)',
+                      border: `1px solid ${isSelected ? rarityColor : '#333'}`,
+                    }}
+                    title={relic.description}
+                  >
+                    <div
+                      className="font-title truncate"
+                      style={{ color: isSelected ? rarityColor : '#888' }}
+                    >
+                      {relic.name}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* 선택된 유물 표시 */}
+            {selectedRelics.length > 0 && (
+              <div className="flex flex-wrap gap-1 pt-2 border-t border-gray-800">
+                {selectedRelics.map((relic) => (
+                  <span
+                    key={relic.id}
+                    className="px-2 py-0.5 text-[10px] rounded cursor-pointer hover:opacity-70"
+                    style={{
+                      background: 'rgba(74, 222, 128, 0.2)',
+                      color: '#4ade80',
+                      border: '1px solid rgba(74, 222, 128, 0.5)',
+                    }}
+                    onClick={() => toggleRelic(relic)}
+                    title={relic.description}
+                  >
+                    {relic.name}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {selectedRelics.length === 0 && (
+              <p className="text-[10px] text-gray-500 text-center py-1">
+                미선택 시 기본 유물 지급
+              </p>
+            )}
+          </div>
 
           {/* 적 선택 섹션 */}
           <div

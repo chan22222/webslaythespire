@@ -1,14 +1,66 @@
+import { useState, useEffect, useRef } from 'react';
 import { useGameStore } from '../../stores/gameStore';
 import { MapNode } from './MapNode';
 import { HealthBar } from '../common/HealthBar';
+import { Card } from '../combat/Card';
+
+// 파티클 데이터 - 타이틀과 동일
+const PARTICLES = Array.from({ length: 25 }, (_, i) => ({
+  id: i,
+  size: Math.random() * 4 + 2,
+  left: Math.random() * 100,
+  delay: Math.random() * 10,
+  duration: Math.random() * 10 + 15,
+  opacity: Math.random() * 0.3 + 0.1,
+}));
+
+const MAP_WIDTH = 1900;
+const VIEW_STEP = 400; // 버튼 클릭시 이동 거리
 
 export function MapScreen() {
   const { player, map, moveToNode, getAvailableNodes } = useGameStore();
   const availableNodes = getAvailableNodes();
+  const [showDeck, setShowDeck] = useState(false);
+  const [viewOffset, setViewOffset] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  // 연결선 그리기
+  // 처음 등장시에만 현재 노드 위치로 중앙 정렬
+  const initializedRef = useRef(false);
+  useEffect(() => {
+    if (initializedRef.current) return;
+
+    const currentNode = map.currentNodeId
+      ? map.nodes.find(n => n.id === map.currentNodeId)
+      : availableNodes[0];
+
+    if (currentNode && containerRef.current) {
+      // 좌우 패딩 160px (80px * 2) 고려
+      const containerWidth = containerRef.current.clientWidth;
+      const effectiveWidth = containerWidth - 160;
+      const targetOffset = Math.max(0, Math.min(
+        MAP_WIDTH - effectiveWidth,
+        currentNode.x - effectiveWidth / 2
+      ));
+      setViewOffset(targetOffset);
+      initializedRef.current = true;
+    }
+  }, [map.currentNodeId, availableNodes]);
+
+  const handleNavLeft = () => {
+    setViewOffset(prev => Math.max(0, prev - VIEW_STEP));
+  };
+
+  const handleNavRight = () => {
+    if (containerRef.current) {
+      // 좌우 패딩 160px (80px * 2) 고려
+      const maxOffset = MAP_WIDTH - containerRef.current.clientWidth + 160;
+      setViewOffset(prev => Math.min(maxOffset, prev + VIEW_STEP));
+    }
+  };
+
+  // 연결선 렌더링
   const renderConnections = () => {
-    const lines: JSX.Element[] = [];
+    const elements: JSX.Element[] = [];
 
     map.nodes.forEach(node => {
       node.connections.forEach(targetId => {
@@ -17,147 +69,261 @@ export function MapScreen() {
 
         const isAvailable = availableNodes.some(n => n.id === targetId) &&
           (map.currentNodeId === node.id || (!map.currentNodeId && node.row === 0));
+        const isVisited = node.visited;
 
-        // 그라데이션 정의
-        const gradientId = `gradient-${node.id}-${targetId}`;
+        const key = `${node.id}-${targetId}`;
 
-        lines.push(
-          <defs key={`def-${node.id}-${targetId}`}>
-            <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor={isAvailable ? 'var(--gold)' : 'rgba(100,100,100,0.3)'} />
-              <stop offset="100%" stopColor={isAvailable ? 'var(--gold-light)' : 'rgba(100,100,100,0.2)'} />
-            </linearGradient>
-          </defs>
-        );
 
-        lines.push(
+        elements.push(
           <line
-            key={`${node.id}-${targetId}`}
+            key={`line-${key}`}
             x1={node.x}
             y1={node.y}
             x2={targetNode.x}
             y2={targetNode.y}
-            stroke={`url(#${gradientId})`}
-            strokeWidth={isAvailable ? 3 : 2}
-            strokeDasharray={node.visited ? '8,4' : 'none'}
+            stroke={isAvailable ? 'rgba(212, 168, 75, 1)' : isVisited ? 'rgba(120, 105, 80, 0.7)' : 'rgba(100, 90, 70, 0.5)'}
+            strokeWidth={isAvailable ? 4 : 3}
             strokeLinecap="round"
-            style={{
-              filter: isAvailable ? 'drop-shadow(0 0 4px var(--gold-glow))' : 'none',
-            }}
+            strokeDasharray="6,10"
+            style={isAvailable ? { filter: 'drop-shadow(0 0 4px rgba(212, 168, 75, 0.8))' } : undefined}
           />
         );
       });
     });
 
-    return lines;
+    return elements;
   };
 
   const handleNodeClick = (nodeId: string) => {
-    const isAvailable = availableNodes.some(n => n.id === nodeId);
-    if (isAvailable) {
+    if (availableNodes.some(n => n.id === nodeId)) {
       moveToNode(nodeId);
     }
   };
 
   return (
-    <div className="w-full h-screen bg-[var(--bg-darkest)] texture-noise flex flex-col">
-      {/* 상단: 플레이어 정보 */}
+    <div className="w-full h-screen flex flex-col overflow-hidden relative">
+      {/* 배경 */}
       <div
-        className="p-2 sm:p-4 flex items-center justify-between relative z-10"
+        className="absolute inset-0"
         style={{
-          background: 'linear-gradient(180deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 100%)',
-          borderBottom: '1px solid var(--gold-dark)',
+          background: 'radial-gradient(ellipse at center, #15121a 0%, #0a0a10 50%, #000 100%)',
         }}
-      >
-        <div className="flex items-center gap-2 sm:gap-6">
-          {/* 체력 */}
-          <div className="flex items-center gap-1 sm:gap-3">
-            <div
-              className="w-7 h-7 sm:w-10 sm:h-10 rounded-full flex items-center justify-center"
-              style={{
-                background: 'linear-gradient(135deg, var(--hp) 0%, var(--hp-dark) 100%)',
-                border: '2px solid var(--hp-light)',
-                boxShadow: '0 0 10px var(--hp)',
-              }}
-            >
-              <span className="text-sm sm:text-lg">❤️</span>
-            </div>
-            <div className="w-20 sm:w-36">
-              <HealthBar current={player.currentHp} max={player.maxHp} size="md" />
-            </div>
-          </div>
+      />
 
-          {/* 골드 */}
+      {/* 소용돌이 링들 */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        {[...Array(6)].map((_, i) => (
           <div
-            className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-1 sm:py-2 rounded-lg"
+            key={i}
+            className="absolute rounded-full"
             style={{
-              background: 'linear-gradient(180deg, var(--bg-medium) 0%, var(--bg-dark) 100%)',
-              border: '1px solid var(--gold-dark)',
+              width: `${(i + 1) * 14}%`,
+              height: `${(i + 1) * 14}%`,
+              border: `1px solid rgba(212, 168, 75, ${0.08 - i * 0.01})`,
+              boxShadow: `0 0 ${12 - i * 2}px rgba(212, 168, 75, ${0.12 - i * 0.015})`,
+              animation: `vortexSpin ${15 + i * 5}s linear infinite ${i % 2 === 0 ? '' : 'reverse'}`,
             }}
-          >
-            <span className="text-sm sm:text-xl">💰</span>
-            <span className="font-title font-bold text-[var(--gold-light)] text-sm sm:text-lg">{player.gold}</span>
-          </div>
-        </div>
-
-        {/* 유물 - 모바일에서 숨김 */}
-        <div className="hidden md:flex items-center gap-3">
-          <span className="font-title text-sm text-[var(--gold)] mr-2">유물</span>
-          {player.relics.map(relic => (
-            <div
-              key={relic.id}
-              className="w-12 h-12 rounded-lg flex items-center justify-center cursor-help transition-transform hover:scale-110"
-              style={{
-                background: 'linear-gradient(135deg, var(--bg-light) 0%, var(--bg-dark) 100%)',
-                border: '2px solid var(--gold-dark)',
-                boxShadow: '0 4px 10px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1)',
-              }}
-              title={`${relic.name}: ${relic.description}`}
-            >
-              <span className="text-2xl">
-                {relic.id === 'burning_blood' && '🔥'}
-                {relic.id === 'ring_of_the_snake' && '🐍'}
-                {relic.id === 'cracked_core' && '💎'}
-                {relic.id === 'anchor' && '⚓'}
-                {relic.id === 'vajra' && '💪'}
-                {relic.id === 'lantern' && '🏮'}
-              </span>
-            </div>
-          ))}
-        </div>
-
-        {/* 덱 정보 */}
-        <div
-          className="flex items-center gap-1 sm:gap-2 px-2 sm:px-4 py-1 sm:py-2 rounded-lg cursor-pointer hover:brightness-110 transition-all"
-          style={{
-            background: 'linear-gradient(180deg, var(--bg-medium) 0%, var(--bg-dark) 100%)',
-            border: '1px solid var(--gold-dark)',
-          }}
-        >
-          <span className="text-sm sm:text-xl">📚</span>
-          <span className="font-title text-xs sm:text-sm text-[var(--gold-light)]">
-            <span className="text-white">{player.deck.length}</span>장
-          </span>
-        </div>
+          />
+        ))}
       </div>
 
-      {/* 맵 영역 - 가로 스크롤 */}
-      <div className="flex-1 overflow-x-auto overflow-y-hidden p-4 relative">
-        {/* 배경 그라데이션 */}
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background: 'radial-gradient(ellipse at center, var(--bg-dark) 0%, var(--bg-darkest) 100%)',
-          }}
-        />
+      {/* 중앙 글로우 */}
+      <div
+        className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 rounded-full pointer-events-none"
+        style={{
+          background: 'radial-gradient(circle, rgba(212,168,75,0.25) 0%, rgba(212,168,75,0.1) 30%, transparent 60%)',
+          animation: 'blackholePulse 3s ease-in-out infinite',
+        }}
+      />
 
-        <div className="relative h-full" style={{ width: '1900px', minHeight: '500px' }}>
-          {/* 연결선 */}
+      {/* 떠오르는 파티클들 */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {PARTICLES.map((p) => (
+          <div
+            key={p.id}
+            className="absolute rounded-full bg-[var(--gold)]"
+            style={{
+              width: p.size,
+              height: p.size,
+              left: `${p.left}%`,
+              bottom: '-20px',
+              opacity: p.opacity,
+              animation: `floatUp ${p.duration}s linear ${p.delay}s infinite`,
+            }}
+          />
+        ))}
+      </div>
+
+      {/* 외곽 비네트 */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: 'radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.7) 100%)',
+        }}
+      />
+
+      {/* 상단 HUD */}
+      <header
+        className="relative z-30 px-6 py-4"
+        style={{
+          background: 'linear-gradient(180deg, rgba(10, 8, 5, 0.95) 0%, transparent 100%)',
+        }}
+      >
+        <div className="flex items-center justify-between max-w-screen-2xl mx-auto">
+          {/* HP & Gold */}
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-3">
+              <span
+                className="text-base font-bold"
+                style={{
+                  fontFamily: '"NeoDunggeunmo", cursive',
+                  color: '#ef4444',
+                  textShadow: '0 0 6px rgba(239, 68, 68, 0.6)',
+                }}
+              >
+                HP
+              </span>
+              <div className="w-32">
+                <HealthBar current={player.currentHp} max={player.maxHp} size="md" showNumbers={true} />
+              </div>
+            </div>
+
+            <div
+              className="flex items-center gap-2 px-4 py-2"
+              style={{
+                background: 'rgba(212, 168, 75, 0.15)',
+                border: '2px solid rgba(212, 168, 75, 0.4)',
+              }}
+            >
+              <span
+                className="text-base font-bold"
+                style={{
+                  fontFamily: '"NeoDunggeunmo", cursive',
+                  color: 'var(--gold)',
+                }}
+              >
+                G
+              </span>
+              <span
+                className="text-base font-bold tabular-nums"
+                style={{
+                  fontFamily: '"Press Start 2P", monospace',
+                  color: 'var(--gold)',
+                  textShadow: '0 0 6px var(--gold-glow)',
+                }}
+              >
+                {player.gold}
+              </span>
+            </div>
+          </div>
+
+          {/* Floor */}
+          <div
+            className="flex flex-col items-center justify-center relative"
+            style={{
+              backgroundImage: 'url(/button_short.png)',
+              backgroundSize: '100% 100%',
+              backgroundRepeat: 'no-repeat',
+              backgroundPosition: 'center',
+              width: '180px',
+              height: '80px',
+              imageRendering: 'pixelated',
+            }}
+          >
+            <span
+              className="text-sm tracking-widest"
+              style={{
+                fontFamily: '"Press Start 2P", monospace',
+                color: 'var(--gold-dark)',
+              }}
+            >
+              FLOOR
+            </span>
+            <span
+              className="text-4xl font-bold tabular-nums"
+              style={{
+                fontFamily: '"Press Start 2P", monospace',
+                color: 'var(--gold)',
+                textShadow: '0 0 12px var(--gold-glow)',
+              }}
+            >
+              {map.floor}
+            </span>
+          </div>
+
+          {/* Deck & Relics */}
+          <div className="flex items-center gap-4">
+            <div className="hidden md:flex items-center gap-2">
+              {player.relics.map(relic => (
+                <div
+                  key={relic.id}
+                  className="w-10 h-10 flex items-center justify-center cursor-help"
+                  style={{
+                    background: 'rgba(212, 168, 75, 0.15)',
+                    border: '2px solid rgba(212, 168, 75, 0.4)',
+                  }}
+                  title={`${relic.name}: ${relic.description}`}
+                >
+                  <span
+                    className="text-sm font-bold"
+                    style={{
+                      fontFamily: '"NeoDunggeunmo", cursive',
+                      color: 'var(--gold)',
+                    }}
+                  >
+                    {relic.name.charAt(0)}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            <button
+              onClick={() => setShowDeck(true)}
+              className="flex items-center gap-3 px-5 py-2.5 transition-all duration-150 hover:brightness-125"
+              style={{
+                background: 'rgba(212, 168, 75, 0.15)',
+                border: '2px solid rgba(212, 168, 75, 0.4)',
+              }}
+            >
+              <span
+                className="text-base font-bold"
+                style={{
+                  fontFamily: '"NeoDunggeunmo", cursive',
+                  color: 'var(--gold)',
+                }}
+              >
+                덱
+              </span>
+              <span
+                className="text-base font-bold tabular-nums"
+                style={{
+                  fontFamily: '"Press Start 2P", monospace',
+                  color: 'var(--gold)',
+                }}
+              >
+                {player.deck.length}
+              </span>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* 맵 영역 */}
+      <main ref={containerRef} className="flex-1 relative overflow-hidden">
+        {/* 맵 컨테이너 - 좌우 80px 여백 */}
+        <div
+          className="absolute h-full transition-transform duration-300 ease-out"
+          style={{
+            width: MAP_WIDTH,
+            left: 80,
+            right: 80,
+            transform: `translateX(-${viewOffset}px)`,
+          }}
+        >
           <svg className="absolute inset-0 w-full h-full pointer-events-none">
             {renderConnections()}
           </svg>
 
-          {/* 노드 */}
           {map.nodes.map(node => (
             <MapNode
               key={node.id}
@@ -168,42 +334,142 @@ export function MapScreen() {
             />
           ))}
         </div>
-      </div>
 
-      {/* 범례 - 모바일에서 숨김 */}
-      <div
-        className="hidden sm:flex p-2 sm:p-4 justify-center gap-3 sm:gap-8 relative z-10"
-        style={{
-          background: 'linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.8) 100%)',
-          borderTop: '1px solid var(--gold-dark)',
-        }}
-      >
-        {[
-          { icon: '👹', label: '적', color: 'var(--attack)' },
-          { icon: '💀', label: '엘리트', color: 'var(--attack-light)' },
-          { icon: '👿', label: '보스', color: '#ff4757' },
-          { icon: '🔥', label: '휴식', color: 'var(--energy)' },
-          { icon: '💰', label: '상점', color: 'var(--gold)' },
-          { icon: '❓', label: '이벤트', color: 'var(--skill)' },
-          { icon: '📦', label: '보물', color: 'var(--gold-light)' },
-        ].map(item => (
-          <div key={item.label} className="flex items-center gap-1 sm:gap-2">
+        {/* 좌측 네비게이션 버튼 */}
+        <button
+          onClick={handleNavLeft}
+          disabled={viewOffset <= 0}
+          className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-14 h-14 flex items-center justify-center transition-all duration-150 hover:scale-110 disabled:opacity-30 disabled:cursor-not-allowed"
+          style={{
+            background: 'rgba(10, 8, 5, 0.8)',
+            border: '2px solid rgba(212, 168, 75, 0.5)',
+            borderRadius: '8px',
+            boxShadow: '0 0 12px rgba(0,0,0,0.5)',
+          }}
+        >
+          <span
+            style={{
+              fontFamily: '"Press Start 2P", monospace',
+              fontSize: '20px',
+              color: 'var(--gold)',
+            }}
+          >
+            ◀
+          </span>
+        </button>
+
+        {/* 우측 네비게이션 버튼 */}
+        <button
+          onClick={handleNavRight}
+          disabled={containerRef.current ? viewOffset >= MAP_WIDTH - containerRef.current.clientWidth + 160 : false}
+          className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-14 h-14 flex items-center justify-center transition-all duration-150 hover:scale-110 disabled:opacity-30 disabled:cursor-not-allowed"
+          style={{
+            background: 'rgba(10, 8, 5, 0.8)',
+            border: '2px solid rgba(212, 168, 75, 0.5)',
+            borderRadius: '8px',
+            boxShadow: '0 0 12px rgba(0,0,0,0.5)',
+          }}
+        >
+          <span
+            style={{
+              fontFamily: '"Press Start 2P", monospace',
+              fontSize: '20px',
+              color: 'var(--gold)',
+            }}
+          >
+            ▶
+          </span>
+        </button>
+      </main>
+
+      {/* 덱 모달 */}
+      {showDeck && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          style={{ background: 'rgba(0, 0, 0, 0.9)' }}
+          onClick={() => setShowDeck(false)}
+        >
+          <div
+            className="w-[94%] max-w-5xl max-h-[88vh] overflow-hidden flex flex-col"
+            style={{
+              background: 'linear-gradient(180deg, rgba(20, 16, 10, 0.98) 0%, rgba(10, 8, 5, 0.99) 100%)',
+              border: '3px solid var(--gold-dark)',
+              boxShadow: '0 0 50px rgba(0,0,0,0.9), 0 0 10px var(--gold-glow)',
+            }}
+            onClick={e => e.stopPropagation()}
+          >
             <div
-              className="w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center"
-              style={{
-                background: 'linear-gradient(135deg, var(--bg-medium) 0%, var(--bg-dark) 100%)',
-                border: `2px solid ${item.color}`,
-                boxShadow: `0 0 8px ${item.color}40`,
-              }}
+              className="flex justify-between items-center px-6 py-4"
+              style={{ borderBottom: '2px solid rgba(212, 168, 75, 0.3)' }}
             >
-              <span className="text-xs sm:text-sm">{item.icon}</span>
+              <div className="flex items-center gap-4">
+                <span
+                  className="text-xl font-bold"
+                  style={{
+                    fontFamily: '"NeoDunggeunmo", cursive',
+                    color: 'var(--gold)',
+                  }}
+                >
+                  보유 카드
+                </span>
+                <span
+                  className="text-sm"
+                  style={{
+                    fontFamily: '"Press Start 2P", monospace',
+                    color: 'var(--gold-dark)',
+                  }}
+                >
+                  {player.deck.length}장
+                </span>
+              </div>
+
+              <button
+                onClick={() => setShowDeck(false)}
+                className="w-10 h-10 flex items-center justify-center transition-all hover:brightness-125"
+                style={{ color: 'var(--gold)' }}
+              >
+                <span style={{ fontFamily: '"Press Start 2P", monospace', fontSize: '16px' }}>×</span>
+              </button>
             </div>
-            <span className="font-card text-xs sm:text-sm" style={{ color: item.color }}>
-              {item.label}
-            </span>
+
+            <div className="flex-1 overflow-y-auto p-6">
+              <div className="flex flex-wrap justify-center gap-4">
+                {player.deck.map((card, index) => (
+                  <Card key={card.instanceId || index} card={card} size="md" />
+                ))}
+              </div>
+            </div>
           </div>
-        ))}
-      </div>
+        </div>
+      )}
+
+      {/* 애니메이션 keyframes */}
+      <style>{`
+        @keyframes vortexSpin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        @keyframes floatUp {
+          0% {
+            transform: translateY(0) scale(1);
+            opacity: 0;
+          }
+          10% {
+            opacity: 1;
+          }
+          90% {
+            opacity: 1;
+          }
+          100% {
+            transform: translateY(-100vh) scale(0.5);
+            opacity: 0;
+          }
+        }
+        @keyframes blackholePulse {
+          0%, 100% { opacity: 0.6; transform: translate(-50%, -50%) scale(1); }
+          50% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+        }
+      `}</style>
     </div>
   );
 }
