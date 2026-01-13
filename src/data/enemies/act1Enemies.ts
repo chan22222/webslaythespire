@@ -184,7 +184,7 @@ export const SLIME_BOSS: EnemyTemplate = {
     if (pattern === 1) {
       return { type: 'ATTACK', damage: 25 + Math.floor(Math.random() * 6) }; // 25-30
     } else if (pattern === 2) {
-      return { type: 'DEBUFF', statusType: 'POISON', statusStacks: 5 }; // 중독 5
+      return { type: 'DEBUFF', statusType: 'POISON', statusStacks: 7 }; // 중독 7
     }
     return { type: 'DEBUFF', statusType: 'VULNERABLE', statusStacks: 2 }; // 취약 2
   },
@@ -193,7 +193,7 @@ export const SLIME_BOSS: EnemyTemplate = {
       dealDamageToPlayer(enemy.intent.damage || 27);
     } else if (enemy.intent.type === 'DEBUFF') {
       const statusType = enemy.intent.statusType || 'POISON';
-      const stacks = enemy.intent.statusStacks || 5;
+      const stacks = enemy.intent.statusStacks || 7;
       applyStatusToPlayer({ type: statusType, stacks });
     }
   },

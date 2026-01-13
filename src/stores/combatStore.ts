@@ -939,11 +939,11 @@ function getNextEnemyIntent(enemy: EnemyInstance, turn: number): EnemyInstance['
       : { type: 'ATTACK', damage: 13 + Math.floor(Math.random() * 3) };
   }
 
-  // 슬라임 보스: 공격 → 중독 5 → 취약 2 (3턴 주기)
+  // 슬라임 보스: 공격 → 중독 7 → 취약 2 (3턴 주기)
   if (enemy.templateId === 'slime_boss') {
     const pattern = turn % 3;
     if (pattern === 1) return { type: 'ATTACK', damage: 25 + Math.floor(Math.random() * 6) };
-    if (pattern === 2) return { type: 'DEBUFF', statusType: 'POISON', statusStacks: 5 };
+    if (pattern === 2) return { type: 'DEBUFF', statusType: 'POISON', statusStacks: 7 };
     return { type: 'DEBUFF', statusType: 'VULNERABLE', statusStacks: 2 };
   }
 
