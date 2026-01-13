@@ -2,7 +2,7 @@ import { Card } from '../../types/card';
 
 export const STRIKE: Card = {
   id: 'strike',
-  name: '타격',
+  name: '기본 베기',
   type: 'ATTACK',
   rarity: 'BASIC',
   cost: 1,
@@ -10,7 +10,7 @@ export const STRIKE: Card = {
   effects: [{ type: 'DAMAGE', value: 6, target: 'SINGLE' }],
   upgraded: false,
   upgradeEffect: {
-    name: '타격+',
+    name: '기본 베기+',
     description: '9 피해를 줍니다.',
     effects: [{ type: 'DAMAGE', value: 9, target: 'SINGLE' }],
   },
@@ -18,7 +18,7 @@ export const STRIKE: Card = {
 
 export const DEFEND: Card = {
   id: 'defend',
-  name: '수비',
+  name: '방어 태세',
   type: 'SHIELD',
   rarity: 'BASIC',
   cost: 1,
@@ -26,7 +26,7 @@ export const DEFEND: Card = {
   effects: [{ type: 'BLOCK', value: 5 }],
   upgraded: false,
   upgradeEffect: {
-    name: '수비+',
+    name: '방어 태세+',
     description: '8 방어도를 얻습니다.',
     effects: [{ type: 'BLOCK', value: 8 }],
   },
@@ -34,22 +34,64 @@ export const DEFEND: Card = {
 
 export const BASH: Card = {
   id: 'bash',
-  name: '강타',
+  name: '갑옷 파괴',
   type: 'ATTACK',
   rarity: 'BASIC',
   cost: 2,
-  description: '8 피해를 주고 취약 2를 부여합니다.',
+  description: '8 피해를 주고 취약 1을 부여합니다.',
   effects: [
     { type: 'DAMAGE', value: 8, target: 'SINGLE' },
-    { type: 'APPLY_STATUS', value: 2, target: 'SINGLE', status: 'VULNERABLE' },
+    { type: 'APPLY_STATUS', value: 1, target: 'SINGLE', status: 'VULNERABLE' },
   ],
   upgraded: false,
   upgradeEffect: {
-    name: '강타+',
-    description: '10 피해를 주고 취약 3을 부여합니다.',
+    name: '갑옷 파괴+',
+    description: '10 피해를 주고 취약 2를 부여합니다.',
     effects: [
       { type: 'DAMAGE', value: 10, target: 'SINGLE' },
-      { type: 'APPLY_STATUS', value: 3, target: 'SINGLE', status: 'VULNERABLE' },
+      { type: 'APPLY_STATUS', value: 2, target: 'SINGLE', status: 'VULNERABLE' },
+    ],
+  },
+};
+
+export const EXPOSE_WEAKNESS: Card = {
+  id: 'expose_weakness',
+  name: '약점 노출',
+  type: 'ATTACK',
+  rarity: 'BASIC',
+  cost: 1,
+  description: '적에게 취약 1을 부여합니다.',
+  effects: [
+    { type: 'APPLY_STATUS', value: 1, target: 'SINGLE', status: 'VULNERABLE' },
+  ],
+  upgraded: false,
+  upgradeEffect: {
+    name: '약점 노출+',
+    description: '적에게 취약 2를 부여합니다.',
+    effects: [
+      { type: 'APPLY_STATUS', value: 2, target: 'SINGLE', status: 'VULNERABLE' },
+    ],
+  },
+};
+
+export const FLEXIBLE_RESPONSE: Card = {
+  id: 'flexible_response',
+  name: '유연한 대응',
+  type: 'SHIELD',
+  rarity: 'BASIC',
+  cost: 1,
+  description: '7 방어도를 얻고 카드 1장을 뽑습니다.',
+  effects: [
+    { type: 'BLOCK', value: 7 },
+    { type: 'DRAW', value: 1 },
+  ],
+  upgraded: false,
+  upgradeEffect: {
+    name: '유연한 대응+',
+    description: '10 방어도를 얻고 카드 1장을 뽑습니다.',
+    effects: [
+      { type: 'BLOCK', value: 10 },
+      { type: 'DRAW', value: 1 },
     ],
   },
 };
@@ -69,3 +111,12 @@ export function createStarterDeck(): Card[] {
     { ...BASH },
   ];
 }
+
+// 모든 BASIC 카드 목록
+export const BASIC_CARDS: Card[] = [
+  STRIKE,
+  DEFEND,
+  BASH,
+  EXPOSE_WEAKNESS,
+  FLEXIBLE_RESPONSE,
+];

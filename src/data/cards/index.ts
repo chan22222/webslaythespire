@@ -1,18 +1,33 @@
 import { Card } from '../../types/card';
-import { createStarterDeck, STRIKE, DEFEND, BASH } from './starterCards';
+import { createStarterDeck, STRIKE, DEFEND, BASH, BASIC_CARDS } from './starterCards';
 import { COMMON_CARDS } from './commonCards';
 import { UNCOMMON_CARDS } from './uncommonCards';
+import { RARE_CARDS } from './rareCards';
+import { BOSS_CARDS } from './bossCards';
 
-export { createStarterDeck, STRIKE, DEFEND, BASH };
+export { createStarterDeck, STRIKE, DEFEND, BASH, BASIC_CARDS };
 export { COMMON_CARDS };
 export { UNCOMMON_CARDS };
+export { RARE_CARDS };
+export { BOSS_CARDS };
 
-// 모든 획득 가능한 카드
-export const ALL_OBTAINABLE_CARDS: Card[] = [...COMMON_CARDS, ...UNCOMMON_CARDS];
+// 모든 획득 가능한 카드 (BASIC 제외)
+export const ALL_OBTAINABLE_CARDS: Card[] = [
+  ...COMMON_CARDS,
+  ...UNCOMMON_CARDS,
+  ...RARE_CARDS,
+];
+
+// 모든 카드 (보스 카드 포함)
+export const ALL_CARDS: Card[] = [
+  ...BASIC_CARDS,
+  ...ALL_OBTAINABLE_CARDS,
+  ...BOSS_CARDS,
+];
 
 // 희귀도별 카드 풀
 export function getCardsByRarity(rarity: Card['rarity']): Card[] {
-  return ALL_OBTAINABLE_CARDS.filter(card => card.rarity === rarity);
+  return ALL_CARDS.filter(card => card.rarity === rarity);
 }
 
 // 랜덤 카드 보상 생성 (3장)
@@ -21,16 +36,16 @@ export function generateCardRewards(count: number = 3): Card[] {
   const availableCards = [...ALL_OBTAINABLE_CARDS];
 
   for (let i = 0; i < count && availableCards.length > 0; i++) {
-    // 희귀도 가중치: COMMON 60%, UNCOMMON 37%, RARE 3%
+    // 희귀도 가중치: COMMON 60%, UNCOMMON 30%, RARE 10%
     const roll = Math.random();
     let targetRarity: Card['rarity'];
 
     if (roll < 0.60) {
       targetRarity = 'COMMON';
-    } else if (roll < 0.97) {
+    } else if (roll < 0.90) {
       targetRarity = 'UNCOMMON';
     } else {
-      targetRarity = 'UNCOMMON'; // RARE가 없으므로 UNCOMMON으로 대체
+      targetRarity = 'RARE';
     }
 
     const eligibleCards = availableCards.filter(c => c.rarity === targetRarity);

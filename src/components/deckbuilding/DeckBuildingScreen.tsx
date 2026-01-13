@@ -47,6 +47,7 @@ const typeStyles = {
   ALL: { bg: '#3a3025', border: '#d4a84b', color: '#f0d090' },
   ATTACK: { bg: '#4a2020', border: '#e8a040', color: '#f0b860' },
   SHIELD: { bg: '#204a4a', border: '#40a8e8', color: '#60c8f8' },
+  SKILL: { bg: '#1a4a2a', border: '#4ade80', color: '#6aee90' },
   GADGET: { bg: '#204a3a', border: '#40e8a0', color: '#60f8b0' },
   EFFECT: { bg: '#3a204a', border: '#a040e8', color: '#c060f8' },
   TERRAIN: { bg: '#4a3a20', border: '#8b6914', color: '#ab8934' },
@@ -58,7 +59,7 @@ type SortOrder = 'asc' | 'desc';
 export function DeckBuildingScreen() {
   const { setDeck, setPhase, startTestBattle, startGameWithDeckAndRelics } = useGameStore();
   const [selectedCards, setSelectedCards] = useState<CardInstance[]>([]);
-  const [filter, setFilter] = useState<'ALL' | 'ATTACK' | 'SHIELD' | 'GADGET' | 'EFFECT' | 'TERRAIN'>('ALL');
+  const [filter, setFilter] = useState<'ALL' | 'ATTACK' | 'SHIELD' | 'SKILL' | 'GADGET' | 'EFFECT' | 'TERRAIN'>('ALL');
   const [sortBy, setSortBy] = useState<SortBy>('cost');
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
   const [selectedEnemies, setSelectedEnemies] = useState<EnemyTemplate[]>([]);
@@ -144,6 +145,7 @@ export function DeckBuildingScreen() {
     return {
       attacks: selectedCards.filter(c => c.type === 'ATTACK').length,
       shields: selectedCards.filter(c => c.type === 'SHIELD').length,
+      skills: selectedCards.filter(c => c.type === 'SKILL').length,
       gadgets: selectedCards.filter(c => c.type === 'GADGET').length,
       effects: selectedCards.filter(c => c.type === 'EFFECT').length,
       terrains: selectedCards.filter(c => c.type === 'TERRAIN').length,
@@ -234,7 +236,7 @@ export function DeckBuildingScreen() {
           <div className="flex items-center gap-4 mb-3 flex-wrap">
             {/* 필터 */}
             <div className="flex gap-2 flex-wrap">
-            {(['ALL', 'ATTACK', 'SHIELD', 'GADGET', 'EFFECT', 'TERRAIN'] as const).map(type => {
+            {(['ALL', 'ATTACK', 'SHIELD', 'SKILL', 'GADGET', 'EFFECT', 'TERRAIN'] as const).map(type => {
               const style = typeStyles[type];
               const count = type === 'ALL'
                 ? ALL_CARDS.length
@@ -369,6 +371,11 @@ export function DeckBuildingScreen() {
               {deckStats.shields > 0 && (
                 <span className="px-2 py-0.5 rounded text-[10px]" style={{ background: typeStyles.SHIELD.bg, color: typeStyles.SHIELD.color, border: `1px solid ${typeStyles.SHIELD.border}` }}>
                   방어 {deckStats.shields}
+                </span>
+              )}
+              {deckStats.skills > 0 && (
+                <span className="px-2 py-0.5 rounded text-[10px]" style={{ background: typeStyles.SKILL.bg, color: typeStyles.SKILL.color, border: `1px solid ${typeStyles.SKILL.border}` }}>
+                  스킬 {deckStats.skills}
                 </span>
               )}
               {deckStats.gadgets > 0 && (

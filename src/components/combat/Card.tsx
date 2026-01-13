@@ -25,6 +25,12 @@ const typeConfig = {
     glowColor: 'rgba(64, 168, 232, 0.6)',
     typeName: 'Shield',
   },
+  SKILL: {
+    cardImage: '/cards/skillcard.png',
+    accentColor: '#4ade80',
+    glowColor: 'rgba(74, 222, 128, 0.6)',
+    typeName: 'Skill',
+  },
   GADGET: {
     cardImage: '/cards/gadgetcard.png',
     accentColor: '#40e8a0',
@@ -92,6 +98,7 @@ const rarityGlow = {
   COMMON: '',
   UNCOMMON: '0 0 12px rgba(100, 150, 255, 0.5)',
   RARE: '0 0 12px rgba(255, 200, 50, 0.5)',
+  BOSS: '0 0 20px rgba(255, 50, 50, 0.7)',
 };
 
 export function Card({

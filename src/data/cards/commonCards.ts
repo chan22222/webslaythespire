@@ -1,68 +1,30 @@
 import { Card } from '../../types/card';
 
-export const CLEAVE: Card = {
-  id: 'cleave',
-  name: '휩쓸기',
+export const COMBO_ATTACK: Card = {
+  id: 'combo_attack',
+  name: '연계 공격',
   type: 'ATTACK',
   rarity: 'COMMON',
   cost: 1,
-  description: '모든 적에게 8 피해를 줍니다.',
-  effects: [{ type: 'DAMAGE', value: 8, target: 'ALL' }],
-  upgraded: false,
-  upgradeEffect: {
-    name: '휩쓸기+',
-    description: '모든 적에게 11 피해를 줍니다.',
-    effects: [{ type: 'DAMAGE', value: 11, target: 'ALL' }],
-  },
-};
-
-export const POMMEL_STRIKE: Card = {
-  id: 'pommel_strike',
-  name: '자루 치기',
-  type: 'ATTACK',
-  rarity: 'COMMON',
-  cost: 1,
-  description: '9 피해를 주고 카드 1장을 뽑습니다.',
+  description: '8 피해를 주고 카드 1장을 뽑습니다.',
   effects: [
-    { type: 'DAMAGE', value: 9, target: 'SINGLE' },
+    { type: 'DAMAGE', value: 8, target: 'SINGLE' },
     { type: 'DRAW', value: 1 },
   ],
   upgraded: false,
   upgradeEffect: {
-    name: '자루 치기+',
-    description: '10 피해를 주고 카드 2장을 뽑습니다.',
+    name: '연계 공격+',
+    description: '12 피해를 주고 카드 1장을 뽑습니다.',
     effects: [
-      { type: 'DAMAGE', value: 10, target: 'SINGLE' },
-      { type: 'DRAW', value: 2 },
-    ],
-  },
-};
-
-export const SHRUG_IT_OFF: Card = {
-  id: 'shrug_it_off',
-  name: '어깨 으쓱',
-  type: 'SHIELD',
-  rarity: 'COMMON',
-  cost: 1,
-  description: '8 방어도를 얻고 카드 1장을 뽑습니다.',
-  effects: [
-    { type: 'BLOCK', value: 8 },
-    { type: 'DRAW', value: 1 },
-  ],
-  upgraded: false,
-  upgradeEffect: {
-    name: '어깨 으쓱+',
-    description: '11 방어도를 얻고 카드 1장을 뽑습니다.',
-    effects: [
-      { type: 'BLOCK', value: 11 },
+      { type: 'DAMAGE', value: 12, target: 'SINGLE' },
       { type: 'DRAW', value: 1 },
     ],
   },
 };
 
-export const IRON_WAVE: Card = {
-  id: 'iron_wave',
-  name: '철 파도',
+export const ASSAULT_SHIELD: Card = {
+  id: 'assault_shield',
+  name: '강습 방패',
   type: 'ATTACK',
   rarity: 'COMMON',
   cost: 1,
@@ -73,7 +35,7 @@ export const IRON_WAVE: Card = {
   ],
   upgraded: false,
   upgradeEffect: {
-    name: '철 파도+',
+    name: '강습 방패+',
     description: '7 방어도를 얻고 7 피해를 줍니다.',
     effects: [
       { type: 'BLOCK', value: 7 },
@@ -82,92 +44,76 @@ export const IRON_WAVE: Card = {
   },
 };
 
-export const TWIN_STRIKE: Card = {
-  id: 'twin_strike',
-  name: '쌍둥이 타격',
+export const DOUBLE_STRIKE: Card = {
+  id: 'double_strike',
+  name: '이연격',
   type: 'ATTACK',
   rarity: 'COMMON',
-  cost: 1,
-  description: '5 피해를 2번 줍니다.',
+  cost: 2,
+  description: '7 피해를 2번 줍니다.',
   effects: [
-    { type: 'DAMAGE', value: 5, target: 'SINGLE' },
-    { type: 'DAMAGE', value: 5, target: 'SINGLE' },
+    { type: 'DAMAGE', value: 7, target: 'SINGLE' },
+    { type: 'DAMAGE', value: 7, target: 'SINGLE' },
   ],
   upgraded: false,
   upgradeEffect: {
-    name: '쌍둥이 타격+',
-    description: '7 피해를 2번 줍니다.',
+    name: '이연격+',
+    description: '10 피해를 2번 줍니다.',
     effects: [
-      { type: 'DAMAGE', value: 7, target: 'SINGLE' },
-      { type: 'DAMAGE', value: 7, target: 'SINGLE' },
+      { type: 'DAMAGE', value: 10, target: 'SINGLE' },
+      { type: 'DAMAGE', value: 10, target: 'SINGLE' },
     ],
   },
 };
 
-export const ANGER: Card = {
-  id: 'anger',
-  name: '분노',
-  type: 'ATTACK',
-  rarity: 'COMMON',
-  cost: 0,
-  description: '6 피해를 줍니다. 이 카드의 복사본을 버린 카드 더미에 추가합니다.',
-  effects: [{ type: 'DAMAGE', value: 6, target: 'SINGLE' }],
-  upgraded: false,
-  upgradeEffect: {
-    name: '분노+',
-    description: '8 피해를 줍니다. 이 카드의 복사본을 버린 카드 더미에 추가합니다.',
-    effects: [{ type: 'DAMAGE', value: 8, target: 'SINGLE' }],
-  },
-};
-
-export const ARMAMENTS: Card = {
-  id: 'armaments',
-  name: '무장',
-  type: 'SHIELD',
+export const EQUIPMENT_CHECK: Card = {
+  id: 'equipment_check',
+  name: '장비 점검',
+  type: 'SKILL',
   rarity: 'COMMON',
   cost: 1,
-  description: '5 방어도를 얻습니다. 손에 있는 카드 1장을 업그레이드합니다.',
+  description: '4 방어도를 얻습니다. 손에 있는 카드 1장을 업그레이드합니다.',
   effects: [
-    { type: 'BLOCK', value: 5 },
+    { type: 'BLOCK', value: 4 },
     { type: 'UPGRADE_HAND', value: 1 },
   ],
   upgraded: false,
   upgradeEffect: {
-    name: '무장+',
-    description: '5 방어도를 얻습니다. 손에 있는 모든 카드를 업그레이드합니다.',
+    name: '장비 점검+',
+    description: '4 방어도를 얻습니다. 손에 있는 카드 2장을 업그레이드합니다.',
     effects: [
-      { type: 'BLOCK', value: 5 },
-      { type: 'UPGRADE_ALL_HAND', value: 0 },
+      { type: 'BLOCK', value: 4 },
+      { type: 'UPGRADE_HAND', value: 2 },
     ],
   },
 };
 
-export const CLOTHESLINE: Card = {
-  id: 'clothesline',
-  name: '빨랫줄',
+export const NEUTRALIZE: Card = {
+  id: 'neutralize',
+  name: '무력화',
   type: 'ATTACK',
   rarity: 'COMMON',
-  cost: 2,
-  description: '12 피해를 주고 약화 2를 부여합니다.',
+  cost: 1,
+  description: '10 피해를 주고 약화 2를 부여합니다.',
   effects: [
-    { type: 'DAMAGE', value: 12, target: 'SINGLE' },
+    { type: 'DAMAGE', value: 10, target: 'SINGLE' },
     { type: 'APPLY_STATUS', value: 2, target: 'SINGLE', status: 'WEAK' },
   ],
   upgraded: false,
   upgradeEffect: {
-    name: '빨랫줄+',
-    description: '14 피해를 주고 약화 3을 부여합니다.',
+    name: '무력화+',
+    description: '14 피해를 주고 약화 2를 부여합니다.',
     effects: [
       { type: 'DAMAGE', value: 14, target: 'SINGLE' },
-      { type: 'APPLY_STATUS', value: 3, target: 'SINGLE', status: 'WEAK' },
+      { type: 'APPLY_STATUS', value: 2, target: 'SINGLE', status: 'WEAK' },
     ],
   },
 };
 
-export const FLEX: Card = {
-  id: 'flex',
-  name: '유연',
-  type: 'SHIELD',
+export const INSTANT_FOCUS: Card = {
+  id: 'instant_focus',
+  name: '순간 집중',
+  type: 'SKILL',
   rarity: 'COMMON',
   cost: 0,
   description: '힘 2를 얻습니다. 턴 종료 시 힘 2를 잃습니다.',
@@ -177,7 +123,7 @@ export const FLEX: Card = {
   ],
   upgraded: false,
   upgradeEffect: {
-    name: '유연+',
+    name: '순간 집중+',
     description: '힘 4를 얻습니다. 턴 종료 시 힘 4를 잃습니다.',
     effects: [
       { type: 'APPLY_STATUS', value: 4, target: 'SELF', status: 'STRENGTH' },
@@ -186,32 +132,30 @@ export const FLEX: Card = {
   },
 };
 
-export const HEADBUTT: Card = {
-  id: 'headbutt',
-  name: '박치기',
+export const TACTICAL_REVIEW: Card = {
+  id: 'tactical_review',
+  name: '전술 복기',
   type: 'ATTACK',
   rarity: 'COMMON',
   cost: 1,
-  description: '9 피해를 줍니다. 버린 카드 더미에서 카드 1장을 뽑기 더미 맨 위에 놓습니다.',
-  effects: [{ type: 'DAMAGE', value: 9, target: 'SINGLE' }],
+  description: '5 피해를 줍니다. 사용한 후 다시 손으로 가져옵니다.',
+  effects: [{ type: 'DAMAGE', value: 5, target: 'SINGLE' }],
+  returnToHand: true,
   upgraded: false,
   upgradeEffect: {
-    name: '박치기+',
-    description: '12 피해를 줍니다. 버린 카드 더미에서 카드 1장을 뽑기 더미 맨 위에 놓습니다.',
-    effects: [{ type: 'DAMAGE', value: 12, target: 'SINGLE' }],
+    name: '전술 복기+',
+    description: '5 피해를 줍니다. 사용한 후 다시 손으로 가져옵니다.',
+    effects: [{ type: 'DAMAGE', value: 5, target: 'SINGLE' }],
   },
 };
 
 // 모든 일반 카드 목록
 export const COMMON_CARDS: Card[] = [
-  CLEAVE,
-  POMMEL_STRIKE,
-  SHRUG_IT_OFF,
-  IRON_WAVE,
-  TWIN_STRIKE,
-  ANGER,
-  ARMAMENTS,
-  CLOTHESLINE,
-  FLEX,
-  HEADBUTT,
+  COMBO_ATTACK,
+  ASSAULT_SHIELD,
+  DOUBLE_STRIKE,
+  EQUIPMENT_CHECK,
+  NEUTRALIZE,
+  INSTANT_FOCUS,
+  TACTICAL_REVIEW,
 ];
