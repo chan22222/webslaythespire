@@ -25,6 +25,8 @@ export function TargetingArrow({ startX, startY, isActive, cardType, needsTarget
   const targetsRef = useRef<SnapTarget[]>([]);
   const playerRef = useRef<SnapTarget | null>(null);
   const uniqueId = useId();
+  const rafRef = useRef<number | null>(null);
+  const pendingPosRef = useRef<{ x: number; y: number } | null>(null);
 
   // 타겟 요소들의 위치를 업데이트
   const updateTargets = useCallback(() => {
@@ -81,7 +83,10 @@ export function TargetingArrow({ startX, startY, isActive, cardType, needsTarget
     return closest;
   }, []);
 
-  const handleMove = useCallback((clientX: number, clientY: number) => {
+  const processMove = useCallback(() => {
+    if (!pendingPosRef.current) return;
+
+    const { x: clientX, y: clientY } = pendingPosRef.current;
     updateTargets();
 
     if (needsTarget) {
@@ -106,7 +111,18 @@ export function TargetingArrow({ startX, startY, isActive, cardType, needsTarget
         setMousePos({ x: clientX, y: clientY });
       }
     }
+
+    pendingPosRef.current = null;
+    rafRef.current = null;
   }, [updateTargets, findClosestEnemy, needsTarget]);
+
+  const handleMove = useCallback((clientX: number, clientY: number) => {
+    pendingPosRef.current = { x: clientX, y: clientY };
+
+    if (!rafRef.current) {
+      rafRef.current = requestAnimationFrame(processMove);
+    }
+  }, [processMove]);
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
     handleMove(e.clientX, e.clientY);
@@ -127,6 +143,10 @@ export function TargetingArrow({ startX, startY, isActive, cardType, needsTarget
       return () => {
         window.removeEventListener('mousemove', handleMouseMove);
         window.removeEventListener('touchmove', handleTouchMove);
+        if (rafRef.current) {
+          cancelAnimationFrame(rafRef.current);
+          rafRef.current = null;
+        }
       };
     }
   }, [isActive, handleMouseMove, handleTouchMove, startX, startY, updateTargets]);
@@ -180,7 +200,7 @@ export function TargetingArrow({ startX, startY, isActive, cardType, needsTarget
         zIndex: 99999,
       }}
     >
-      <svg style={{ width: '100%', height: '100%' }}>
+      <svg style={{ width: '100%', height: '100%', willChange: 'auto' }}>
         <defs>
           <filter id={glowId} x="-50%" y="-50%" width="200%" height="200%">
             <feGaussianBlur stdDeviation="4" result="blur" />
@@ -192,14 +212,14 @@ export function TargetingArrow({ startX, startY, isActive, cardType, needsTarget
 
           <marker
             id={arrowheadId}
-            markerWidth="12"
-            markerHeight="10"
-            refX="10"
-            refY="5"
+            markerWidth="8"
+            markerHeight="6"
+            refX="7"
+            refY="3"
             orient="auto"
           >
             <polygon
-              points="0 0, 12 5, 0 10, 3 5"
+              points="0 0, 8 3, 0 6, 2 3"
               fill={color.main}
             />
           </marker>
@@ -210,37 +230,16 @@ export function TargetingArrow({ startX, startY, isActive, cardType, needsTarget
           </linearGradient>
         </defs>
 
-        {/* 글로우 효과 */}
-        <path
-          d={pathD}
-          fill="none"
-          stroke={color.glow}
-          strokeWidth="12"
-          strokeLinecap="round"
-          filter={`url(#${glowId})`}
-        />
-
-        {/* 메인 화살표 라인 */}
-        <path
-          d={pathD}
-          fill="none"
-          stroke={`url(#${gradientId})`}
-          strokeWidth="4"
-          strokeLinecap="round"
-          markerEnd={`url(#${arrowheadId})`}
-        />
-
-        {/* 점선 효과 */}
+        {/* 점선 화살표 */}
         <path
           d={pathD}
           fill="none"
           stroke={color.main}
-          strokeWidth="2"
-          strokeDasharray="8 8"
+          strokeWidth="6"
+          strokeDasharray="16 14"
           strokeLinecap="round"
-          style={{
-            animation: 'targetingDash 0.5s linear infinite',
-          }}
+          markerEnd={`url(#${arrowheadId})`}
+          className="targeting-dash-anim"
         />
       </svg>
 
@@ -261,7 +260,7 @@ export function TargetingArrow({ startX, startY, isActive, cardType, needsTarget
         }}
       />
 
-      {/* 크로스헤어 - transition 제거 */}
+      {/* 크로스헤어 */}
       <div
         style={{
           position: 'absolute',
@@ -271,6 +270,8 @@ export function TargetingArrow({ startX, startY, isActive, cardType, needsTarget
           height: crosshairSize,
           background: color.main,
           boxShadow: `0 0 10px ${color.glow}`,
+          opacity: 0.6,
+          animation: 'pulse 1s ease-in-out infinite',
         }}
       />
       <div
@@ -282,6 +283,8 @@ export function TargetingArrow({ startX, startY, isActive, cardType, needsTarget
           height: 4,
           background: color.main,
           boxShadow: `0 0 10px ${color.glow}`,
+          opacity: 0.6,
+          animation: 'pulse 1s ease-in-out infinite',
         }}
       />
 
@@ -310,9 +313,15 @@ export function TargetingArrow({ startX, startY, isActive, cardType, needsTarget
 
       <style>{`
         @keyframes targetingDash {
-          to {
-            stroke-dashoffset: -16;
+          from {
+            stroke-dashoffset: 0;
           }
+          to {
+            stroke-dashoffset: -30;
+          }
+        }
+        .targeting-dash-anim {
+          animation: targetingDash 0.5s linear infinite;
         }
       `}</style>
     </div>
