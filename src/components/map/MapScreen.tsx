@@ -175,7 +175,7 @@ export function MapScreen() {
 
       {/* 상단 HUD */}
       <header
-        className="relative z-30 px-6 py-4"
+        className="relative z-30 px-6 pt-9 pb-4"
         style={{
           background: 'linear-gradient(180deg, rgba(10, 8, 5, 0.95) 0%, transparent 100%)',
         }}
@@ -318,7 +318,7 @@ export function MapScreen() {
 
           {/* Floor */}
           <div
-            className="flex flex-col items-center justify-center relative group cursor-help"
+            className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center justify-center group cursor-help"
             style={{
               backgroundImage: 'url(/floor.png)',
               backgroundSize: 'contain',
@@ -344,12 +344,7 @@ export function MapScreen() {
                 className="text-4xl font-bold tabular-nums"
                 style={{
                   fontFamily: '"Press Start 2P", monospace',
-                  background: 'linear-gradient(180deg, #ffe066 0%, #f0c040 35%, #d4a520 65%, #c49520 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent',
-                  WebkitTextStroke: '1px #4a4a4a',
-                  paintOrder: 'stroke fill',
-                  filter: 'drop-shadow(0 0 3px rgba(255,215,0,0.6)) drop-shadow(0 0 6px rgba(255,204,0,0.4)) drop-shadow(0 0 12px rgba(255,204,0,0.3))',
+                  color: '#3a3a3a',
                 }}
               >
                 {map.floor}
@@ -402,8 +397,8 @@ export function MapScreen() {
           </div>
 
           {/* Deck & Relics */}
-          <div className="flex items-center gap-4">
-            <div className="hidden md:flex items-center gap-2">
+          <div className="flex items-center gap-2">
+            <div className="hidden md:flex items-center gap-0">
               {player.relics.map(relic => (
                 <div
                   key={relic.id}
@@ -478,10 +473,16 @@ export function MapScreen() {
             <div className="relative group">
               <button
                 onClick={() => setShowDeck(true)}
-                className="flex items-center gap-3 px-5 py-2.5 transition-all duration-150 hover:brightness-125"
+                className="flex flex-col items-center justify-center gap-0 transition-all duration-150 hover:brightness-125"
                 style={{
-                  background: 'rgba(212, 168, 75, 0.15)',
-                  border: '2px solid rgba(212, 168, 75, 0.4)',
+                  backgroundImage: 'url(/card.png)',
+                  backgroundSize: 'contain',
+                  backgroundRepeat: 'no-repeat',
+                  backgroundPosition: 'center',
+                  width: '96px',
+                  height: '120px',
+                  imageRendering: 'pixelated',
+                  border: 'none',
                 }}
               >
                 <span
