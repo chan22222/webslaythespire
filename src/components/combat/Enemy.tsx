@@ -861,7 +861,7 @@ export function Enemy({ enemy, isTargetable = false, incomingDamage = 0, ignoreB
             animation: isHurt ? 'shake 0.3s ease-in-out' : 'none',
           }}
         >
-          {getEnemyCharacter(enemy.templateId, 100, false)}
+          {getEnemyCharacter(enemy.templateId, 100)}
           {/* 바닥 그림자 */}
           <div
             className="absolute left-1/2"

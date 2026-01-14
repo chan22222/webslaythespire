@@ -4,7 +4,6 @@ import { useEffect, useState, useRef } from 'react';
 interface CharacterProps {
   size?: number;
   className?: string;
-  isTargetable?: boolean;
 }
 
 // 스프라이트시트 설정
@@ -243,7 +242,7 @@ export function IroncladSilhouette({ size = 120, className = '' }: CharacterProp
 }
 
 // 컬티스트 실루엣
-export function CultistSilhouette({ size = 100, className = '', isTargetable = false }: CharacterProps) {
+export function CultistSilhouette({ size = 100, className = '' }: CharacterProps) {
   return (
     <svg width={size} height={size * 1.4} viewBox="0 0 100 140" className={className}>
       <defs>
@@ -299,18 +298,12 @@ export function CultistSilhouette({ size = 100, className = '', isTargetable = f
         <animate attributeName="opacity" values="0.5;0.8;0.5" dur="2s" repeatCount="indefinite" />
       </circle>
 
-      {/* 타겟 글로우 */}
-      {isTargetable && (
-        <ellipse cx="50" cy="80" rx="45" ry="60" fill="none" stroke="#e04040" strokeWidth="2" opacity="0.6">
-          <animate attributeName="opacity" values="0.3;0.7;0.3" dur="1s" repeatCount="indefinite" />
-        </ellipse>
-      )}
     </svg>
   );
 }
 
 // 턱 벌레 (Jaw Worm) 실루엣
-export function JawWormSilhouette({ size = 100, className = '', isTargetable = false }: CharacterProps) {
+export function JawWormSilhouette({ size = 100, className = '' }: CharacterProps) {
   return (
     <svg width={size} height={size * 0.8} viewBox="0 0 120 90" className={className}>
       <defs>
@@ -365,12 +358,6 @@ export function JawWormSilhouette({ size = 100, className = '', isTargetable = f
       <path d="M35 25 L38 18 L40 26" fill="#4a5a4a" />
       <path d="M55 22 L58 14 L60 23" fill="#4a5a4a" />
       <path d="M78 28 L81 20 L83 29" fill="#4a5a4a" />
-
-      {isTargetable && (
-        <ellipse cx="50" cy="45" rx="55" ry="40" fill="none" stroke="#e04040" strokeWidth="2" opacity="0.6">
-          <animate attributeName="opacity" values="0.3;0.7;0.3" dur="1s" repeatCount="indefinite" />
-        </ellipse>
-      )}
     </svg>
   );
 }
@@ -597,7 +584,7 @@ export function MushroomSprite({ size = 80, className = '', variant = 'normal' }
 }
 
 // 슬라임 실루엣
-export function SlimeSilhouette({ size = 100, className = '', isTargetable = false, variant = 'medium' }: CharacterProps & { variant?: 'small' | 'medium' | 'large' }) {
+export function SlimeSilhouette({ size = 100, className = '', variant = 'medium' }: CharacterProps & { variant?: 'small' | 'medium' | 'large' }) {
   const scale = variant === 'small' ? 0.6 : variant === 'large' ? 1.3 : 1;
 
   return (
@@ -642,18 +629,12 @@ export function SlimeSilhouette({ size = 100, className = '', isTargetable = fal
       {/* 점액 드립 */}
       <path d="M25 70 Q23 78, 25 85" stroke="#3a7a3a" strokeWidth="3" fill="none" opacity="0.7" />
       <path d="M75 70 Q77 76, 74 82" stroke="#3a7a3a" strokeWidth="2" fill="none" opacity="0.5" />
-
-      {isTargetable && (
-        <ellipse cx="50" cy="45" rx="50" ry="40" fill="none" stroke="#e04040" strokeWidth="2" opacity="0.6">
-          <animate attributeName="opacity" values="0.3;0.7;0.3" dur="1s" repeatCount="indefinite" />
-        </ellipse>
-      )}
     </svg>
   );
 }
 
 // 그렘린 놉 (엘리트) 실루엣
-export function GremlinNobSilhouette({ size = 140, className = '', isTargetable = false }: CharacterProps) {
+export function GremlinNobSilhouette({ size = 140, className = '' }: CharacterProps) {
   return (
     <svg width={size} height={size * 1.2} viewBox="0 0 120 150" className={className}>
       <defs>
@@ -710,18 +691,12 @@ export function GremlinNobSilhouette({ size = 140, className = '', isTargetable 
       {/* 이빨 */}
       <path d="M45 45 L48 52 L51 45" fill="#ddd" />
       <path d="M55 45 L58 52 L61 45" fill="#ddd" />
-
-      {isTargetable && (
-        <ellipse cx="55" cy="85" rx="60" ry="70" fill="none" stroke="#e04040" strokeWidth="2" opacity="0.6">
-          <animate attributeName="opacity" values="0.3;0.7;0.3" dur="1s" repeatCount="indefinite" />
-        </ellipse>
-      )}
     </svg>
   );
 }
 
 // 슬라임 보스 실루엣
-export function SlimeBossSilhouette({ size = 180, className = '', isTargetable = false }: CharacterProps) {
+export function SlimeBossSilhouette({ size = 180, className = '' }: CharacterProps) {
   return (
     <svg width={size} height={size * 0.9} viewBox="0 0 180 160" className={className}>
       <defs>
@@ -774,12 +749,6 @@ export function SlimeBossSilhouette({ size = 180, className = '', isTargetable =
       <path d="M30 140 Q25 155, 30 165" stroke="#3a7a3a" strokeWidth="5" fill="none" opacity="0.6" />
       <path d="M150 140 Q155 152, 150 160" stroke="#3a7a3a" strokeWidth="4" fill="none" opacity="0.5" />
       <path d="M90 145 Q88 158, 92 168" stroke="#3a7a3a" strokeWidth="6" fill="none" opacity="0.7" />
-
-      {isTargetable && (
-        <ellipse cx="90" cy="85" rx="90" ry="75" fill="none" stroke="#e04040" strokeWidth="3" opacity="0.6">
-          <animate attributeName="opacity" values="0.3;0.7;0.3" dur="1s" repeatCount="indefinite" />
-        </ellipse>
-      )}
     </svg>
   );
 }
@@ -811,7 +780,7 @@ function EasterEggEnemy({ imageUrl, size }: { imageUrl: string; size: number }) 
 }
 
 // 캐릭터 매핑
-export function getEnemyCharacter(templateId: string, size: number, isTargetable: boolean) {
+export function getEnemyCharacter(templateId: string, size: number) {
   switch (templateId) {
     case 'goblin':
       return <GoblinSprite size={size} />;
@@ -826,9 +795,9 @@ export function getEnemyCharacter(templateId: string, size: number, isTargetable
     case 'mushroom':
       return <MushroomSprite size={size} variant="normal" />;
     case 'gremlin_nob':
-      return <GremlinNobSilhouette size={size * 1.2} isTargetable={isTargetable} />;
+      return <GremlinNobSilhouette size={size * 1.2} />;
     case 'slime_boss':
-      return <SlimeBossSilhouette size={size * 1.5} isTargetable={isTargetable} />;
+      return <SlimeBossSilhouette size={size * 1.5} />;
     // 이스터에그 적
     case 'real_tukbug':
       return <EasterEggEnemy imageUrl="/sprites/mob/easteregg/tukbug.png" size={size} />;
