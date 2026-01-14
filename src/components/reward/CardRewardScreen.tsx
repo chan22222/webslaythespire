@@ -23,7 +23,7 @@ export function CardRewardScreen() {
 
   useEffect(() => {
     setCardRewards(generateCardRewards(3));
-    setGoldReward(randomInt(10, 25));
+    setGoldReward(randomInt(20, 50));
     if (hasEasterEggEnemy) {
       setBonusGold(2000);
     }
