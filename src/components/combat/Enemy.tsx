@@ -843,16 +843,30 @@ export function Enemy({ enemy, isTargetable = false, incomingDamage = 0, ignoreB
             filter: isDying
               ? 'grayscale(1)'
               : isHurt
-                ? 'sepia(1) saturate(6) hue-rotate(-50deg) brightness(0.9) drop-shadow(0 5px 10px rgba(0, 0, 0, 0.5))'
+                ? 'sepia(1) saturate(6) hue-rotate(-50deg) brightness(0.9)'
                 : isTargetable
                   ? 'drop-shadow(0 0 15px rgba(224, 64, 64, 0.6))'
-                  : 'drop-shadow(0 5px 10px rgba(0, 0, 0, 0.5))',
+                  : 'none',
             opacity: isDying ? 0 : 1,
             transition: 'filter 0.6s ease-out, opacity 0.8s ease-out',
             animation: isHurt ? 'shake 0.3s ease-in-out' : 'none',
           }}
         >
           {getEnemyCharacter(enemy.templateId, 100, isTargetable)}
+          {/* 바닥 그림자 */}
+          <div
+            className="absolute left-1/2"
+            style={{
+              bottom: '-8px',
+              width: '70px',
+              height: '16px',
+              background: 'radial-gradient(ellipse at center, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0.3) 50%, transparent 70%)',
+              borderRadius: '50%',
+              transform: 'translateX(-50%)',
+              opacity: isDying ? 0 : 1,
+              transition: 'opacity 0.3s ease-out',
+            }}
+          />
         </div>
 
         {/* 블록 표시 - 방패 모양 */}
