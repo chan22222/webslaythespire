@@ -68,6 +68,9 @@ interface CombatStore extends CombatState {
   // 플레이어 디버프 이펙트 트리거
   playerDebuffTrigger: number;
   triggerPlayerDebuff: () => void;
+
+  // 추가 턴 (시간 왜곡)
+  extraTurnPending: boolean;
 }
 
 export const useCombatStore = create<CombatStore>((set, get) => ({
@@ -78,6 +81,7 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
   enemyHitTriggers: {},
   enemySkillTriggers: {},
   playerDebuffTrigger: 0,
+  extraTurnPending: false,
   onPlayerHit: null,
   setOnPlayerHit: (callback) => set({ onPlayerHit: callback }),
 
@@ -211,9 +215,14 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
   startPlayerTurn: () => {
     const { turn, maxEnergy, playerStatuses, extraDrawNextTurn } = get();
 
-    // 첫 턴이 아니면 방어도 리셋 (첫 턴은 유물 효과로 받은 방어도 유지)
+    // 첫 턴이 아니면 방어도 리셋 (BLOCK_RETAIN 상태가 있으면 유지)
     if (turn > 1) {
-      set({ playerBlock: 0 });
+      const blockRetain = playerStatuses.find(s => s.type === 'BLOCK_RETAIN');
+      if (!blockRetain || blockRetain.stacks <= 0) {
+        set({ playerBlock: 0 });
+      } else {
+        get().addToCombatLog('방어도 유지 상태로 방어도가 유지됩니다!');
+      }
     }
 
     // 에너지 리셋
@@ -348,11 +357,13 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       processedStatuses = processedStatuses.filter(s => s.type !== 'STRENGTH_DOWN');
     }
 
-    // 상태 효과 지속시간 감소
+    // 상태 효과 지속시간 감소 (약화, 취약, 방어도 유지, 무적)
     const updatedStatuses = processedStatuses
       .map(s => ({
         ...s,
-        stacks: s.type === 'WEAK' || s.type === 'VULNERABLE' ? s.stacks - 1 : s.stacks,
+        stacks: (s.type === 'WEAK' || s.type === 'VULNERABLE' || s.type === 'BLOCK_RETAIN' || s.type === 'INVULNERABLE')
+          ? s.stacks - 1
+          : s.stacks,
       }))
       .filter(s => s.stacks > 0);
 
@@ -360,6 +371,17 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       isPlayerTurn: false,
       playerStatuses: updatedStatuses,
     });
+
+    // 추가 턴 처리 (시간 왜곡)
+    const { extraTurnPending } = get();
+    if (extraTurnPending) {
+      set({ extraTurnPending: false });
+      get().addToCombatLog('--- 추가 턴 시작! ---');
+      // 적 턴 건너뛰고 바로 플레이어 턴
+      set(state => ({ turn: state.turn + 1 }));
+      get().startPlayerTurn();
+      return;
+    }
 
     // 적 턴 실행
     get().executeEnemyTurn();
@@ -618,21 +640,162 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
           }
           break;
         }
+        case 'MULTIPLY_STRENGTH': {
+          // 한계 돌파: 현재 힘을 배수만큼 증가
+          const currentStatuses = get().playerStatuses;
+          const strengthStatus = currentStatuses.find(s => s.type === 'STRENGTH');
+          if (strengthStatus && strengthStatus.stacks > 0) {
+            const newStacks = Math.floor(strengthStatus.stacks * effect.value);
+            const gained = newStacks - strengthStatus.stacks;
+            const updatedStatuses = currentStatuses.map(s =>
+              s.type === 'STRENGTH' ? { ...s, stacks: newStacks } : s
+            );
+            set({ playerStatuses: updatedStatuses });
+            get().addToCombatLog(`힘이 ${gained} 증가! (${strengthStatus.stacks} → ${newStacks})`);
+          } else {
+            get().addToCombatLog('힘이 없어서 효과 없음!');
+          }
+          break;
+        }
+        case 'BLOCK_RETAIN': {
+          // 철벽의 요새: N턴간 방어도 유지 상태 부여
+          get().applyStatusToPlayer({ type: 'BLOCK_RETAIN', stacks: effect.value });
+          get().addToCombatLog(`${effect.value}턴간 방어도가 유지됩니다!`);
+          break;
+        }
+        case 'DAMAGE_PER_LOST_HP': {
+          // 사선에서: 잃은 HP 기반 피해
+          const gameState = useGameStore.getState();
+          const lostHp = gameState.player.maxHp - gameState.player.currentHp;
+          const ratio = effect.ratio || 1;
+          const baseDmg = Math.floor((lostHp / ratio) * effect.value);
+
+          // 힘 적용
+          const str = get().playerStatuses.find(s => s.type === 'STRENGTH')?.stacks || 0;
+          const finalDmg = baseDmg + str;
+
+          if (targetEnemyId) {
+            get().dealDamageToEnemy(targetEnemyId, finalDmg);
+            get().addToCombatLog(`잃은 HP ${lostHp}로 ${finalDmg} 피해!`);
+          }
+          break;
+        }
+        case 'REDUCE_ATTACK_COST': {
+          // 전술 지휘: 마지막으로 뽑은 카드들 중 공격 카드 코스트 감소
+          const currentHandForCost = get().hand;
+          // 마지막 DRAW 효과로 뽑은 카드들 (가장 최근에 추가된 카드들)
+          const drawnCount = card.effects.find(e => e.type === 'DRAW')?.value || 0;
+          const recentCards = currentHandForCost.slice(-drawnCount);
+
+          let reducedCount = 0;
+          const newHandCost = currentHandForCost.map(c => {
+            if (recentCards.some(rc => rc.instanceId === c.instanceId) && c.type === 'ATTACK') {
+              reducedCount++;
+              return { ...c, cost: Math.max(0, c.cost - effect.value) };
+            }
+            return c;
+          });
+          set({ hand: newHandCost });
+          if (reducedCount > 0) {
+            get().addToCombatLog(`공격 카드 ${reducedCount}장의 코스트 ${effect.value} 감소!`);
+          }
+          break;
+        }
+        case 'GAIN_MAX_HP_ON_KILL': {
+          // 피의 축제: 적 처치 시 최대 HP 증가
+          // 이 효과는 DAMAGE 효과와 함께 사용되므로, 적이 죽었는지 확인
+          if (targetEnemyId) {
+            const targetEnemy = get().enemies.find(e => e.instanceId === targetEnemyId);
+            if (targetEnemy && targetEnemy.currentHp <= 0) {
+              useGameStore.getState().modifyMaxHp(effect.value);
+              get().addToCombatLog(`적 처치! 최대 HP ${effect.value} 증가!`);
+            }
+          }
+          break;
+        }
+        case 'DAMAGE_PER_EXHAUST': {
+          // 종언의 일격: 소멸된 카드당 피해
+          const exhaustCount = get().exhaustPile.length;
+          const dmgPerExhaust = effect.value * exhaustCount;
+          const str2 = get().playerStatuses.find(s => s.type === 'STRENGTH')?.stacks || 0;
+          const totalDmg = dmgPerExhaust + str2;
+
+          if (effect.target === 'ALL') {
+            enemies.forEach(enemy => {
+              if (enemy.currentHp > 0) {
+                get().dealDamageToEnemy(enemy.instanceId, totalDmg);
+              }
+            });
+            get().addToCombatLog(`소멸 카드 ${exhaustCount}장 × ${effect.value} = ${totalDmg} 피해!`);
+          }
+          break;
+        }
+        case 'RETURN_PLAYED_CARDS': {
+          // 무한의 소용돌이: 이번 턴에 사용한 카드를 손으로
+          // discardPile에서 최근 카드들을 가져옴
+          const returnCount = Math.min(effect.value, get().discardPile.length);
+          const cardsToReturn = get().discardPile.slice(-returnCount);
+          const remainingDiscard = get().discardPile.slice(0, -returnCount);
+
+          set({
+            hand: [...get().hand, ...cardsToReturn],
+            discardPile: remainingDiscard,
+          });
+          get().addToCombatLog(`${returnCount}장의 카드가 손으로 돌아왔습니다!`);
+          break;
+        }
+        case 'INVULNERABLE': {
+          // 절대 방어 영역: N턴간 무적
+          get().applyStatusToPlayer({ type: 'INVULNERABLE', stacks: effect.value });
+          get().addToCombatLog(`${effect.value}턴간 무적!`);
+          break;
+        }
+        case 'HALVE_ENEMY_HP': {
+          // 신의 권능: 적 HP 절반 감소
+          if (targetEnemyId) {
+            const targetEnemy = get().enemies.find(e => e.instanceId === targetEnemyId);
+            if (targetEnemy) {
+              const halfHp = Math.floor(targetEnemy.currentHp / 2);
+              const cappedDmg = Math.min(halfHp, effect.value); // 최대 피해 제한
+              get().dealDamageToEnemy(targetEnemyId, cappedDmg);
+              get().addToCombatLog(`${targetEnemy.name}의 HP를 ${cappedDmg} 감소! (절반)`);
+            }
+          }
+          break;
+        }
+        case 'EXTRA_TURN': {
+          // 시간 왜곡: 추가 턴
+          set({ extraTurnPending: true });
+          get().addToCombatLog('추가 턴을 얻습니다!');
+          break;
+        }
       }
     });
 
     // 카드 사용 후 처리 (DRAW 효과로 hand가 변경되었을 수 있으므로 다시 가져옴)
     const currentHand = get().hand;
     const newHand = currentHand.filter(c => c.instanceId !== cardInstanceId);
-    const { discardPile, energy: currentEnergy } = get();
+    const { discardPile, exhaustPile, energy: currentEnergy } = get();
 
-    set({
-      hand: newHand,
-      discardPile: [...discardPile, card],
-      energy: currentEnergy - card.cost,
-      selectedCardId: null,
-      targetingMode: false,
-    });
+    // exhaust 카드는 소멸 더미로, 아니면 버린 더미로
+    if (card.exhaust) {
+      set({
+        hand: newHand,
+        exhaustPile: [...exhaustPile, card],
+        energy: currentEnergy - card.cost,
+        selectedCardId: null,
+        targetingMode: false,
+      });
+      get().addToCombatLog(`${card.name} 소멸!`);
+    } else {
+      set({
+        hand: newHand,
+        discardPile: [...discardPile, card],
+        energy: currentEnergy - card.cost,
+        selectedCardId: null,
+        targetingMode: false,
+      });
+    }
 
     // 전투 종료 체크
     get().checkCombatEnd();
@@ -717,6 +880,14 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
 
   dealDamageToPlayer: (baseDamage: number, attackerEnemyId?: string) => {
     const { playerBlock, playerStatuses, enemies } = get();
+
+    // 무적 상태 체크
+    const invulnerable = playerStatuses.find(s => s.type === 'INVULNERABLE');
+    if (invulnerable && invulnerable.stacks > 0) {
+      get().addToCombatLog('무적! 피해 무효화!');
+      get().addDamagePopup(0, 'blocked', 0, 0, 'player');
+      return 0;
+    }
 
     // 합연산 방식으로 배수 계산 (기본 1.0 + 취약 0.5 - 약화 0.25)
     let damageMultiplier = 1.0;

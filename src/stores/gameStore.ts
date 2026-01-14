@@ -32,6 +32,7 @@ interface GameState {
   addRelic: (relic: Relic) => void;
   modifyGold: (amount: number) => void;
   modifyHp: (amount: number) => void;
+  modifyMaxHp: (amount: number) => void;
   healPlayer: (amount: number) => void;
   takeDamage: (amount: number) => void;
   upgradeCard: (cardInstanceId: string) => void;
@@ -226,6 +227,23 @@ export const useGameStore = create<GameState>((set, get) => ({
       player: {
         ...player,
         currentHp: Math.max(0, player.currentHp - amount),
+      },
+    });
+  },
+
+  modifyMaxHp: (amount: number) => {
+    const { player } = get();
+    const newMaxHp = Math.max(1, player.maxHp + amount);
+    // 최대 HP 증가 시 현재 HP도 같이 증가
+    const newCurrentHp = amount > 0
+      ? Math.min(newMaxHp, player.currentHp + amount)
+      : Math.min(newMaxHp, player.currentHp);
+
+    set({
+      player: {
+        ...player,
+        maxHp: newMaxHp,
+        currentHp: newCurrentHp,
       },
     });
   },

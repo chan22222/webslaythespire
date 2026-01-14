@@ -2,7 +2,6 @@ import { GameMap, MapNode, NodeType } from '../types/map';
 import { randomInt } from './shuffle';
 
 const MAP_COLUMNS = 15; // 열(스테이지) 수
-const MAP_ROWS = 5; // 최대 경로 수 (세로)
 const MIN_PATHS = 2; // 최소 경로 수
 const MAX_PATHS = 4; // 최대 경로 수
 
@@ -34,48 +33,78 @@ export function generateMap(): GameMap {
   }
 
   // 노드 생성 (가로 배치)
+  const minY = 80;
+  const maxY = 520;
+
   for (let col = 0; col < MAP_COLUMNS; col++) {
     const nodeCount = colSizes[col];
-    const spacing = MAP_ROWS / (nodeCount + 1);
+    const colNodes: { y: number }[] = [];
 
     for (let i = 0; i < nodeCount; i++) {
-      const row = Math.round(spacing * (i + 1));
       const nodeType = getNodeType(col);
 
-      // 약간의 y 오프셋 추가 (시각적 다양성)
-      const yOffset = randomInt(-15, 15);
+      // 랜덤 y 좌표 생성 (기존 노드와 겹치지 않도록)
+      let y: number;
+      let attempts = 0;
+      do {
+        y = randomInt(minY, maxY);
+        attempts++;
+      } while (
+        attempts < 50 &&
+        colNodes.some(n => Math.abs(n.y - y) < 70) // 최소 70px 간격
+      );
+
+      colNodes.push({ y });
+
+      // x 오프셋 추가
+      const xOffset = randomInt(-20, 20);
 
       nodes.push({
         id: `node-${nodeId++}`,
         type: nodeType,
-        row: col, // 이제 row는 x축 위치 (스테이지)를 나타냄
-        col: row, // col은 y축 위치 (분기)를 나타냄
+        row: col,
+        col: i,
         connections: [],
         visited: false,
-        x: col * 120 + 80, // 왼쪽에서 오른쪽으로
-        y: row * 100 + 80 + yOffset, // 세로 분기
+        x: col * 120 + 80 + xOffset,
+        y,
       });
     }
   }
 
+  // 각 열의 노드들을 y 좌표 순으로 정렬
+  for (let col = 0; col < MAP_COLUMNS; col++) {
+    const colNodes = nodes.filter(n => n.row === col);
+    colNodes.sort((a, b) => a.y - b.y);
+    // 정렬된 순서대로 col(인덱스) 재할당
+    colNodes.forEach((node, idx) => {
+      node.col = idx;
+    });
+  }
+
   // 연결 생성 (왼쪽에서 오른쪽으로)
   for (let col = 0; col < MAP_COLUMNS - 1; col++) {
-    const currentColNodes = nodes.filter(n => n.row === col);
-    const nextColNodes = nodes.filter(n => n.row === col + 1);
+    const currentColNodes = nodes.filter(n => n.row === col).sort((a, b) => a.y - b.y);
+    const nextColNodes = nodes.filter(n => n.row === col + 1).sort((a, b) => a.y - b.y);
 
     currentColNodes.forEach(currentNode => {
-      // 가장 가까운 다음 열 노드들과 연결
-      const sortedNextNodes = [...nextColNodes].sort((a, b) => {
-        const distA = Math.abs(a.col - currentNode.col);
-        const distB = Math.abs(b.col - currentNode.col);
+      // y 거리가 가까운 노드 중에서 연결 (최대 거리 제한)
+      const maxYDistance = 180;
+      const nearbyNodes = nextColNodes.filter(n => Math.abs(n.y - currentNode.y) <= maxYDistance);
+
+      // 가까운 노드가 있으면 그 중에서, 없으면 전체에서 가장 가까운 것
+      const candidates = nearbyNodes.length > 0 ? nearbyNodes : nextColNodes;
+      const sortedCandidates = [...candidates].sort((a, b) => {
+        const distA = Math.abs(a.y - currentNode.y);
+        const distB = Math.abs(b.y - currentNode.y);
         return distA - distB;
       });
 
       // 1-2개의 연결 생성
-      const connectionCount = Math.min(randomInt(1, 2), sortedNextNodes.length);
+      const connectionCount = Math.min(randomInt(1, 2), sortedCandidates.length);
       for (let i = 0; i < connectionCount; i++) {
-        if (!currentNode.connections.includes(sortedNextNodes[i].id)) {
-          currentNode.connections.push(sortedNextNodes[i].id);
+        if (!currentNode.connections.includes(sortedCandidates[i].id)) {
+          currentNode.connections.push(sortedCandidates[i].id);
         }
       }
     });
@@ -86,8 +115,8 @@ export function generateMap(): GameMap {
       if (!hasConnection) {
         // 가장 가까운 현재 열 노드와 연결
         const closestNode = currentColNodes.reduce((closest, node) => {
-          const distCurrent = Math.abs(node.col - nextNode.col);
-          const distClosest = Math.abs(closest.col - nextNode.col);
+          const distCurrent = Math.abs(node.y - nextNode.y);
+          const distClosest = Math.abs(closest.y - nextNode.y);
           return distCurrent < distClosest ? node : closest;
         });
         closestNode.connections.push(nextNode.id);

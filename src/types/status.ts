@@ -48,4 +48,14 @@ export const STATUS_INFO: Record<StatusType, { name: string; description: string
     description: '턴 종료 시 힘이 감소합니다.',
     isDebuff: true,
   },
+  BLOCK_RETAIN: {
+    name: '방어도 유지',
+    description: '방어도가 턴 종료 시 사라지지 않습니다.',
+    isDebuff: false,
+  },
+  INVULNERABLE: {
+    name: '무적',
+    description: '모든 피해를 받지 않습니다.',
+    isDebuff: false,
+  },
 };

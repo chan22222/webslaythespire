@@ -15,6 +15,7 @@ const PARTICLES = Array.from({ length: 25 }, (_, i) => ({
 }));
 
 const MAP_WIDTH = 1900;
+const MAP_PADDING = 80; // 맵 좌우 패딩
 const VIEW_STEP = 400; // 버튼 클릭시 이동 거리
 
 export function MapScreen() {
@@ -34,9 +35,9 @@ export function MapScreen() {
       : availableNodes[0];
 
     if (currentNode && containerRef.current) {
-      // 좌우 패딩 160px (80px * 2) 고려
+      // 좌우 패딩 고려
       const containerWidth = containerRef.current.clientWidth;
-      const effectiveWidth = containerWidth - 160;
+      const effectiveWidth = containerWidth - MAP_PADDING * 2;
       const targetOffset = Math.max(0, Math.min(
         MAP_WIDTH - effectiveWidth,
         currentNode.x - effectiveWidth / 2
@@ -52,8 +53,8 @@ export function MapScreen() {
 
   const handleNavRight = () => {
     if (containerRef.current) {
-      // 좌우 패딩 160px (80px * 2) 고려
-      const maxOffset = MAP_WIDTH - containerRef.current.clientWidth + 160;
+      // 좌우 패딩 고려
+      const maxOffset = MAP_WIDTH - containerRef.current.clientWidth + MAP_PADDING * 2;
       setViewOffset(prev => Math.min(maxOffset, prev + VIEW_STEP));
     }
   };
@@ -310,13 +311,12 @@ export function MapScreen() {
 
       {/* 맵 영역 */}
       <main ref={containerRef} className="flex-1 relative overflow-hidden">
-        {/* 맵 컨테이너 - 좌우 80px 여백 */}
+        {/* 맵 컨테이너 - 좌우 여백 */}
         <div
           className="absolute h-full transition-transform duration-300 ease-out"
           style={{
             width: MAP_WIDTH,
-            left: 80,
-            right: 80,
+            left: MAP_PADDING,
             transform: `translateX(-${viewOffset}px)`,
           }}
         >
@@ -339,46 +339,30 @@ export function MapScreen() {
         <button
           onClick={handleNavLeft}
           disabled={viewOffset <= 0}
-          className="absolute left-4 top-1/2 -translate-y-1/2 z-20 w-14 h-14 flex items-center justify-center transition-all duration-150 hover:scale-110 disabled:opacity-30 disabled:cursor-not-allowed"
-          style={{
-            background: 'rgba(10, 8, 5, 0.8)',
-            border: '2px solid rgba(212, 168, 75, 0.5)',
-            borderRadius: '8px',
-            boxShadow: '0 0 12px rgba(0,0,0,0.5)',
-          }}
+          className="absolute left-6 top-1/2 -translate-y-1/2 z-20 transition-all duration-150 hover:scale-125 disabled:opacity-30 disabled:cursor-not-allowed"
         >
-          <span
-            style={{
-              fontFamily: '"Press Start 2P", monospace',
-              fontSize: '20px',
-              color: 'var(--gold)',
-            }}
-          >
-            ◀
-          </span>
+          <img
+            src="/sprites/icon/left_arrow.png"
+            alt="Left"
+            className="w-14 h-auto"
+            style={{ imageRendering: 'pixelated' }}
+            draggable={false}
+          />
         </button>
 
         {/* 우측 네비게이션 버튼 */}
         <button
           onClick={handleNavRight}
-          disabled={containerRef.current ? viewOffset >= MAP_WIDTH - containerRef.current.clientWidth + 160 : false}
-          className="absolute right-4 top-1/2 -translate-y-1/2 z-20 w-14 h-14 flex items-center justify-center transition-all duration-150 hover:scale-110 disabled:opacity-30 disabled:cursor-not-allowed"
-          style={{
-            background: 'rgba(10, 8, 5, 0.8)',
-            border: '2px solid rgba(212, 168, 75, 0.5)',
-            borderRadius: '8px',
-            boxShadow: '0 0 12px rgba(0,0,0,0.5)',
-          }}
+          disabled={containerRef.current ? viewOffset >= MAP_WIDTH - containerRef.current.clientWidth + MAP_PADDING * 2 : false}
+          className="absolute right-6 top-1/2 -translate-y-1/2 z-20 transition-all duration-150 hover:scale-125 disabled:opacity-30 disabled:cursor-not-allowed"
         >
-          <span
-            style={{
-              fontFamily: '"Press Start 2P", monospace',
-              fontSize: '20px',
-              color: 'var(--gold)',
-            }}
-          >
-            ▶
-          </span>
+          <img
+            src="/sprites/icon/right_arrow.png"
+            alt="Right"
+            className="w-14 h-auto"
+            style={{ imageRendering: 'pixelated' }}
+            draggable={false}
+          />
         </button>
       </main>
 
