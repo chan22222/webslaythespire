@@ -483,11 +483,24 @@ export function PlayerStatus({ player, block, statuses, animation = 'idle', atta
           style={{
             filter: block > 0
               ? 'drop-shadow(0 0 15px rgba(40, 102, 168, 0.6))'
-              : 'drop-shadow(0 5px 15px rgba(0, 0, 0, 0.6))',
+              : 'none',
             transform: getAttackTransform(),
           }}
         >
           <WarriorSprite size={180} animation={animation} onAnimationEnd={onAnimationEnd} />
+          {/* 바닥 그림자 */}
+          <div
+            className="absolute left-1/2"
+            style={{
+              bottom: '-10px',
+              width: '100px',
+              height: '20px',
+              background: 'radial-gradient(ellipse at center, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0.3) 50%, transparent 70%)',
+              borderRadius: '50%',
+              transform: 'translateX(-83%)',
+              zIndex: -1,
+            }}
+          />
         </div>
 
         {/* 블록 뱃지 - 방패 모양 */}
