@@ -217,7 +217,7 @@ export function MapScreen() {
                 className="absolute inset-0 flex items-center justify-center pl-12"
               >
                 <span
-                  className="text-base font-bold tabular-nums"
+                  className="text-sm font-bold tabular-nums"
                   style={{
                     fontFamily: '"Press Start 2P", monospace',
                     color: '#ffe8e8',
@@ -274,23 +274,24 @@ export function MapScreen() {
             </div>
 
             <div
-              className="flex items-center justify-center relative group cursor-help pl-12 pt-1"
+              className="flex items-center justify-center relative group cursor-help pl-10"
               style={{
                 backgroundImage: 'url(/gold.png)',
                 backgroundSize: 'contain',
                 backgroundRepeat: 'no-repeat',
                 backgroundPosition: 'center',
-                width: '192px',
-                height: '80px',
+                width: '180px',
+                height: '75px',
                 imageRendering: 'pixelated',
               }}
             >
               <span
-                className="text-base font-bold tabular-nums"
+                className="text-sm font-bold tabular-nums"
                 style={{
                   fontFamily: '"Press Start 2P", monospace',
                   color: 'var(--gold)',
                   textShadow: '0 0 6px var(--gold-glow)',
+                  marginTop: '2px',
                 }}
               >
                 {player.gold}
