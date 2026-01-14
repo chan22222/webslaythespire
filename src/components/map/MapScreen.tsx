@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useGameStore } from '../../stores/gameStore';
 import { MapNode } from './MapNode';
-import { HealthBar } from '../common/HealthBar';
 import { Card } from '../combat/Card';
 
 // 파티클 데이터 - 타이틀과 동일
