@@ -320,34 +320,41 @@ export function MapScreen() {
           <div
             className="flex flex-col items-center justify-center relative group cursor-help"
             style={{
-              backgroundImage: 'url(/button_short.png)',
-              backgroundSize: '100% 100%',
+              backgroundImage: 'url(/floor.png)',
+              backgroundSize: 'contain',
               backgroundRepeat: 'no-repeat',
               backgroundPosition: 'center',
-              width: '180px',
-              height: '80px',
+              width: '300px',
+              height: '150px',
               imageRendering: 'pixelated',
             }}
           >
-            <span
-              className="text-sm tracking-widest"
-              style={{
-                fontFamily: '"Press Start 2P", monospace',
-                color: 'var(--gold-dark)',
-              }}
-            >
-              FLOOR
-            </span>
-            <span
-              className="text-4xl font-bold tabular-nums"
-              style={{
-                fontFamily: '"Press Start 2P", monospace',
-                color: 'var(--gold)',
-                textShadow: '0 0 12px var(--gold-glow)',
-              }}
-            >
-              {map.floor}
-            </span>
+            <div className="flex flex-col items-center" style={{ marginTop: '18px' }}>
+              <span
+                className="text-sm tracking-widest relative z-10"
+                style={{
+                  fontFamily: '"Press Start 2P", monospace',
+                  color: '#3a3a3a',
+                  textShadow: '0 1px 2px rgba(0,0,0,0.3)',
+                }}
+              >
+                FLOOR
+              </span>
+              <span
+                className="text-4xl font-bold tabular-nums"
+                style={{
+                  fontFamily: '"Press Start 2P", monospace',
+                  background: 'linear-gradient(180deg, #ffe066 0%, #f0c040 35%, #d4a520 65%, #c49520 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  WebkitTextStroke: '1px #4a4a4a',
+                  paintOrder: 'stroke fill',
+                  filter: 'drop-shadow(0 0 3px rgba(255,215,0,0.6)) drop-shadow(0 0 6px rgba(255,204,0,0.4)) drop-shadow(0 0 12px rgba(255,204,0,0.3))',
+                }}
+              >
+                {map.floor}
+              </span>
+            </div>
             {/* Floor 툴팁 */}
             <div
               className="absolute z-50 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150"
@@ -549,7 +556,7 @@ export function MapScreen() {
       <main ref={containerRef} className="flex-1 relative overflow-hidden pt-8">
         {/* 맵 컨테이너 - 좌우 여백 */}
         <div
-          className="absolute h-full transition-transform duration-300 ease-out"
+          className="absolute top-0 h-full transition-transform duration-300 ease-out"
           style={{
             width: MAP_WIDTH,
             left: MAP_PADDING,
