@@ -434,19 +434,9 @@ export function FlyingEyeSprite({ size = 80, className = '', isTargetable = fals
           backgroundRepeat: 'no-repeat',
           imageRendering: 'pixelated',
           transform: 'scaleX(-1)',
-          filter: `${colorFilter} ${isTargetable ? 'drop-shadow(0 0 15px rgba(224, 64, 64, 0.6))' : 'drop-shadow(0 5px 10px rgba(0, 0, 0, 0.5))'}`,
+          filter: colorFilter,
         }}
       />
-      {isTargetable && (
-        <div
-          className="absolute inset-0 rounded-full"
-          style={{
-            border: '2px solid #e04040',
-            opacity: 0.6,
-            animation: 'pulse 1s ease-in-out infinite',
-          }}
-        />
-      )}
     </div>
   );
 }
@@ -494,7 +484,7 @@ export function GoblinSprite({ size = 80, className = '', isTargetable = false }
           backgroundRepeat: 'no-repeat',
           imageRendering: 'pixelated',
           transform: 'scaleX(-1)',
-          filter: isTargetable ? 'drop-shadow(0 0 15px rgba(224, 64, 64, 0.6))' : 'drop-shadow(0 5px 10px rgba(0, 0, 0, 0.5))',
+          filter: 'none',
         }}
       />
     </div>
@@ -544,7 +534,7 @@ export function SkeletonSprite({ size = 80, className = '', isTargetable = false
           backgroundRepeat: 'no-repeat',
           imageRendering: 'pixelated',
           transform: 'scaleX(-1)',
-          filter: isTargetable ? 'drop-shadow(0 0 15px rgba(224, 64, 64, 0.6))' : 'drop-shadow(0 5px 10px rgba(0, 0, 0, 0.5))',
+          filter: 'none',
         }}
       />
     </div>
@@ -599,7 +589,7 @@ export function MushroomSprite({ size = 80, className = '', isTargetable = false
           backgroundRepeat: 'no-repeat',
           imageRendering: 'pixelated',
           transform: 'scaleX(-1)',
-          filter: `${colorFilter} ${isTargetable ? 'drop-shadow(0 0 15px rgba(224, 64, 64, 0.6))' : 'drop-shadow(0 5px 10px rgba(0, 0, 0, 0.5))'}`,
+          filter: colorFilter,
         }}
       />
     </div>
@@ -813,19 +803,9 @@ function EasterEggEnemy({ imageUrl, size, isTargetable }: { imageUrl: string; si
           width: '100%',
           height: '100%',
           imageRendering: 'pixelated',
-          filter: isTargetable ? 'drop-shadow(0 0 15px rgba(224, 64, 64, 0.6))' : 'drop-shadow(0 5px 10px rgba(0, 0, 0, 0.5))',
+          filter: 'none',
         }}
       />
-      {isTargetable && (
-        <div
-          className="absolute inset-0 rounded-full"
-          style={{
-            border: '2px solid #e04040',
-            opacity: 0.6,
-            animation: 'pulse 1s ease-in-out infinite',
-          }}
-        />
-      )}
     </div>
   );
 }
