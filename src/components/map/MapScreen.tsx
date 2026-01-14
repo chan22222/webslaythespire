@@ -183,19 +183,49 @@ export function MapScreen() {
         <div className="flex items-center justify-between max-w-screen-2xl mx-auto">
           {/* HP & Gold */}
           <div className="flex items-center gap-6">
-            <div className="flex items-center gap-3 relative group cursor-help">
-              <span
-                className="text-base font-bold"
+            <div
+              className="relative group cursor-help"
+              style={{
+                width: '173px',
+                height: '61px',
+              }}
+            >
+              {/* 빈 HP 바 (배경) */}
+              <img
+                src="/hp0.png"
+                alt="HP Background"
+                className="absolute inset-0 w-full h-full"
+                style={{ imageRendering: 'pixelated' }}
+              />
+              {/* 채워진 HP 바 (오버레이) */}
+              <div
+                className="absolute inset-0 overflow-hidden"
                 style={{
-                  fontFamily: '"NeoDunggeunmo", cursive',
-                  color: '#ef4444',
-                  textShadow: '0 0 6px rgba(239, 68, 68, 0.6)',
+                  clipPath: `inset(0 ${(1 - player.currentHp / player.maxHp) * 70}% 0 0)`,
+                  animation: player.currentHp / player.maxHp <= 0.35 ? 'hpBlink 1s ease-in-out infinite' : 'none',
                 }}
               >
-                HP
-              </span>
-              <div className="w-32">
-                <HealthBar current={player.currentHp} max={player.maxHp} size="md" showNumbers={true} />
+                <img
+                  src="/hp100.png"
+                  alt="HP"
+                  className="w-full h-full"
+                  style={{ imageRendering: 'pixelated' }}
+                />
+              </div>
+              {/* HP 숫자 */}
+              <div
+                className="absolute inset-0 flex items-center justify-center pl-12"
+              >
+                <span
+                  className="text-base font-bold tabular-nums"
+                  style={{
+                    fontFamily: '"Press Start 2P", monospace',
+                    color: '#ffe8e8',
+                    textShadow: '0 0 6px rgba(239, 68, 68, 0.6)',
+                  }}
+                >
+                  {player.currentHp}/{player.maxHp}
+                </span>
               </div>
               {/* HP 툴팁 */}
               <div
@@ -244,21 +274,17 @@ export function MapScreen() {
             </div>
 
             <div
-              className="flex items-center gap-2 px-4 py-2 relative group cursor-help"
+              className="flex items-center justify-center relative group cursor-help pl-12 pt-1"
               style={{
-                background: 'rgba(212, 168, 75, 0.15)',
-                border: '2px solid rgba(212, 168, 75, 0.4)',
+                backgroundImage: 'url(/gold.png)',
+                backgroundSize: 'contain',
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: 'center',
+                width: '192px',
+                height: '80px',
+                imageRendering: 'pixelated',
               }}
             >
-              <span
-                className="text-base font-bold"
-                style={{
-                  fontFamily: '"NeoDunggeunmo", cursive',
-                  color: 'var(--gold)',
-                }}
-              >
-                G
-              </span>
               <span
                 className="text-base font-bold tabular-nums"
                 style={{
@@ -673,6 +699,10 @@ export function MapScreen() {
 
       {/* 애니메이션 keyframes */}
       <style>{`
+        @keyframes hpBlink {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.4; }
+        }
         @keyframes vortexSpin {
           from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }
