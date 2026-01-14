@@ -183,7 +183,7 @@ export function MapNode({ node, isAvailable, isCurrent, onClick }: MapNodeProps)
           className="absolute z-50 pointer-events-none whitespace-nowrap"
           style={{
             left: '50%',
-            bottom: config.size + 16,
+            top: config.size + 24,
             transform: 'translateX(-50%)',
             background: 'rgba(10, 8, 5, 0.95)',
             padding: '8px 14px',
@@ -191,6 +191,17 @@ export function MapNode({ node, isAvailable, isCurrent, onClick }: MapNodeProps)
             boxShadow: '0 0 16px rgba(0,0,0,0.9), 0 0 6px var(--gold-glow)',
           }}
         >
+          <div
+            className="absolute left-1/2 -top-[8px]"
+            style={{
+              transform: 'translateX(-50%)',
+              width: 0,
+              height: 0,
+              borderLeft: '8px solid transparent',
+              borderRight: '8px solid transparent',
+              borderBottom: '8px solid var(--gold-dark)',
+            }}
+          />
           <div
             className="text-sm font-bold"
             style={{
@@ -209,17 +220,6 @@ export function MapNode({ node, isAvailable, isCurrent, onClick }: MapNodeProps)
           >
             {config.description}
           </div>
-          <div
-            className="absolute left-1/2 -bottom-[8px]"
-            style={{
-              transform: 'translateX(-50%)',
-              width: 0,
-              height: 0,
-              borderLeft: '8px solid transparent',
-              borderRight: '8px solid transparent',
-              borderTop: '8px solid var(--gold-dark)',
-            }}
-          />
         </div>
       )}
 

@@ -37,4 +37,5 @@ export interface Relic {
   rarity: RelicRarity;
   effects: RelicEffect[];
   counter?: number; // 일부 유물은 카운터가 필요
+  icon?: string; // 아이콘 이미지 경로
 }

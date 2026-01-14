@@ -6,6 +6,7 @@ export const BURNING_BLOOD: Relic = {
   name: '불타는 피',
   description: '전투 종료 시 HP를 5 회복합니다.',
   rarity: 'STARTER',
+  icon: '/sprites/item/불타는피.png',
   effects: [
     {
       trigger: 'ON_COMBAT_END',
@@ -22,6 +23,7 @@ export const RING_OF_THE_SNAKE: Relic = {
   name: '뱀의 반지',
   description: '전투 시작 시 카드를 1장 추가로 뽑습니다.',
   rarity: 'STARTER',
+  icon: '/sprites/item/뱀의반지.png',
   effects: [
     {
       trigger: 'ON_COMBAT_START',
@@ -38,6 +40,7 @@ export const CRACKED_ARMOR: Relic = {
   name: '금 간 갑옷',
   description: 'HP 최대치가 15 증가합니다.',
   rarity: 'STARTER',
+  icon: '/sprites/item/금간갑옷.png',
   effects: [
     {
       trigger: 'PASSIVE',
@@ -55,6 +58,7 @@ export const SPELL_SHIELD: Relic = {
   name: '주술방패',
   description: '전투 시작 시 방어도 5를 얻습니다.',
   rarity: 'COMMON',
+  icon: '/sprites/item/주술방패.png',
   effects: [
     {
       trigger: 'ON_COMBAT_START',
@@ -71,6 +75,7 @@ export const THORN_ARMOR: Relic = {
   name: '가시갑옷',
   description: '피해를 받을 때마다 공격자에게 2 피해를 줍니다.',
   rarity: 'COMMON',
+  icon: '/sprites/item/가시갑옷.png',
   effects: [
     {
       trigger: 'ON_DAMAGE_TAKEN',
@@ -87,6 +92,7 @@ export const VAJRA: Relic = {
   name: '금강저',
   description: '전투 시작 시 힘 2를 얻습니다.',
   rarity: 'COMMON',
+  icon: '/sprites/item/금강저.png',
   effects: [
     {
       trigger: 'ON_COMBAT_START',
@@ -103,6 +109,7 @@ export const SWIFT_POTION: Relic = {
   name: '신속의 물약',
   description: '전투 시작 시 민첩 2를 얻습니다.',
   rarity: 'COMMON',
+  icon: '/sprites/item/신속의물약.png',
   effects: [
     {
       trigger: 'ON_COMBAT_START',
@@ -119,6 +126,7 @@ export const HEALING_POTION: Relic = {
   name: '회복포션',
   description: '매 턴 시작 시 HP를 2 회복합니다.',
   rarity: 'COMMON',
+  icon: '/sprites/item/회복포션.png',
   effects: [
     {
       trigger: 'ON_TURN_START',
@@ -136,6 +144,7 @@ export const LANTERN: Relic = {
   name: '랜턴',
   description: '매 턴 시작 시 에너지 1을 얻습니다.',
   rarity: 'UNCOMMON',
+  icon: '/sprites/item/랜턴.png',
   effects: [
     {
       trigger: 'ON_TURN_START',
@@ -152,6 +161,7 @@ export const GAMBLERS_DICE: Relic = {
   name: '도박꾼의 주사위',
   description: '매 턴 시작 시 -1~2 에너지를 랜덤하게 획득합니다.',
   rarity: 'UNCOMMON',
+  icon: '/sprites/item/도박꾼의주사위.png',
   effects: [
     {
       trigger: 'ON_TURN_START',
@@ -169,6 +179,7 @@ export const BLOOD_PACT: Relic = {
   name: '피의 서약',
   description: '매 턴 시작 시 HP 4 손실, 힘 +3 획득.',
   rarity: 'UNCOMMON',
+  icon: '/sprites/item/피의서약.png',
   effects: [
     {
       trigger: 'ON_TURN_START',
@@ -186,6 +197,7 @@ export const STRANGE_PILL: Relic = {
   name: '기묘한 알약',
   description: '매 턴 시작 시 HP 4 손실, 카드 2장 추가 드로우.',
   rarity: 'UNCOMMON',
+  icon: '/sprites/item/기묘한알약.png',
   effects: [
     {
       trigger: 'ON_TURN_START',
@@ -203,6 +215,7 @@ export const BERSERKER_HELM: Relic = {
   name: '광전사 투구',
   description: '전투 시작 시 힘 +6, 민첩 -2.',
   rarity: 'UNCOMMON',
+  icon: '/sprites/item/광전사투구.png',
   effects: [
     {
       trigger: 'ON_COMBAT_START',
@@ -221,6 +234,7 @@ export const CURSED_COIN: Relic = {
   name: '저주받은 금화',
   description: '전투 종료 시 골드 +50. (HP 50% 이하 시 2배)',
   rarity: 'RARE',
+  icon: '/sprites/item/저주받은금화.png',
   effects: [
     {
       trigger: 'ON_COMBAT_END',
@@ -238,6 +252,7 @@ export const MAGIC_RING: Relic = {
   name: '마법 반지',
   description: '전투 시작 시 에너지 +4 획득.',
   rarity: 'RARE',
+  icon: '/sprites/item/마법반지.png',
   effects: [
     {
       trigger: 'ON_COMBAT_START',
@@ -254,6 +269,7 @@ export const MYSTIC_ORB: Relic = {
   name: '신비한 구슬',
   description: '전투 시작 시 모든 적에게 취약 1을 부여합니다.',
   rarity: 'RARE',
+  icon: '/sprites/item/신비한구슬.png',
   effects: [
     {
       trigger: 'ON_COMBAT_START',
@@ -270,6 +286,7 @@ export const ELIXIR: Relic = {
   name: '엘릭서',
   description: '매 턴 시작 시 HP 4를 회복합니다.',
   rarity: 'RARE',
+  icon: '/sprites/item/엘릭서.png',
   effects: [
     {
       trigger: 'ON_TURN_START',
@@ -286,6 +303,7 @@ export const VAMPIRE_FANG: Relic = {
   name: '흡혈귀의 이빨',
   description: '공격 피해의 10%만큼 HP를 회복합니다.',
   rarity: 'RARE',
+  icon: '/sprites/item/흡혈귀의이빨.png',
   effects: [
     {
       trigger: 'ON_DAMAGE_DEALT',
@@ -308,6 +326,7 @@ export const DEVILS_CONTRACT: Relic = {
   name: '악마의 계약',
   description: '매 턴 에너지 +3. 매 턴 종료 시 HP 8 손실.',
   rarity: 'UNIQUE',
+  icon: '/sprites/item/악마의계약.png',
   effects: [
     {
       trigger: 'ON_TURN_START',
@@ -331,6 +350,7 @@ export const ANGELS_TOUCH: Relic = {
   name: '천사의 손길',
   description: '매 턴 시작 시 HP 7을 회복합니다.',
   rarity: 'UNIQUE',
+  icon: '/sprites/item/천사의손길.png',
   effects: [
     {
       trigger: 'ON_TURN_START',

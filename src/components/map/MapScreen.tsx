@@ -183,7 +183,7 @@ export function MapScreen() {
         <div className="flex items-center justify-between max-w-screen-2xl mx-auto">
           {/* HP & Gold */}
           <div className="flex items-center gap-6">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 relative group cursor-help">
               <span
                 className="text-base font-bold"
                 style={{
@@ -197,10 +197,54 @@ export function MapScreen() {
               <div className="w-32">
                 <HealthBar current={player.currentHp} max={player.maxHp} size="md" showNumbers={true} />
               </div>
+              {/* HP 툴팁 */}
+              <div
+                className="absolute z-50 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150"
+                style={{
+                  left: '50%',
+                  top: 'calc(100% + 12px)',
+                  transform: 'translateX(-50%)',
+                  background: 'rgba(10, 8, 5, 0.95)',
+                  padding: '12px 18px',
+                  border: '2px solid var(--gold-dark)',
+                  boxShadow: '0 0 16px rgba(0,0,0,0.9), 0 0 6px var(--gold-glow)',
+                  minWidth: '200px',
+                }}
+              >
+                <div
+                  className="absolute left-1/2 -top-[8px]"
+                  style={{
+                    transform: 'translateX(-50%)',
+                    width: 0,
+                    height: 0,
+                    borderLeft: '8px solid transparent',
+                    borderRight: '8px solid transparent',
+                    borderBottom: '8px solid var(--gold-dark)',
+                  }}
+                />
+                <div
+                  className="text-sm font-bold"
+                  style={{
+                    fontFamily: '"NeoDunggeunmo", cursive',
+                    color: '#ef4444',
+                  }}
+                >
+                  체력
+                </div>
+                <div
+                  className="text-sm mt-1"
+                  style={{
+                    fontFamily: '"NeoDunggeunmo", cursive',
+                    color: 'rgba(255, 255, 255, 0.7)',
+                  }}
+                >
+                  현재 체력이 0이 되면 게임 오버
+                </div>
+              </div>
             </div>
 
             <div
-              className="flex items-center gap-2 px-4 py-2"
+              className="flex items-center gap-2 px-4 py-2 relative group cursor-help"
               style={{
                 background: 'rgba(212, 168, 75, 0.15)',
                 border: '2px solid rgba(212, 168, 75, 0.4)',
@@ -225,12 +269,56 @@ export function MapScreen() {
               >
                 {player.gold}
               </span>
+              {/* Gold 툴팁 */}
+              <div
+                className="absolute z-50 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150"
+                style={{
+                  left: '50%',
+                  top: 'calc(100% + 12px)',
+                  transform: 'translateX(-50%)',
+                  background: 'rgba(10, 8, 5, 0.95)',
+                  padding: '12px 18px',
+                  border: '2px solid var(--gold-dark)',
+                  boxShadow: '0 0 16px rgba(0,0,0,0.9), 0 0 6px var(--gold-glow)',
+                  minWidth: '200px',
+                }}
+              >
+                <div
+                  className="absolute left-1/2 -top-[8px]"
+                  style={{
+                    transform: 'translateX(-50%)',
+                    width: 0,
+                    height: 0,
+                    borderLeft: '8px solid transparent',
+                    borderRight: '8px solid transparent',
+                    borderBottom: '8px solid var(--gold-dark)',
+                  }}
+                />
+                <div
+                  className="text-sm font-bold"
+                  style={{
+                    fontFamily: '"NeoDunggeunmo", cursive',
+                    color: 'var(--gold)',
+                  }}
+                >
+                  골드
+                </div>
+                <div
+                  className="text-sm mt-1"
+                  style={{
+                    fontFamily: '"NeoDunggeunmo", cursive',
+                    color: 'rgba(255, 255, 255, 0.7)',
+                  }}
+                >
+                  상점에서 카드와 유물을 구매
+                </div>
+              </div>
             </div>
           </div>
 
           {/* Floor */}
           <div
-            className="flex flex-col items-center justify-center relative"
+            className="flex flex-col items-center justify-center relative group cursor-help"
             style={{
               backgroundImage: 'url(/button_short.png)',
               backgroundSize: '100% 100%',
@@ -260,6 +348,50 @@ export function MapScreen() {
             >
               {map.floor}
             </span>
+            {/* Floor 툴팁 */}
+            <div
+              className="absolute z-50 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150"
+              style={{
+                left: '50%',
+                top: 'calc(100% + 12px)',
+                transform: 'translateX(-50%)',
+                background: 'rgba(10, 8, 5, 0.95)',
+                padding: '12px 18px',
+                border: '2px solid var(--gold-dark)',
+                boxShadow: '0 0 16px rgba(0,0,0,0.9), 0 0 6px var(--gold-glow)',
+                minWidth: '200px',
+              }}
+            >
+              <div
+                className="absolute left-1/2 -top-[8px]"
+                style={{
+                  transform: 'translateX(-50%)',
+                  width: 0,
+                  height: 0,
+                  borderLeft: '8px solid transparent',
+                  borderRight: '8px solid transparent',
+                  borderBottom: '8px solid var(--gold-dark)',
+                }}
+              />
+              <div
+                className="text-sm font-bold"
+                style={{
+                  fontFamily: '"NeoDunggeunmo", cursive',
+                  color: 'var(--gold)',
+                }}
+              >
+                현재 층
+              </div>
+              <div
+                className="text-sm mt-1"
+                style={{
+                  fontFamily: '"NeoDunggeunmo", cursive',
+                  color: 'rgba(255, 255, 255, 0.7)',
+                }}
+              >
+                보스를 처치하면 다음 층으로 이동
+              </div>
+            </div>
           </div>
 
           {/* Deck & Relics */}
@@ -268,59 +400,153 @@ export function MapScreen() {
               {player.relics.map(relic => (
                 <div
                   key={relic.id}
-                  className="w-10 h-10 flex items-center justify-center cursor-help"
-                  style={{
-                    background: 'rgba(212, 168, 75, 0.15)',
-                    border: '2px solid rgba(212, 168, 75, 0.4)',
-                  }}
-                  title={`${relic.name}: ${relic.description}`}
+                  className="relative cursor-help group"
                 >
-                  <span
-                    className="text-sm font-bold"
+                  {relic.icon ? (
+                    <img
+                      src={relic.icon}
+                      alt={relic.name}
+                      className="w-24 h-24 object-contain transition-all duration-150 group-hover:scale-110 group-hover:drop-shadow-[0_0_10px_rgba(212,168,75,0.9)]"
+                      style={{ imageRendering: 'auto' }}
+                    />
+                  ) : (
+                    <span
+                      className="text-sm font-bold"
+                      style={{
+                        fontFamily: '"NeoDunggeunmo", cursive',
+                        color: 'var(--gold)',
+                      }}
+                    >
+                      {relic.name.charAt(0)}
+                    </span>
+                  )}
+                  {/* 툴팁 */}
+                  <div
+                    className="absolute z-50 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150"
                     style={{
-                      fontFamily: '"NeoDunggeunmo", cursive',
-                      color: 'var(--gold)',
+                      left: '50%',
+                      top: 'calc(100% + 12px)',
+                      transform: 'translateX(-50%)',
+                      background: 'rgba(10, 8, 5, 0.95)',
+                      padding: '12px 18px',
+                      border: '2px solid var(--gold-dark)',
+                      boxShadow: '0 0 16px rgba(0,0,0,0.9), 0 0 6px var(--gold-glow)',
+                      minWidth: '280px',
                     }}
                   >
-                    {relic.name.charAt(0)}
-                  </span>
+                    <div
+                      className="absolute left-1/2 -top-[8px]"
+                      style={{
+                        transform: 'translateX(-50%)',
+                        width: 0,
+                        height: 0,
+                        borderLeft: '8px solid transparent',
+                        borderRight: '8px solid transparent',
+                        borderBottom: '8px solid var(--gold-dark)',
+                      }}
+                    />
+                    <div
+                      className="text-sm font-bold"
+                      style={{
+                        fontFamily: '"NeoDunggeunmo", cursive',
+                        color: 'var(--gold)',
+                      }}
+                    >
+                      {relic.name}
+                    </div>
+                    <div
+                      className="text-sm mt-1 whitespace-normal max-w-80"
+                      style={{
+                        fontFamily: '"NeoDunggeunmo", cursive',
+                        color: 'rgba(255, 255, 255, 0.7)',
+                      }}
+                    >
+                      {relic.description}
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
 
-            <button
-              onClick={() => setShowDeck(true)}
-              className="flex items-center gap-3 px-5 py-2.5 transition-all duration-150 hover:brightness-125"
-              style={{
-                background: 'rgba(212, 168, 75, 0.15)',
-                border: '2px solid rgba(212, 168, 75, 0.4)',
-              }}
-            >
-              <span
-                className="text-base font-bold"
+            <div className="relative group">
+              <button
+                onClick={() => setShowDeck(true)}
+                className="flex items-center gap-3 px-5 py-2.5 transition-all duration-150 hover:brightness-125"
                 style={{
-                  fontFamily: '"NeoDunggeunmo", cursive',
-                  color: 'var(--gold)',
+                  background: 'rgba(212, 168, 75, 0.15)',
+                  border: '2px solid rgba(212, 168, 75, 0.4)',
                 }}
               >
-                덱
-              </span>
-              <span
-                className="text-base font-bold tabular-nums"
+                <span
+                  className="text-base font-bold"
+                  style={{
+                    fontFamily: '"NeoDunggeunmo", cursive',
+                    color: 'var(--gold)',
+                  }}
+                >
+                  덱
+                </span>
+                <span
+                  className="text-base font-bold tabular-nums"
+                  style={{
+                    fontFamily: '"Press Start 2P", monospace',
+                    color: 'var(--gold)',
+                  }}
+                >
+                  {player.deck.length}
+                </span>
+              </button>
+              {/* 덱 툴팁 */}
+              <div
+                className="absolute z-50 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150"
                 style={{
-                  fontFamily: '"Press Start 2P", monospace',
-                  color: 'var(--gold)',
+                  left: '50%',
+                  top: 'calc(100% + 12px)',
+                  transform: 'translateX(-50%)',
+                  background: 'rgba(10, 8, 5, 0.95)',
+                  padding: '12px 18px',
+                  border: '2px solid var(--gold-dark)',
+                  boxShadow: '0 0 16px rgba(0,0,0,0.9), 0 0 6px var(--gold-glow)',
+                  minWidth: '200px',
                 }}
               >
-                {player.deck.length}
-              </span>
-            </button>
+                <div
+                  className="absolute left-1/2 -top-[8px]"
+                  style={{
+                    transform: 'translateX(-50%)',
+                    width: 0,
+                    height: 0,
+                    borderLeft: '8px solid transparent',
+                    borderRight: '8px solid transparent',
+                    borderBottom: '8px solid var(--gold-dark)',
+                  }}
+                />
+                <div
+                  className="text-sm font-bold"
+                  style={{
+                    fontFamily: '"NeoDunggeunmo", cursive',
+                    color: 'var(--gold)',
+                  }}
+                >
+                  카드 덱
+                </div>
+                <div
+                  className="text-sm mt-1"
+                  style={{
+                    fontFamily: '"NeoDunggeunmo", cursive',
+                    color: 'rgba(255, 255, 255, 0.7)',
+                  }}
+                >
+                  클릭하여 보유 카드 확인
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </header>
 
       {/* 맵 영역 */}
-      <main ref={containerRef} className="flex-1 relative overflow-hidden">
+      <main ref={containerRef} className="flex-1 relative overflow-hidden pt-8">
         {/* 맵 컨테이너 - 좌우 여백 */}
         <div
           className="absolute h-full transition-transform duration-300 ease-out"

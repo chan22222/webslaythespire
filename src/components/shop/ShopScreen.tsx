@@ -213,30 +213,23 @@ export function ShopScreen() {
                 }}
               >
                 <div
-                  className="w-10 h-10 sm:w-16 sm:h-16 rounded-lg flex items-center justify-center mb-1 sm:mb-2"
+                  className="w-10 h-10 sm:w-16 sm:h-16 rounded-lg flex items-center justify-center mb-1 sm:mb-2 p-1 sm:p-2"
                   style={{
                     background: 'linear-gradient(135deg, var(--bg-light) 0%, var(--bg-dark) 100%)',
                     border: `2px solid ${relic.rarity === 'RARE' ? '#c084fc' : relic.rarity === 'UNIQUE' ? '#e879f9' : 'var(--gold)'}`,
                     boxShadow: 'inset 0 0 15px rgba(0,0,0,0.5)',
                   }}
                 >
-                  <span className="text-xl sm:text-3xl">
-                    {relic.id === 'spell_shield' && '🛡️'}
-                    {relic.id === 'thorn_armor' && '🌿'}
-                    {relic.id === 'vajra' && '💪'}
-                    {relic.id === 'swift_potion' && '💨'}
-                    {relic.id === 'healing_potion' && '❤️'}
-                    {relic.id === 'lantern' && '🏮'}
-                    {relic.id === 'gamblers_dice' && '🎲'}
-                    {relic.id === 'blood_pact' && '🩸'}
-                    {relic.id === 'strange_pill' && '💊'}
-                    {relic.id === 'berserker_helm' && '⚔️'}
-                    {relic.id === 'cursed_coin' && '🪙'}
-                    {relic.id === 'magic_ring' && '💍'}
-                    {relic.id === 'mystic_orb' && '🔮'}
-                    {relic.id === 'elixir' && '🧪'}
-                    {relic.id === 'vampire_fang' && '🧛'}
-                  </span>
+                  {relic.icon ? (
+                    <img
+                      src={relic.icon}
+                      alt={relic.name}
+                      className="w-full h-full object-contain"
+                      style={{ imageRendering: 'pixelated' }}
+                    />
+                  ) : (
+                    <span className="text-xl sm:text-3xl">❓</span>
+                  )}
                 </div>
                 <span className="font-title text-xs sm:text-base text-[var(--gold-light)]">{relic.name}</span>
                 <span className="font-card text-[10px] sm:text-xs text-gray-400 text-center max-w-20 sm:max-w-32 mt-1 hidden sm:block">{relic.description}</span>
