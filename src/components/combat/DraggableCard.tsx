@@ -80,6 +80,7 @@ export function DraggableCard({
 
   // 전투 중인 경우 플레이어 상태 가져오기
   const playerStatuses = useCombatStore(state => state.playerStatuses);
+  const usedCardTypes = useCombatStore(state => state.usedCardTypes);
 
   // 데미지 수정치 계산
   const calculateModifiedDamage = (baseDamage: number) => {
@@ -104,6 +105,17 @@ export function DraggableCard({
 
     if (!card.effects || card.effects.length === 0) {
       return description;
+    }
+
+    // 종언의 일격: 사용한 카드 종류당 피해 표시 (자기 자신 제외)
+    if (card.id === 'final_strike') {
+      const uniqueCount = usedCardTypes.filter(id => id !== 'final_strike').length;
+      const damagePerType = card.upgraded ? 6 : 4;
+      const totalDamage = damagePerType * uniqueCount;
+      description = description.replace(
+        /종류당 (\d+) 피해를/,
+        `종류당 $1 (${totalDamage}) 피해를`
+      );
     }
 
     const strength = playerStatuses.find(s => s.type === 'STRENGTH')?.stacks || 0;

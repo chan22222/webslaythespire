@@ -47,10 +47,10 @@ const typeConfig = {
 
 const rarityConfig = {
   BASIC: { name: 'Basic', color: '#a0a0a0' },
-  COMMON: { name: 'Common', color: '#a0a0a0' },
+  COMMON: { name: 'Common', color: '#dcdcdc' },
   UNCOMMON: { name: 'Uncommon', color: '#4a9eff' },
-  RARE: { name: 'Rare', color: '#c084fc' },
-  UNIQUE: { name: 'Unique', color: '#e879f9' },
+  RARE: { name: 'Rare', color: '#b440dc' },
+  UNIQUE: { name: 'Unique', color: '#ffc832' },
 };
 
 // 기준: 전투 카드 140x195 (비율 1:1.393)
@@ -97,10 +97,10 @@ const sizeConfig = {
 
 const rarityGlow = {
   BASIC: '',
-  COMMON: '',
-  UNCOMMON: '0 0 12px rgba(74, 158, 255, 0.5)',
-  RARE: '0 0 12px rgba(192, 132, 252, 0.5)',
-  UNIQUE: '0 0 20px rgba(232, 121, 249, 0.7)',
+  COMMON: '0 0 5px rgba(220, 220, 220, 1), 0 0 8px rgba(220, 220, 220, 0.8), inset 0 0 4px rgba(220, 220, 220, 0.6)',
+  UNCOMMON: '0 0 6px rgba(60, 140, 255, 1), 0 0 10px rgba(60, 140, 255, 0.9), inset 0 0 5px rgba(60, 140, 255, 0.7)',
+  RARE: '0 0 8px rgba(180, 50, 220, 1), 0 0 12px rgba(180, 50, 220, 0.9), inset 0 0 6px rgba(180, 50, 220, 0.7)',
+  UNIQUE: '0 0 8px rgba(255, 200, 50, 1), 0 0 12px rgba(255, 200, 50, 0.9), inset 0 0 6px rgba(255, 200, 50, 0.7)',
 };
 
 export function Card({
@@ -117,6 +117,7 @@ export function Card({
   // 전투 중인 경우에만 플레이어 상태 반영
   const playerStatuses = useCombatStore(state => state.playerStatuses);
   const enemies = useCombatStore(state => state.enemies);
+  const usedCardTypes = useCombatStore(state => state.usedCardTypes);
   const isInCombat = enemies.length > 0;
 
   // 데미지 수정치 계산
@@ -143,13 +144,25 @@ export function Card({
   const getModifiedDescription = () => {
     let description = card.description;
 
-    // 전투 중이 아니면 원본 반환
-    if (!isInCombat) {
+    // effects가 없으면 원본 반환
+    if (!card.effects || card.effects.length === 0) {
       return description;
     }
 
-    // effects가 없으면 원본 반환
-    if (!card.effects || card.effects.length === 0) {
+    // 종언의 일격: 사용한 카드 종류당 피해 표시 (전투 중일 때만, 자기 자신 제외)
+    if (card.id === 'final_strike' && isInCombat) {
+      const uniqueCount = usedCardTypes.filter(id => id !== 'final_strike').length;
+      const damagePerType = card.upgraded ? 6 : 4;
+      const totalDamage = damagePerType * uniqueCount;
+      // "종류당 4 피해를" -> "종류당 4 (32) 피해를"
+      description = description.replace(
+        /종류당 (\d+) 피해를/,
+        `종류당 $1 (${totalDamage}) 피해를`
+      );
+    }
+
+    // 전투 중이 아니면 여기서 반환
+    if (!isInCombat) {
       return description;
     }
 

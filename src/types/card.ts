@@ -21,7 +21,7 @@ export interface CardEffect {
     | 'REDUCE_ATTACK_COST'
     | 'GAIN_MAX_HP_ON_KILL'
     // BOSS 효과
-    | 'DAMAGE_PER_EXHAUST'
+    | 'DAMAGE_PER_PLAYED'
     | 'RETURN_PLAYED_CARDS'
     | 'INVULNERABLE'
     | 'HALVE_ENEMY_HP'

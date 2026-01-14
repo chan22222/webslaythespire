@@ -72,6 +72,7 @@ export const EQUIPMENT_CHECK: Card = {
   type: 'SHIELD',
   rarity: 'COMMON',
   cost: 1,
+  image: '/cards/effect/equipment_check.png',
   description: '4 방어도를 얻습니다. 손에 있는 카드 1장을 업그레이드합니다.',
   effects: [
     { type: 'BLOCK', value: 4 },
@@ -94,6 +95,7 @@ export const NEUTRALIZE: Card = {
   type: 'ATTACK',
   rarity: 'COMMON',
   cost: 1,
+  image: '/cards/effect/neutralize.png',
   description: '10 피해를 주고 약화 2를 부여합니다.',
   effects: [
     { type: 'DAMAGE', value: 10, target: 'SINGLE' },
@@ -116,6 +118,7 @@ export const INSTANT_FOCUS: Card = {
   type: 'EFFECT',
   rarity: 'COMMON',
   cost: 0,
+  image: '/cards/effect/instant_focus.png',
   description: '힘 2를 얻습니다. 턴 종료 시 힘 2를 잃습니다.',
   effects: [
     { type: 'APPLY_STATUS', value: 2, target: 'SELF', status: 'STRENGTH' },
@@ -138,6 +141,7 @@ export const TACTICAL_REVIEW: Card = {
   type: 'ATTACK',
   rarity: 'COMMON',
   cost: 1,
+  image: '/cards/effect/tactical_review.png',
   description: '5 피해를 줍니다. 사용한 후 다시 손으로 가져옵니다.',
   effects: [{ type: 'DAMAGE', value: 5, target: 'SINGLE' }],
   returnToHand: true,

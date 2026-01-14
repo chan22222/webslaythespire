@@ -534,6 +534,12 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     const pName = useGameStore.getState().playerName;
     get().addToCombatLog(`${pName}(이)가 ${card.name} 사용!`);
 
+    // 사용한 카드 종류 기록 (중복 제외)
+    const usedCardTypes = get().usedCardTypes;
+    if (!usedCardTypes.includes(card.id)) {
+      set({ usedCardTypes: [...usedCardTypes, card.id] });
+    }
+
     card.effects.forEach(effect => {
       switch (effect.type) {
         case 'DAMAGE': {
@@ -713,12 +719,12 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
           }
           break;
         }
-        case 'DAMAGE_PER_EXHAUST': {
-          // 종언의 일격: 소멸된 카드당 피해
-          const exhaustCount = get().exhaustPile.length;
-          const dmgPerExhaust = effect.value * exhaustCount;
+        case 'DAMAGE_PER_PLAYED': {
+          // 종언의 일격: 사용한 카드 종류당 피해 (자기 자신 제외)
+          const uniqueCount = get().usedCardTypes.filter(id => id !== 'final_strike').length;
+          const dmgPerPlayed = effect.value * uniqueCount;
           const str2 = get().playerStatuses.find(s => s.type === 'STRENGTH')?.stacks || 0;
-          const totalDmg = dmgPerExhaust + str2;
+          const totalDmg = dmgPerPlayed + str2;
 
           if (effect.target === 'ALL') {
             enemies.forEach(enemy => {
@@ -726,7 +732,7 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
                 get().dealDamageToEnemy(enemy.instanceId, totalDmg);
               }
             });
-            get().addToCombatLog(`소멸 카드 ${exhaustCount}장 × ${effect.value} = ${totalDmg} 피해!`);
+            get().addToCombatLog(`카드 종류 ${uniqueCount}개 × ${effect.value} = ${totalDmg} 피해!`);
           }
           break;
         }

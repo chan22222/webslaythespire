@@ -15,6 +15,7 @@ export interface CombatState {
   targetingMode: boolean;
   combatLog: string[];
   extraDrawNextTurn: number;
+  usedCardTypes: string[]; // 이번 전투에서 사용한 카드 종류 (id)
 }
 
 export const createInitialCombatState = (): CombatState => ({
@@ -31,4 +32,5 @@ export const createInitialCombatState = (): CombatState => ({
   targetingMode: false,
   combatLog: [],
   extraDrawNextTurn: 0,
+  usedCardTypes: [],
 });
