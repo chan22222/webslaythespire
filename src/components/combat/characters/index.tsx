@@ -389,7 +389,7 @@ const FLYING_EYE_CONFIG = {
 };
 
 // 플라잉아이 (Flying Eye) - 애니메이션 스프라이트
-export function FlyingEyeSprite({ size = 80, className = '', isTargetable = false, variant = 'red' }: CharacterProps & { variant?: 'red' | 'green' }) {
+export function FlyingEyeSprite({ size = 80, className = '', variant = 'red' }: CharacterProps & { variant?: 'red' | 'green' }) {
   const [frame, setFrame] = useState(FLYING_EYE_CONFIG.totalFrames - 1);
 
   const scaledSize = size * 1.7; // 크기 조정
@@ -454,7 +454,7 @@ const GOBLIN_CONFIG = {
 };
 
 // 고블린 (Goblin) - 애니메이션 스프라이트
-export function GoblinSprite({ size = 80, className = '', isTargetable = false }: CharacterProps) {
+export function GoblinSprite({ size = 80, className = '' }: CharacterProps) {
   const [frame, setFrame] = useState(0);
 
   const scaledSize = size * 2.1;
@@ -504,7 +504,7 @@ const SKELETON_CONFIG = {
 };
 
 // 스켈레톤 (Skeleton) - 애니메이션 스프라이트
-export function SkeletonSprite({ size = 80, className = '', isTargetable = false }: CharacterProps) {
+export function SkeletonSprite({ size = 80, className = '' }: CharacterProps) {
   const [frame, setFrame] = useState(0);
 
   const scaledSize = size * 2.1;
@@ -554,7 +554,7 @@ const MUSHROOM_CONFIG = {
 };
 
 // 머쉬룸 (Mushroom) - 애니메이션 스프라이트
-export function MushroomSprite({ size = 80, className = '', isTargetable = false, variant = 'normal' }: CharacterProps & { variant?: 'normal' | 'acid' }) {
+export function MushroomSprite({ size = 80, className = '', variant = 'normal' }: CharacterProps & { variant?: 'normal' | 'acid' }) {
   const [frame, setFrame] = useState(0);
 
   const scaledSize = size * 1.9;
@@ -785,7 +785,7 @@ export function SlimeBossSilhouette({ size = 180, className = '', isTargetable =
 }
 
 // 이스터에그 적 - PNG 이미지 (1.5배 스케일)
-function EasterEggEnemy({ imageUrl, size, isTargetable }: { imageUrl: string; size: number; isTargetable: boolean }) {
+function EasterEggEnemy({ imageUrl, size }: { imageUrl: string; size: number }) {
   const scaledSize = size * 1.5;
 
   return (
@@ -814,27 +814,27 @@ function EasterEggEnemy({ imageUrl, size, isTargetable }: { imageUrl: string; si
 export function getEnemyCharacter(templateId: string, size: number, isTargetable: boolean) {
   switch (templateId) {
     case 'goblin':
-      return <GoblinSprite size={size} isTargetable={isTargetable} />;
+      return <GoblinSprite size={size} />;
     case 'skeleton':
-      return <SkeletonSprite size={size} isTargetable={isTargetable} />;
+      return <SkeletonSprite size={size} />;
     case 'flying_eye':
-      return <FlyingEyeSprite size={size * 0.8} isTargetable={isTargetable} variant="red" />;
+      return <FlyingEyeSprite size={size * 0.8} variant="red" />;
     case 'green_flying_eye':
-      return <FlyingEyeSprite size={size * 0.8} isTargetable={isTargetable} variant="green" />;
+      return <FlyingEyeSprite size={size * 0.8} variant="green" />;
     case 'acid_mushroom':
-      return <MushroomSprite size={size} isTargetable={isTargetable} variant="acid" />;
+      return <MushroomSprite size={size} variant="acid" />;
     case 'mushroom':
-      return <MushroomSprite size={size} isTargetable={isTargetable} variant="normal" />;
+      return <MushroomSprite size={size} variant="normal" />;
     case 'gremlin_nob':
       return <GremlinNobSilhouette size={size * 1.2} isTargetable={isTargetable} />;
     case 'slime_boss':
       return <SlimeBossSilhouette size={size * 1.5} isTargetable={isTargetable} />;
     // 이스터에그 적
     case 'real_tukbug':
-      return <EasterEggEnemy imageUrl="/sprites/mob/easteregg/tukbug.png" size={size} isTargetable={isTargetable} />;
+      return <EasterEggEnemy imageUrl="/sprites/mob/easteregg/tukbug.png" size={size} />;
     case 'kkuchu':
-      return <EasterEggEnemy imageUrl="/sprites/mob/easteregg/kkuchu.png" size={size} isTargetable={isTargetable} />;
+      return <EasterEggEnemy imageUrl="/sprites/mob/easteregg/kkuchu.png" size={size} />;
     default:
-      return <GoblinSprite size={size} isTargetable={isTargetable} />;
+      return <GoblinSprite size={size} />;
   }
 }
