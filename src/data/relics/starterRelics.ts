@@ -20,14 +20,14 @@ export const BURNING_BLOOD: Relic = {
 export const RING_OF_THE_SNAKE: Relic = {
   id: 'ring_of_the_snake',
   name: '뱀의 반지',
-  description: '전투 시작 시 카드를 2장 추가로 뽑습니다.',
+  description: '전투 시작 시 카드를 1장 추가로 뽑습니다.',
   rarity: 'STARTER',
   effects: [
     {
       trigger: 'ON_COMBAT_START',
-      description: '카드 2장 드로우',
+      description: '카드 1장 드로우',
       execute: (context) => {
-        context.drawCards?.(2);
+        context.drawCards?.(1);
       },
     },
   ],

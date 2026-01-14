@@ -280,13 +280,21 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     const poisonStatus = playerStatuses.find(s => s.type === 'POISON');
     if (poisonStatus && poisonStatus.stacks > 0) {
       const poisonDamage = poisonStatus.stacks;
-      get().addToCombatLog(`중독으로 ${poisonDamage} 피해!`);
 
-      // 직접 HP 감소 (방어도 무시)
-      useGameStore.getState().takeDamage(poisonDamage);
+      // 무적 상태면 독 피해도 무효화
+      const invulnerable = playerStatuses.find(s => s.type === 'INVULNERABLE');
+      if (invulnerable && invulnerable.stacks > 0) {
+        get().addToCombatLog(`무적! 중독 피해 무효화!`);
+        get().addDamagePopup(0, 'blocked', 0, 0, 'player');
+      } else {
+        get().addToCombatLog(`중독으로 ${poisonDamage} 피해!`);
 
-      // 초록색 팝업 표시
-      get().addDamagePopup(poisonDamage, 'poison', 0, 0, 'player');
+        // 직접 HP 감소 (방어도 무시)
+        useGameStore.getState().takeDamage(poisonDamage);
+
+        // 초록색 팝업 표시
+        get().addDamagePopup(poisonDamage, 'poison', 0, 0, 'player');
+      }
 
       poisonStatus.stacks -= 1;
       set({
@@ -520,8 +528,10 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
 
     // 타겟이 필요한 카드인지 체크
     const needsTarget = card.effects.some(e =>
-      e.type === 'DAMAGE' && e.target === 'SINGLE' ||
-      e.type === 'APPLY_STATUS' && e.target === 'SINGLE'
+      (e.type === 'DAMAGE' && e.target === 'SINGLE') ||
+      (e.type === 'APPLY_STATUS' && e.target === 'SINGLE') ||
+      (e.type === 'DAMAGE_PER_LOST_HP' && e.target === 'SINGLE') ||
+      (e.type === 'HALVE_ENEMY_HP' && e.target === 'SINGLE')
     );
 
     if (needsTarget && !targetEnemyId) {
@@ -540,6 +550,10 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       set({ usedCardTypes: [...usedCardTypes, card.id] });
     }
 
+    // 다중 히트 딜레이를 위한 DAMAGE 효과 카운트
+    let damageHitIndex = 0;
+    const DAMAGE_HIT_DELAY = 800; // ms
+
     card.effects.forEach(effect => {
       switch (effect.type) {
         case 'DAMAGE': {
@@ -548,14 +562,26 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
           const strength = get().playerStatuses.find(s => s.type === 'STRENGTH')?.stacks || 0;
           baseDamage += strength;
 
-          if (effect.target === 'ALL') {
-            enemies.forEach(enemy => {
-              if (enemy.currentHp > 0) {
-                get().dealDamageToEnemy(enemy.instanceId, baseDamage);
-              }
-            });
-          } else if (targetEnemyId) {
-            get().dealDamageToEnemy(targetEnemyId, baseDamage);
+          const currentHitIndex = damageHitIndex;
+          damageHitIndex++;
+
+          const executeDamage = () => {
+            if (effect.target === 'ALL') {
+              get().enemies.forEach(enemy => {
+                if (enemy.currentHp > 0) {
+                  get().dealDamageToEnemy(enemy.instanceId, baseDamage);
+                }
+              });
+            } else if (targetEnemyId) {
+              get().dealDamageToEnemy(targetEnemyId, baseDamage);
+            }
+          };
+
+          // 첫 번째 히트는 바로, 이후는 딜레이
+          if (currentHitIndex === 0) {
+            executeDamage();
+          } else {
+            setTimeout(executeDamage, currentHitIndex * DAMAGE_HIT_DELAY);
           }
           break;
         }
@@ -592,15 +618,22 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
           get().addToCombatLog(`에너지 ${effect.value} 획득!`);
           break;
         case 'LOSE_HP': {
-          // HP 직접 감소 (방어도 무시)
-          useGameStore.getState().modifyHp(-effect.value);
-          get().addDamagePopup(effect.value, 'damage', 0, 0, 'player');
-          // 피격 애니메이션 트리거
-          const { onPlayerHit } = get();
-          if (onPlayerHit) {
-            onPlayerHit();
+          // 무적 상태면 HP 손실 무효화
+          const invulnerableStatus = get().playerStatuses.find(s => s.type === 'INVULNERABLE');
+          if (invulnerableStatus && invulnerableStatus.stacks > 0) {
+            get().addToCombatLog(`무적! HP 손실 무효화!`);
+            get().addDamagePopup(0, 'blocked', 0, 0, 'player');
+          } else {
+            // HP 직접 감소 (방어도 무시)
+            useGameStore.getState().modifyHp(-effect.value);
+            get().addDamagePopup(effect.value, 'damage', 0, 0, 'player');
+            // 피격 애니메이션 트리거
+            const { onPlayerHit } = get();
+            if (onPlayerHit) {
+              onPlayerHit();
+            }
+            get().addToCombatLog(`HP ${effect.value} 감소!`);
           }
-          get().addToCombatLog(`HP ${effect.value} 감소!`);
           break;
         }
         case 'HEAL':
@@ -757,14 +790,23 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
           break;
         }
         case 'HALVE_ENEMY_HP': {
-          // 신의 권능: 적 HP 절반 감소
+          // 신의 권능: 적 HP 절반 감소 (방어도/배수 무시, 직접 HP 감소)
           if (targetEnemyId) {
-            const targetEnemy = get().enemies.find(e => e.instanceId === targetEnemyId);
-            if (targetEnemy) {
+            const currentEnemies = get().enemies;
+            const enemyIndex = currentEnemies.findIndex(e => e.instanceId === targetEnemyId);
+            if (enemyIndex !== -1) {
+              const targetEnemy = currentEnemies[enemyIndex];
               const halfHp = Math.floor(targetEnemy.currentHp / 2);
               const cappedDmg = Math.min(halfHp, effect.value); // 최대 피해 제한
-              get().dealDamageToEnemy(targetEnemyId, cappedDmg);
-              get().addToCombatLog(`${targetEnemy.name}의 HP를 ${cappedDmg} 감소! (절반)`);
+              const newHp = targetEnemy.currentHp - cappedDmg;
+
+              // 직접 HP 감소 (방어도/배수 무시)
+              const updatedEnemy = { ...targetEnemy, currentHp: Math.max(0, newHp) };
+              const updatedEnemies = [...currentEnemies];
+              updatedEnemies[enemyIndex] = updatedEnemy;
+              set({ enemies: updatedEnemies });
+
+              get().addToCombatLog(`${targetEnemy.name}의 HP를 ${cappedDmg} 감소! (${targetEnemy.currentHp} → ${newHp})`);
             }
           }
           break;
@@ -783,7 +825,7 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     const newHand = currentHand.filter(c => c.instanceId !== cardInstanceId);
     const { discardPile, exhaustPile, energy: currentEnergy } = get();
 
-    // exhaust 카드는 소멸 더미로, 아니면 버린 더미로
+    // exhaust 카드는 소멸 더미로
     if (card.exhaust) {
       set({
         hand: newHand,
@@ -793,7 +835,32 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
         targetingMode: false,
       });
       get().addToCombatLog(`${card.name} 소멸!`);
-    } else {
+    }
+    // returnToHand 카드는 잠시 버린 후 다시 손으로 돌아옴
+    else if (card.returnToHand) {
+      // 먼저 카드를 버린 더미로 이동
+      set({
+        hand: newHand,
+        discardPile: [...discardPile, card],
+        energy: currentEnergy - card.cost,
+        selectedCardId: null,
+        targetingMode: false,
+      });
+      // 딜레이 후 다시 손으로
+      setTimeout(() => {
+        const currentDiscard = get().discardPile;
+        const cardInDiscard = currentDiscard.find(c => c.instanceId === card.instanceId);
+        if (cardInDiscard) {
+          set({
+            hand: [...get().hand, cardInDiscard],
+            discardPile: currentDiscard.filter(c => c.instanceId !== card.instanceId),
+          });
+          get().addToCombatLog(`${card.name}이(가) 손으로 돌아왔습니다!`);
+        }
+      }, 300);
+    }
+    // 일반 카드는 버린 더미로
+    else {
       set({
         hand: newHand,
         discardPile: [...discardPile, card],

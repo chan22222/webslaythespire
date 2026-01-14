@@ -145,14 +145,14 @@ export const TACTICAL_REVIEW: Card = {
   rarity: 'COMMON',
   cost: 1,
   image: '/cards/effect/tactical_review.png',
-  description: '5 피해를 줍니다. 사용한 후 다시 손으로 가져옵니다.',
-  effects: [{ type: 'DAMAGE', value: 5, target: 'SINGLE' }],
+  description: '4 피해를 줍니다. 사용한 후 다시 손으로 가져옵니다.',
+  effects: [{ type: 'DAMAGE', value: 4, target: 'SINGLE' }],
   returnToHand: true,
   upgraded: false,
   upgradeEffect: {
     name: '전술 복기+',
-    description: '5 피해를 줍니다. 사용한 후 다시 손으로 가져옵니다.',
-    effects: [{ type: 'DAMAGE', value: 5, target: 'SINGLE' }],
+    description: '6 피해를 줍니다. 사용한 후 다시 손으로 가져옵니다.',
+    effects: [{ type: 'DAMAGE', value: 6, target: 'SINGLE' }],
   },
 };
 

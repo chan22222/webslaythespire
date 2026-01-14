@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { CardInstance } from '../../types/card';
 import { TargetingArrow } from './TargetingArrow';
 import { useCombatStore } from '../../stores/combatStore';
+import { useGameStore } from '../../stores/gameStore';
 
 interface DraggableCardProps {
   card: CardInstance;
@@ -115,6 +116,23 @@ export function DraggableCard({
       description = description.replace(
         /종류당 (\d+) 피해를/,
         `종류당 $1 (${totalDamage}) 피해를`
+      );
+    }
+
+    // 사선에서: 잃은 HP 기반 피해 표시
+    const lostHpEffect = card.effects.find(e => e.type === 'DAMAGE_PER_LOST_HP');
+    if (lostHpEffect) {
+      const gameState = useGameStore.getState();
+      const lostHp = gameState.player.maxHp - gameState.player.currentHp;
+      const ratio = lostHpEffect.ratio || 1;
+      const baseDmg = Math.floor((lostHp / ratio) * lostHpEffect.value);
+      const strength = playerStatuses.find(s => s.type === 'STRENGTH')?.stacks || 0;
+      const finalDmg = Math.max(0, baseDmg + strength);
+
+      // "잃은 HP X당 Y의 피해" 형식에서 실제 피해 표시
+      description = description.replace(
+        /피해를 줍니다/,
+        `피해(${finalDmg})를 줍니다`
       );
     }
 
@@ -261,7 +279,9 @@ export function DraggableCard({
   // 타겟이 필요한 카드인지 확인
   const needsTarget = card.effects.some(e =>
     (e.type === 'DAMAGE' && e.target === 'SINGLE') ||
-    (e.type === 'APPLY_STATUS' && e.target === 'SINGLE')
+    (e.type === 'APPLY_STATUS' && e.target === 'SINGLE') ||
+    (e.type === 'DAMAGE_PER_LOST_HP' && e.target === 'SINGLE') ||
+    (e.type === 'HALVE_ENEMY_HP' && e.target === 'SINGLE')
   );
 
   return (
