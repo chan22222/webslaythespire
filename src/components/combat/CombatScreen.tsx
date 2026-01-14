@@ -543,6 +543,7 @@ export function CombatScreen() {
     removeDamagePopup,
     setOnPlayerHit,
     triggerEnemyHit,
+    lockCardPlay,
   } = useCombatStore();
 
   const currentNode = getCurrentNode();
@@ -932,6 +933,9 @@ export function CombatScreen() {
       selectCard(null);
       return;
     }
+
+    // 카드 사용 시작 즉시 1초간 다른 카드 사용 불가
+    lockCardPlay();
 
     const needsTarget = card.effects.some(e =>
       (e.type === 'DAMAGE' && e.target === 'SINGLE') ||

@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { CardInstance } from '../../types/card';
 import { DraggableCard } from './DraggableCard';
+import { useCombatStore } from '../../stores/combatStore';
 
 interface CardHandProps {
   cards: CardInstance[];
@@ -18,6 +19,7 @@ export function CardHand({
   onCardDragEnd,
 }: CardHandProps) {
   const [hoveredCardId, setHoveredCardId] = useState<string | null>(null);
+  const isPlayingCard = useCombatStore(state => state.isPlayingCard);
   // 새로 추가된 카드 추적
   const [newCardIds, setNewCardIds] = useState<Set<string>>(new Set());
   const [cardDelays, setCardDelays] = useState<Map<string, number>>(new Map());
@@ -159,7 +161,7 @@ export function CardHand({
                 <DraggableCard
                   card={card}
                   isSelected={isSelected}
-                  isPlayable={card.cost <= energy}
+                  isPlayable={card.cost <= energy && !isPlayingCard}
                   onSelect={() => onCardSelect(card.instanceId)}
                   onDragEnd={(x, y, dist) => onCardDragEnd(card.instanceId, x, y, dist)}
                   rotation={isSelected || isHovered ? 0 : rotation}
