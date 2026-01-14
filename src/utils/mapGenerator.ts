@@ -185,6 +185,7 @@ export function getNodeIcon(type: NodeType): string {
     SHOP: '💰',
     EVENT: '❓',
     TREASURE: '📦',
+    NEXT_FLOOR: '🚪',
   };
   return icons[type];
 }
@@ -201,6 +202,7 @@ export function getNodeColor(type: NodeType): string {
     SHOP: '#ffd700',
     EVENT: '#9b59b6',
     TREASURE: '#f39c12',
+    NEXT_FLOOR: '#a855f7',
   };
   return colors[type];
 }

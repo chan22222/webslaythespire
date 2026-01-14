@@ -41,6 +41,8 @@ interface GameState {
   startTestBattle: (enemies: EnemyTemplate[], relics?: Relic[]) => void;
   startGameWithDeckAndRelics: (relics: Relic[]) => void;
   clearTestEnemies: () => void;
+  addNextFloorNode: () => void;
+  goToNextFloor: () => void;
 }
 
 export const useGameStore = create<GameState>((set, get) => ({
@@ -143,6 +145,10 @@ export const useGameStore = create<GameState>((set, get) => ({
         break;
       case 'TREASURE':
         set({ phase: 'REWARD' });
+        break;
+      case 'NEXT_FLOOR':
+        // 다음 층으로 이동
+        get().goToNextFloor();
         break;
     }
   },
@@ -325,5 +331,58 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   clearTestEnemies: () => {
     set({ testEnemies: null });
+  },
+
+  addNextFloorNode: () => {
+    const { map } = get();
+
+    // 현재 노드가 보스인지 확인
+    const currentNode = map.nodes.find(n => n.id === map.currentNodeId);
+    if (!currentNode || currentNode.type !== 'BOSS') return;
+
+    // 이미 NEXT_FLOOR 노드가 있는지 확인
+    const existingNextFloor = map.nodes.find(n => n.type === 'NEXT_FLOOR');
+    if (existingNextFloor) return;
+
+    // 보스 노드 뒤에 NEXT_FLOOR 노드 생성
+    const nextFloorNode: MapNode = {
+      id: `node-next-floor-${map.floor}`,
+      type: 'NEXT_FLOOR',
+      row: currentNode.row + 1,
+      col: 0,
+      connections: [],
+      visited: false,
+      x: currentNode.x + 120,
+      y: currentNode.y,
+    };
+
+    // 보스 노드에 연결 추가
+    const updatedNodes = map.nodes.map(n =>
+      n.id === currentNode.id
+        ? { ...n, connections: [...n.connections, nextFloorNode.id] }
+        : n
+    );
+
+    set({
+      map: {
+        ...map,
+        nodes: [...updatedNodes, nextFloorNode],
+      },
+    });
+  },
+
+  goToNextFloor: () => {
+    const { map } = get();
+
+    // 새 맵 생성
+    const newMap = generateMap();
+
+    set({
+      phase: 'MAP',
+      map: {
+        ...newMap,
+        floor: map.floor + 1,
+      },
+    });
   },
 }));

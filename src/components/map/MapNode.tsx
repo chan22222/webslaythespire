@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { MapNode as MapNodeType } from '../../types/map';
 
 interface MapNodeProps {
@@ -15,13 +15,38 @@ const nodeConfig = {
   BOSS: { size: 80, label: '보스', description: '이 층의 보스와 대결', icon: '/sprites/icon/enemy_boss.png' },
   REST: { size: 52, label: '휴식', description: 'HP를 회복하거나 카드를 강화', icon: '/sprites/icon/realx.png' },
   SHOP: { size: 52, label: '상점', description: '카드와 아이템을 구매', icon: '/sprites/icon/shop.png' },
-  EVENT: { size: 52, label: '이벤트', description: '무작위 이벤트 발생', icon: '/sprites/icon/question.png' },
+  EVENT: { size: 52, label: '이벤트', description: '무작위 이벤트 발생', icon: '/sprites/icon/gamble.png' },
   TREASURE: { size: 52, label: '보물', description: '유물 획득', icon: '/sprites/icon/treasure.png' },
+  NEXT_FLOOR: { size: 60, label: '다음 층', description: '다음 층으로 이동', icon: '/sprites/icon/question.png' },
 };
 
 export function MapNode({ node, isAvailable, isCurrent, onClick }: MapNodeProps) {
   const [showTooltip, setShowTooltip] = useState(false);
+  const [nextFloorPhase, setNextFloorPhase] = useState<'lock' | 'shake' | 'reveal'>('lock');
   const config = nodeConfig[node.type] || nodeConfig.ENEMY;
+
+  // NEXT_FLOOR 노드 애니메이션
+  useEffect(() => {
+    if (node.type !== 'NEXT_FLOOR') return;
+
+    // lock → shake → reveal 순서로 애니메이션
+    const shakeTimer = setTimeout(() => setNextFloorPhase('shake'), 500);
+    const revealTimer = setTimeout(() => setNextFloorPhase('reveal'), 1200);
+
+    return () => {
+      clearTimeout(shakeTimer);
+      clearTimeout(revealTimer);
+    };
+  }, [node.type]);
+
+  // NEXT_FLOOR 노드의 현재 아이콘
+  const getCurrentIcon = () => {
+    if (node.type !== 'NEXT_FLOOR') return config.icon;
+    if (nextFloorPhase === 'lock' || nextFloorPhase === 'shake') {
+      return '/sprites/icon/lock.png';
+    }
+    return '/sprites/icon/question.png';
+  };
   const halfSize = config.size / 2;
   const isDisabled = !isAvailable && !node.visited;
 
@@ -86,10 +111,11 @@ export function MapNode({ node, isAvailable, isCurrent, onClick }: MapNodeProps)
           flex items-center justify-center
           transition-all duration-150
           ${isAvailable && !node.visited ? 'cursor-pointer hover:scale-110' : ''}
+          ${node.type === 'NEXT_FLOOR' && nextFloorPhase === 'shake' ? 'animate-shake' : ''}
         `}
       >
         <img
-          src={config.icon}
+          src={getCurrentIcon()}
           alt={config.label}
           style={{
             maxWidth: config.size,
@@ -99,6 +125,7 @@ export function MapNode({ node, isAvailable, isCurrent, onClick }: MapNodeProps)
             imageRendering: 'pixelated',
             filter: getFilter(),
             transition: 'all 0.15s ease',
+            animation: node.type === 'NEXT_FLOOR' && nextFloorPhase === 'reveal' ? 'popIn 0.3s ease-out' : undefined,
           }}
         />
 
@@ -178,6 +205,26 @@ export function MapNode({ node, isAvailable, isCurrent, onClick }: MapNodeProps)
             opacity: 0.9;
             transform: translate(-50%, -50%) scale(1.1);
           }
+        }
+        .animate-shake {
+          animation: shake 0.6s ease-in-out;
+        }
+        @keyframes shake {
+          0%, 100% { transform: translateX(0) rotate(0); }
+          10% { transform: translateX(-4px) rotate(-3deg); }
+          20% { transform: translateX(4px) rotate(3deg); }
+          30% { transform: translateX(-4px) rotate(-3deg); }
+          40% { transform: translateX(4px) rotate(3deg); }
+          50% { transform: translateX(-3px) rotate(-2deg); }
+          60% { transform: translateX(3px) rotate(2deg); }
+          70% { transform: translateX(-2px) rotate(-1deg); }
+          80% { transform: translateX(2px) rotate(1deg); }
+          90% { transform: translateX(-1px) rotate(0); }
+        }
+        @keyframes popIn {
+          0% { transform: scale(0.5); opacity: 0; }
+          50% { transform: scale(1.2); }
+          100% { transform: scale(1); opacity: 1; }
         }
       `}</style>
     </div>

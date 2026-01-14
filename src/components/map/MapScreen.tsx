@@ -14,7 +14,7 @@ const PARTICLES = Array.from({ length: 25 }, (_, i) => ({
   opacity: Math.random() * 0.3 + 0.1,
 }));
 
-const MAP_WIDTH = 1900;
+const MAP_WIDTH = 2050;
 const MAP_PADDING = 80; // 맵 좌우 패딩
 const VIEW_STEP = 400; // 버튼 클릭시 이동 거리
 
@@ -27,12 +27,22 @@ export function MapScreen() {
 
   // 처음 등장시에만 현재 노드 위치로 중앙 정렬
   const initializedRef = useRef(false);
+  const prevNodesLengthRef = useRef(map.nodes.length);
+
   useEffect(() => {
+    // 노드가 새로 추가되면 (NEXT_FLOOR 등) 스크롤 다시 초기화
+    if (map.nodes.length !== prevNodesLengthRef.current) {
+      initializedRef.current = false;
+      prevNodesLengthRef.current = map.nodes.length;
+    }
+
     if (initializedRef.current) return;
 
-    const currentNode = map.currentNodeId
-      ? map.nodes.find(n => n.id === map.currentNodeId)
-      : availableNodes[0];
+    // NEXT_FLOOR 노드가 있으면 해당 위치로, 아니면 현재 노드로
+    const nextFloorNode = map.nodes.find(n => n.type === 'NEXT_FLOOR' && !n.visited);
+    const currentNode = nextFloorNode
+      || (map.currentNodeId ? map.nodes.find(n => n.id === map.currentNodeId) : null)
+      || availableNodes[0];
 
     if (currentNode && containerRef.current) {
       // 좌우 패딩 고려
@@ -45,7 +55,7 @@ export function MapScreen() {
       setViewOffset(targetOffset);
       initializedRef.current = true;
     }
-  }, [map.currentNodeId, availableNodes]);
+  }, [map.currentNodeId, availableNodes, map.nodes.length]);
 
   const handleNavLeft = () => {
     setViewOffset(prev => Math.max(0, prev - VIEW_STEP));

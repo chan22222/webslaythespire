@@ -7,7 +7,7 @@ import { generateCardRewards } from '../../data/cards';
 import { randomInt } from '../../utils/shuffle';
 
 export function CardRewardScreen() {
-  const { setPhase, modifyGold, addCardToDeck } = useGameStore();
+  const { setPhase, modifyGold, addCardToDeck, getCurrentNode, addNextFloorNode } = useGameStore();
   const { resetCombat, enemies } = useCombatStore();
   const [cardRewards, setCardRewards] = useState<CardType[]>([]);
   const [goldReward, setGoldReward] = useState(0);
@@ -58,6 +58,13 @@ export function CardRewardScreen() {
       addCardToDeck(cardRewards[selectedCardIndex]);
     }
     resetCombat();
+
+    // 보스 클리어 시 NEXT_FLOOR 노드 추가
+    const currentNode = getCurrentNode();
+    if (currentNode?.type === 'BOSS') {
+      addNextFloorNode();
+    }
+
     setPhase('MAP');
   };
 

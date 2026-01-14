@@ -1,4 +1,4 @@
-export type NodeType = 'ENEMY' | 'ELITE' | 'BOSS' | 'REST' | 'SHOP' | 'EVENT' | 'TREASURE';
+export type NodeType = 'ENEMY' | 'ELITE' | 'BOSS' | 'REST' | 'SHOP' | 'EVENT' | 'TREASURE' | 'NEXT_FLOOR';
 
 export interface MapNode {
   id: string;
@@ -25,6 +25,7 @@ export const NODE_SYMBOLS: Record<NodeType, string> = {
   SHOP: '$',
   EVENT: '?',
   TREASURE: 'T',
+  NEXT_FLOOR: '→',
 };
 
 export const NODE_COLORS: Record<NodeType, string> = {
@@ -35,4 +36,5 @@ export const NODE_COLORS: Record<NodeType, string> = {
   SHOP: '#ffd700',
   EVENT: '#9b59b6',
   TREASURE: '#f39c12',
+  NEXT_FLOOR: '#a855f7',
 };
