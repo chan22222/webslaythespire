@@ -104,7 +104,7 @@ export const BATTLE_TRANCE: Card = {
   name: '전투 트랜스',
   type: 'EFFECT',
   rarity: 'UNCOMMON',
-  cost: 0,
+  cost: 1,
   image: '/cards/effect/battle_trance.png',
   description: '카드 2장을 뽑습니다.',
   effects: [{ type: 'DRAW', value: 2 }],

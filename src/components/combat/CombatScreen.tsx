@@ -1414,6 +1414,7 @@ export function CombatScreen() {
                   enemy={enemy}
                   isTargetable={selectedCardId !== null && enemy.currentHp > 0}
                   incomingDamage={selectedCardId && enemy.currentHp > 0 ? calculateIncomingDamage(enemy.instanceId) : 0}
+                  ignoreBlock={selectedCardId ? hand.find(c => c.instanceId === selectedCardId)?.effects.some(e => e.type === 'HALVE_ENEMY_HP') : false}
                 />
               </div>
             ))}

@@ -13,6 +13,7 @@ import {
   DexterityIcon,
   PoisonIcon,
   MetallicizeIcon,
+  InvulnerableIcon,
 } from './icons';
 
 // 스킬 이펙트 컴포넌트 (export해서 Enemy에서도 사용)
@@ -255,6 +256,8 @@ function StatusBadge({ status }: { status: Status }) {
         return <PoisonIcon size={14} color="#84cc16" />;
       case 'METALLICIZE':
         return <MetallicizeIcon size={14} color="#94a3b8" />;
+      case 'INVULNERABLE':
+        return <InvulnerableIcon size={14} color="#fbbf24" />;
       default:
         return null;
     }

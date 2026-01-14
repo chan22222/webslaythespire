@@ -254,3 +254,31 @@ export function MetallicizeIcon({ size = 24, className = '', color = 'currentCol
     </svg>
   );
 }
+
+// 무적 아이콘 (빛나는 방패)
+export function InvulnerableIcon({ size = 24, className = '', color = 'currentColor' }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} fill="none">
+      {/* 빛나는 후광 */}
+      <circle cx="12" cy="12" r="10" fill={color} opacity="0.2" />
+      {/* 방패 기본 형태 */}
+      <path
+        d="M12 3L5 6V11C5 15.5 8 19.5 12 21C16 19.5 19 15.5 19 11V6L12 3Z"
+        fill={color}
+        opacity="0.95"
+      />
+      {/* 방패 테두리 광택 */}
+      <path
+        d="M12 4L6.5 6.5V11C6.5 14.5 9 18 12 19.5"
+        stroke="rgba(255,255,255,0.6)"
+        strokeWidth="1"
+        fill="none"
+      />
+      {/* 중앙 별 모양 */}
+      <path
+        d="M12 7L13 10L16 10L13.5 12L14.5 15L12 13L9.5 15L10.5 12L8 10L11 10Z"
+        fill="rgba(255,255,255,0.9)"
+      />
+    </svg>
+  );
+}

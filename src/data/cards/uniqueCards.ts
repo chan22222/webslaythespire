@@ -23,16 +23,16 @@ export const INFINITE_VORTEX: Card = {
   name: '무한의 소용돌이',
   type: 'EFFECT',
   rarity: 'UNIQUE',
-  cost: 1,
+  cost: 0,
   image: '/cards/effect/infinite_vortex.png',
-  description: '이번 턴에 사용한 카드 5장을 다시 손으로 가져옵니다. 소멸.',
-  effects: [{ type: 'RETURN_PLAYED_CARDS', value: 5 }],
+  description: '에너지를 최대 3까지 사용해, 사용한 에너지 1당 카드를 2장씩 뽑습니다. 소멸.',
+  effects: [{ type: 'CONSUME_ENERGY_DRAW', value: 2, maxConsume: 3 }],
   exhaust: true,
   upgraded: false,
   upgradeEffect: {
     name: '무한의 소용돌이+',
-    description: '이번 턴에 사용한 카드 8장을 다시 손으로 가져옵니다. 소멸.',
-    effects: [{ type: 'RETURN_PLAYED_CARDS', value: 8 }],
+    description: '에너지를 최대 5까지 사용해, 사용한 에너지 1당 카드를 2장씩 뽑습니다. 소멸.',
+    effects: [{ type: 'CONSUME_ENERGY_DRAW', value: 2, maxConsume: 5 }],
   },
 };
 
