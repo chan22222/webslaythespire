@@ -197,24 +197,22 @@ export function DexterityIcon({ size = 24, className = '', color = 'currentColor
   );
 }
 
-// 독 아이콘 (45도 기울어진 동그란 물약병)
+// 독 아이콘 (동그란 물약병)
 export function PoisonIcon({ size = 24, className = '', color = 'currentColor' }: IconProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" className={className} fill="none">
-      <g transform="rotate(45 12 12)">
-        {/* 물약병 목 */}
-        <rect x="10" y="2" width="4" height="4" fill={color} rx="0.5" />
-        {/* 물약병 마개 */}
-        <rect x="9.5" y="1" width="5" height="2" fill={color} opacity="0.7" rx="1" />
-        {/* 동그란 물약병 몸체 */}
-        <circle cx="12" cy="14" r="8" fill={color} opacity="0.9" />
-        {/* 물약 내용물 하이라이트 */}
-        <ellipse cx="10" cy="12" rx="2.5" ry="2" fill="rgba(255,255,255,0.3)" />
-        {/* 거품 */}
-        <circle cx="14" cy="11" r="1" fill="rgba(255,255,255,0.4)" />
-        <circle cx="15.5" cy="13" r="0.7" fill="rgba(255,255,255,0.3)" />
-        <circle cx="9" cy="15" r="0.5" fill="rgba(255,255,255,0.25)" />
-      </g>
+      {/* 물약병 목 */}
+      <rect x="10" y="2" width="4" height="4" fill={color} rx="0.5" />
+      {/* 물약병 마개 */}
+      <rect x="9.5" y="1" width="5" height="2" fill={color} opacity="0.7" rx="1" />
+      {/* 동그란 물약병 몸체 */}
+      <circle cx="12" cy="14" r="8" fill={color} opacity="0.9" />
+      {/* 물약 내용물 하이라이트 */}
+      <ellipse cx="10" cy="12" rx="2.5" ry="2" fill="rgba(255,255,255,0.3)" />
+      {/* 거품 */}
+      <circle cx="14" cy="11" r="1" fill="rgba(255,255,255,0.4)" />
+      <circle cx="15.5" cy="13" r="0.7" fill="rgba(255,255,255,0.3)" />
+      <circle cx="9" cy="15" r="0.5" fill="rgba(255,255,255,0.25)" />
     </svg>
   );
 }

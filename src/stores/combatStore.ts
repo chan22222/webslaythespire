@@ -71,6 +71,10 @@ interface CombatStore extends CombatState {
 
   // 추가 턴 (시간 왜곡)
   extraTurnPending: boolean;
+
+  // 카드 사용 중 (1초간 다른 카드 사용 불가)
+  isPlayingCard: boolean;
+  lockCardPlay: () => void;
 }
 
 export const useCombatStore = create<CombatStore>((set, get) => ({
@@ -82,6 +86,7 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
   enemySkillTriggers: {},
   playerDebuffTrigger: 0,
   extraTurnPending: false,
+  isPlayingCard: false,
   onPlayerHit: null,
   setOnPlayerHit: (callback) => set({ onPlayerHit: callback }),
 
@@ -1139,6 +1144,14 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     return 'ONGOING';
   },
 
+  lockCardPlay: () => {
+    if (get().isPlayingCard) return;
+    set({ isPlayingCard: true });
+    setTimeout(() => {
+      set({ isPlayingCard: false });
+    }, 400);
+  },
+
   resetCombat: () => {
     const { combatLog } = get();
     set({
@@ -1148,6 +1161,7 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       playerBlock: 0,
       playerStatuses: [],
       damagePopups: [],
+      isPlayingCard: false,
     });
   },
 }));

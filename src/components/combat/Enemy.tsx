@@ -502,7 +502,7 @@ function EnemyStatusBadge({ status }: { status: { type: string; stacks: number }
           <div className="font-title text-sm mb-1" style={{ color: info.isDebuff ? '#ff6b6b' : '#4ade80' }}>
             {info.name}
           </div>
-          <div className="font-card text-xs text-gray-300 max-w-48">
+          <div className="font-card text-xs text-gray-300">
             {info.description}
           </div>
           <div
@@ -742,6 +742,7 @@ export function Enemy({ enemy, isTargetable = false, incomingDamage = 0, ignoreB
           opacity: isDying ? 0 : 1,
           transition: 'opacity 0.3s ease-out',
           marginBottom: `${ENEMY_INTENT_OFFSET[enemy.templateId] ?? 0}px`,
+          zIndex: 10,
         }}
       >
         <div className="flex items-center gap-1">
