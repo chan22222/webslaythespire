@@ -919,15 +919,21 @@ export function Enemy({ enemy, isTargetable = false, incomingDamage = 0, ignoreB
 
       {/* 이름 */}
       <div
-        className="mt-4 px-4 py-1 rounded-full"
+        className="mt-4 px-2"
         style={{
-          background: 'linear-gradient(180deg, rgba(30,25,20,0.9) 0%, rgba(15,12,10,0.95) 100%)',
-          border: '1px solid var(--gold-dark)',
+          background: 'rgba(0, 0, 0, 0.7)',
+          borderRadius: '2px',
           opacity: isDying ? 0 : 1,
           transition: 'opacity 0.3s ease-out',
         }}
       >
-        <span className="font-title text-sm text-[var(--gold-light)] tracking-wide">
+        <span
+          className="text-sm text-white"
+          style={{
+            fontFamily: '"NeoDunggeunmo", cursive',
+            textShadow: '0 1px 2px rgba(0,0,0,0.8)'
+          }}
+        >
           {enemy.name}
         </span>
       </div>
