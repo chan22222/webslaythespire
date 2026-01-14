@@ -25,11 +25,13 @@ export interface CardEffect {
     | 'RETURN_PLAYED_CARDS'
     | 'INVULNERABLE'
     | 'HALVE_ENEMY_HP'
-    | 'EXTRA_TURN';
+    | 'EXTRA_TURN'
+    | 'CONSUME_ENERGY_DRAW'; // 에너지 소비해서 카드 드로우
   value: number;
   target?: TargetType;
   status?: StatusType;
   ratio?: number; // 사선에서 카드용 (잃은 HP 비율)
+  maxConsume?: number; // CONSUME_ENERGY_DRAW용 최대 소비 에너지
 }
 
 export interface Card {

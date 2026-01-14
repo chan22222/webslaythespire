@@ -269,11 +269,13 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       }
     }
 
-    // 금속화 효과: 턴 시작 시 방어도 획득
+    // 금속화 효과: 턴 시작 시 방어도 획득 (민첩 적용)
     const metallicize = playerStatuses.find(s => s.type === 'METALLICIZE');
     if (metallicize && metallicize.stacks > 0) {
-      get().gainPlayerBlock(metallicize.stacks);
-      get().addToCombatLog(`금속화로 방어도 ${metallicize.stacks} 획득!`);
+      const dexterity = playerStatuses.find(s => s.type === 'DEXTERITY')?.stacks || 0;
+      const blockAmount = metallicize.stacks + dexterity;
+      get().gainPlayerBlock(blockAmount);
+      get().addToCombatLog(`금속화로 방어도 ${blockAmount} 획득!`);
     }
 
     // 독 피해 처리 (방어도 무시, 직접 HP 감소)
@@ -808,6 +810,20 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
 
               get().addToCombatLog(`${targetEnemy.name}의 HP를 ${cappedDmg} 감소! (${targetEnemy.currentHp} → ${newHp})`);
             }
+          }
+          break;
+        }
+        case 'CONSUME_ENERGY_DRAW': {
+          // 무한의 소용돌이: 에너지 소비해서 카드 드로우
+          const currentEnergy = get().energy;
+          const maxConsume = effect.maxConsume || 3;
+          const energyToConsume = Math.min(currentEnergy, maxConsume);
+          const cardsToDraw = energyToConsume * effect.value;
+
+          if (energyToConsume > 0) {
+            set({ energy: currentEnergy - energyToConsume });
+            get().drawCards(cardsToDraw);
+            get().addToCombatLog(`에너지 ${energyToConsume} 소비! 카드 ${cardsToDraw}장 드로우!`);
           }
           break;
         }

@@ -22,19 +22,25 @@ const nodeConfig = {
 
 export function MapNode({ node, isAvailable, isCurrent, onClick }: MapNodeProps) {
   const [showTooltip, setShowTooltip] = useState(false);
-  const [nextFloorPhase, setNextFloorPhase] = useState<'lock' | 'shake' | 'reveal'>('lock');
+  const [nextFloorPhase, setNextFloorPhase] = useState<'hidden' | 'appearing' | 'shake1' | 'shake2' | 'flash' | 'reveal'>('hidden');
   const config = nodeConfig[node.type] || nodeConfig.ENEMY;
 
   // NEXT_FLOOR 노드 애니메이션
   useEffect(() => {
     if (node.type !== 'NEXT_FLOOR') return;
 
-    // lock → shake → reveal 순서로 애니메이션
-    const shakeTimer = setTimeout(() => setNextFloorPhase('shake'), 500);
-    const revealTimer = setTimeout(() => setNextFloorPhase('reveal'), 1200);
+    // hidden → appearing → shake1 → shake2 → flash → reveal
+    const appearTimer = setTimeout(() => setNextFloorPhase('appearing'), 300);
+    const shake1Timer = setTimeout(() => setNextFloorPhase('shake1'), 1500);
+    const shake2Timer = setTimeout(() => setNextFloorPhase('shake2'), 2200);
+    const flashTimer = setTimeout(() => setNextFloorPhase('flash'), 2900);
+    const revealTimer = setTimeout(() => setNextFloorPhase('reveal'), 3200);
 
     return () => {
-      clearTimeout(shakeTimer);
+      clearTimeout(appearTimer);
+      clearTimeout(shake1Timer);
+      clearTimeout(shake2Timer);
+      clearTimeout(flashTimer);
       clearTimeout(revealTimer);
     };
   }, [node.type]);
@@ -42,11 +48,22 @@ export function MapNode({ node, isAvailable, isCurrent, onClick }: MapNodeProps)
   // NEXT_FLOOR 노드의 현재 아이콘
   const getCurrentIcon = () => {
     if (node.type !== 'NEXT_FLOOR') return config.icon;
-    if (nextFloorPhase === 'lock' || nextFloorPhase === 'shake') {
-      return '/sprites/icon/lock.png';
+    if (nextFloorPhase === 'reveal') {
+      return '/sprites/icon/question.png';
     }
-    return '/sprites/icon/question.png';
+    return '/sprites/icon/lock.png';
   };
+
+  // NEXT_FLOOR 노드의 opacity
+  const getNextFloorOpacity = () => {
+    if (node.type !== 'NEXT_FLOOR') return 1;
+    if (nextFloorPhase === 'hidden') return 0;
+    if (nextFloorPhase === 'appearing') return 1;
+    return 1;
+  };
+
+  // NEXT_FLOOR 노드가 흔들리는 중인지
+  const isShaking = node.type === 'NEXT_FLOOR' && (nextFloorPhase === 'shake1' || nextFloorPhase === 'shake2');
   const halfSize = config.size / 2;
   const isDisabled = !isAvailable && !node.visited;
 
@@ -104,6 +121,17 @@ export function MapNode({ node, isAvailable, isCurrent, onClick }: MapNodeProps)
         />
       )}
 
+      {/* NEXT_FLOOR 빛 효과 */}
+      {node.type === 'NEXT_FLOOR' && nextFloorPhase === 'flash' && (
+        <div
+          className="absolute inset-0 flex items-center justify-center"
+          style={{
+            background: 'radial-gradient(circle, rgba(255, 255, 200, 0.9) 0%, rgba(255, 220, 100, 0.6) 30%, transparent 70%)',
+            animation: 'flashBurst 0.3s ease-out forwards',
+          }}
+        />
+      )}
+
       {/* 아이콘 이미지 - 원본 비율 유지 */}
       <div
         className={`
@@ -111,8 +139,12 @@ export function MapNode({ node, isAvailable, isCurrent, onClick }: MapNodeProps)
           flex items-center justify-center
           transition-all duration-150
           ${isAvailable && !node.visited ? 'cursor-pointer hover:scale-110' : ''}
-          ${node.type === 'NEXT_FLOOR' && nextFloorPhase === 'shake' ? 'animate-shake' : ''}
+          ${isShaking ? 'animate-shake' : ''}
         `}
+        style={{
+          opacity: getNextFloorOpacity(),
+          transition: node.type === 'NEXT_FLOOR' && nextFloorPhase === 'appearing' ? 'opacity 1s ease-out' : 'opacity 0.15s ease',
+        }}
       >
         <img
           src={getCurrentIcon()}
@@ -125,7 +157,7 @@ export function MapNode({ node, isAvailable, isCurrent, onClick }: MapNodeProps)
             imageRendering: 'pixelated',
             filter: getFilter(),
             transition: 'all 0.15s ease',
-            animation: node.type === 'NEXT_FLOOR' && nextFloorPhase === 'reveal' ? 'popIn 0.3s ease-out' : undefined,
+            animation: node.type === 'NEXT_FLOOR' && nextFloorPhase === 'reveal' ? 'revealPop 0.4s ease-out' : undefined,
           }}
         />
 
@@ -207,24 +239,51 @@ export function MapNode({ node, isAvailable, isCurrent, onClick }: MapNodeProps)
           }
         }
         .animate-shake {
-          animation: shake 0.6s ease-in-out;
+          animation: shake 0.5s ease-in-out;
         }
         @keyframes shake {
           0%, 100% { transform: translateX(0) rotate(0); }
-          10% { transform: translateX(-4px) rotate(-3deg); }
-          20% { transform: translateX(4px) rotate(3deg); }
-          30% { transform: translateX(-4px) rotate(-3deg); }
-          40% { transform: translateX(4px) rotate(3deg); }
-          50% { transform: translateX(-3px) rotate(-2deg); }
-          60% { transform: translateX(3px) rotate(2deg); }
-          70% { transform: translateX(-2px) rotate(-1deg); }
-          80% { transform: translateX(2px) rotate(1deg); }
-          90% { transform: translateX(-1px) rotate(0); }
+          15% { transform: translateX(-6px) rotate(-4deg); }
+          30% { transform: translateX(6px) rotate(4deg); }
+          45% { transform: translateX(-5px) rotate(-3deg); }
+          60% { transform: translateX(5px) rotate(3deg); }
+          75% { transform: translateX(-3px) rotate(-2deg); }
+          90% { transform: translateX(2px) rotate(1deg); }
         }
-        @keyframes popIn {
-          0% { transform: scale(0.5); opacity: 0; }
-          50% { transform: scale(1.2); }
-          100% { transform: scale(1); opacity: 1; }
+        @keyframes flashBurst {
+          0% {
+            transform: scale(0.5);
+            opacity: 1;
+          }
+          50% {
+            transform: scale(2);
+            opacity: 0.8;
+          }
+          100% {
+            transform: scale(3);
+            opacity: 0;
+          }
+        }
+        @keyframes revealPop {
+          0% {
+            transform: scale(0);
+            opacity: 0;
+            filter: brightness(3);
+          }
+          40% {
+            transform: scale(1.3);
+            opacity: 1;
+            filter: brightness(2);
+          }
+          70% {
+            transform: scale(0.9);
+            filter: brightness(1.2);
+          }
+          100% {
+            transform: scale(1);
+            opacity: 1;
+            filter: brightness(1);
+          }
         }
       `}</style>
     </div>

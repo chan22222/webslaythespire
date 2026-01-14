@@ -16,6 +16,7 @@ interface EnemyProps {
   enemy: EnemyInstance;
   isTargetable?: boolean;
   incomingDamage?: number; // 예상 피해량 (버프/디버프 계산 완료된 값)
+  ignoreBlock?: boolean; // 방어도 무시 (신의권능 등)
 }
 
 // ===== 게임 스타일 의도 표시 컴포넌트 =====
@@ -509,7 +510,7 @@ function EnemyStatusBadge({ status }: { status: { type: string; stacks: number }
   );
 }
 
-export function Enemy({ enemy, isTargetable = false, incomingDamage = 0 }: EnemyProps) {
+export function Enemy({ enemy, isTargetable = false, incomingDamage = 0, ignoreBlock = false }: EnemyProps) {
   const [showIntentTooltip, setShowIntentTooltip] = useState(false);
   const [isDying, setIsDying] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -922,7 +923,7 @@ export function Enemy({ enemy, isTargetable = false, incomingDamage = 0 }: Enemy
           size="md"
           showNumbers
           incomingDamage={incomingDamage}
-          enemyBlock={enemy.block}
+          enemyBlock={ignoreBlock ? 0 : enemy.block}
         />
       </div>
 
