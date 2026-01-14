@@ -18,7 +18,6 @@ export function HealthBar({
   enemyBlock = 0,
 }: HealthBarProps) {
   const percentage = Math.max(0, Math.min(100, (current / max) * 100));
-  const isLowHealth = percentage < 30;
   const isCritical = percentage < 15;
 
   // 예상 피해 계산 (방어도 먼저 차감)
@@ -28,9 +27,9 @@ export function HealthBar({
   const willDie = expectedHp <= 0 && incomingDamage > 0;
 
   const heights = {
-    sm: 16,
-    md: 22,
-    lg: 28,
+    sm: 18,
+    md: 24,
+    lg: 30,
   };
 
   const textSizes = {
@@ -41,66 +40,53 @@ export function HealthBar({
 
   const height = heights[size];
 
-  // HP 색상 결정
-  const getBarColor = () => {
-    if (isCritical) return '#dc2626';
-    if (isLowHealth) return '#ef4444';
-    return '#b91c1c';
-  };
-
   return (
     <div className="w-full relative">
-      {/* 체력바 컨테이너 */}
+      {/* 체력바 컨테이너 - 빈 HP 바 배경 */}
       <div
         style={{
           height: `${height}px`,
-          background: 'rgba(0, 0, 0, 0.6)',
-          borderRadius: '3px',
-          border: '1px solid rgba(255, 255, 255, 0.15)',
-          overflow: 'hidden',
+          backgroundImage: 'url(/hp0_combat.png)',
+          backgroundSize: '100% 100%',
           position: 'relative',
+          imageRendering: 'pixelated',
         }}
       >
-        {/* 예상 피해 후 남을 HP (반투명 빨간색) - 뒤에 깔림 */}
+        {/* 예상 피해 후 남을 HP (반투명) - 뒤에 깔림 */}
         {incomingDamage > 0 && (
           <div
-            className="absolute h-full"
+            className="absolute inset-0 overflow-hidden"
             style={{
-              width: `${percentage}%`,
-              background: willDie
-                ? 'repeating-linear-gradient(45deg, #7f1d1d, #7f1d1d 3px, #991b1b 3px, #991b1b 6px)'
-                : getBarColor(),
+              clipPath: `inset(0 ${100 - percentage}% 0 0)`,
               opacity: 0.4,
             }}
-          />
+          >
+            <img
+              src="/hp_combat.png"
+              alt=""
+              className="w-full h-full"
+              style={{ imageRendering: 'pixelated' }}
+            />
+          </div>
         )}
 
-        {/* 실제 HP 바 (예상 피해 적용 시 줄어든 것처럼 표시) */}
+        {/* 실제 HP 바 */}
         <div
-          className={`h-full transition-all duration-50 ${isCritical && incomingDamage === 0 ? 'animate-pulse' : ''}`}
+          className={`absolute inset-0 overflow-hidden transition-all duration-50 ${isCritical && incomingDamage === 0 ? 'animate-pulse' : ''}`}
           style={{
-            width: incomingDamage > 0 ? `${expectedPercentage}%` : `${percentage}%`,
-            background: getBarColor(),
-            boxShadow: isCritical ? '0 0 8px rgba(220, 38, 38, 0.5)' : 'none',
-            position: 'relative',
+            clipPath: `inset(0 ${100 - (incomingDamage > 0 ? expectedPercentage : percentage)}% 0 0)`,
             zIndex: 1,
           }}
         >
-          {/* 상단 하이라이트 */}
-          <div
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              height: '40%',
-              background: 'linear-gradient(180deg, rgba(255,255,255,0.2) 0%, transparent 100%)',
-              pointerEvents: 'none',
-            }}
+          <img
+            src="/hp_combat.png"
+            alt=""
+            className="w-full h-full"
+            style={{ imageRendering: 'pixelated' }}
           />
         </div>
 
-        {/* 피해 영역 강조선 (줄어든 HP와 현재 HP 사이) */}
+        {/* 피해 영역 강조선 */}
         {incomingDamage > 0 && expectedPercentage < percentage && (
           <div
             className="absolute h-full animate-pulse"

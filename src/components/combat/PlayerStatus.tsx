@@ -511,13 +511,19 @@ export function PlayerStatus({ player, block, statuses, animation = 'idle', atta
 
       {/* 플레이어 이름 */}
       <div
-        className="mt-4 px-4 py-1 rounded-full -ml-14"
+        className="mt-4 px-3 py-0.5 -ml-14"
         style={{
-          background: 'linear-gradient(rgba(30, 25, 20, 0.9) 0%, rgba(15, 12, 10, 0.95) 100%)',
-          border: '1px solid var(--gold-dark)',
+          background: 'rgba(0, 0, 0, 0.7)',
+          borderRadius: '2px',
         }}
       >
-        <span className="font-title text-sm text-[var(--gold-light)] tracking-wide">
+        <span
+          className="text-base text-white"
+          style={{
+            fontFamily: '"NeoDunggeunmo", cursive',
+            textShadow: '0 1px 2px rgba(0,0,0,0.8)'
+          }}
+        >
           {playerName}
         </span>
       </div>
