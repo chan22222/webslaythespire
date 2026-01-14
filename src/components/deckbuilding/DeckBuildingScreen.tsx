@@ -10,12 +10,12 @@ import { UNCOMMON_CARDS } from '../../data/cards/uncommonCards';
 import { RARE_CARDS } from '../../data/cards/rareCards';
 import { UNIQUE_CARDS } from '../../data/cards/uniqueCards';
 import {
-  CULTIST,
-  JAW_WORM,
-  LOUSE_RED,
-  LOUSE_GREEN,
-  ACID_SLIME_M,
-  SPIKE_SLIME_M,
+  GOBLIN,
+  SKELETON,
+  FLYING_EYE,
+  GREEN_FLYING_EYE,
+  ACID_MUSHROOM,
+  MUSHROOM,
   GREMLIN_NOB,
   SLIME_BOSS,
 } from '../../data/enemies/act1Enemies';
@@ -23,12 +23,12 @@ import { ALL_RELICS } from '../../data/relics';
 
 // 선택 가능한 적 목록
 const ENEMY_OPTIONS: { template: EnemyTemplate; label: string; type: 'normal' | 'elite' | 'boss' }[] = [
-  { template: CULTIST, label: '컬티스트', type: 'normal' },
-  { template: JAW_WORM, label: '턱 벌레', type: 'normal' },
-  { template: LOUSE_RED, label: '붉은 이', type: 'normal' },
-  { template: LOUSE_GREEN, label: '녹색 이', type: 'normal' },
-  { template: ACID_SLIME_M, label: '산성 슬라임', type: 'normal' },
-  { template: SPIKE_SLIME_M, label: '가시 슬라임', type: 'normal' },
+  { template: GOBLIN, label: '고블린', type: 'normal' },
+  { template: SKELETON, label: '스켈레톤', type: 'normal' },
+  { template: FLYING_EYE, label: '플라잉아이', type: 'normal' },
+  { template: GREEN_FLYING_EYE, label: '그린 플라잉아이', type: 'normal' },
+  { template: ACID_MUSHROOM, label: '산성 머쉬룸', type: 'normal' },
+  { template: MUSHROOM, label: '머쉬룸', type: 'normal' },
   { template: GREMLIN_NOB, label: '고위 노블레스', type: 'elite' },
   { template: SLIME_BOSS, label: '슬라임 보스', type: 'boss' },
 ];

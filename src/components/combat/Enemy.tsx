@@ -19,6 +19,17 @@ interface EnemyProps {
   ignoreBlock?: boolean; // 방어도 무시 (신의권능 등)
 }
 
+// 몹별 인텐트 위치 오프셋 설정 (양수: 위로, 음수: 아래로)
+const ENEMY_INTENT_OFFSET: Record<string, number> = {
+  goblin: -50,
+  skeleton: -15,
+  mushroom: -25,
+  acid_mushroom: -25,
+  flying_eye: -9,
+  green_flying_eye: -9,
+  // 새 몹 추가 시 여기에 설정
+};
+
 // ===== 게임 스타일 의도 표시 컴포넌트 =====
 
 function AttackIntent({ damage, hits }: { damage: number; hits?: number }) {
@@ -724,12 +735,13 @@ export function Enemy({ enemy, isTargetable = false, incomingDamage = 0, ignoreB
       >
       {/* 인텐트 표시 */}
       <div
-        className="mb-6 animate-float relative cursor-help"
+        className="animate-float relative cursor-help"
         onMouseEnter={() => setShowIntentTooltip(true)}
         onMouseLeave={() => setShowIntentTooltip(false)}
         style={{
           opacity: isDying ? 0 : 1,
           transition: 'opacity 0.3s ease-out',
+          marginBottom: `${ENEMY_INTENT_OFFSET[enemy.templateId] ?? 0}px`,
         }}
       >
         <div className="flex items-center gap-1">
@@ -865,6 +877,7 @@ export function Enemy({ enemy, isTargetable = false, incomingDamage = 0, ignoreB
               transform: 'translateX(-50%)',
               opacity: isDying ? 0 : 1,
               transition: 'opacity 0.3s ease-out',
+              zIndex: -1,
             }}
           />
         </div>
