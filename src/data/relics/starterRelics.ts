@@ -250,15 +250,15 @@ export const CURSED_COIN: Relic = {
 export const MAGIC_RING: Relic = {
   id: 'magic_ring',
   name: '마법 반지',
-  description: '전투 시작 시 에너지 +4 획득.',
+  description: '전투 시작 시 에너지 +3 획득.',
   rarity: 'RARE',
   icon: '/sprites/item/마법반지.png',
   effects: [
     {
       trigger: 'ON_COMBAT_START',
-      description: '에너지 4 획득',
+      description: '에너지 3 획득',
       execute: (context) => {
-        context.gainEnergy?.(4);
+        context.gainEnergy?.(3);
       },
     },
   ],

@@ -66,13 +66,18 @@ export const useGameStore = create<GameState>((set, get) => ({
   startNewGame: () => {
     const starterDeck = createStarterDeck().map(card => createCardInstance(card));
     const newMap = generateMap();
+    const relics = getRandomStarterRelic();
+    const hasCrackedArmor = relics.some(r => r.id === 'cracked_armor');
+    const initialPlayer = createInitialPlayer();
 
     set({
       phase: 'MAP',
       player: {
-        ...createInitialPlayer(),
+        ...initialPlayer,
         deck: starterDeck,
-        relics: getRandomStarterRelic(),
+        relics,
+        maxHp: hasCrackedArmor ? initialPlayer.maxHp + 15 : initialPlayer.maxHp,
+        currentHp: hasCrackedArmor ? initialPlayer.currentHp + 15 : initialPlayer.currentHp,
       },
       map: newMap,
       currentAct: 1,
@@ -80,12 +85,18 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   startDeckBuilding: () => {
+    const relics = getRandomStarterRelic();
+    const hasCrackedArmor = relics.some(r => r.id === 'cracked_armor');
+    const initialPlayer = createInitialPlayer();
+
     set({
       phase: 'DECK_BUILDING',
       player: {
-        ...createInitialPlayer(),
+        ...initialPlayer,
         deck: [],
-        relics: getRandomStarterRelic(),
+        relics,
+        maxHp: hasCrackedArmor ? initialPlayer.maxHp + 15 : initialPlayer.maxHp,
+        currentHp: hasCrackedArmor ? initialPlayer.currentHp + 15 : initialPlayer.currentHp,
       },
       map: { nodes: [], currentNodeId: null, floor: 1 },
       currentAct: 1,
@@ -183,7 +194,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   addRelic: (relic: Relic) => {
-    const { player } = get();
+    const { player, modifyMaxHp } = get();
 
     // 이미 가지고 있는 유물인지 확인
     if (player.relics.some(r => r.id === relic.id)) return;
@@ -194,6 +205,11 @@ export const useGameStore = create<GameState>((set, get) => ({
         relics: [...player.relics, relic],
       },
     });
+
+    // PASSIVE 유물 효과 처리
+    if (relic.id === 'cracked_armor') {
+      modifyMaxHp(15);
+    }
   },
 
   modifyGold: (amount: number) => {
@@ -309,13 +325,18 @@ export const useGameStore = create<GameState>((set, get) => ({
     const deck = player.deck.length > 0
       ? player.deck
       : createStarterDeck().map(card => createCardInstance(card));
+    const finalRelics = relics && relics.length > 0 ? relics : [...STARTER_RELICS];
+    const hasCrackedArmor = finalRelics.some(r => r.id === 'cracked_armor');
+    const initialPlayer = createInitialPlayer();
 
     set({
       phase: 'COMBAT',
       player: {
-        ...createInitialPlayer(),
+        ...initialPlayer,
         deck,
-        relics: relics && relics.length > 0 ? relics : [...STARTER_RELICS],
+        relics: finalRelics,
+        maxHp: hasCrackedArmor ? initialPlayer.maxHp + 15 : initialPlayer.maxHp,
+        currentHp: hasCrackedArmor ? initialPlayer.currentHp + 15 : initialPlayer.currentHp,
       },
       testEnemies: enemies,
       map: { nodes: [], currentNodeId: null, floor: 1 },
@@ -325,12 +346,21 @@ export const useGameStore = create<GameState>((set, get) => ({
   startGameWithDeckAndRelics: (relics: Relic[]) => {
     const { player } = get();
     const newMap = generateMap();
+    const finalRelics = relics.length > 0 ? relics : [...STARTER_RELICS];
+    const hasCrackedArmor = finalRelics.some(r => r.id === 'cracked_armor');
+    const hadCrackedArmorBefore = player.relics.some(r => r.id === 'cracked_armor');
+
+    // 새로 금간갑옷이 추가되는 경우만 HP 증가
+    const hpBonus = hasCrackedArmor && !hadCrackedArmorBefore ? 15 : 0;
+
     set({
       phase: 'MAP',
       map: newMap,
       player: {
         ...player,
-        relics: relics.length > 0 ? relics : [...STARTER_RELICS],
+        relics: finalRelics,
+        maxHp: player.maxHp + hpBonus,
+        currentHp: player.currentHp + hpBonus,
       },
     });
   },
