@@ -232,6 +232,7 @@ interface PlayerStatusProps {
   attackTargetPos?: { x: number; y: number } | null;
   enemyCount?: number;
   onAnimationEnd?: () => void;
+  incomingDamage?: number; // 예상 HP 손실 (LOSE_HP 카드)
 }
 
 function StatusBadge({ status }: { status: Status }) {
@@ -417,7 +418,7 @@ function BlockBadge({ block }: { block: number }) {
   );
 }
 
-export function PlayerStatus({ player, block, statuses, animation = 'idle', attackTargetPos, enemyCount = 1, onAnimationEnd }: PlayerStatusProps) {
+export function PlayerStatus({ player, block, statuses, animation = 'idle', attackTargetPos, enemyCount = 1, onAnimationEnd, incomingDamage = 0 }: PlayerStatusProps) {
   // 플레이어 이름
   const playerName = useGameStore(state => state.playerName);
 
@@ -513,6 +514,7 @@ export function PlayerStatus({ player, block, statuses, animation = 'idle', atta
           block={0}
           size="md"
           showNumbers
+          incomingDamage={incomingDamage}
         />
       </div>
 

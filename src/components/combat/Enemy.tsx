@@ -15,6 +15,7 @@ import {
 interface EnemyProps {
   enemy: EnemyInstance;
   isTargetable?: boolean;
+  incomingDamage?: number; // 예상 피해량 (버프/디버프 계산 완료된 값)
 }
 
 // ===== 게임 스타일 의도 표시 컴포넌트 =====
@@ -508,7 +509,7 @@ function EnemyStatusBadge({ status }: { status: { type: string; stacks: number }
   );
 }
 
-export function Enemy({ enemy, isTargetable = false }: EnemyProps) {
+export function Enemy({ enemy, isTargetable = false, incomingDamage = 0 }: EnemyProps) {
   const [showIntentTooltip, setShowIntentTooltip] = useState(false);
   const [isDying, setIsDying] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -918,8 +919,10 @@ export function Enemy({ enemy, isTargetable = false }: EnemyProps) {
           current={enemy.currentHp}
           max={enemy.maxHp}
           block={0}
-          size="sm"
+          size="md"
           showNumbers
+          incomingDamage={incomingDamage}
+          enemyBlock={enemy.block}
         />
       </div>
 

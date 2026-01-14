@@ -532,6 +532,7 @@ export function CombatScreen() {
     discardPile,
     combatLog,
     damagePopups,
+    usedCardTypes,
     initCombat,
     playCard,
     selectCard,
@@ -810,6 +811,107 @@ export function CombatScreen() {
 
     return modifier;
   }, [playerStatuses, enemies]);
+
+  // 선택된 카드의 예상 총 데미지 계산 (다중 히트 포함)
+  const calculateIncomingDamage = useCallback((targetEnemyId: string): number => {
+    if (!selectedCardId) return 0;
+
+    const card = hand.find(c => c.instanceId === selectedCardId);
+    if (!card || card.cost > energy) return 0;
+
+    // 타겟이 필요한 카드인지 확인
+    const needsTarget = card.effects.some(e =>
+      (e.type === 'DAMAGE' && e.target === 'SINGLE') ||
+      (e.type === 'APPLY_STATUS' && e.target === 'SINGLE') ||
+      (e.type === 'DAMAGE_PER_LOST_HP' && e.target === 'SINGLE') ||
+      (e.type === 'HALVE_ENEMY_HP' && e.target === 'SINGLE')
+    );
+
+    // 전체 공격 효과 확인
+    const hasAllTargetDamage = card.effects.some(e =>
+      (e.type === 'DAMAGE' && e.target === 'ALL') ||
+      (e.type === 'DAMAGE_PER_PLAYED' && e.target === 'ALL')
+    );
+
+    if (!needsTarget && !hasAllTargetDamage) return 0;
+
+    let totalDamage = 0;
+    const strength = playerStatuses.find(s => s.type === 'STRENGTH')?.stacks || 0;
+    const weak = playerStatuses.find(s => s.type === 'WEAK');
+    const enemy = enemies.find(e => e.instanceId === targetEnemyId);
+    const vulnerable = enemy?.statuses.find(s => s.type === 'VULNERABLE');
+
+    for (const effect of card.effects) {
+      if (effect.type === 'DAMAGE' && (effect.target === 'SINGLE' || effect.target === 'ALL')) {
+        let damage = effect.value + strength;
+
+        // 약화 (25% 감소)
+        if (weak && weak.stacks > 0) {
+          damage = Math.round(damage * 0.75);
+        }
+
+        // 취약 (50% 추가)
+        if (vulnerable && vulnerable.stacks > 0) {
+          damage = Math.round(damage * 1.5);
+        }
+
+        totalDamage += Math.max(0, damage);
+      } else if (effect.type === 'DAMAGE_PER_LOST_HP') {
+        // 사선에서: 잃은 HP 기반 피해
+        const gameState = useGameStore.getState();
+        const lostHp = gameState.player.maxHp - gameState.player.currentHp;
+        const ratio = effect.ratio || 1;
+        let damage = Math.floor((lostHp / ratio) * effect.value) + strength;
+
+        if (weak && weak.stacks > 0) {
+          damage = Math.round(damage * 0.75);
+        }
+        if (vulnerable && vulnerable.stacks > 0) {
+          damage = Math.round(damage * 1.5);
+        }
+
+        totalDamage += Math.max(0, damage);
+      } else if (effect.type === 'HALVE_ENEMY_HP') {
+        // 신의 권능: 적 HP 절반 (최대 피해 제한)
+        if (enemy) {
+          const halfHp = Math.floor(enemy.currentHp / 2);
+          totalDamage += Math.min(halfHp, effect.value);
+        }
+      } else if (effect.type === 'DAMAGE_PER_PLAYED' && effect.target === 'ALL') {
+        // 종언의 일격: 사용한 카드 종류당 피해 (자기 자신 제외)
+        const uniqueCount = usedCardTypes.filter(id => id !== 'final_strike').length;
+        let damage = effect.value * uniqueCount + strength;
+
+        if (weak && weak.stacks > 0) {
+          damage = Math.round(damage * 0.75);
+        }
+        if (vulnerable && vulnerable.stacks > 0) {
+          damage = Math.round(damage * 1.5);
+        }
+
+        totalDamage += Math.max(0, damage);
+      }
+    }
+
+    return totalDamage;
+  }, [selectedCardId, hand, energy, playerStatuses, enemies, usedCardTypes]);
+
+  // 선택된 카드의 플레이어 HP 손실 계산 (LOSE_HP 효과)
+  const calculatePlayerHpLoss = useCallback((): number => {
+    if (!selectedCardId) return 0;
+
+    const card = hand.find(c => c.instanceId === selectedCardId);
+    if (!card || card.cost > energy) return 0;
+
+    let totalLoss = 0;
+    for (const effect of card.effects) {
+      if (effect.type === 'LOSE_HP') {
+        totalLoss += effect.value;
+      }
+    }
+
+    return totalLoss;
+  }, [selectedCardId, hand, energy]);
 
   const handleCardDragEnd = useCallback((cardInstanceId: string, x: number, y: number, dragDistance: number) => {
     // 공격 중이면 카드 사용 불가
@@ -1254,6 +1356,7 @@ export function CombatScreen() {
               animation={playerAnimation}
               attackTargetPos={attackTargetPos}
               enemyCount={enemies.filter(e => e.currentHp > 0).length}
+              incomingDamage={calculatePlayerHpLoss()}
               onAnimationEnd={() => {
                 // 사망 애니메이션 완료 시
                 if (playerAnimation === 'death') {
@@ -1310,6 +1413,7 @@ export function CombatScreen() {
                 <Enemy
                   enemy={enemy}
                   isTargetable={selectedCardId !== null && enemy.currentHp > 0}
+                  incomingDamage={selectedCardId && enemy.currentHp > 0 ? calculateIncomingDamage(enemy.instanceId) : 0}
                 />
               </div>
             ))}
