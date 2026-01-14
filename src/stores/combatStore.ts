@@ -1149,44 +1149,44 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
 
 // 간소화된 적 의도 결정 함수
 function getNextEnemyIntent(enemy: EnemyInstance, turn: number): EnemyInstance['intent'] {
-  // 컬티스트: 힘+3 → 공격 → 공격...
-  if (enemy.templateId === 'cultist') {
+  // 고블린: 힘+3 → 공격 → 공격...
+  if (enemy.templateId === 'goblin') {
     return turn === 1
       ? { type: 'BUFF', statusType: 'STRENGTH', statusStacks: 3 }
       : { type: 'ATTACK', damage: 9 + Math.floor(Math.random() * 3) };
   }
 
-  // 턱 벌레: 방어 7 → 공격 (2턴 주기)
-  if (enemy.templateId === 'jaw_worm') {
+  // 스켈레톤: 방어 7 → 공격 (2턴 주기)
+  if (enemy.templateId === 'skeleton') {
     return turn % 2 === 1
       ? { type: 'DEFEND', block: 7 }
       : { type: 'ATTACK', damage: 7 + Math.floor(Math.random() * 5) };
   }
 
-  // 붉은 이: 공격 → 힘+3 (2턴 주기)
-  if (enemy.templateId === 'louse_red') {
+  // 플라잉아이: 공격 → 힘+3 (2턴 주기)
+  if (enemy.templateId === 'flying_eye') {
     return turn % 2 === 1
       ? { type: 'ATTACK', damage: 4 + Math.floor(Math.random() * 3) }
       : { type: 'BUFF', statusType: 'STRENGTH', statusStacks: 3 };
   }
 
-  // 녹색 이: 공격 → 약화 1 → 공격 (3턴 주기)
-  if (enemy.templateId === 'louse_green') {
+  // 그린 플라잉아이: 공격 → 약화 1 → 공격 (3턴 주기)
+  if (enemy.templateId === 'green_flying_eye') {
     const pattern = turn % 3;
     if (pattern === 1) return { type: 'ATTACK', damage: 4 + Math.floor(Math.random() * 3) };
     if (pattern === 2) return { type: 'DEBUFF', statusType: 'WEAK', statusStacks: 1 };
     return { type: 'ATTACK', damage: 4 + Math.floor(Math.random() * 3) };
   }
 
-  // 산성 슬라임: 중독 5 → 공격 패턴
-  if (enemy.templateId === 'acid_slime_m') {
+  // 산성 머쉬룸: 중독 5 → 공격 패턴
+  if (enemy.templateId === 'acid_mushroom') {
     return turn % 2 === 1
       ? { type: 'DEBUFF', statusType: 'POISON', statusStacks: 5 }
       : { type: 'ATTACK', damage: 10 + Math.floor(Math.random() * 3) };
   }
 
-  // 가시 슬라임: 공격 → 방어 패턴
-  if (enemy.templateId === 'spike_slime_m') {
+  // 머쉬룸: 공격 → 방어 패턴
+  if (enemy.templateId === 'mushroom') {
     return turn % 2 === 1
       ? { type: 'ATTACK', damage: 9 + Math.floor(Math.random() * 3) }
       : { type: 'DEFEND', block: 5 };

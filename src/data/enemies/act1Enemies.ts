@@ -1,10 +1,10 @@
 import { EnemyTemplate, EnemyIntent, Enemy } from '../../types/enemy';
 import { Status } from '../../types/status';
 
-// 컬티스트 - 기본 적, 매 턴 힘을 얻으며 공격
-export const CULTIST: EnemyTemplate = {
-  id: 'cultist',
-  name: '컬티스트',
+// 고블린 - 기본 적, 매 턴 힘을 얻으며 공격
+export const GOBLIN: EnemyTemplate = {
+  id: 'goblin',
+  name: '고블린',
   minHp: 28,
   maxHp: 34,
   getNextIntent: (_enemy: Enemy, turn: number): EnemyIntent => {
@@ -29,10 +29,10 @@ export const CULTIST: EnemyTemplate = {
   },
 };
 
-// 턱 벌레 - 방어와 공격을 번갈아 사용
-export const JAW_WORM: EnemyTemplate = {
-  id: 'jaw_worm',
-  name: '턱 벌레',
+// 스켈레톤 - 방어와 공격을 번갈아 사용
+export const SKELETON: EnemyTemplate = {
+  id: 'skeleton',
+  name: '스켈레톤',
   minHp: 34,
   maxHp: 38,
   getNextIntent: (_enemy: Enemy, turn: number): EnemyIntent => {
@@ -51,10 +51,10 @@ export const JAW_WORM: EnemyTemplate = {
   },
 };
 
-// 붉은 이 - 약한 적
-export const LOUSE_RED: EnemyTemplate = {
-  id: 'louse_red',
-  name: '붉은 이',
+// 플라잉아이 - 공격 후 힘 버프
+export const FLYING_EYE: EnemyTemplate = {
+  id: 'flying_eye',
+  name: '플라잉아이',
   minHp: 10,
   maxHp: 15,
   getNextIntent: (_enemy: Enemy, turn: number): EnemyIntent => {
@@ -78,10 +78,10 @@ export const LOUSE_RED: EnemyTemplate = {
   },
 };
 
-// 녹색 이 - 공격 → 약화 → 공격 패턴
-export const LOUSE_GREEN: EnemyTemplate = {
-  id: 'louse_green',
-  name: '녹색 이',
+// 그린 플라잉아이 - 공격 → 약화 → 공격 패턴
+export const GREEN_FLYING_EYE: EnemyTemplate = {
+  id: 'green_flying_eye',
+  name: '그린 플라잉아이',
   minHp: 11,
   maxHp: 17,
   getNextIntent: (_enemy: Enemy, turn: number): EnemyIntent => {
@@ -103,10 +103,10 @@ export const LOUSE_GREEN: EnemyTemplate = {
   },
 };
 
-// 산성 슬라임 - 중독 → 공격 패턴
-export const ACID_SLIME_M: EnemyTemplate = {
-  id: 'acid_slime_m',
-  name: '산성 슬라임 (중)',
+// 산성 머쉬룸 - 중독 → 공격 패턴
+export const ACID_MUSHROOM: EnemyTemplate = {
+  id: 'acid_mushroom',
+  name: '산성 머쉬룸',
   minHp: 28,
   maxHp: 32,
   getNextIntent: (_enemy: Enemy, turn: number): EnemyIntent => {
@@ -124,10 +124,10 @@ export const ACID_SLIME_M: EnemyTemplate = {
   },
 };
 
-// 가시 슬라임 - 공격 → 방어 패턴
-export const SPIKE_SLIME_M: EnemyTemplate = {
-  id: 'spike_slime_m',
-  name: '가시 슬라임 (중)',
+// 머쉬룸 - 공격 → 방어 패턴
+export const MUSHROOM: EnemyTemplate = {
+  id: 'mushroom',
+  name: '머쉬룸',
   minHp: 28,
   maxHp: 32,
   getNextIntent: (_enemy: Enemy, turn: number): EnemyIntent => {
@@ -269,12 +269,12 @@ export const EASTER_EGG_ENCOUNTER: EnemyTemplate[] = [REAL_TUKBUG, KKUCHU];
 
 // 적 템플릿 목록
 export const NORMAL_ENEMIES: EnemyTemplate[] = [
-  CULTIST,
-  JAW_WORM,
-  LOUSE_RED,
-  LOUSE_GREEN,
-  ACID_SLIME_M,
-  SPIKE_SLIME_M,
+  GOBLIN,
+  SKELETON,
+  FLYING_EYE,
+  GREEN_FLYING_EYE,
+  ACID_MUSHROOM,
+  MUSHROOM,
 ];
 
 export const ELITE_ENEMIES: EnemyTemplate[] = [GREMLIN_NOB];
@@ -295,6 +295,6 @@ export function generateNormalEncounter(): EnemyTemplate[] {
     return [enemy1, enemy2];
   } else {
     // 3마리 약한 적
-    return [LOUSE_RED, LOUSE_GREEN, LOUSE_RED];
+    return [FLYING_EYE, GREEN_FLYING_EYE, FLYING_EYE];
   }
 }

@@ -375,51 +375,234 @@ export function JawWormSilhouette({ size = 100, className = '', isTargetable = f
   );
 }
 
-// 이 (Louse) 실루엣
-export function LouseSilhouette({ size = 80, className = '', isTargetable = false, variant = 'red' }: CharacterProps & { variant?: 'red' | 'green' }) {
-  const colors = variant === 'red'
-    ? { body: '#8a4a4a', dark: '#4a2525', glow: '#ff6b6b' }
-    : { body: '#4a8a4a', dark: '#254a25', glow: '#6bff6b' };
+// 플라잉아이 스프라이트 설정
+const FLYING_EYE_CONFIG = {
+  frameWidth: 150,
+  frameHeight: 150,
+  totalFrames: 8,
+  animationSpeed: 100, // ms per frame
+  // 실제 스프라이트 영역 (여백 제거)
+  cropOffsetX: 45,
+  cropOffsetY: 50,
+  cropWidth: 60,
+  cropHeight: 50,
+};
+
+// 플라잉아이 (Flying Eye) - 애니메이션 스프라이트
+export function FlyingEyeSprite({ size = 80, className = '', isTargetable = false, variant = 'red' }: CharacterProps & { variant?: 'red' | 'green' }) {
+  const [frame, setFrame] = useState(FLYING_EYE_CONFIG.totalFrames - 1);
+
+  const scaledSize = size * 1.7; // 크기 조정
+  const scale = scaledSize / FLYING_EYE_CONFIG.cropHeight;
+  const displayWidth = FLYING_EYE_CONFIG.cropWidth * scale;
+  const displayHeight = FLYING_EYE_CONFIG.cropHeight * scale;
+
+  // 애니메이션 루프 (역방향)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setFrame((prev) => (prev - 1 + FLYING_EYE_CONFIG.totalFrames) % FLYING_EYE_CONFIG.totalFrames);
+    }, FLYING_EYE_CONFIG.animationSpeed);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // 그린 버전은 hue-rotate 필터로 색상 변경
+  const colorFilter = variant === 'green'
+    ? 'hue-rotate(90deg) saturate(1.2)'
+    : 'none';
+
+  // 현재 프레임의 시작 위치 + crop offset
+  const bgX = -(frame * FLYING_EYE_CONFIG.frameWidth + FLYING_EYE_CONFIG.cropOffsetX) * scale;
+  const bgY = -FLYING_EYE_CONFIG.cropOffsetY * scale;
 
   return (
-    <svg width={size} height={size * 0.7} viewBox="0 0 100 70" className={className}>
-      <defs>
-        <linearGradient id={`louseBody-${variant}`} x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor={colors.body} />
-          <stop offset="100%" stopColor={colors.dark} />
-        </linearGradient>
-      </defs>
-
-      {/* 몸통 */}
-      <ellipse cx="50" cy="40" rx="35" ry="25" fill={`url(#louseBody-${variant})`} />
-
-      {/* 껍질 패턴 */}
-      <path d="M25 35 Q50 20, 75 35" stroke={colors.dark} strokeWidth="3" fill="none" />
-      <path d="M30 45 Q50 30, 70 45" stroke={colors.dark} strokeWidth="2" fill="none" />
-
-      {/* 다리 */}
-      <path d="M25 45 L10 55 L12 58 L28 48" fill={colors.dark} />
-      <path d="M30 50 L18 62 L21 65 L33 52" fill={colors.dark} />
-      <path d="M75 45 L90 55 L88 58 L72 48" fill={colors.dark} />
-      <path d="M70 50 L82 62 L79 65 L67 52" fill={colors.dark} />
-
-      {/* 머리 */}
-      <ellipse cx="20" cy="35" rx="12" ry="10" fill={`url(#louseBody-${variant})`} />
-
-      {/* 눈 */}
-      <circle cx="15" cy="32" r="4" fill="#1a1a1a" />
-      <circle cx="16" cy="31" r="1.5" fill={colors.glow} />
-
-      {/* 더듬이 */}
-      <path d="M12 28 L5 18" stroke={colors.dark} strokeWidth="2" strokeLinecap="round" />
-      <path d="M18 26 L15 15" stroke={colors.dark} strokeWidth="2" strokeLinecap="round" />
-
+    <div
+      className={`relative ${className}`}
+      style={{
+        width: displayWidth,
+        height: displayHeight + 30, // 아래 여백 추가
+        paddingBottom: '30px', // 공중에 떠있는 효과
+      }}
+    >
+      <div
+        style={{
+          width: displayWidth,
+          height: displayHeight,
+          backgroundImage: 'url(/sprites/mob/flyingeye.png)',
+          backgroundPosition: `${bgX}px ${bgY}px`,
+          backgroundSize: `${FLYING_EYE_CONFIG.frameWidth * FLYING_EYE_CONFIG.totalFrames * scale}px ${FLYING_EYE_CONFIG.frameHeight * scale}px`,
+          backgroundRepeat: 'no-repeat',
+          imageRendering: 'pixelated',
+          transform: 'scaleX(-1)',
+          filter: `${colorFilter} ${isTargetable ? 'drop-shadow(0 0 15px rgba(224, 64, 64, 0.6))' : 'drop-shadow(0 5px 10px rgba(0, 0, 0, 0.5))'}`,
+        }}
+      />
       {isTargetable && (
-        <ellipse cx="45" cy="40" rx="50" ry="35" fill="none" stroke="#e04040" strokeWidth="2" opacity="0.6">
-          <animate attributeName="opacity" values="0.3;0.7;0.3" dur="1s" repeatCount="indefinite" />
-        </ellipse>
+        <div
+          className="absolute inset-0 rounded-full"
+          style={{
+            border: '2px solid #e04040',
+            opacity: 0.6,
+            animation: 'pulse 1s ease-in-out infinite',
+          }}
+        />
       )}
-    </svg>
+    </div>
+  );
+}
+
+// 고블린 스프라이트 설정
+const GOBLIN_CONFIG = {
+  frameWidth: 150,
+  frameHeight: 150,
+  totalFrames: 4,
+  animationSpeed: 150,
+  cropOffsetX: 40,
+  cropOffsetY: 45,
+  cropWidth: 70,
+  cropHeight: 55,
+};
+
+// 고블린 (Goblin) - 애니메이션 스프라이트
+export function GoblinSprite({ size = 80, className = '', isTargetable = false }: CharacterProps) {
+  const [frame, setFrame] = useState(0);
+
+  const scaledSize = size * 2.1;
+  const scale = scaledSize / GOBLIN_CONFIG.cropHeight;
+  const displayWidth = GOBLIN_CONFIG.cropWidth * scale;
+  const displayHeight = GOBLIN_CONFIG.cropHeight * scale;
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setFrame((prev) => (prev + 1) % GOBLIN_CONFIG.totalFrames);
+    }, GOBLIN_CONFIG.animationSpeed);
+    return () => clearInterval(interval);
+  }, []);
+
+  const bgX = -(frame * GOBLIN_CONFIG.frameWidth + GOBLIN_CONFIG.cropOffsetX) * scale;
+  const bgY = -GOBLIN_CONFIG.cropOffsetY * scale;
+
+  return (
+    <div className={`relative ${className}`} style={{ width: displayWidth, height: displayHeight }}>
+      <div
+        style={{
+          width: displayWidth,
+          height: displayHeight,
+          backgroundImage: 'url(/sprites/mob/gblin.png)',
+          backgroundPosition: `${bgX}px ${bgY}px`,
+          backgroundSize: `${GOBLIN_CONFIG.frameWidth * GOBLIN_CONFIG.totalFrames * scale}px ${GOBLIN_CONFIG.frameHeight * scale}px`,
+          backgroundRepeat: 'no-repeat',
+          imageRendering: 'pixelated',
+          transform: 'scaleX(-1)',
+          filter: isTargetable ? 'drop-shadow(0 0 15px rgba(224, 64, 64, 0.6))' : 'drop-shadow(0 5px 10px rgba(0, 0, 0, 0.5))',
+        }}
+      />
+    </div>
+  );
+}
+
+// 스켈레톤 스프라이트 설정
+const SKELETON_CONFIG = {
+  frameWidth: 150,
+  frameHeight: 150,
+  totalFrames: 4,
+  animationSpeed: 180,
+  cropOffsetX: 35,
+  cropOffsetY: 40,
+  cropWidth: 80,
+  cropHeight: 60,
+};
+
+// 스켈레톤 (Skeleton) - 애니메이션 스프라이트
+export function SkeletonSprite({ size = 80, className = '', isTargetable = false }: CharacterProps) {
+  const [frame, setFrame] = useState(0);
+
+  const scaledSize = size * 2.1;
+  const scale = scaledSize / SKELETON_CONFIG.cropHeight;
+  const displayWidth = SKELETON_CONFIG.cropWidth * scale;
+  const displayHeight = SKELETON_CONFIG.cropHeight * scale;
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setFrame((prev) => (prev + 1) % SKELETON_CONFIG.totalFrames);
+    }, SKELETON_CONFIG.animationSpeed);
+    return () => clearInterval(interval);
+  }, []);
+
+  const bgX = -(frame * SKELETON_CONFIG.frameWidth + SKELETON_CONFIG.cropOffsetX) * scale;
+  const bgY = -SKELETON_CONFIG.cropOffsetY * scale;
+
+  return (
+    <div className={`relative ${className}`} style={{ width: displayWidth, height: displayHeight }}>
+      <div
+        style={{
+          width: displayWidth,
+          height: displayHeight,
+          backgroundImage: 'url(/sprites/mob/skeleton.png)',
+          backgroundPosition: `${bgX}px ${bgY}px`,
+          backgroundSize: `${SKELETON_CONFIG.frameWidth * SKELETON_CONFIG.totalFrames * scale}px ${SKELETON_CONFIG.frameHeight * scale}px`,
+          backgroundRepeat: 'no-repeat',
+          imageRendering: 'pixelated',
+          transform: 'scaleX(-1)',
+          filter: isTargetable ? 'drop-shadow(0 0 15px rgba(224, 64, 64, 0.6))' : 'drop-shadow(0 5px 10px rgba(0, 0, 0, 0.5))',
+        }}
+      />
+    </div>
+  );
+}
+
+// 머쉬룸 스프라이트 설정
+const MUSHROOM_CONFIG = {
+  frameWidth: 150,
+  frameHeight: 150,
+  totalFrames: 4,
+  animationSpeed: 200,
+  cropOffsetX: 50,
+  cropOffsetY: 50,
+  cropWidth: 50,
+  cropHeight: 50,
+};
+
+// 머쉬룸 (Mushroom) - 애니메이션 스프라이트
+export function MushroomSprite({ size = 80, className = '', isTargetable = false, variant = 'normal' }: CharacterProps & { variant?: 'normal' | 'acid' }) {
+  const [frame, setFrame] = useState(0);
+
+  const scaledSize = size * 1.9;
+  const scale = scaledSize / MUSHROOM_CONFIG.cropHeight;
+  const displayWidth = MUSHROOM_CONFIG.cropWidth * scale;
+  const displayHeight = MUSHROOM_CONFIG.cropHeight * scale;
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setFrame((prev) => (prev + 1) % MUSHROOM_CONFIG.totalFrames);
+    }, MUSHROOM_CONFIG.animationSpeed);
+    return () => clearInterval(interval);
+  }, []);
+
+  // 산성 버전은 녹색 색조
+  const colorFilter = variant === 'acid'
+    ? 'hue-rotate(60deg) saturate(1.5)'
+    : 'none';
+
+  const bgX = -(frame * MUSHROOM_CONFIG.frameWidth + MUSHROOM_CONFIG.cropOffsetX) * scale;
+  const bgY = -MUSHROOM_CONFIG.cropOffsetY * scale;
+
+  return (
+    <div className={`relative ${className}`} style={{ width: displayWidth, height: displayHeight }}>
+      <div
+        style={{
+          width: displayWidth,
+          height: displayHeight,
+          backgroundImage: 'url(/sprites/mob/mushroom.png)',
+          backgroundPosition: `${bgX}px ${bgY}px`,
+          backgroundSize: `${MUSHROOM_CONFIG.frameWidth * MUSHROOM_CONFIG.totalFrames * scale}px ${MUSHROOM_CONFIG.frameHeight * scale}px`,
+          backgroundRepeat: 'no-repeat',
+          imageRendering: 'pixelated',
+          transform: 'scaleX(-1)',
+          filter: `${colorFilter} ${isTargetable ? 'drop-shadow(0 0 15px rgba(224, 64, 64, 0.6))' : 'drop-shadow(0 5px 10px rgba(0, 0, 0, 0.5))'}`,
+        }}
+      />
+    </div>
   );
 }
 
@@ -650,20 +833,18 @@ function EasterEggEnemy({ imageUrl, size, isTargetable }: { imageUrl: string; si
 // 캐릭터 매핑
 export function getEnemyCharacter(templateId: string, size: number, isTargetable: boolean) {
   switch (templateId) {
-    case 'cultist':
-      return <CultistSilhouette size={size} isTargetable={isTargetable} />;
-    case 'jaw_worm':
-      return <JawWormSilhouette size={size} isTargetable={isTargetable} />;
-    case 'red_louse':
-      return <LouseSilhouette size={size * 0.8} isTargetable={isTargetable} variant="red" />;
-    case 'green_louse':
-      return <LouseSilhouette size={size * 0.8} isTargetable={isTargetable} variant="green" />;
-    case 'small_slime':
-      return <SlimeSilhouette size={size * 0.7} isTargetable={isTargetable} variant="small" />;
-    case 'medium_slime':
-      return <SlimeSilhouette size={size} isTargetable={isTargetable} variant="medium" />;
-    case 'large_slime':
-      return <SlimeSilhouette size={size * 1.2} isTargetable={isTargetable} variant="large" />;
+    case 'goblin':
+      return <GoblinSprite size={size} isTargetable={isTargetable} />;
+    case 'skeleton':
+      return <SkeletonSprite size={size} isTargetable={isTargetable} />;
+    case 'flying_eye':
+      return <FlyingEyeSprite size={size * 0.8} isTargetable={isTargetable} variant="red" />;
+    case 'green_flying_eye':
+      return <FlyingEyeSprite size={size * 0.8} isTargetable={isTargetable} variant="green" />;
+    case 'acid_mushroom':
+      return <MushroomSprite size={size} isTargetable={isTargetable} variant="acid" />;
+    case 'mushroom':
+      return <MushroomSprite size={size} isTargetable={isTargetable} variant="normal" />;
     case 'gremlin_nob':
       return <GremlinNobSilhouette size={size * 1.2} isTargetable={isTargetable} />;
     case 'slime_boss':
@@ -674,6 +855,6 @@ export function getEnemyCharacter(templateId: string, size: number, isTargetable
     case 'kkuchu':
       return <EasterEggEnemy imageUrl="/sprites/mob/easteregg/kkuchu.png" size={size} isTargetable={isTargetable} />;
     default:
-      return <CultistSilhouette size={size} isTargetable={isTargetable} />;
+      return <GoblinSprite size={size} isTargetable={isTargetable} />;
   }
 }
