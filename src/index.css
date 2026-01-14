@@ -162,12 +162,32 @@ body {
   inset: -50px;
   background: radial-gradient(ellipse 56% 80% at 50% 50%, transparent 40%, rgba(10, 9, 8, 0.6) 58%, rgba(10, 9, 8, 0.97) 68%, #0a0908 76%);
   pointer-events: none;
+  z-index: 2;
   animation: vignette-breathe 3s ease-in-out infinite;
 }
+
 
 @keyframes vignette-breathe {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.15); }
+}
+
+/* 빛줄기 효과 */
+.combat-arena::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(105deg, transparent 30%, rgba(255, 240, 200, 0.1) 37%, rgba(255, 240, 200, 0.22) 45%, rgba(255, 240, 200, 0.1) 53%, transparent 60%),
+    linear-gradient(95deg, transparent 45%, rgba(255, 240, 200, 0.06) 52%, rgba(255, 240, 200, 0.15) 60%, rgba(255, 240, 200, 0.06) 68%, transparent 75%);
+  pointer-events: none;
+  z-index: 1;
+  animation: light-rays 15s ease-in-out infinite;
+}
+
+@keyframes light-rays {
+  0%, 100% { transform: translateX(-3%); }
+  50% { transform: translateX(3%); }
 }
 
 /* 비네트 효과 (사용 안 함) */
