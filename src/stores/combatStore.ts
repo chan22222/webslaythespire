@@ -1127,6 +1127,11 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     // 모든 적이 죽었는지 확인
     const allEnemiesDead = enemies.every(e => e.currentHp <= 0);
     if (allEnemiesDead) {
+      // 전투 종료 시 모든 버프/디버프 초기화
+      set({
+        playerStatuses: [],
+        playerBlock: 0
+      });
       get().addToCombatLog('승리!');
       return 'VICTORY';
     }

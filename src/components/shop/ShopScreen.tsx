@@ -22,12 +22,17 @@ export function ShopScreen() {
   useEffect(() => {
     const cards = generateCardRewards(5);
 
-    // 5개의 유물 생성 (중복 방지)
+    // 플레이어가 이미 보유한 유물 ID
+    const ownedRelicIds = new Set(player.relics.map(r => r.id));
+
+    // 5개의 유물 생성 (중복 방지 + 이미 보유한 유물 제외)
     const relics: Relic[] = [];
     const usedIds = new Set<string>();
-    while (relics.length < 5) {
+    let attempts = 0;
+    while (relics.length < 5 && attempts < 50) {
+      attempts++;
       const relic = generateRelicReward();
-      if (!usedIds.has(relic.id)) {
+      if (!usedIds.has(relic.id) && !ownedRelicIds.has(relic.id)) {
         relics.push(relic);
         usedIds.add(relic.id);
       }
@@ -83,8 +88,12 @@ export function ShopScreen() {
     const item = shopItems[index];
     if (item.sold || player.gold < item.price || item.type !== 'relic') return;
 
+    const relic = item.item as Relic;
+    // 이미 보유한 유물인지 체크
+    if (player.relics.some(r => r.id === relic.id)) return;
+
     modifyGold(-item.price);
-    addRelic(item.item as Relic);
+    addRelic(relic);
 
     const newItems = [...shopItems];
     newItems[index].sold = true;
