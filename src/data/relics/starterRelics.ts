@@ -390,8 +390,11 @@ export function generateRelicReward(): Relic {
     pool = COMMON_RELICS;
   } else if (roll < 0.75) {
     pool = UNCOMMON_RELICS;
-  } else {
+  } else if (roll < 0.95) {
     pool = RARE_RELICS;
+  } else {
+    // 5% 확률로 유니크 유물
+    pool = UNIQUE_RELICS;
   }
 
   return pool[Math.floor(Math.random() * pool.length)];
