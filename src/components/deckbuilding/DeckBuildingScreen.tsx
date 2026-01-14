@@ -344,7 +344,7 @@ export function DeckBuildingScreen() {
 
         {/* 중간: 유물 선택 패널 */}
         <div
-          className="w-56 flex flex-col overflow-hidden"
+          className="w-[26rem] flex flex-col overflow-hidden"
           style={{
             background: 'linear-gradient(180deg, rgba(20,18,15,0.95) 0%, rgba(10,8,5,0.98) 100%)',
             borderLeft: '2px solid var(--gold-dark)',
@@ -362,8 +362,8 @@ export function DeckBuildingScreen() {
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-2">
-            <div className="space-y-1.5">
+          <div className="flex-1 overflow-y-auto p-2 mr-2">
+            <div className="space-y-1">
               {ALL_RELICS.map((relic) => {
                 const isSelected = selectedRelics.some(r => r.id === relic.id);
                 const rarityColor = relic.rarity === 'STARTER' ? '#4ade80'
@@ -381,20 +381,35 @@ export function DeckBuildingScreen() {
                   <button
                     key={relic.id}
                     onClick={() => toggleRelic(relic)}
-                    className="w-full p-2 rounded text-left transition-all hover:brightness-125"
+                    className="w-full p-2 rounded text-left transition-all hover:brightness-125 flex gap-2 items-center"
                     style={{
                       background: isSelected ? rarityBg : 'rgba(0,0,0,0.3)',
                       border: `1px solid ${isSelected ? rarityColor : '#555'}`,
                     }}
                   >
-                    <div
-                      className="font-title text-sm"
-                      style={{ color: isSelected ? rarityColor : '#ccc' }}
-                    >
-                      {relic.name}
+                    {/* 유물 아이콘 */}
+                    <div className="flex-shrink-0">
+                      {relic.icon ? (
+                        <img
+                          src={relic.icon}
+                          alt={relic.name}
+                          className="w-24 h-24 object-contain"
+                          style={{ imageRendering: 'auto' }}
+                        />
+                      ) : (
+                        <span className="text-3xl">❓</span>
+                      )}
                     </div>
-                    <div className="text-xs mt-0.5 line-clamp-2" style={{ color: isSelected ? '#999' : '#999' }}>
-                      {relic.description}
+                    <div className="flex-1">
+                      <div
+                        className="font-title text-base"
+                        style={{ color: isSelected ? rarityColor : '#ccc' }}
+                      >
+                        {relic.name}
+                      </div>
+                      <div className="text-sm line-clamp-3" style={{ color: '#999' }}>
+                        {relic.description}
+                      </div>
                     </div>
                   </button>
                 );
