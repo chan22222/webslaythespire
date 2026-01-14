@@ -23,6 +23,7 @@ export const DIAMOND_BODY: Card = {
   type: 'SHIELD',
   rarity: 'UNCOMMON',
   cost: 1,
+  image: '/cards/effect/diamond_body.png',
   description: '매 턴 종료 시 방어도 2를 얻습니다.',
   effects: [{ type: 'APPLY_STATUS', value: 2, target: 'SELF', status: 'METALLICIZE' }],
   upgraded: false,
@@ -79,6 +80,7 @@ export const FATAL_WOUND: Card = {
   type: 'ATTACK',
   rarity: 'UNCOMMON',
   cost: 2,
+  image: '/cards/effect/fatal_wound.png',
   description: '13 피해를 줍니다. 약화 1과 취약 1을 부여합니다.',
   effects: [
     { type: 'DAMAGE', value: 13, target: 'SINGLE' },

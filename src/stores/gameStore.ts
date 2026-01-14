@@ -5,8 +5,14 @@ import { Card, CardInstance, createCardInstance } from '../types/card';
 import { Relic } from '../types/relic';
 import { EnemyTemplate } from '../types/enemy';
 import { createStarterDeck } from '../data/cards';
-import { BURNING_BLOOD } from '../data/relics';
+import { STARTER_RELICS } from '../data/relics';
 import { generateMap } from '../utils/mapGenerator';
+
+// 랜덤 시작 유물 선택
+const getRandomStarterRelic = () => {
+  const index = Math.floor(Math.random() * STARTER_RELICS.length);
+  return [STARTER_RELICS[index]];
+};
 
 export type GamePhase = 'MAIN_MENU' | 'DECK_BUILDING' | 'MAP' | 'COMBAT' | 'REWARD' | 'SHOP' | 'REST' | 'EVENT' | 'CARD_REWARD' | 'GAME_OVER' | 'VICTORY';
 
@@ -66,7 +72,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       player: {
         ...createInitialPlayer(),
         deck: starterDeck,
-        relics: [BURNING_BLOOD],
+        relics: getRandomStarterRelic(),
       },
       map: newMap,
       currentAct: 1,
@@ -79,7 +85,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       player: {
         ...createInitialPlayer(),
         deck: [],
-        relics: [BURNING_BLOOD],
+        relics: getRandomStarterRelic(),
       },
       map: { nodes: [], currentNodeId: null, floor: 1 },
       currentAct: 1,
@@ -309,7 +315,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       player: {
         ...createInitialPlayer(),
         deck,
-        relics: relics && relics.length > 0 ? relics : [BURNING_BLOOD],
+        relics: relics && relics.length > 0 ? relics : [...STARTER_RELICS],
       },
       testEnemies: enemies,
       map: { nodes: [], currentNodeId: null, floor: 1 },
@@ -324,7 +330,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       map: newMap,
       player: {
         ...player,
-        relics: relics.length > 0 ? relics : [BURNING_BLOOD],
+        relics: relics.length > 0 ? relics : [...STARTER_RELICS],
       },
     });
   },

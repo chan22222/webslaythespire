@@ -6,6 +6,7 @@ export const STRIKE: Card = {
   type: 'ATTACK',
   rarity: 'BASIC',
   cost: 1,
+  image: '/cards/effect/strike.png',
   description: '6 피해를 줍니다.',
   effects: [{ type: 'DAMAGE', value: 6, target: 'SINGLE' }],
   upgraded: false,
@@ -22,6 +23,7 @@ export const DEFEND: Card = {
   type: 'SHIELD',
   rarity: 'BASIC',
   cost: 1,
+  image: '/cards/effect/defend.png',
   description: '5 방어도를 얻습니다.',
   effects: [{ type: 'BLOCK', value: 5 }],
   upgraded: false,
@@ -38,6 +40,7 @@ export const BASH: Card = {
   type: 'ATTACK',
   rarity: 'BASIC',
   cost: 2,
+  image: '/cards/effect/bash.png',
   description: '8 피해를 주고 취약 1을 부여합니다.',
   effects: [
     { type: 'DAMAGE', value: 8, target: 'SINGLE' },
@@ -60,6 +63,7 @@ export const EXPOSE_WEAKNESS: Card = {
   type: 'ATTACK',
   rarity: 'BASIC',
   cost: 1,
+  image: '/cards/effect/expose_weakness.png',
   description: '적에게 취약 1을 부여합니다.',
   effects: [
     { type: 'APPLY_STATUS', value: 1, target: 'SINGLE', status: 'VULNERABLE' },
@@ -80,6 +84,7 @@ export const FLEXIBLE_RESPONSE: Card = {
   type: 'SHIELD',
   rarity: 'BASIC',
   cost: 1,
+  image: '/cards/effect/flexible_response.png',
   description: '7 방어도를 얻고 카드 1장을 뽑습니다.',
   effects: [
     { type: 'BLOCK', value: 7 },
@@ -102,13 +107,13 @@ export function createStarterDeck(): Card[] {
     { ...STRIKE },
     { ...STRIKE },
     { ...STRIKE },
-    { ...STRIKE },
-    { ...STRIKE },
-    { ...DEFEND },
     { ...DEFEND },
     { ...DEFEND },
     { ...DEFEND },
     { ...BASH },
+    { ...BASH },
+    { ...EXPOSE_WEAKNESS },
+    { ...FLEXIBLE_RESPONSE },
   ];
 }
 

@@ -6,6 +6,7 @@ export const COMBO_ATTACK: Card = {
   type: 'ATTACK',
   rarity: 'COMMON',
   cost: 1,
+  image: '/cards/effect/combo_attack.png',
   description: '8 피해를 주고 카드 1장을 뽑습니다.',
   effects: [
     { type: 'DAMAGE', value: 8, target: 'SINGLE' },
@@ -28,6 +29,7 @@ export const ASSAULT_SHIELD: Card = {
   type: 'ATTACK',
   rarity: 'COMMON',
   cost: 1,
+  image: '/cards/effect/assault_shield.png',
   description: '5 방어도를 얻고 5 피해를 줍니다.',
   effects: [
     { type: 'BLOCK', value: 5 },
@@ -50,6 +52,7 @@ export const DOUBLE_STRIKE: Card = {
   type: 'ATTACK',
   rarity: 'COMMON',
   cost: 2,
+  image: '/cards/effect/double_strike.png',
   description: '7 피해를 2번 줍니다.',
   effects: [
     { type: 'DAMAGE', value: 7, target: 'SINGLE' },

@@ -57,6 +57,7 @@ export const TACTICAL_COMMAND: Card = {
   type: 'EFFECT',
   rarity: 'RARE',
   cost: 1,
+  image: '/cards/effect/tactical_command.png',
   description: '카드 2장을 뽑습니다. 뽑은 카드가 공격 카드면 코스트를 2 감소 시킵니다.',
   effects: [
     { type: 'DRAW', value: 2 },
@@ -79,6 +80,7 @@ export const BLOOD_FESTIVAL: Card = {
   type: 'ATTACK',
   rarity: 'RARE',
   cost: 2,
+  image: '/cards/effect/blood_festival.png',
   description: '14 피해를 줍니다. 이 공격으로 적 처치 시 최대 HP가 3 증가합니다.',
   effects: [
     { type: 'DAMAGE', value: 14, target: 'SINGLE' },

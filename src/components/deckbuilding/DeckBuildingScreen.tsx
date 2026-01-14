@@ -8,7 +8,7 @@ import { STRIKE, DEFEND, BASH, EXPOSE_WEAKNESS, FLEXIBLE_RESPONSE } from '../../
 import { COMMON_CARDS } from '../../data/cards/commonCards';
 import { UNCOMMON_CARDS } from '../../data/cards/uncommonCards';
 import { RARE_CARDS } from '../../data/cards/rareCards';
-import { UNIQUE_CARDS } from '../../data/cards/bossCards';
+import { UNIQUE_CARDS } from '../../data/cards/uniqueCards';
 import {
   CULTIST,
   JAW_WORM,

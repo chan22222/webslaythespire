@@ -3,7 +3,7 @@ import { createStarterDeck, STRIKE, DEFEND, BASH, BASIC_CARDS } from './starterC
 import { COMMON_CARDS } from './commonCards';
 import { UNCOMMON_CARDS } from './uncommonCards';
 import { RARE_CARDS } from './rareCards';
-import { UNIQUE_CARDS } from './bossCards';
+import { UNIQUE_CARDS } from './uniqueCards';
 
 export { createStarterDeck, STRIKE, DEFEND, BASH, BASIC_CARDS };
 export { COMMON_CARDS };
