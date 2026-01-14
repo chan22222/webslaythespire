@@ -741,12 +741,13 @@ export function CombatScreen() {
 
   // 배경 파티클 데이터 (한 번만 생성)
   const particles = useMemo(() =>
-    [...Array(12)].map((_, i) => ({
+    [...Array(25)].map((_, i) => ({
       id: i,
-      left: Math.random() * 100,
-      top: Math.random() * 50,
-      opacity: 0.15 + Math.random() * 0.2,
-      duration: 5 + Math.random() * 5,
+      left: 25 + Math.random() * 50,
+      top: 15 + Math.random() * 45,
+      opacity: 0.4 + Math.random() * 0.4,
+      size: 2 + Math.random() * 3,
+      duration: 4 + Math.random() * 6,
       delay: Math.random() * 5,
     })), []);
 
@@ -1114,16 +1115,27 @@ export function CombatScreen() {
         />
 
       {/* 배경 파티클 효과 */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+      <div className="absolute inset-0 pointer-events-none overflow-hidden z-10">
+        <style>{`
+          @keyframes particleMove {
+            0%, 100% { transform: translateY(0) translateX(0) scale(1); opacity: 0.3; }
+            25% { transform: translateY(-20px) translateX(10px) scale(1.2); opacity: 0.5; }
+            50% { transform: translateY(-35px) translateX(0) scale(1); opacity: 0.4; }
+            75% { transform: translateY(-20px) translateX(-10px) scale(1.3); opacity: 0.5; }
+          }
+        `}</style>
         {particles.map((p) => (
           <div
             key={p.id}
-            className="absolute w-1 h-1 rounded-full bg-[var(--gold)]"
+            className="absolute rounded-full"
             style={{
               left: `${p.left}%`,
               top: `${p.top}%`,
-              opacity: p.opacity,
-              animation: `float ${p.duration}s ease-in-out infinite`,
+              width: `${p.size + 2}px`,
+              height: `${p.size + 2}px`,
+              backgroundColor: '#fff',
+              boxShadow: '0 0 8px #ffd700, 0 0 16px #ffd700, 0 0 24px rgba(255, 215, 0, 0.6)',
+              animation: `particleMove ${p.duration}s ease-in-out infinite`,
               animationDelay: `${p.delay}s`,
             }}
           />
@@ -1150,51 +1162,24 @@ export function CombatScreen() {
               }}
             />
             <div className="relative">
-              {/* 뒤쪽 카드들 (쌓인 효과) */}
-              <div
-                className="absolute w-10 h-14 md:w-12 md:h-16 rounded-sm"
+              <img
+                src="/card.png"
+                alt="뽑기 더미"
+                className="w-16 h-20 md:w-20 md:h-24"
                 style={{
-                  background: 'linear-gradient(135deg, #2a2520 0%, #0a0805 100%)',
-                  border: '1px solid rgba(212, 168, 75, 0.3)',
-                  transform: 'rotate(-8deg) translate(-2px, 3px)',
-                  boxShadow: '0 2px 4px rgba(0,0,0,0.5)',
+                  imageRendering: 'pixelated',
+                  filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.6))',
                 }}
               />
-              <div
-                className="absolute w-10 h-14 md:w-12 md:h-16 rounded-sm"
+              {/* 카드 수 - 중앙 표시 */}
+              <span
+                className="absolute inset-0 flex items-center justify-center text-lg md:text-xl"
                 style={{
-                  background: 'linear-gradient(135deg, #252015 0%, #0a0805 100%)',
-                  border: '1px solid rgba(212, 168, 75, 0.4)',
-                  transform: 'rotate(-4deg) translate(-1px, 1px)',
-                  boxShadow: '0 2px 4px rgba(0,0,0,0.5)',
-                }}
-              />
-              {/* 맨 위 카드 */}
-              <div
-                className="relative w-10 h-14 md:w-12 md:h-16 rounded-sm overflow-hidden"
-                style={{
-                  background: 'linear-gradient(135deg, #3a3025 0%, #1a1510 50%, #0a0805 100%)',
-                  border: '2px solid var(--gold)',
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.1)',
+                  fontFamily: '"Press Start 2P", monospace',
+                  color: 'var(--gold-light)',
+                  textShadow: '2px 2px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000',
                 }}
               >
-                {/* 카드 무늬 */}
-                <div className="absolute inset-2 rounded-sm opacity-20" style={{
-                  border: '1px solid var(--gold)',
-                  background: 'repeating-linear-gradient(45deg, transparent, transparent 3px, rgba(212,168,75,0.1) 3px, rgba(212,168,75,0.1) 6px)',
-                }} />
-              </div>
-            </div>
-            {/* 카드 수 뱃지 */}
-            <div
-              className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full"
-              style={{
-                background: 'linear-gradient(180deg, #2a2520 0%, #0a0805 100%)',
-                border: '2px solid var(--gold)',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.5), 0 0 10px rgba(212, 168, 75, 0.2)',
-              }}
-            >
-              <span className="font-title text-xs md:text-sm text-[var(--gold-light)]" style={{ textShadow: '0 0 6px rgba(212, 168, 75, 0.5)' }}>
                 {drawPile.length}
               </span>
             </div>
@@ -1216,31 +1201,25 @@ export function CombatScreen() {
                 filter: 'blur(8px)',
               }}
             />
-            {/* 카드 (버린 더미는 한 장만) */}
-            <div
-              className="relative w-10 h-14 md:w-12 md:h-16 rounded-sm overflow-hidden"
-              style={{
-                background: 'linear-gradient(135deg, #3a2020 0%, #1a0a0a 50%, #0a0505 100%)',
-                border: '2px solid var(--attack)',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05)',
-              }}
-            >
-              {/* 카드 무늬 */}
-              <div className="absolute inset-2 rounded-sm opacity-15" style={{
-                border: '1px solid var(--attack)',
-                background: 'repeating-linear-gradient(-45deg, transparent, transparent 3px, rgba(220,80,80,0.1) 3px, rgba(220,80,80,0.1) 6px)',
-              }} />
-            </div>
-            {/* 카드 수 뱃지 */}
-            <div
-              className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2.5 py-0.5 rounded-full"
-              style={{
-                background: 'linear-gradient(180deg, #2a1515 0%, #0a0505 100%)',
-                border: '2px solid var(--attack)',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.5), 0 0 10px rgba(220, 80, 80, 0.2)',
-              }}
-            >
-              <span className="font-title text-xs md:text-sm text-[var(--attack-light)]" style={{ textShadow: '0 0 6px rgba(220, 80, 80, 0.5)' }}>
+            <div className="relative">
+              <img
+                src="/card2.png"
+                alt="버린 더미"
+                className="w-16 h-20 md:w-20 md:h-24"
+                style={{
+                  imageRendering: 'pixelated',
+                  filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.6))',
+                }}
+              />
+              {/* 카드 수 - 중앙 표시 */}
+              <span
+                className="absolute inset-0 flex items-center justify-center text-lg md:text-xl"
+                style={{
+                  fontFamily: '"Press Start 2P", monospace',
+                  color: 'var(--attack-light)',
+                  textShadow: '2px 2px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000',
+                }}
+              >
                 {discardPile.length}
               </span>
             </div>

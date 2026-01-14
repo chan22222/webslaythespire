@@ -148,12 +148,26 @@ body {
   background:
     linear-gradient(180deg, rgba(0, 0, 0, 0.15) 0%, transparent 30%, transparent 70%, rgba(0, 0, 0, 0.2) 100%),
     url('/maps/map1.png');
-  background-size: auto 100%;
-  background-position: center;
+  background-size: cover, auto 100%;
+  background-position: center, center;
   background-repeat: no-repeat;
   background-color: #0a0908;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
+}
+
+.combat-arena::before {
+  content: '';
+  position: absolute;
+  inset: -50px;
+  background: radial-gradient(ellipse 56% 80% at 50% 50%, transparent 40%, rgba(10, 9, 8, 0.6) 58%, rgba(10, 9, 8, 0.97) 68%, #0a0908 76%);
+  pointer-events: none;
+  animation: vignette-breathe 3s ease-in-out infinite;
+}
+
+@keyframes vignette-breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.15); }
 }
 
 /* 비네트 효과 (사용 안 함) */
@@ -402,6 +416,13 @@ body {
 @keyframes float {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-8px); }
+}
+
+@keyframes particle-float {
+  0%, 100% { transform: translateY(0) translateX(0) scale(1); opacity: 0.6; }
+  25% { transform: translateY(-20px) translateX(10px) scale(1.2); opacity: 1; }
+  50% { transform: translateY(-35px) translateX(0) scale(1); opacity: 0.8; }
+  75% { transform: translateY(-20px) translateX(-10px) scale(1.3); opacity: 1; }
 }
 
 @keyframes floatSubtle {
