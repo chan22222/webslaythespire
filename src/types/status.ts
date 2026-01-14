@@ -29,8 +29,8 @@ export const STATUS_INFO: Record<StatusType, { name: string; description: string
     isDebuff: false,
   },
   POISON: {
-    name: '독',
-    description: '턴 시작 시 독 수치만큼 피해를 받고 1 감소합니다.',
+    name: '중독',
+    description: '턴 시작 시 중독 수치만큼 피해를 받고 1 감소합니다.',
     isDebuff: true,
   },
   BLOCK_NEXT_TURN: {

@@ -287,17 +287,18 @@ function StatusBadge({ status }: { status: Status }) {
       {/* 툴팁 */}
       {showTooltip && (
         <div
-          className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 rounded-lg whitespace-nowrap z-[9999] pointer-events-none"
+          className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 rounded-lg z-[9999] pointer-events-none"
           style={{
             background: 'rgba(0, 0, 0, 0.95)',
             border: `2px solid ${info.isDebuff ? '#e04040' : '#4ade80'}`,
             boxShadow: '0 4px 20px rgba(0, 0, 0, 0.8)',
+            width: '180px',
           }}
         >
-          <div className="font-title text-sm mb-1" style={{ color: info.isDebuff ? '#ff6b6b' : '#4ade80' }}>
+          <div className="font-title text-sm mb-1 whitespace-nowrap text-center" style={{ color: info.isDebuff ? '#ff6b6b' : '#4ade80' }}>
             {info.name}
           </div>
-          <div className="font-card text-xs text-gray-300 max-w-48">
+          <div className="font-card text-xs text-gray-300 text-center">
             {info.description}
           </div>
           {/* 화살표 */}
