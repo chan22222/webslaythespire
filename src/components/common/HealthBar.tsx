@@ -77,7 +77,7 @@ export function HealthBar({
 
         {/* 실제 HP 바 (예상 피해 적용 시 줄어든 것처럼 표시) */}
         <div
-          className={`h-full transition-all duration-300 ${isCritical && incomingDamage === 0 ? 'animate-pulse' : ''}`}
+          className={`h-full transition-all duration-50 ${isCritical && incomingDamage === 0 ? 'animate-pulse' : ''}`}
           style={{
             width: incomingDamage > 0 ? `${expectedPercentage}%` : `${percentage}%`,
             background: getBarColor(),

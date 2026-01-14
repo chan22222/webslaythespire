@@ -727,7 +727,7 @@ export function Enemy({ enemy, isTargetable = false, incomingDamage = 0, ignoreB
     >
       <div
         data-enemy-id={enemy.instanceId}
-        className={`flex flex-col items-center transition-transform ${isTargetable ? 'scale-105' : ''}`}
+        className="flex flex-col items-center transition-transform"
         style={{
           transform: isCollapsed ? 'scale(0)' : 'scale(1)',
           transitionDuration: '150ms',
@@ -837,10 +837,9 @@ export function Enemy({ enemy, isTargetable = false, incomingDamage = 0, ignoreB
         {/* 타겟팅 글로우 */}
         {isTargetable && (
           <div
-            className="absolute -inset-8 rounded-full"
+            className="absolute -inset-4 rounded-full"
             style={{
-              background: 'radial-gradient(ellipse, rgba(224, 64, 64, 0.4) 0%, transparent 70%)',
-              animation: 'pulse 1s ease-in-out infinite',
+              background: 'radial-gradient(ellipse, rgba(224, 64, 64, 0.35) 0%, transparent 70%)',
             }}
           />
         )}
@@ -850,21 +849,19 @@ export function Enemy({ enemy, isTargetable = false, incomingDamage = 0, ignoreB
 
         {/* 적 캐릭터 SVG */}
         <div
-          className={`relative ${isTargetable ? 'drop-shadow-[0_0_20px_rgba(224,64,64,0.5)]' : ''}`}
+          className="relative"
           style={{
             filter: isDying
               ? 'grayscale(1)'
               : isHurt
                 ? 'sepia(1) saturate(6) hue-rotate(-50deg) brightness(0.9)'
-                : isTargetable
-                  ? 'drop-shadow(0 0 15px rgba(224, 64, 64, 0.6))'
-                  : 'none',
+                : 'none',
             opacity: isDying ? 0 : 1,
             transition: 'filter 0.6s ease-out, opacity 0.8s ease-out',
             animation: isHurt ? 'shake 0.3s ease-in-out' : 'none',
           }}
         >
-          {getEnemyCharacter(enemy.templateId, 100, isTargetable)}
+          {getEnemyCharacter(enemy.templateId, 100, false)}
           {/* 바닥 그림자 */}
           <div
             className="absolute left-1/2"
