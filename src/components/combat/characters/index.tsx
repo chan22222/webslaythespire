@@ -840,11 +840,6 @@ export function EvilWizardSprite({ size = 120, className = '', isAttacking = fal
   const [frame, setFrame] = useState(0);
   const config = isAttacking ? EVIL_WIZARD_ATTACK_CONFIG : EVIL_WIZARD_CONFIG;
 
-  // 상태 변경 시 frame 리셋
-  useEffect(() => {
-    setFrame(0);
-  }, [isAttacking]);
-
   // 컨테이너는 idle 기준 crop 크기로 설정
   const scaledSize = size * 3.4;
   const baseScale = scaledSize / EVIL_WIZARD_CONFIG.cropHeight;
@@ -856,12 +851,14 @@ export function EvilWizardSprite({ size = 120, className = '', isAttacking = fal
   const displayWidth = config.cropWidth * scale;
   const displayHeight = config.cropHeight * scale;
 
+  // 상태 변경 시 frame 리셋 및 interval 재설정
   useEffect(() => {
+    setFrame(0);
     const interval = setInterval(() => {
       setFrame((prev) => (prev + 1) % config.totalFrames);
     }, config.animationSpeed);
     return () => clearInterval(interval);
-  }, [config.totalFrames, config.animationSpeed]);
+  }, [isAttacking, config.totalFrames, config.animationSpeed]);
 
   const bgX = -(frame * config.frameWidth + config.cropOffsetX) * scale;
   const bgY = -config.cropOffsetY * scale;
