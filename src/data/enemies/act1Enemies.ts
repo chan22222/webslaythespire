@@ -145,10 +145,10 @@ export const MUSHROOM: EnemyTemplate = {
   },
 };
 
-// 엘리트: 고위 노블레스
+// 엘리트: 이블 위자드
 export const GREMLIN_NOB: EnemyTemplate = {
   id: 'gremlin_nob',
-  name: '고위 노블레스',
+  name: '이블 위자드',
   minHp: 82,
   maxHp: 86,
   getNextIntent: (_enemy: Enemy, turn: number): EnemyIntent => {
@@ -173,10 +173,10 @@ export const GREMLIN_NOB: EnemyTemplate = {
   },
 };
 
-// 보스: 슬라임 보스 - 공격 → 중독 5 → 취약 2 패턴 (3턴 주기)
+// 보스: 나이트본 - 공격 → 중독 5 → 취약 2 패턴 (3턴 주기)
 export const SLIME_BOSS: EnemyTemplate = {
   id: 'slime_boss',
-  name: '슬라임 보스',
+  name: '나이트본',
   minHp: 140,
   maxHp: 150,
   getNextIntent: (_enemy: Enemy, turn: number): EnemyIntent => {

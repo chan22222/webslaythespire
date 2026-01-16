@@ -65,6 +65,10 @@ interface CombatStore extends CombatState {
   enemySkillTriggers: Record<string, number>;
   triggerEnemySkill: (enemyId: string) => void;
 
+  // 적 공격 애니메이션 트리거
+  enemyAttackTriggers: Record<string, number>;
+  triggerEnemyAttack: (enemyId: string) => void;
+
   // 플레이어 디버프 이펙트 트리거
   playerDebuffTrigger: number;
   triggerPlayerDebuff: () => void;
@@ -84,6 +88,7 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
   damagePopups: [],
   enemyHitTriggers: {},
   enemySkillTriggers: {},
+  enemyAttackTriggers: {},
   playerDebuffTrigger: 0,
   extraTurnPending: false,
   isPlayingCard: false,
@@ -138,6 +143,15 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       enemySkillTriggers: {
         ...state.enemySkillTriggers,
         [enemyId]: (state.enemySkillTriggers[enemyId] || 0) + 1,
+      },
+    }));
+  },
+
+  triggerEnemyAttack: (enemyId: string) => {
+    set(state => ({
+      enemyAttackTriggers: {
+        ...state.enemyAttackTriggers,
+        [enemyId]: (state.enemyAttackTriggers[enemyId] || 0) + 1,
       },
     }));
   },
@@ -427,6 +441,12 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
           get().addToCombatLog(`[${enemy.name}: 기본 ${damage} + 힘 ${strength} = ${baseDamage}]`);
         }
 
+        // 공격 애니메이션 트리거
+        get().triggerEnemyAttack(enemy.instanceId);
+
+        // 공격 애니메이션 재생 후 데미지 적용
+        await new Promise(resolve => setTimeout(resolve, 400));
+
         // 피격 콜백 호출
         const { onPlayerHit } = get();
         if (onPlayerHit) {
@@ -437,7 +457,7 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
         get().dealDamageToPlayer(baseDamage, enemy.instanceId);
 
         // 다음 적 공격 전 딜레이
-        await new Promise(resolve => setTimeout(resolve, 600));
+        await new Promise(resolve => setTimeout(resolve, 400));
       } else if (enemy.intent.type === 'DEFEND') {
         get().triggerEnemySkill(enemy.instanceId);
         enemy.block += enemy.intent.block || 0;
@@ -456,11 +476,17 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
         get().addToCombatLog(`${enemy.name}이(가) 힘을 얻었습니다!`);
         await new Promise(resolve => setTimeout(resolve, 500));
       } else if (enemy.intent.type === 'DEBUFF') {
+        // 공격 애니메이션 트리거
+        get().triggerEnemyAttack(enemy.instanceId);
+
+        // 애니메이션 재생 후 디버프 적용
+        await new Promise(resolve => setTimeout(resolve, 400));
+
         // intent에 정의된 statusType과 stacks 사용
         const statusType = enemy.intent.statusType || 'WEAK';
         const stacks = enemy.intent.statusStacks || 1;
         get().applyStatusToPlayer({ type: statusType, stacks });
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise(resolve => setTimeout(resolve, 400));
       }
 
       // 상태 효과 감소

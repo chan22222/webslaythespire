@@ -27,7 +27,21 @@ const ENEMY_INTENT_OFFSET: Record<string, number> = {
   acid_mushroom: -25,
   flying_eye: -9,
   green_flying_eye: -9,
+  gremlin_nob: 50, // 이블 위자드
   // 새 몹 추가 시 여기에 설정
+};
+
+// 몹별 그림자 크기 설정
+const ENEMY_SHADOW_SIZE: Record<string, number> = {
+  slime_boss: 120, // 나이트본
+  gremlin_nob: 90, // 이블 위자드
+  // 기본값: 70
+};
+
+// 몹별 스킬 이펙트 X 오프셋 (px)
+const ENEMY_SKILL_EFFECT_OFFSET: Record<string, number> = {
+  gremlin_nob: 25, // 이블 위자드 - 오른쪽으로
+  // 기본값: 0
 };
 
 // ===== 게임 스타일 의도 표시 컴포넌트 =====
@@ -529,6 +543,7 @@ export function Enemy({ enemy, isTargetable = false, incomingDamage = 0, ignoreB
   const [isRemoved, setIsRemoved] = useState(false);
   const [isHurt, setIsHurt] = useState(false);
   const [isSkillActive, setIsSkillActive] = useState(false);
+  const [isAttacking, setIsAttacking] = useState(false);
   const [prevHp, setPrevHp] = useState(enemy.currentHp);
 
   // 플레이어 상태 구독 (취약 확인용)
@@ -541,6 +556,10 @@ export function Enemy({ enemy, isTargetable = false, incomingDamage = 0, ignoreB
   // 스킬 트리거 구독 (BUFF/DEFEND 애니메이션용)
   const skillTrigger = useCombatStore(state => state.enemySkillTriggers[enemy.instanceId] || 0);
   const prevSkillTriggerRef = useRef(skillTrigger);
+
+  // 공격 트리거 구독 (공격 애니메이션용)
+  const attackTrigger = useCombatStore(state => state.enemyAttackTriggers[enemy.instanceId] || 0);
+  const prevAttackTriggerRef = useRef(attackTrigger);
 
   // 피격 트리거 감지 (다중 타격 애니메이션)
   useEffect(() => {
@@ -563,6 +582,17 @@ export function Enemy({ enemy, isTargetable = false, incomingDamage = 0, ignoreB
     }
     prevSkillTriggerRef.current = skillTrigger;
   }, [skillTrigger]);
+
+  // 공격 트리거 감지 (공격 애니메이션)
+  useEffect(() => {
+    if (attackTrigger > prevAttackTriggerRef.current) {
+      setIsAttacking(true);
+      setTimeout(() => {
+        setIsAttacking(false);
+      }, 600);
+    }
+    prevAttackTriggerRef.current = attackTrigger;
+  }, [attackTrigger]);
 
   // 피격 감지 (HP 감소 시) - 죽음 처리용
   useEffect(() => {
@@ -863,14 +893,14 @@ export function Enemy({ enemy, isTargetable = false, incomingDamage = 0, ignoreB
             animation: isHurt ? 'shake 0.3s ease-in-out' : 'none',
           }}
         >
-          {getEnemyCharacter(enemy.templateId, 100)}
+          {getEnemyCharacter(enemy.templateId, 100, isAttacking)}
           {/* 바닥 그림자 */}
           <div
             className="absolute left-1/2"
             style={{
               bottom: '-8px',
-              width: '70px',
-              height: '16px',
+              width: `${ENEMY_SHADOW_SIZE[enemy.templateId] || 70}px`,
+              height: `${(ENEMY_SHADOW_SIZE[enemy.templateId] || 70) * 0.23}px`,
               background: 'radial-gradient(ellipse at center, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0.3) 50%, transparent 70%)',
               borderRadius: '50%',
               transform: 'translateX(-50%)',
