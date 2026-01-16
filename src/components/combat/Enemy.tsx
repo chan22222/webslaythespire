@@ -38,12 +38,6 @@ const ENEMY_SHADOW_SIZE: Record<string, number> = {
   // 기본값: 70
 };
 
-// 몹별 스킬 이펙트 X 오프셋 (px)
-const ENEMY_SKILL_EFFECT_OFFSET: Record<string, number> = {
-  gremlin_nob: 25, // 이블 위자드 - 오른쪽으로
-  // 기본값: 0
-};
-
 // ===== 게임 스타일 의도 표시 컴포넌트 =====
 
 function AttackIntent({ damage, hits }: { damage: number; hits?: number }) {
