@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 interface CharacterProps {
   size?: number;
   className?: string;
+  isAttacking?: boolean;
 }
 
 // 스프라이트시트 설정
@@ -375,23 +376,46 @@ const FLYING_EYE_CONFIG = {
   cropHeight: 50,
 };
 
-// 플라잉아이 (Flying Eye) - 애니메이션 스프라이트
-export function FlyingEyeSprite({ size = 80, className = '', variant = 'red' }: CharacterProps & { variant?: 'red' | 'green' }) {
-  const [frame, setFrame] = useState(FLYING_EYE_CONFIG.totalFrames - 1);
+const FLYING_EYE_ATTACK_CONFIG = {
+  frameWidth: 150,
+  frameHeight: 150,
+  totalFrames: 8,
+  animationSpeed: 80,
+  cropOffsetX: 35,
+  cropOffsetY: 50,
+  cropWidth: 80,
+  cropHeight: 50,
+};
 
-  const scaledSize = size * 1.7; // 크기 조정
-  const scale = scaledSize / FLYING_EYE_CONFIG.cropHeight;
-  const displayWidth = FLYING_EYE_CONFIG.cropWidth * scale;
-  const displayHeight = FLYING_EYE_CONFIG.cropHeight * scale;
+// 플라잉아이 (Flying Eye) - 애니메이션 스프라이트
+export function FlyingEyeSprite({ size = 80, className = '', variant = 'red', isAttacking = false }: CharacterProps & { variant?: 'red' | 'green' }) {
+  const config = isAttacking ? FLYING_EYE_ATTACK_CONFIG : FLYING_EYE_CONFIG;
+  const [frame, setFrame] = useState(config.totalFrames - 1);
+
+  // 상태 변경 시 frame 리셋
+  useEffect(() => {
+    setFrame(config.totalFrames - 1);
+  }, [isAttacking, config.totalFrames]);
+
+  // 컨테이너는 idle 기준 고정
+  const scaledSize = size * 1.7;
+  const baseScale = scaledSize / FLYING_EYE_CONFIG.cropHeight;
+  const containerWidth = FLYING_EYE_CONFIG.cropWidth * baseScale;
+  const containerHeight = FLYING_EYE_CONFIG.cropHeight * baseScale;
+
+  // 실제 스프라이트 크기
+  const scale = scaledSize / config.cropHeight;
+  const displayWidth = config.cropWidth * scale;
+  const displayHeight = config.cropHeight * scale;
 
   // 애니메이션 루프 (역방향)
   useEffect(() => {
     const interval = setInterval(() => {
-      setFrame((prev) => (prev - 1 + FLYING_EYE_CONFIG.totalFrames) % FLYING_EYE_CONFIG.totalFrames);
-    }, FLYING_EYE_CONFIG.animationSpeed);
+      setFrame((prev) => (prev - 1 + config.totalFrames) % config.totalFrames);
+    }, config.animationSpeed);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [config.totalFrames, config.animationSpeed]);
 
   // 그린 버전은 hue-rotate 필터로 색상 변경
   const colorFilter = variant === 'green'
@@ -399,28 +423,33 @@ export function FlyingEyeSprite({ size = 80, className = '', variant = 'red' }: 
     : 'none';
 
   // 현재 프레임의 시작 위치 + crop offset
-  const bgX = -(frame * FLYING_EYE_CONFIG.frameWidth + FLYING_EYE_CONFIG.cropOffsetX) * scale;
-  const bgY = -FLYING_EYE_CONFIG.cropOffsetY * scale;
+  const bgX = -(frame * config.frameWidth + config.cropOffsetX) * scale;
+  const bgY = -config.cropOffsetY * scale;
+
+  const spriteUrl = isAttacking ? '/sprites/mob/flyingeye_Attack.png' : '/sprites/mob/flyingeye.png';
 
   return (
     <div
       className={`relative ${className}`}
       style={{
-        width: displayWidth,
-        height: displayHeight + 30, // 아래 여백 추가
-        paddingBottom: '30px', // 공중에 떠있는 효과
+        width: containerWidth,
+        height: containerHeight + 30,
+        paddingBottom: '30px',
       }}
     >
       <div
+        className="absolute"
         style={{
           width: displayWidth,
           height: displayHeight,
-          backgroundImage: 'url(/sprites/mob/flyingeye.png)',
+          left: '50%',
+          top: '50%',
+          transform: 'translate(-50%, -50%) scaleX(-1)',
+          backgroundImage: `url(${spriteUrl})`,
           backgroundPosition: `${bgX}px ${bgY}px`,
-          backgroundSize: `${FLYING_EYE_CONFIG.frameWidth * FLYING_EYE_CONFIG.totalFrames * scale}px ${FLYING_EYE_CONFIG.frameHeight * scale}px`,
+          backgroundSize: `${config.frameWidth * config.totalFrames * scale}px ${config.frameHeight * scale}px`,
           backgroundRepeat: 'no-repeat',
           imageRendering: 'pixelated',
-          transform: 'scaleX(-1)',
           filter: colorFilter,
         }}
       />
@@ -440,37 +469,65 @@ const GOBLIN_CONFIG = {
   cropHeight: 55,
 };
 
-// 고블린 (Goblin) - 애니메이션 스프라이트
-export function GoblinSprite({ size = 80, className = '' }: CharacterProps) {
-  const [frame, setFrame] = useState(0);
+const GOBLIN_ATTACK_CONFIG = {
+  frameWidth: 150,
+  frameHeight: 150,
+  totalFrames: 8,
+  animationSpeed: 80,
+  cropOffsetX: 20,
+  cropOffsetY: 45,
+  cropWidth: 100,
+  cropHeight: 55,
+};
 
+// 고블린 (Goblin) - 애니메이션 스프라이트
+export function GoblinSprite({ size = 80, className = '', isAttacking = false }: CharacterProps) {
+  const [frame, setFrame] = useState(0);
+  const config = isAttacking ? GOBLIN_ATTACK_CONFIG : GOBLIN_CONFIG;
+
+  // 상태 변경 시 frame 리셋
+  useEffect(() => {
+    setFrame(0);
+  }, [isAttacking]);
+
+  // 컨테이너는 idle 기준 고정
   const scaledSize = size * 2.1;
-  const scale = scaledSize / GOBLIN_CONFIG.cropHeight;
-  const displayWidth = GOBLIN_CONFIG.cropWidth * scale;
-  const displayHeight = GOBLIN_CONFIG.cropHeight * scale;
+  const baseScale = scaledSize / GOBLIN_CONFIG.cropHeight;
+  const containerWidth = GOBLIN_CONFIG.cropWidth * baseScale;
+  const containerHeight = GOBLIN_CONFIG.cropHeight * baseScale;
+
+  // 실제 스프라이트 크기
+  const scale = scaledSize / config.cropHeight;
+  const displayWidth = config.cropWidth * scale;
+  const displayHeight = config.cropHeight * scale;
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setFrame((prev) => (prev + 1) % GOBLIN_CONFIG.totalFrames);
-    }, GOBLIN_CONFIG.animationSpeed);
+      setFrame((prev) => (prev + 1) % config.totalFrames);
+    }, config.animationSpeed);
     return () => clearInterval(interval);
-  }, []);
+  }, [config.totalFrames, config.animationSpeed]);
 
-  const bgX = -(frame * GOBLIN_CONFIG.frameWidth + GOBLIN_CONFIG.cropOffsetX) * scale;
-  const bgY = -GOBLIN_CONFIG.cropOffsetY * scale;
+  const bgX = -(frame * config.frameWidth + config.cropOffsetX) * scale;
+  const bgY = -config.cropOffsetY * scale;
+
+  const spriteUrl = isAttacking ? '/sprites/mob/goblin_Attack.png' : '/sprites/mob/goblin.png';
 
   return (
-    <div className={`relative ${className}`} style={{ width: displayWidth, height: displayHeight }}>
+    <div className={`relative ${className}`} style={{ width: containerWidth, height: containerHeight }}>
       <div
+        className="absolute"
         style={{
           width: displayWidth,
           height: displayHeight,
-          backgroundImage: 'url(/sprites/mob/gblin.png)',
+          left: '50%',
+          top: '50%',
+          transform: 'translate(-50%, -50%) scaleX(-1)',
+          backgroundImage: `url(${spriteUrl})`,
           backgroundPosition: `${bgX}px ${bgY}px`,
-          backgroundSize: `${GOBLIN_CONFIG.frameWidth * GOBLIN_CONFIG.totalFrames * scale}px ${GOBLIN_CONFIG.frameHeight * scale}px`,
+          backgroundSize: `${config.frameWidth * config.totalFrames * scale}px ${config.frameHeight * scale}px`,
           backgroundRepeat: 'no-repeat',
           imageRendering: 'pixelated',
-          transform: 'scaleX(-1)',
           filter: 'none',
         }}
       />
@@ -490,37 +547,65 @@ const SKELETON_CONFIG = {
   cropHeight: 60,
 };
 
-// 스켈레톤 (Skeleton) - 애니메이션 스프라이트
-export function SkeletonSprite({ size = 80, className = '' }: CharacterProps) {
-  const [frame, setFrame] = useState(0);
+const SKELETON_ATTACK_CONFIG = {
+  frameWidth: 150,
+  frameHeight: 150,
+  totalFrames: 8,
+  animationSpeed: 80,
+  cropOffsetX: 0,
+  cropOffsetY: 35,
+  cropWidth: 150,
+  cropHeight: 65,
+};
 
+// 스켈레톤 (Skeleton) - 애니메이션 스프라이트
+export function SkeletonSprite({ size = 80, className = '', isAttacking = false }: CharacterProps) {
+  const [frame, setFrame] = useState(0);
+  const config = isAttacking ? SKELETON_ATTACK_CONFIG : SKELETON_CONFIG;
+
+  // 상태 변경 시 frame 리셋
+  useEffect(() => {
+    setFrame(0);
+  }, [isAttacking]);
+
+  // 컨테이너는 idle 기준 고정
   const scaledSize = size * 2.1;
-  const scale = scaledSize / SKELETON_CONFIG.cropHeight;
-  const displayWidth = SKELETON_CONFIG.cropWidth * scale;
-  const displayHeight = SKELETON_CONFIG.cropHeight * scale;
+  const baseScale = scaledSize / SKELETON_CONFIG.cropHeight;
+  const containerWidth = SKELETON_CONFIG.cropWidth * baseScale;
+  const containerHeight = SKELETON_CONFIG.cropHeight * baseScale;
+
+  // 실제 스프라이트 크기
+  const scale = scaledSize / config.cropHeight;
+  const displayWidth = config.cropWidth * scale;
+  const displayHeight = config.cropHeight * scale;
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setFrame((prev) => (prev + 1) % SKELETON_CONFIG.totalFrames);
-    }, SKELETON_CONFIG.animationSpeed);
+      setFrame((prev) => (prev + 1) % config.totalFrames);
+    }, config.animationSpeed);
     return () => clearInterval(interval);
-  }, []);
+  }, [config.totalFrames, config.animationSpeed]);
 
-  const bgX = -(frame * SKELETON_CONFIG.frameWidth + SKELETON_CONFIG.cropOffsetX) * scale;
-  const bgY = -SKELETON_CONFIG.cropOffsetY * scale;
+  const bgX = -(frame * config.frameWidth + config.cropOffsetX) * scale;
+  const bgY = -config.cropOffsetY * scale;
+
+  const spriteUrl = isAttacking ? '/sprites/mob/skeleton_Attack.png' : '/sprites/mob/skeleton.png';
 
   return (
-    <div className={`relative ${className}`} style={{ width: displayWidth, height: displayHeight }}>
+    <div className={`relative ${className}`} style={{ width: containerWidth, height: containerHeight }}>
       <div
+        className="absolute"
         style={{
           width: displayWidth,
           height: displayHeight,
-          backgroundImage: 'url(/sprites/mob/skeleton.png)',
+          left: '50%',
+          top: '50%',
+          transform: 'translate(-50%, -50%) scaleX(-1)',
+          backgroundImage: `url(${spriteUrl})`,
           backgroundPosition: `${bgX}px ${bgY}px`,
-          backgroundSize: `${SKELETON_CONFIG.frameWidth * SKELETON_CONFIG.totalFrames * scale}px ${SKELETON_CONFIG.frameHeight * scale}px`,
+          backgroundSize: `${config.frameWidth * config.totalFrames * scale}px ${config.frameHeight * scale}px`,
           backgroundRepeat: 'no-repeat',
           imageRendering: 'pixelated',
-          transform: 'scaleX(-1)',
           filter: 'none',
         }}
       />
@@ -540,42 +625,70 @@ const MUSHROOM_CONFIG = {
   cropHeight: 50,
 };
 
+const MUSHROOM_ATTACK_CONFIG = {
+  frameWidth: 150,
+  frameHeight: 150,
+  totalFrames: 8,
+  animationSpeed: 80,
+  cropOffsetX: 40,
+  cropOffsetY: 50,
+  cropWidth: 70,
+  cropHeight: 50,
+};
+
 // 머쉬룸 (Mushroom) - 애니메이션 스프라이트
-export function MushroomSprite({ size = 80, className = '', variant = 'normal' }: CharacterProps & { variant?: 'normal' | 'acid' }) {
+export function MushroomSprite({ size = 80, className = '', variant = 'normal', isAttacking = false }: CharacterProps & { variant?: 'normal' | 'acid' }) {
+  const config = isAttacking ? MUSHROOM_ATTACK_CONFIG : MUSHROOM_CONFIG;
   const [frame, setFrame] = useState(0);
 
+  // 상태 변경 시 frame 리셋
+  useEffect(() => {
+    setFrame(0);
+  }, [isAttacking]);
+
+  // 컨테이너는 idle 기준 고정
   const scaledSize = size * 1.9;
-  const scale = scaledSize / MUSHROOM_CONFIG.cropHeight;
-  const displayWidth = MUSHROOM_CONFIG.cropWidth * scale;
-  const displayHeight = MUSHROOM_CONFIG.cropHeight * scale;
+  const baseScale = scaledSize / MUSHROOM_CONFIG.cropHeight;
+  const containerWidth = MUSHROOM_CONFIG.cropWidth * baseScale;
+  const containerHeight = MUSHROOM_CONFIG.cropHeight * baseScale;
+
+  // 실제 스프라이트 크기
+  const scale = scaledSize / config.cropHeight;
+  const displayWidth = config.cropWidth * scale;
+  const displayHeight = config.cropHeight * scale;
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setFrame((prev) => (prev + 1) % MUSHROOM_CONFIG.totalFrames);
-    }, MUSHROOM_CONFIG.animationSpeed);
+      setFrame((prev) => (prev + 1) % config.totalFrames);
+    }, config.animationSpeed);
     return () => clearInterval(interval);
-  }, []);
+  }, [config.totalFrames, config.animationSpeed]);
 
   // 산성 버전은 녹색 색조
   const colorFilter = variant === 'acid'
     ? 'hue-rotate(60deg) saturate(1.5)'
     : 'none';
 
-  const bgX = -(frame * MUSHROOM_CONFIG.frameWidth + MUSHROOM_CONFIG.cropOffsetX) * scale;
-  const bgY = -MUSHROOM_CONFIG.cropOffsetY * scale;
+  const bgX = -(frame * config.frameWidth + config.cropOffsetX) * scale;
+  const bgY = -config.cropOffsetY * scale;
+
+  const spriteUrl = isAttacking ? '/sprites/mob/mushroom_Attack.png' : '/sprites/mob/mushroom.png';
 
   return (
-    <div className={`relative ${className}`} style={{ width: displayWidth, height: displayHeight }}>
+    <div className={`relative ${className}`} style={{ width: containerWidth, height: containerHeight }}>
       <div
+        className="absolute"
         style={{
           width: displayWidth,
           height: displayHeight,
-          backgroundImage: 'url(/sprites/mob/mushroom.png)',
+          left: '50%',
+          top: '50%',
+          transform: 'translate(-50%, -50%) scaleX(-1)',
+          backgroundImage: `url(${spriteUrl})`,
           backgroundPosition: `${bgX}px ${bgY}px`,
-          backgroundSize: `${MUSHROOM_CONFIG.frameWidth * MUSHROOM_CONFIG.totalFrames * scale}px ${MUSHROOM_CONFIG.frameHeight * scale}px`,
+          backgroundSize: `${config.frameWidth * config.totalFrames * scale}px ${config.frameHeight * scale}px`,
           backgroundRepeat: 'no-repeat',
           imageRendering: 'pixelated',
-          transform: 'scaleX(-1)',
           filter: colorFilter,
         }}
       />
@@ -695,6 +808,173 @@ export function GremlinNobSilhouette({ size = 140, className = '' }: CharacterPr
   );
 }
 
+// EvilWizard 스프라이트 설정
+const EVIL_WIZARD_CONFIG = {
+  frameWidth: 140,
+  frameHeight: 140,
+  sheetWidth: 1400,
+  sheetHeight: 140,
+  totalFrames: 8,
+  animationSpeed: 150,
+  cropOffsetX: 5,
+  cropOffsetY: 35,
+  cropWidth: 120,
+  cropHeight: 105,
+};
+
+const EVIL_WIZARD_ATTACK_CONFIG = {
+  frameWidth: 140,
+  frameHeight: 140,
+  sheetWidth: 1820,
+  sheetHeight: 140,
+  totalFrames: 13,
+  animationSpeed: 55,
+  cropOffsetX: -5,
+  cropOffsetY: 35,
+  cropWidth: 140,
+  cropHeight: 105,
+};
+
+// EvilWizard (엘리트) - 애니메이션 스프라이트
+export function EvilWizardSprite({ size = 120, className = '', isAttacking = false }: CharacterProps) {
+  const [frame, setFrame] = useState(0);
+  const config = isAttacking ? EVIL_WIZARD_ATTACK_CONFIG : EVIL_WIZARD_CONFIG;
+
+  // 상태 변경 시 frame 리셋
+  useEffect(() => {
+    setFrame(0);
+  }, [isAttacking]);
+
+  // 컨테이너는 idle 기준 crop 크기로 설정
+  const scaledSize = size * 3.4;
+  const baseScale = scaledSize / EVIL_WIZARD_CONFIG.cropHeight;
+  const containerWidth = EVIL_WIZARD_CONFIG.cropWidth * baseScale;
+  const containerHeight = EVIL_WIZARD_CONFIG.cropHeight * baseScale * 0.45; // HP바 가깝게
+
+  // 실제 스프라이트 크기
+  const scale = scaledSize / config.cropHeight;
+  const displayWidth = config.cropWidth * scale;
+  const displayHeight = config.cropHeight * scale;
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setFrame((prev) => (prev + 1) % config.totalFrames);
+    }, config.animationSpeed);
+    return () => clearInterval(interval);
+  }, [config.totalFrames, config.animationSpeed]);
+
+  const bgX = -(frame * config.frameWidth + config.cropOffsetX) * scale;
+  const bgY = -config.cropOffsetY * scale;
+  const spriteUrl = isAttacking ? '/sprites/mob/EvilWizard_Attack.png' : '/sprites/mob/EvilWizard.png';
+
+  return (
+    <div className={`relative ${className}`} style={{ width: containerWidth, height: containerHeight, overflow: 'visible' }}>
+      <div
+        className="absolute"
+        style={{
+          width: displayWidth,
+          height: displayHeight,
+          left: '50%',
+          top: '50%',
+          transform: 'translate(-50%, -38%) scaleX(-1)',
+          backgroundImage: `url(${spriteUrl})`,
+          backgroundPosition: `${bgX}px ${bgY}px`,
+          backgroundSize: `${config.sheetWidth * scale}px ${config.sheetHeight * scale}px`,
+          backgroundRepeat: 'no-repeat',
+          imageRendering: 'pixelated',
+          filter: 'none',
+        }}
+      />
+    </div>
+  );
+}
+
+// NightBorne 스프라이트 설정 (멀티 row)
+const NIGHTBORNE_CONFIG = {
+  frameWidth: 80,
+  frameHeight: 80,
+  sheetWidth: 1840,
+  sheetHeight: 400,
+  idleFrames: 9,
+  attackFrames: 12,
+  idleRow: 0,
+  attackRow: 2,
+  animationSpeed: 120,
+  attackAnimationSpeed: 45,
+  // crop 설정 - 캐릭터 영역
+  idleCropOffsetX: 10,
+  idleCropOffsetY: 15,
+  idleCropWidth: 60,
+  idleCropHeight: 65,
+  // 공격용 crop - 더 넓게
+  attackCropOffsetX: 0,
+  attackCropOffsetY: 15,
+  attackCropWidth: 80,
+  attackCropHeight: 65,
+};
+
+// NightBorne (보스) - 애니메이션 스프라이트
+export function NightBorneSprite({ size = 150, className = '', isAttacking = false }: CharacterProps) {
+  const [frame, setFrame] = useState(0);
+
+  const totalFrames = isAttacking ? NIGHTBORNE_CONFIG.attackFrames : NIGHTBORNE_CONFIG.idleFrames;
+  const row = isAttacking ? NIGHTBORNE_CONFIG.attackRow : NIGHTBORNE_CONFIG.idleRow;
+  const speed = isAttacking ? NIGHTBORNE_CONFIG.attackAnimationSpeed : NIGHTBORNE_CONFIG.animationSpeed;
+
+  // 현재 상태에 맞는 crop 설정
+  const cropOffsetX = isAttacking ? NIGHTBORNE_CONFIG.attackCropOffsetX : NIGHTBORNE_CONFIG.idleCropOffsetX;
+  const cropOffsetY = isAttacking ? NIGHTBORNE_CONFIG.attackCropOffsetY : NIGHTBORNE_CONFIG.idleCropOffsetY;
+  const cropWidth = isAttacking ? NIGHTBORNE_CONFIG.attackCropWidth : NIGHTBORNE_CONFIG.idleCropWidth;
+  const cropHeight = isAttacking ? NIGHTBORNE_CONFIG.attackCropHeight : NIGHTBORNE_CONFIG.idleCropHeight;
+
+  // 상태 변경 시 frame 리셋
+  useEffect(() => {
+    setFrame(0);
+  }, [isAttacking]);
+
+  // 컨테이너 크기 - idle 기준 고정
+  const scaledSize = size * 2.4;
+  const baseScale = scaledSize / NIGHTBORNE_CONFIG.idleCropHeight;
+  const containerWidth = NIGHTBORNE_CONFIG.idleCropWidth * baseScale;
+  const containerHeight = NIGHTBORNE_CONFIG.idleCropHeight * baseScale * 0.55; // HP바 가깝게
+
+  // 실제 스프라이트 크기 - idle 기준 scale 고정
+  const scale = scaledSize / NIGHTBORNE_CONFIG.idleCropHeight;
+  const displayWidth = cropWidth * scale;
+  const displayHeight = cropHeight * scale;
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setFrame((prev) => (prev + 1) % totalFrames);
+    }, speed);
+    return () => clearInterval(interval);
+  }, [totalFrames, speed]);
+
+  const bgX = -(frame * NIGHTBORNE_CONFIG.frameWidth + cropOffsetX) * scale;
+  const bgY = -(row * NIGHTBORNE_CONFIG.frameHeight + cropOffsetY) * scale;
+
+  return (
+    <div className={`relative ${className}`} style={{ width: containerWidth, height: containerHeight, overflow: 'visible' }}>
+      <div
+        className="absolute"
+        style={{
+          width: displayWidth,
+          height: displayHeight,
+          left: '50%',
+          top: '50%',
+          transform: 'translate(-50%, -47%) scaleX(-1)',
+          backgroundImage: 'url(/sprites/mob/NightBorne.png)',
+          backgroundPosition: `${bgX}px ${bgY}px`,
+          backgroundSize: `${NIGHTBORNE_CONFIG.sheetWidth * scale}px ${NIGHTBORNE_CONFIG.sheetHeight * scale}px`,
+          backgroundRepeat: 'no-repeat',
+          imageRendering: 'pixelated',
+          filter: 'none',
+        }}
+      />
+    </div>
+  );
+}
+
 // 슬라임 보스 실루엣
 export function SlimeBossSilhouette({ size = 180, className = '' }: CharacterProps) {
   return (
@@ -780,30 +1060,30 @@ function EasterEggEnemy({ imageUrl, size }: { imageUrl: string; size: number }) 
 }
 
 // 캐릭터 매핑
-export function getEnemyCharacter(templateId: string, size: number) {
+export function getEnemyCharacter(templateId: string, size: number, isAttacking: boolean = false) {
   switch (templateId) {
     case 'goblin':
-      return <GoblinSprite size={size} />;
+      return <GoblinSprite size={size} isAttacking={isAttacking} />;
     case 'skeleton':
-      return <SkeletonSprite size={size} />;
+      return <SkeletonSprite size={size} isAttacking={isAttacking} />;
     case 'flying_eye':
-      return <FlyingEyeSprite size={size * 0.8} variant="red" />;
+      return <FlyingEyeSprite size={size * 0.8} variant="red" isAttacking={isAttacking} />;
     case 'green_flying_eye':
-      return <FlyingEyeSprite size={size * 0.8} variant="green" />;
+      return <FlyingEyeSprite size={size * 0.8} variant="green" isAttacking={isAttacking} />;
     case 'acid_mushroom':
-      return <MushroomSprite size={size} variant="acid" />;
+      return <MushroomSprite size={size} variant="acid" isAttacking={isAttacking} />;
     case 'mushroom':
-      return <MushroomSprite size={size} variant="normal" />;
+      return <MushroomSprite size={size} variant="normal" isAttacking={isAttacking} />;
     case 'gremlin_nob':
-      return <GremlinNobSilhouette size={size * 1.2} />;
+      return <EvilWizardSprite size={size * 1.2} isAttacking={isAttacking} />;
     case 'slime_boss':
-      return <SlimeBossSilhouette size={size * 1.5} />;
+      return <NightBorneSprite size={size * 1.5} isAttacking={isAttacking} />;
     // 이스터에그 적
     case 'real_tukbug':
       return <EasterEggEnemy imageUrl="/sprites/mob/easteregg/tukbug.png" size={size} />;
     case 'kkuchu':
       return <EasterEggEnemy imageUrl="/sprites/mob/easteregg/kkuchu.png" size={size} />;
     default:
-      return <GoblinSprite size={size} />;
+      return <GoblinSprite size={size} isAttacking={isAttacking} />;
   }
 }

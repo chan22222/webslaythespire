@@ -29,8 +29,8 @@ const ENEMY_OPTIONS: { template: EnemyTemplate; label: string; type: 'normal' | 
   { template: GREEN_FLYING_EYE, label: '그린 플라잉아이', type: 'normal' },
   { template: ACID_MUSHROOM, label: '산성 머쉬룸', type: 'normal' },
   { template: MUSHROOM, label: '머쉬룸', type: 'normal' },
-  { template: GREMLIN_NOB, label: '고위 노블레스', type: 'elite' },
-  { template: SLIME_BOSS, label: '슬라임 보스', type: 'boss' },
+  { template: GREMLIN_NOB, label: '이블 위자드', type: 'elite' },
+  { template: SLIME_BOSS, label: '나이트본', type: 'boss' },
 ];
 
 const MIN_DECK_SIZE = 10;
