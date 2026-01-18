@@ -544,6 +544,8 @@ export function CombatScreen() {
     setOnPlayerHit,
     triggerEnemyHit,
     lockCardPlay,
+    isEndTurnLocked,
+    lockEndTurn,
   } = useCombatStore();
 
   const currentNode = getCurrentNode();
@@ -934,8 +936,12 @@ export function CombatScreen() {
       return;
     }
 
-    // 카드 사용 시작 즉시 1초간 다른 카드 사용 불가
+    // 카드 사용 시작 즉시 다른 카드 사용 불가 (0.4초) 및 턴종료 버튼 잠금
     lockCardPlay();
+    // 다중 히트 카드는 더 긴 잠금 시간 (히트당 약 1초)
+    const damageHitCount = card.effects.filter(e => e.type === 'DAMAGE').length;
+    const lockDuration = damageHitCount > 1 ? damageHitCount * 1000 : 1000;
+    lockEndTurn(lockDuration);
 
     const needsTarget = card.effects.some(e =>
       (e.type === 'DAMAGE' && e.target === 'SINGLE') ||
@@ -1441,13 +1447,13 @@ export function CombatScreen() {
         >
           <button
             onClick={() => {
-              if (isEndingTurn || isPlayerDying) return;
+              if (isEndingTurn || isPlayerDying || isEndTurnLocked) return;
               setIsEndingTurn(true);
               endPlayerTurn();
               setTimeout(() => setIsEndingTurn(false), 2500);
             }}
-            disabled={isEndingTurn || isPlayerDying}
-            className={`group relative overflow-hidden active:scale-95 transition-all duration-300 px-3 py-2 md:px-5 md:py-3 lg:px-6 lg:py-3 rounded-full ${energy === 0 && !isEndingTurn ? 'animate-pulse-glow' : ''} ${isEndingTurn ? 'opacity-50 cursor-not-allowed' : ''}`}
+            disabled={isEndingTurn || isPlayerDying || isEndTurnLocked}
+            className={`group relative overflow-hidden active:scale-95 transition-all duration-300 px-3 py-2 md:px-5 md:py-3 lg:px-6 lg:py-3 rounded-full ${energy === 0 && !isEndingTurn && !isEndTurnLocked ? 'animate-pulse-glow' : ''} ${isEndingTurn || isEndTurnLocked ? 'opacity-50 cursor-not-allowed' : ''}`}
             style={{
               background: energy === 0
                 ? 'linear-gradient(180deg, #3a2515 0%, #1a0d08 100%)'
