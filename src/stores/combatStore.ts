@@ -79,6 +79,10 @@ interface CombatStore extends CombatState {
   // 카드 사용 중 (1초간 다른 카드 사용 불가)
   isPlayingCard: boolean;
   lockCardPlay: () => void;
+
+  // 카드 사용 중 턴종료 버튼 잠금
+  isEndTurnLocked: boolean;
+  lockEndTurn: (duration?: number) => void;
 }
 
 export const useCombatStore = create<CombatStore>((set, get) => ({
@@ -92,6 +96,7 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
   playerDebuffTrigger: 0,
   extraTurnPending: false,
   isPlayingCard: false,
+  isEndTurnLocked: false,
   onPlayerHit: null,
   setOnPlayerHit: (callback) => set({ onPlayerHit: callback }),
 
@@ -1178,6 +1183,14 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     }, 400);
   },
 
+  lockEndTurn: (duration = 1000) => {
+    if (get().isEndTurnLocked) return;
+    set({ isEndTurnLocked: true });
+    setTimeout(() => {
+      set({ isEndTurnLocked: false });
+    }, duration);
+  },
+
   resetCombat: () => {
     const { combatLog } = get();
     set({
@@ -1188,6 +1201,7 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       playerStatuses: [],
       damagePopups: [],
       isPlayingCard: false,
+      isEndTurnLocked: false,
     });
   },
 }));
