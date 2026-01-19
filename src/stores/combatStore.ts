@@ -674,9 +674,13 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
           }
           break;
         }
-        case 'HEAL':
-          // 힐은 gameStore에서 처리
+        case 'HEAL': {
+          const healAmount = effect.value;
+          useGameStore.getState().healPlayer(healAmount);
+          get().addDamagePopup(healAmount, 'heal', 0, 0, 'player');
+          get().addToCombatLog(`HP ${healAmount} 회복!`);
           break;
+        }
         case 'UPGRADE_HAND': {
           // 손에 있는 업그레이드 가능한 카드 중 랜덤 1장 업그레이드
           const currentHand = get().hand;
