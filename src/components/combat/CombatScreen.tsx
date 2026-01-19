@@ -1246,16 +1246,23 @@ export function CombatScreen() {
               className="w-auto h-16 md:h-20"
               style={{ imageRendering: 'pixelated' }}
             />
-            <div className="absolute inset-0 flex flex-col items-center justify-center -mt-1">
+            <div className="absolute inset-0 flex items-center justify-center gap-2 -mt-5">
               <span
-                className="font-display text-[8px] md:text-[10px] tracking-widest"
-                style={{ color: 'var(--gold-dark)', textShadow: '0 1px 2px rgba(0,0,0,0.9)' }}
+                className="text-sm md:text-base tracking-widest"
+                style={{
+                  fontFamily: '"Press Start 2P", monospace',
+                  color: 'var(--gold)',
+                  textShadow: '0 1px 2px rgba(0,0,0,0.9)'
+                }}
               >
                 TURN
               </span>
               <span
-                className="font-title text-lg md:text-xl text-white -mt-1"
-                style={{ textShadow: '0 0 10px rgba(0,0,0,0.8), 0 2px 4px rgba(0,0,0,0.9)' }}
+                className="text-xl md:text-2xl text-white"
+                style={{
+                  fontFamily: '"Press Start 2P", monospace',
+                  textShadow: '0 0 10px rgba(0,0,0,0.8), 0 2px 4px rgba(0,0,0,0.9)'
+                }}
               >
                 {turn}
               </span>
