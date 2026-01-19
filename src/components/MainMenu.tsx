@@ -368,12 +368,39 @@ export function MainMenu() {
 
       {/* 메인 메뉴 버튼들 - 하단 배치 */}
       <div className="absolute bottom-32 sm:bottom-40 flex flex-col gap-2 sm:gap-3 z-10 items-center">
+        {/* 이어하기 버튼 */}
+        <button
+          onClick={() => canContinue && loadGame()}
+          disabled={!canContinue}
+          className={`relative ${canContinue ? 'transition-all duration-150 hover:scale-105 hover:brightness-125' : 'cursor-not-allowed'}`}
+          style={{
+            animation: 'buttonFadeIn 0.5s ease-out 0.5s forwards',
+            opacity: 0,
+          }}
+        >
+          <img
+            src="/button_long.png"
+            alt=""
+            className={`w-[160px] sm:w-[200px] h-auto ${!canContinue ? 'opacity-50' : ''}`}
+            style={{ imageRendering: 'pixelated' }}
+          />
+          <span
+            className={`absolute inset-0 flex items-center justify-center text-[var(--gold-light)] text-sm sm:text-base ${!canContinue ? 'opacity-50' : ''}`}
+            style={{
+              fontFamily: '"NeoDunggeunmo", "Neo둥근모", cursive',
+              textShadow: '2px 2px 0 #000',
+            }}
+          >
+            이어하기
+          </span>
+        </button>
+
         {/* 새 게임 버튼 */}
         <button
           onClick={startNewGame}
           className="relative transition-all duration-150 hover:scale-105 hover:brightness-125"
           style={{
-            animation: 'buttonFadeIn 0.5s ease-out 0.5s forwards',
+            animation: 'buttonFadeIn 0.5s ease-out 0.6s forwards',
             opacity: 0,
           }}
         >
@@ -399,7 +426,7 @@ export function MainMenu() {
           onClick={startDeckBuilding}
           className="relative transition-all duration-150 hover:scale-105 hover:brightness-125"
           style={{
-            animation: 'buttonFadeIn 0.5s ease-out 0.6s forwards',
+            animation: 'buttonFadeIn 0.5s ease-out 0.7s forwards',
             opacity: 0,
           }}
         >
@@ -417,33 +444,6 @@ export function MainMenu() {
             }}
           >
             커스텀 모드
-          </span>
-        </button>
-
-        {/* 이어하기 버튼 */}
-        <button
-          onClick={() => canContinue && loadGame()}
-          disabled={!canContinue}
-          className={`relative ${canContinue ? 'transition-all duration-150 hover:scale-105 hover:brightness-125' : 'cursor-not-allowed'}`}
-          style={{
-            animation: 'buttonFadeIn 0.5s ease-out 0.7s forwards',
-            opacity: 0,
-          }}
-        >
-          <img
-            src="/button_long.png"
-            alt=""
-            className={`w-[160px] sm:w-[200px] h-auto ${!canContinue ? 'opacity-50' : ''}`}
-            style={{ imageRendering: 'pixelated' }}
-          />
-          <span
-            className={`absolute inset-0 flex items-center justify-center text-[var(--gold-light)] text-sm sm:text-base ${!canContinue ? 'opacity-50' : ''}`}
-            style={{
-              fontFamily: '"NeoDunggeunmo", "Neo둥근모", cursive',
-              textShadow: '2px 2px 0 #000',
-            }}
-          >
-            이어하기
           </span>
         </button>
       </div>
