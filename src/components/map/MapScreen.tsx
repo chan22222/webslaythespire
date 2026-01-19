@@ -174,14 +174,14 @@ export function MapScreen() {
 
       {/* 상단 HUD */}
       <header
-        className="relative z-30 px-6 pt-9 pb-4"
+        className="map-header relative z-30 px-6 pt-9 pb-4"
         style={{
           background: 'linear-gradient(180deg, rgba(10, 8, 5, 0.95) 0%, transparent 100%)',
         }}
       >
         <div className="flex items-center justify-between max-w-screen-2xl mx-auto">
           {/* HP & Gold */}
-          <div className="flex items-center gap-6">
+          <div className="map-hud-left flex items-center gap-6">
             <div
               className="relative group cursor-help"
               style={{
@@ -344,7 +344,7 @@ export function MapScreen() {
 
           {/* Floor */}
           <div
-            className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center justify-center group cursor-help"
+            className="map-hud-center absolute left-1/2 -translate-x-1/2 flex flex-col items-center justify-center group cursor-help"
             style={{
               backgroundImage: 'url(/floor.png)',
               backgroundSize: 'contain',
@@ -423,7 +423,7 @@ export function MapScreen() {
           </div>
 
           {/* Deck & Relics */}
-          <div className="flex items-center gap-2">
+          <div className="map-hud-right flex items-center gap-2">
             <div className="hidden md:flex items-center gap-0">
               {player.relics.map(relic => (
                 <div
@@ -580,10 +580,10 @@ export function MapScreen() {
       </header>
 
       {/* 맵 영역 */}
-      <main ref={containerRef} className="flex-1 relative overflow-hidden pt-8">
+      <main ref={containerRef} className="map-main flex-1 relative overflow-hidden pt-8">
         {/* 맵 컨테이너 - 좌우 여백 */}
         <div
-          className="absolute top-0 h-full transition-transform duration-300 ease-out"
+          className="map-container absolute top-0 h-full transition-transform duration-300 ease-out"
           style={{
             width: MAP_WIDTH,
             left: MAP_PADDING,
@@ -609,7 +609,7 @@ export function MapScreen() {
         <button
           onClick={handleNavLeft}
           disabled={viewOffset <= 0}
-          className="absolute left-6 top-1/2 -translate-y-1/2 z-20 transition-all duration-150 hover:scale-125 disabled:opacity-30 disabled:cursor-not-allowed"
+          className="map-nav-btn absolute left-6 top-1/2 -translate-y-1/2 z-20 transition-all duration-150 hover:scale-125 disabled:opacity-30 disabled:cursor-not-allowed"
         >
           <img
             src="/sprites/icon/left_arrow.png"
@@ -624,7 +624,7 @@ export function MapScreen() {
         <button
           onClick={handleNavRight}
           disabled={containerRef.current ? viewOffset >= MAP_WIDTH - containerRef.current.clientWidth + MAP_PADDING * 2 : false}
-          className="absolute right-6 top-1/2 -translate-y-1/2 z-20 transition-all duration-150 hover:scale-125 disabled:opacity-30 disabled:cursor-not-allowed"
+          className="map-nav-btn absolute right-6 top-1/2 -translate-y-1/2 z-20 transition-all duration-150 hover:scale-125 disabled:opacity-30 disabled:cursor-not-allowed"
         >
           <img
             src="/sprites/icon/right_arrow.png"
