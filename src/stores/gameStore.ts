@@ -16,6 +16,8 @@ const getRandomStarterRelic = () => {
 
 export type GamePhase = 'MAIN_MENU' | 'DECK_BUILDING' | 'MAP' | 'COMBAT' | 'REWARD' | 'SHOP' | 'REST' | 'EVENT' | 'CARD_REWARD' | 'GAME_OVER' | 'VICTORY';
 
+const SAVE_KEY = 'shuffle_and_slash_save';
+
 interface GameState {
   // 게임 상태
   phase: GamePhase;
@@ -28,6 +30,12 @@ interface GameState {
   // 액션
   setPlayerName: (name: string) => void;
   startNewGame: () => void;
+
+  // 저장/불러오기
+  saveGame: () => void;
+  loadGame: () => boolean;
+  hasSaveData: () => boolean;
+  deleteSaveData: () => void;
   startDeckBuilding: () => void;
   setDeck: (deck: CardInstance[]) => void;
   startGameWithDeck: () => void;
@@ -82,6 +90,8 @@ export const useGameStore = create<GameState>((set, get) => ({
       map: newMap,
       currentAct: 1,
     });
+    // 새 게임 시작 시 자동 저장
+    setTimeout(() => get().saveGame(), 100);
   },
 
   startDeckBuilding: () => {
@@ -119,10 +129,19 @@ export const useGameStore = create<GameState>((set, get) => ({
       phase: 'MAP',
       map: newMap,
     });
+    setTimeout(() => get().saveGame(), 100);
   },
 
   setPhase: (phase: GamePhase) => {
     set({ phase });
+    // MAP 화면 진입 시 자동 저장
+    if (phase === 'MAP') {
+      setTimeout(() => get().saveGame(), 100);
+    }
+    // 게임 오버 또는 승리 시 저장 데이터 삭제
+    if (phase === 'GAME_OVER' || phase === 'VICTORY') {
+      get().deleteSaveData();
+    }
   },
 
   moveToNode: (nodeId: string) => {
@@ -363,6 +382,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         currentHp: player.currentHp + hpBonus,
       },
     });
+    setTimeout(() => get().saveGame(), 100);
   },
 
   clearTestEnemies: () => {
@@ -420,5 +440,64 @@ export const useGameStore = create<GameState>((set, get) => ({
         floor: map.floor + 1,
       },
     });
+    setTimeout(() => get().saveGame(), 100);
+  },
+
+  // 게임 저장
+  saveGame: () => {
+    const { player, map, currentAct, playerName } = get();
+    const saveData = {
+      player,
+      map,
+      currentAct,
+      playerName,
+      savedAt: Date.now(),
+    };
+    try {
+      localStorage.setItem(SAVE_KEY, JSON.stringify(saveData));
+    } catch (e) {
+      console.error('게임 저장 실패:', e);
+    }
+  },
+
+  // 게임 불러오기
+  loadGame: () => {
+    try {
+      const savedData = localStorage.getItem(SAVE_KEY);
+      if (!savedData) return false;
+
+      const { player, map, currentAct, playerName } = JSON.parse(savedData);
+      set({
+        phase: 'MAP',
+        player,
+        map,
+        currentAct,
+        playerName,
+        testEnemies: null,
+      });
+      return true;
+    } catch (e) {
+      console.error('게임 불러오기 실패:', e);
+      return false;
+    }
+  },
+
+  // 저장 데이터 존재 여부 확인
+  hasSaveData: () => {
+    try {
+      const savedData = localStorage.getItem(SAVE_KEY);
+      return savedData !== null;
+    } catch {
+      return false;
+    }
+  },
+
+  // 저장 데이터 삭제
+  deleteSaveData: () => {
+    try {
+      localStorage.removeItem(SAVE_KEY);
+    } catch (e) {
+      console.error('저장 데이터 삭제 실패:', e);
+    }
   },
 }));

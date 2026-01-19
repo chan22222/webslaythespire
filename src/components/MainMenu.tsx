@@ -265,9 +265,10 @@ function BlackholeBackground() {
 }
 
 export function MainMenu() {
-  const { startNewGame, startDeckBuilding, playerName, setPlayerName } = useGameStore();
+  const { startNewGame, startDeckBuilding, playerName, setPlayerName, hasSaveData, loadGame } = useGameStore();
   const [isEditing, setIsEditing] = useState(false);
   const [tempName, setTempName] = useState(playerName);
+  const canContinue = hasSaveData();
 
   return (
     <div className="w-full h-screen bg-black flex flex-col items-center justify-center relative overflow-hidden">
@@ -421,8 +422,9 @@ export function MainMenu() {
 
         {/* 이어하기 버튼 */}
         <button
-          disabled
-          className="relative cursor-not-allowed"
+          onClick={() => canContinue && loadGame()}
+          disabled={!canContinue}
+          className={`relative ${canContinue ? 'transition-all duration-150 hover:scale-105 hover:brightness-125' : 'cursor-not-allowed'}`}
           style={{
             animation: 'buttonFadeIn 0.5s ease-out 0.7s forwards',
             opacity: 0,
@@ -431,11 +433,11 @@ export function MainMenu() {
           <img
             src="/button_long.png"
             alt=""
-            className="w-[160px] sm:w-[200px] h-auto opacity-50"
+            className={`w-[160px] sm:w-[200px] h-auto ${!canContinue ? 'opacity-50' : ''}`}
             style={{ imageRendering: 'pixelated' }}
           />
           <span
-            className="absolute inset-0 flex items-center justify-center text-[var(--gold-light)] text-sm sm:text-base opacity-50"
+            className={`absolute inset-0 flex items-center justify-center text-[var(--gold-light)] text-sm sm:text-base ${!canContinue ? 'opacity-50' : ''}`}
             style={{
               fontFamily: '"NeoDunggeunmo", "Neo둥근모", cursive',
               textShadow: '2px 2px 0 #000',
