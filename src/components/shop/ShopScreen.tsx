@@ -202,7 +202,7 @@ export function ShopScreen() {
           {/* 왼쪽 화살표 */}
           <button
             onClick={handleScrollLeft}
-            className="shop-nav-btn absolute left-2 z-20 transition-all duration-150 hover:scale-125"
+            className="shop-nav-btn absolute left-0 z-30 transition-all duration-150 hover:scale-125"
           >
             <img
               src="/sprites/icon/left_arrow.png"
@@ -276,7 +276,7 @@ export function ShopScreen() {
                       <div
                         className="shop-relic-icon-area flex items-center justify-center relative z-10"
                         style={{
-                          background: `radial-gradient(circle at center, ${glowColor} 0%, ${glowColor.replace(/[\d.]+\)$/, '0.3)')} 30%, transparent 55%)`,
+                          background: `radial-gradient(circle at center, ${glowColor} 0%, ${glowColor.replace(/[\d.]+\)$/, '0.6)')} 25%, transparent 50%)`,
                         }}
                       >
                         {relic.icon ? (
@@ -323,7 +323,7 @@ export function ShopScreen() {
           {/* 오른쪽 화살표 */}
           <button
             onClick={handleScrollRight}
-            className="shop-nav-btn absolute right-2 z-20 transition-all duration-150 hover:scale-125"
+            className="shop-nav-btn absolute right-0 z-30 transition-all duration-150 hover:scale-125"
           >
             <img
               src="/sprites/icon/right_arrow.png"
