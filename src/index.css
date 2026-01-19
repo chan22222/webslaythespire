@@ -416,6 +416,98 @@ body {
   }
 }
 
+/* ============================================
+   메인 메뉴 모바일 반응형
+   ============================================ */
+
+/* 높이 850px 미만 */
+@media (max-height: 850px) {
+  .menu-title {
+    top: 14% !important;
+    transform: scale(0.9) !important;
+    transform-origin: top center !important;
+  }
+
+  .menu-buttons {
+    bottom: 6rem !important;
+    transform: scale(0.9) !important;
+    transform-origin: bottom center !important;
+    gap: 0.4rem !important;
+  }
+}
+
+/* 높이 700px 미만 - 태블릿/중간 사이즈 */
+@media (max-height: 700px) {
+  .menu-title {
+    top: 12% !important;
+    transform: scale(0.8) !important;
+  }
+
+  .menu-buttons {
+    bottom: 5rem !important;
+    transform: scale(0.85) !important;
+    gap: 0.3rem !important;
+  }
+}
+
+/* 높이 600px 미만 */
+@media (max-height: 600px) {
+  .menu-title {
+    top: 10% !important;
+    transform: scale(0.7) !important;
+  }
+
+  .menu-buttons {
+    bottom: 2.5rem !important;
+    transform: scale(0.75) !important;
+    gap: 0.25rem !important;
+  }
+}
+
+/* 높이 500px 미만 - 모바일 가로 모드 */
+@media (max-height: 500px) and (orientation: landscape) {
+  .menu-title {
+    top: 18% !important;
+    transform: scale(0.55) !important;
+    transform-origin: top center !important;
+  }
+
+  .menu-buttons {
+    bottom: 4rem !important;
+    transform: scale(0.6) !important;
+    transform-origin: bottom center !important;
+    gap: 0.2rem !important;
+  }
+}
+
+/* 높이 420px 미만 */
+@media (max-height: 420px) and (orientation: landscape) {
+  .menu-title {
+    top: 16% !important;
+    transform: scale(0.5) !important;
+  }
+
+  .menu-buttons {
+    bottom: 3.5rem !important;
+    transform: scale(0.55) !important;
+    gap: 0.15rem !important;
+  }
+}
+
+/* 높이 380px 미만 */
+@media (max-height: 380px) and (orientation: landscape) {
+  .menu-title {
+    top: 14% !important;
+    transform: scale(0.45) !important;
+  }
+
+  .menu-buttons {
+    bottom: 3rem !important;
+    transform: scale(0.5) !important;
+    gap: 0.1rem !important;
+  }
+}
+
 /* 타이포그래피 */
 .font-title {
   font-family: 'Cinzel', serif;

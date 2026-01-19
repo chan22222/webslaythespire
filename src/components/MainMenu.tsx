@@ -291,7 +291,7 @@ export function MainMenu() {
       <BlackholeBackground />
 
       {/* 타이틀 텍스트 */}
-      <div className="absolute top-[15%] sm:top-[18%] z-10 text-center px-4">
+      <div className="menu-title absolute top-[15%] sm:top-[18%] z-10 text-center px-4">
         <AnimatedTitle />
 
         {/* 캐릭터 이름 입력 - 장식 라인 바로 아래 */}
@@ -382,7 +382,7 @@ export function MainMenu() {
       </div>
 
       {/* 메인 메뉴 버튼들 - 하단 배치 */}
-      <div className="absolute bottom-32 sm:bottom-40 flex flex-col gap-2 sm:gap-3 z-10 items-center">
+      <div className="menu-buttons absolute bottom-32 sm:bottom-40 flex flex-col gap-2 sm:gap-3 z-10 items-center">
         {/* 새 게임 버튼 */}
         <button
           onClick={handleNewGame}
