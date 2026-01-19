@@ -2000,6 +2000,102 @@ body {
   margin-top: 0.25rem;
 }
 
+/* 휴식처 화면 */
+.rest-screen {
+  font-family: 'NeoDunggeunmo', cursive;
+}
+
+.rest-title,
+.rest-option-title,
+.rest-option-desc,
+.rest-option-hint,
+.rest-complete-text,
+.rest-proceed-btn,
+.rest-upgrade-title,
+.rest-upgrade-hint,
+.rest-upgrade-cancel {
+  font-family: 'NeoDunggeunmo', cursive;
+}
+
+.rest-fire {
+  margin-bottom: 1rem;
+}
+
+.rest-fire-icon {
+  font-size: 5rem;
+}
+
+.rest-title {
+  font-size: 2.5rem;
+  margin-bottom: 2rem;
+}
+
+.rest-options {
+  gap: 2rem;
+}
+
+.rest-option-btn {
+  padding: 2rem 2.5rem;
+  min-width: 200px;
+}
+
+.rest-option-icon {
+  font-size: 3rem;
+  margin-bottom: 0.75rem;
+}
+
+.rest-option-title {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.rest-option-desc {
+  font-size: 1rem;
+}
+
+.rest-option-hint {
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+.rest-complete-text {
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+}
+
+.rest-proceed-btn {
+  padding: 1rem 2.5rem;
+  font-size: 1.25rem;
+}
+
+.rest-upgrade-modal {
+  padding: 2rem;
+  min-width: min(600px, 90vw);
+  max-width: 90vw;
+}
+
+.rest-upgrade-title {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.rest-upgrade-hint {
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+}
+
+.rest-upgrade-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.rest-upgrade-cancel {
+  padding: 0.75rem 2rem;
+  font-size: 1rem;
+}
+
 /* 상점 화면 */
 .shop-screen {
   padding: 2rem;
@@ -2054,33 +2150,13 @@ body {
 .shop-items-wrapper {
   position: relative;
   max-width: 100%;
-}
-
-.shop-items-wrapper::before,
-.shop-items-wrapper::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 120px;
-  z-index: 15;
-  pointer-events: auto;
-}
-
-.shop-items-wrapper::before {
-  left: 0;
-  background: linear-gradient(to right, var(--bg-darkest) 0%, var(--bg-darkest) 40%, transparent 100%);
-}
-
-.shop-items-wrapper::after {
-  right: 0;
-  background: linear-gradient(to left, var(--bg-darkest) 0%, var(--bg-darkest) 40%, transparent 100%);
+  overflow: hidden;
 }
 
 .shop-items-container {
   display: flex;
   gap: 1rem;
-  padding: 1rem 6.5rem;
+  padding: 1rem 8.5rem;
   align-items: flex-end;
 }
 
@@ -2331,6 +2407,50 @@ body {
     margin-top: 0.25rem;
   }
 
+  /* 휴식처 850px */
+  .rest-fire-icon {
+    font-size: 4rem;
+  }
+
+  .rest-title {
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .rest-options {
+    gap: 1.5rem;
+  }
+
+  .rest-option-btn {
+    padding: 1.5rem 2rem;
+    min-width: 180px;
+  }
+
+  .rest-option-icon {
+    font-size: 2.5rem;
+  }
+
+  .rest-option-title {
+    font-size: 1.25rem;
+  }
+
+  .rest-option-desc {
+    font-size: 0.9rem;
+  }
+
+  .rest-option-hint {
+    font-size: 0.75rem;
+  }
+
+  .rest-complete-text {
+    font-size: 1.75rem;
+  }
+
+  .rest-proceed-btn {
+    padding: 0.875rem 2rem;
+    font-size: 1.125rem;
+  }
+
   /* 상점 850px */
   .shop-gold-wrapper {
     width: 190px;
@@ -2518,6 +2638,50 @@ body {
     padding: 0.5rem 1.25rem;
     font-size: 0.875rem;
     margin-top: 0.125rem;
+  }
+
+  /* 휴식처 700px */
+  .rest-fire-icon {
+    font-size: 3.5rem;
+  }
+
+  .rest-title {
+    font-size: 1.75rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .rest-options {
+    gap: 1.25rem;
+  }
+
+  .rest-option-btn {
+    padding: 1.25rem 1.5rem;
+    min-width: 160px;
+  }
+
+  .rest-option-icon {
+    font-size: 2rem;
+  }
+
+  .rest-option-title {
+    font-size: 1.125rem;
+  }
+
+  .rest-option-desc {
+    font-size: 0.8rem;
+  }
+
+  .rest-option-hint {
+    font-size: 0.7rem;
+  }
+
+  .rest-complete-text {
+    font-size: 1.5rem;
+  }
+
+  .rest-proceed-btn {
+    padding: 0.75rem 1.75rem;
+    font-size: 1rem;
   }
 
   /* 상점 700px */
@@ -2715,14 +2879,48 @@ body {
     font-size: 0.75rem;
   }
 
-  .reward-cards-hint {
-    margin-top: 0.25rem;
-    font-size: 0.5rem;
+  /* 휴식처 500px */
+  .rest-fire-icon {
+    font-size: 3rem;
   }
 
-  .reward-proceed-btn {
-    padding: 0.375rem 0.75rem;
-    font-size: 0.65rem;
+  .rest-title {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .rest-options {
+    gap: 1rem;
+  }
+
+  .rest-option-btn {
+    padding: 1rem 1.25rem;
+    min-width: 140px;
+  }
+
+  .rest-option-icon {
+    font-size: 1.75rem;
+  }
+
+  .rest-option-title {
+    font-size: 1rem;
+  }
+
+  .rest-option-desc {
+    font-size: 0.7rem;
+  }
+
+  .rest-option-hint {
+    font-size: 0.6rem;
+  }
+
+  .rest-complete-text {
+    font-size: 1.25rem;
+  }
+
+  .rest-proceed-btn {
+    padding: 0.625rem 1.5rem;
+    font-size: 0.875rem;
   }
 
   /* 상점 500px 모바일 */
@@ -2885,6 +3083,50 @@ body {
   .reward-proceed-btn {
     padding: 0.25rem 0.5rem;
     font-size: 0.55rem;
+  }
+
+  /* 휴식처 420px */
+  .rest-fire-icon {
+    font-size: 2.5rem;
+  }
+
+  .rest-title {
+    font-size: 1.25rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .rest-options {
+    gap: 0.75rem;
+  }
+
+  .rest-option-btn {
+    padding: 0.75rem 1rem;
+    min-width: 120px;
+  }
+
+  .rest-option-icon {
+    font-size: 1.5rem;
+  }
+
+  .rest-option-title {
+    font-size: 0.875rem;
+  }
+
+  .rest-option-desc {
+    font-size: 0.6rem;
+  }
+
+  .rest-option-hint {
+    font-size: 0.5rem;
+  }
+
+  .rest-complete-text {
+    font-size: 1rem;
+  }
+
+  .rest-proceed-btn {
+    padding: 0.5rem 1.25rem;
+    font-size: 0.75rem;
   }
 
   /* 상점 420px */
@@ -3068,6 +3310,50 @@ body {
   .reward-proceed-btn {
     padding: 0.2rem 0.4rem;
     font-size: 0.5rem;
+  }
+
+  /* 휴식처 380px */
+  .rest-fire-icon {
+    font-size: 2rem;
+  }
+
+  .rest-title {
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .rest-options {
+    gap: 0.5rem;
+  }
+
+  .rest-option-btn {
+    padding: 0.5rem 0.75rem;
+    min-width: 100px;
+  }
+
+  .rest-option-icon {
+    font-size: 1.25rem;
+  }
+
+  .rest-option-title {
+    font-size: 0.75rem;
+  }
+
+  .rest-option-desc {
+    font-size: 0.5rem;
+  }
+
+  .rest-option-hint {
+    font-size: 0.45rem;
+  }
+
+  .rest-complete-text {
+    font-size: 0.875rem;
+  }
+
+  .rest-proceed-btn {
+    padding: 0.375rem 1rem;
+    font-size: 0.625rem;
   }
 
   /* 상점 380px */

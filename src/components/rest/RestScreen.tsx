@@ -6,6 +6,7 @@ export function RestScreen() {
   const { player, setPhase, healPlayer, upgradeCard } = useGameStore();
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [actionTaken, setActionTaken] = useState(false);
+  const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
 
   const healAmount = Math.floor(player.maxHp * 0.3);
   const upgradableCards = player.deck.filter(card => !card.upgraded && card.upgradeEffect);
@@ -18,13 +19,20 @@ export function RestScreen() {
   const handleUpgrade = () => {
     if (upgradableCards.length > 0) {
       setShowUpgradeModal(true);
+      setSelectedCardId(null);
     }
   };
 
-  const handleSelectUpgrade = (cardInstanceId: string) => {
-    upgradeCard(cardInstanceId);
-    setShowUpgradeModal(false);
-    setActionTaken(true);
+  const handleCardClick = (cardInstanceId: string) => {
+    if (selectedCardId === cardInstanceId) {
+      // 두 번째 클릭 - 선택 확정
+      upgradeCard(cardInstanceId);
+      setShowUpgradeModal(false);
+      setActionTaken(true);
+    } else {
+      // 첫 번째 클릭 - 선택
+      setSelectedCardId(cardInstanceId);
+    }
   };
 
   const handleProceed = () => {
@@ -139,7 +147,7 @@ export function RestScreen() {
 
       {/* 업그레이드 모달 */}
       {showUpgradeModal && (
-        <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-2">
+        <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4">
           <div
             className="rest-upgrade-modal rounded-xl max-h-[90vh] overflow-auto"
             style={{
@@ -148,25 +156,44 @@ export function RestScreen() {
               boxShadow: '0 0 40px rgba(0,0,0,0.8), 0 0 20px var(--gold-glow)',
             }}
           >
-            <h2 className="rest-upgrade-title font-title text-[var(--gold-light)] text-center">
+            <h2 className="rest-upgrade-title text-[var(--gold-light)] text-center">
               업그레이드할 카드 선택
             </h2>
+            <p className="rest-upgrade-hint text-center text-gray-400">
+              {selectedCardId ? '한 번 더 클릭하여 확정' : '카드를 선택하세요'}
+            </p>
 
             <div className="rest-upgrade-grid">
-              {upgradableCards.map(card => (
-                <div
-                  key={card.instanceId}
-                  onClick={() => handleSelectUpgrade(card.instanceId)}
-                  className="cursor-pointer hover:scale-105 transition-transform"
-                >
-                  <Card card={card} size="sm" />
-                </div>
-              ))}
+              {upgradableCards.map(card => {
+                const isSelected = selectedCardId === card.instanceId;
+                return (
+                  <div
+                    key={card.instanceId}
+                    onClick={() => handleCardClick(card.instanceId)}
+                    className="cursor-pointer transition-all duration-200 relative"
+                    style={{
+                      transform: isSelected ? 'scale(1.05)' : 'scale(1)',
+                      opacity: selectedCardId && !isSelected ? 0.5 : 1,
+                    }}
+                  >
+                    <Card card={card} size="sm" />
+                    {isSelected && (
+                      <div
+                        className="absolute inset-0 pointer-events-none rounded-lg"
+                        style={{
+                          border: '3px solid #4ade80',
+                          boxShadow: '0 0 20px rgba(74, 222, 128, 0.6)',
+                        }}
+                      />
+                    )}
+                  </div>
+                );
+              })}
             </div>
 
             <button
               onClick={() => setShowUpgradeModal(false)}
-              className="rest-upgrade-cancel rounded-lg font-card text-gray-400 hover:text-white transition-colors block mx-auto"
+              className="rest-upgrade-cancel rounded-lg text-gray-400 hover:text-white transition-colors block mx-auto"
               style={{
                 background: 'linear-gradient(180deg, var(--bg-light) 0%, var(--bg-dark) 100%)',
                 border: '1px solid var(--gold-dark)',

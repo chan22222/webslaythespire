@@ -166,16 +166,25 @@ export function ShopScreen() {
   };
 
   return (
-    <div className="shop-screen w-full h-screen bg-[var(--bg-darkest)] texture-noise flex flex-col items-center relative overflow-hidden">
-      {/* 배경 효과 */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div
-          className="absolute inset-0"
-          style={{
-            background: 'radial-gradient(ellipse at center top, rgba(201, 162, 39, 0.15) 0%, transparent 50%)',
-          }}
-        />
-      </div>
+    <div className="shop-screen w-full h-screen flex flex-col items-center relative overflow-hidden">
+      {/* 배경 이미지 */}
+      <div
+        className="absolute inset-0"
+        style={{
+          backgroundImage: 'url(/maps/shop1.png)',
+          backgroundSize: 'auto 100%',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+          backgroundColor: 'var(--bg-darkest)',
+        }}
+      />
+      {/* 배경 오버레이 */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background: 'rgba(0,0,0,0.65)',
+        }}
+      />
 
       {/* 상단: 골드 - 맵 스타일 */}
       <div className="shop-gold-wrapper flex items-center justify-center relative z-10">
