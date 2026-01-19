@@ -1900,76 +1900,76 @@ body {
   font-size: 1.25rem;
 }
 
-/* 승리 화면 */
+/* 승리 화면 - 컴팩트 디자인 */
+.reward-panel {
+  gap: 0.75rem;
+  max-width: 90vw;
+  font-family: 'NeoDunggeunmo', cursive;
+}
+
+.reward-title,
+.reward-gold-btn,
+.reward-cards-title,
+.reward-proceed-btn {
+  font-family: 'NeoDunggeunmo', cursive;
+}
+
 .reward-header {
-  margin-bottom: 2rem;
+  margin-bottom: 0.25rem;
 }
 
 .reward-trophy {
-  font-size: 4rem;
-  margin-bottom: 1rem;
+  font-size: 2.5rem;
 }
 
 .reward-title {
-  font-size: 3rem;
-  margin-bottom: 0.5rem;
-}
-
-.reward-subtitle {
-  font-size: 1.125rem;
+  font-size: 2.25rem;
 }
 
 .reward-gold {
-  margin-bottom: 2rem;
-  gap: 0.75rem;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
 }
 
 .reward-gold-btn {
-  padding: 1rem 2rem;
-  font-size: 1.25rem;
-  gap: 1rem;
+  padding: 0.5rem 1.25rem;
+  font-size: 1rem;
+  gap: 0.5rem;
 }
 
 .reward-gold-icon {
-  font-size: 1.75rem;
+  font-size: 1.25rem;
 }
 
 .reward-cards {
-  margin-bottom: 2rem;
+  margin-bottom: 0.5rem;
 }
 
 .reward-cards-title {
-  font-size: 1.25rem;
-  margin-bottom: 1.5rem;
-  padding: 0 0.5rem;
+  font-size: 1rem;
+  margin-bottom: 0.75rem;
+  opacity: 0.9;
 }
 
 .reward-cards-container {
   display: flex;
   gap: 2rem;
-  transform-origin: top center;
-}
-
-.reward-card-selected {
-  transform: scale(1.1) translateY(-1.5rem);
+  transform-origin: center center;
+  margin-bottom: 0;
 }
 
 .reward-card-check {
-  top: -0.75rem;
-  right: -0.75rem;
-  width: 2rem;
-  height: 2rem;
-  font-size: 1.125rem;
-}
-
-.reward-cards-hint {
-  margin-top: 1rem;
+  top: -0.5rem;
+  right: -0.5rem;
+  width: 1.5rem;
+  height: 1.5rem;
   font-size: 0.875rem;
 }
 
 .reward-proceed-btn {
-  padding: 1rem 2.5rem;
-  font-size: 1.25rem;
+  padding: 0.75rem 2rem;
+  font-size: 1.125rem;
+  margin-top: 0.25rem;
 }
 
 /* 상점 화면 */
@@ -2242,69 +2242,65 @@ body {
     font-size: 1rem;
   }
 
-  .reward-header {
-    margin-bottom: 1.5rem;
-  }
-
-  .reward-trophy {
-    font-size: 3rem;
-    margin-bottom: 0.75rem;
-  }
-
-  .reward-title {
-    font-size: 2.5rem;
-    margin-bottom: 0.375rem;
-  }
-
-  .reward-subtitle {
-    font-size: 1rem;
-  }
-
-  .reward-gold {
-    margin-bottom: 1.5rem;
+  .reward-panel {
     gap: 0.5rem;
   }
 
+  .reward-header {
+    margin-bottom: 0.25rem;
+  }
+
+  .reward-trophy {
+    font-size: 2rem;
+  }
+
+  .reward-title {
+    font-size: 1.875rem;
+  }
+
+  .reward-gold {
+    gap: 0.375rem;
+    margin-bottom: 0.375rem;
+  }
+
   .reward-gold-btn {
-    padding: 0.75rem 1.5rem;
-    font-size: 1rem;
-    gap: 0.75rem;
+    padding: 0.375rem 1rem;
+    font-size: 0.875rem;
+    gap: 0.375rem;
   }
 
   .reward-gold-icon {
-    font-size: 1.5rem;
+    font-size: 1rem;
   }
 
   .reward-cards {
-    margin-bottom: 1.5rem;
+    margin-bottom: 0.375rem;
   }
 
   .reward-cards-title {
-    font-size: 1rem;
-    margin-bottom: 1rem;
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
   }
 
   .reward-cards-container {
     gap: 1.5rem;
-    transform: scale(0.9);
+    transform: scale(0.85);
+    margin-top: -1rem;
+    margin-bottom: -1rem;
   }
 
   .reward-card-check {
-    top: -0.5rem;
-    right: -0.5rem;
-    width: 1.75rem;
-    height: 1.75rem;
-    font-size: 1rem;
-  }
-
-  .reward-cards-hint {
-    margin-top: 0.75rem;
+    top: -0.375rem;
+    right: -0.375rem;
+    width: 1.25rem;
+    height: 1.25rem;
     font-size: 0.75rem;
   }
 
   .reward-proceed-btn {
-    padding: 0.875rem 2rem;
+    padding: 0.625rem 1.5rem;
     font-size: 1rem;
+    margin-top: 0.25rem;
   }
 
   /* 상점 850px */
@@ -2439,65 +2435,61 @@ body {
     margin-bottom: 1rem;
   }
 
-  .reward-trophy {
-    font-size: 2.5rem;
-    margin-bottom: 0.5rem;
-  }
-
-  .reward-title {
-    font-size: 2rem;
-    margin-bottom: 0.25rem;
-  }
-
-  .reward-subtitle {
-    font-size: 0.875rem;
-  }
-
-  .reward-gold {
-    margin-bottom: 1rem;
+  .reward-panel {
     gap: 0.375rem;
   }
 
+  .reward-trophy {
+    font-size: 1.75rem;
+  }
+
+  .reward-title {
+    font-size: 1.5rem;
+  }
+
+  .reward-gold {
+    gap: 0.25rem;
+    margin-bottom: 0.25rem;
+  }
+
   .reward-gold-btn {
-    padding: 0.5rem 1rem;
-    font-size: 0.875rem;
-    gap: 0.5rem;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.75rem;
+    gap: 0.25rem;
   }
 
   .reward-gold-icon {
-    font-size: 1.25rem;
+    font-size: 0.875rem;
   }
 
   .reward-cards {
-    margin-bottom: 1rem;
+    margin-bottom: 0.25rem;
   }
 
   .reward-cards-title {
-    font-size: 0.875rem;
-    margin-bottom: 0.75rem;
+    font-size: 0.75rem;
+    margin-bottom: 0.375rem;
   }
 
   .reward-cards-container {
-    gap: 1rem;
-    transform: scale(0.75);
+    gap: 1.25rem;
+    transform: scale(0.7);
+    margin-top: -2rem;
+    margin-bottom: -2rem;
   }
 
   .reward-card-check {
-    top: -0.375rem;
-    right: -0.375rem;
-    width: 1.5rem;
-    height: 1.5rem;
-    font-size: 0.875rem;
-  }
-
-  .reward-cards-hint {
-    margin-top: 0.5rem;
+    top: -0.25rem;
+    right: -0.25rem;
+    width: 1rem;
+    height: 1rem;
     font-size: 0.625rem;
   }
 
   .reward-proceed-btn {
-    padding: 0.625rem 1.5rem;
+    padding: 0.5rem 1.25rem;
     font-size: 0.875rem;
+    margin-top: 0.125rem;
   }
 
   /* 상점 700px */
@@ -2635,63 +2627,64 @@ body {
     font-size: 0.7rem;
   }
 
+  .reward-panel {
+    gap: 0.25rem;
+  }
+
   .reward-header {
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.125rem;
   }
 
   .reward-trophy {
-    font-size: 1.75rem;
-    margin-bottom: 0.25rem;
+    font-size: 1.5rem;
   }
 
   .reward-title {
     font-size: 1.25rem;
-    margin-bottom: 0.125rem;
-  }
-
-  .reward-subtitle {
-    font-size: 0.65rem;
   }
 
   .reward-gold {
-    margin-bottom: 0.5rem;
     gap: 0.25rem;
+    margin-bottom: 0.125rem;
   }
 
   .reward-gold-btn {
-    padding: 0.375rem 0.75rem;
-    font-size: 0.65rem;
-    gap: 0.375rem;
+    padding: 0.25rem 0.625rem;
+    font-size: 0.625rem;
+    gap: 0.25rem;
   }
 
   .reward-gold-icon {
-    font-size: 1rem;
+    font-size: 0.75rem;
   }
 
   .reward-cards {
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.125rem;
   }
 
   .reward-cards-title {
-    font-size: 0.65rem;
-    margin-bottom: 0.375rem;
+    font-size: 0.625rem;
+    margin-bottom: 0.25rem;
   }
 
   .reward-cards-container {
-    gap: 0.5rem;
-    transform: scale(0.5);
-  }
-
-  .reward-card-selected {
-    transform: scale(1.1) translateY(-0.5rem);
+    gap: 1rem;
+    transform: scale(0.55);
+    margin-top: -3rem;
+    margin-bottom: -3rem;
   }
 
   .reward-card-check {
-    top: -0.25rem;
-    right: -0.25rem;
-    width: 1rem;
-    height: 1rem;
-    font-size: 0.625rem;
+    top: -0.125rem;
+    right: -0.125rem;
+    width: 0.875rem;
+    height: 0.875rem;
+    font-size: 0.5rem;
+  }
+
+  .reward-proceed-btn {
+    padding: 0.375rem 1rem;
+    font-size: 0.75rem;
   }
 
   .reward-cards-hint {
@@ -2851,7 +2844,10 @@ body {
   }
 
   .reward-cards-container {
+    gap: 0.75rem;
     transform: scale(0.45);
+    margin-top: -4rem;
+    margin-bottom: -4rem;
   }
 
   .reward-cards-hint {
@@ -3022,12 +3018,10 @@ body {
   }
 
   .reward-cards-container {
-    gap: 0.25rem;
+    gap: 0.5rem;
     transform: scale(0.4);
-  }
-
-  .reward-card-selected {
-    transform: scale(1.1) translateY(-0.375rem);
+    margin-top: -4.5rem;
+    margin-bottom: -4.5rem;
   }
 
   .reward-card-check {

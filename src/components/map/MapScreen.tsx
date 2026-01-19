@@ -580,7 +580,7 @@ export function MapScreen() {
       </header>
 
       {/* 맵 영역 */}
-      <main ref={containerRef} className="map-main flex-1 relative overflow-hidden pt-8">
+      <main ref={containerRef} className="map-main flex-1 relative pt-8" style={{ overflowX: 'hidden', overflowY: 'visible' }}>
         {/* 맵 컨테이너 - 좌우 여백 */}
         <div
           className="map-container absolute top-0 h-full transition-transform duration-300 ease-out"
@@ -590,7 +590,7 @@ export function MapScreen() {
             transform: `translateX(-${viewOffset}px)`,
           }}
         >
-          <svg className="absolute inset-0 w-full h-full pointer-events-none">
+          <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ overflow: 'visible' }}>
             {renderConnections()}
           </svg>
 

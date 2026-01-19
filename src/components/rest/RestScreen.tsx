@@ -32,7 +32,7 @@ export function RestScreen() {
   };
 
   return (
-    <div className="w-full h-screen bg-[var(--bg-darkest)] texture-noise vignette flex flex-col items-center justify-center relative overflow-hidden">
+    <div className="rest-screen w-full h-screen bg-[var(--bg-darkest)] texture-noise vignette flex flex-col items-center justify-center relative overflow-hidden">
       {/* 배경 - 따뜻한 불빛 효과 */}
       <div className="absolute inset-0 pointer-events-none">
         <div
@@ -44,8 +44,8 @@ export function RestScreen() {
       </div>
 
       {/* 모닥불 */}
-      <div className="relative z-10 mb-4 sm:mb-8">
-        <div className="text-6xl sm:text-9xl animate-float" style={{ filter: 'drop-shadow(0 0 30px rgba(230, 126, 34, 0.8))' }}>
+      <div className="rest-fire relative z-10">
+        <div className="rest-fire-icon animate-float" style={{ filter: 'drop-shadow(0 0 30px rgba(230, 126, 34, 0.8))' }}>
           🔥
         </div>
         {/* 불빛 글로우 */}
@@ -59,7 +59,7 @@ export function RestScreen() {
       </div>
 
       <h1
-        className="font-title text-3xl sm:text-5xl text-[var(--energy-light)] mb-4 sm:mb-8 relative z-10"
+        className="rest-title font-title text-[var(--energy-light)] relative z-10"
         style={{
           textShadow: '0 0 30px var(--energy-glow), 0 4px 8px rgba(0,0,0,0.8)',
         }}
@@ -68,23 +68,23 @@ export function RestScreen() {
       </h1>
 
       {!actionTaken ? (
-        <div className="flex gap-4 sm:gap-8 relative z-10">
+        <div className="rest-options flex relative z-10">
           {/* 휴식 옵션 */}
           <button
             onClick={handleRest}
-            className="group flex flex-col items-center p-4 sm:p-8 rounded-xl transition-all duration-300 hover:scale-105"
+            className="rest-option-btn group flex flex-col items-center rounded-xl transition-all duration-300 hover:scale-105"
             style={{
               background: 'linear-gradient(135deg, #2a1515 0%, #1a0a0a 100%)',
               border: '2px solid var(--hp)',
               boxShadow: '0 8px 25px rgba(0,0,0,0.5)',
             }}
           >
-            <span className="text-4xl sm:text-6xl mb-2 sm:mb-4 group-hover:scale-110 transition-transform">💤</span>
-            <span className="font-title text-base sm:text-xl text-[var(--hp-light)]">휴식</span>
-            <span className="font-card text-xs sm:text-sm text-gray-300 mt-1 sm:mt-2">
+            <span className="rest-option-icon group-hover:scale-110 transition-transform">💤</span>
+            <span className="rest-option-title font-title text-[var(--hp-light)]">휴식</span>
+            <span className="rest-option-desc font-card text-gray-300">
               HP <span className="text-[var(--hp-light)] font-bold">{healAmount}</span> 회복
             </span>
-            <span className="font-card text-[10px] sm:text-xs text-gray-500 mt-1">
+            <span className="rest-option-hint font-card text-gray-500">
               (최대 HP의 30%)
             </span>
           </button>
@@ -94,7 +94,7 @@ export function RestScreen() {
             onClick={handleUpgrade}
             disabled={upgradableCards.length === 0}
             className={`
-              group flex flex-col items-center p-4 sm:p-8 rounded-xl transition-all duration-300
+              rest-option-btn group flex flex-col items-center rounded-xl transition-all duration-300
               ${upgradableCards.length > 0 ? 'hover:scale-105' : 'opacity-40 cursor-not-allowed'}
             `}
             style={{
@@ -105,27 +105,27 @@ export function RestScreen() {
               boxShadow: '0 8px 25px rgba(0,0,0,0.5)',
             }}
           >
-            <span className="text-4xl sm:text-6xl mb-2 sm:mb-4 group-hover:scale-110 transition-transform">⚒️</span>
-            <span className="font-title text-base sm:text-xl text-[var(--gold-light)]">대장간</span>
-            <span className="font-card text-xs sm:text-sm text-gray-300 mt-1 sm:mt-2">
+            <span className="rest-option-icon group-hover:scale-110 transition-transform">⚒️</span>
+            <span className="rest-option-title font-title text-[var(--gold-light)]">대장간</span>
+            <span className="rest-option-desc font-card text-gray-300">
               카드 업그레이드
             </span>
-            <span className="font-card text-[10px] sm:text-xs text-gray-500 mt-1">
+            <span className="rest-option-hint font-card text-gray-500">
               ({upgradableCards.length}장 가능)
             </span>
           </button>
         </div>
       ) : (
-        <div className="text-center relative z-10">
+        <div className="rest-complete text-center relative z-10">
           <div
-            className="text-xl sm:text-2xl text-green-400 mb-4 sm:mb-8 font-title"
+            className="rest-complete-text text-green-400 font-title"
             style={{ textShadow: '0 0 20px rgba(74, 222, 128, 0.5)' }}
           >
             휴식 완료!
           </div>
           <button
             onClick={handleProceed}
-            className="px-6 sm:px-10 py-2 sm:py-4 rounded-xl font-title text-base sm:text-xl text-white transition-all hover:scale-105"
+            className="rest-proceed-btn rounded-xl font-title text-white transition-all hover:scale-105"
             style={{
               background: 'linear-gradient(180deg, #22c55e 0%, #166534 100%)',
               border: '2px solid #4ade80',
@@ -139,20 +139,20 @@ export function RestScreen() {
 
       {/* 업그레이드 모달 */}
       {showUpgradeModal && (
-        <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-2 sm:p-4">
+        <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-2">
           <div
-            className="rounded-xl p-4 sm:p-8 max-w-4xl max-h-[90vh] overflow-auto"
+            className="rest-upgrade-modal rounded-xl max-h-[90vh] overflow-auto"
             style={{
               background: 'linear-gradient(135deg, var(--bg-medium) 0%, var(--bg-dark) 100%)',
               border: '2px solid var(--gold-dark)',
               boxShadow: '0 0 40px rgba(0,0,0,0.8), 0 0 20px var(--gold-glow)',
             }}
           >
-            <h2 className="font-title text-lg sm:text-2xl text-[var(--gold-light)] mb-4 sm:mb-6 text-center">
+            <h2 className="rest-upgrade-title font-title text-[var(--gold-light)] text-center">
               업그레이드할 카드 선택
             </h2>
 
-            <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 sm:gap-4 scale-75 sm:scale-100 origin-top">
+            <div className="rest-upgrade-grid">
               {upgradableCards.map(card => (
                 <div
                   key={card.instanceId}
@@ -166,7 +166,7 @@ export function RestScreen() {
 
             <button
               onClick={() => setShowUpgradeModal(false)}
-              className="mt-4 sm:mt-6 px-4 sm:px-6 py-2 rounded-lg font-card text-sm sm:text-base text-gray-400 hover:text-white transition-colors block mx-auto"
+              className="rest-upgrade-cancel rounded-lg font-card text-gray-400 hover:text-white transition-colors block mx-auto"
               style={{
                 background: 'linear-gradient(180deg, var(--bg-light) 0%, var(--bg-dark) 100%)',
                 border: '1px solid var(--gold-dark)',
