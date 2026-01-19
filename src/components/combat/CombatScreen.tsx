@@ -1420,7 +1420,7 @@ export function CombatScreen() {
         />
 
         {/* 에너지 오브 - 좌측 (안쪽으로) */}
-        <div className="absolute left-2 md:left-[6%] lg:left-[10%] bottom-8 md:bottom-14 lg:bottom-16 z-30 scale-[0.45] md:scale-90 lg:scale-110 origin-bottom-left">
+        <div className="absolute left-2 md:left-[6%] lg:left-[10%] bottom-12 md:bottom-18 lg:bottom-20 z-30 scale-[0.45] md:scale-90 lg:scale-110 origin-bottom-left">
           <EnergyOrb current={energy} max={maxEnergy} />
         </div>
 
@@ -1439,7 +1439,7 @@ export function CombatScreen() {
 
         {/* 턴 종료 버튼 - 우측 하단 */}
         <div
-          className="absolute right-2 md:right-[6%] lg:right-[10%] bottom-2 md:bottom-8 lg:bottom-10 z-30"
+          className="absolute right-2 md:right-[6%] lg:right-[10%] bottom-7 md:bottom-10 lg:bottom-[4.25rem] z-30 scale-[0.45] md:scale-90 lg:scale-110 origin-bottom-right"
           onMouseEnter={() => setShowEndTurnTooltip(true)}
           onMouseLeave={() => setShowEndTurnTooltip(false)}
         >
@@ -1451,38 +1451,23 @@ export function CombatScreen() {
               setTimeout(() => setIsEndingTurn(false), 2500);
             }}
             disabled={isEndingTurn || isPlayerDying || isEndTurnLocked}
-            className={`group relative overflow-hidden active:scale-95 transition-all duration-300 px-3 py-2 md:px-5 md:py-3 lg:px-6 lg:py-3 rounded-full ${energy === 0 && !isEndingTurn && !isEndTurnLocked ? 'animate-pulse-glow' : ''} ${isEndingTurn || isEndTurnLocked ? 'opacity-50 cursor-not-allowed' : ''}`}
-            style={{
-              background: energy === 0
-                ? 'linear-gradient(180deg, #3a2515 0%, #1a0d08 100%)'
-                : 'linear-gradient(180deg, #2a2015 0%, #0a0805 100%)',
-              border: `2px solid ${energy === 0 ? 'var(--gold)' : 'var(--gold-dark)'}`,
-              boxShadow: energy === 0
-                ? '0 4px 15px rgba(0,0,0,0.6), 0 0 20px rgba(212, 168, 75, 0.4), inset 0 1px 0 rgba(255,255,255,0.1)'
-                : '0 4px 15px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.05)',
-            }}
+            className={`relative active:scale-95 transition-all duration-300 ${isEndingTurn || isEndTurnLocked ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'}`}
           >
-            {/* 에너지 0일 때 내부 글로우 */}
-            {energy === 0 && (
-              <div
-                className="absolute inset-0 rounded-full"
-                style={{
-                  background: 'radial-gradient(ellipse at center, rgba(212, 168, 75, 0.15) 0%, transparent 70%)',
-                  animation: 'pulse 2s ease-in-out infinite',
-                }}
-              />
-            )}
-            <span
-              className="font-title text-[10px] md:text-sm lg:text-base tracking-wider relative z-10 transition-colors duration-300"
+            <img
+              src="/turnend.png"
+              alt="턴 종료"
               style={{
-                color: energy === 0 ? 'var(--gold-light)' : 'var(--gold)',
-                textShadow: energy === 0
-                  ? '0 0 8px rgba(212, 168, 75, 0.6)'
+                imageRendering: 'pixelated',
+                width: '165px',
+                height: '87px',
+                filter: energy === 0 && !isEndingTurn && !isEndTurnLocked
+                  ? 'drop-shadow(0 0 12px rgba(255, 200, 100, 0.8))'
+                  : 'drop-shadow(0 0 6px rgba(255, 150, 50, 0.4))',
+                animation: energy === 0 && !isEndingTurn && !isEndTurnLocked
+                  ? 'energy-glow 2s ease-in-out infinite'
                   : 'none',
               }}
-            >
-              턴 끝내기
-            </span>
+            />
           </button>
           {/* 턴 끝내기 툴팁 */}
           {showEndTurnTooltip && (
