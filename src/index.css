@@ -2156,7 +2156,7 @@ body {
 .shop-items-container {
   display: flex;
   gap: 1rem;
-  padding: 1rem 8.5rem;
+  padding: 1rem 6.5rem;
   align-items: flex-end;
 }
 
