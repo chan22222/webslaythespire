@@ -1901,6 +1901,34 @@ body {
 }
 
 /* 승리 화면 - 컴팩트 디자인 */
+.reward-particle {
+  position: absolute;
+  bottom: -20px;
+  width: 6px;
+  height: 6px;
+  background: radial-gradient(circle, var(--gold-light) 0%, var(--gold) 50%, transparent 70%);
+  border-radius: 50%;
+  animation: particle-rise linear infinite;
+  opacity: 0;
+}
+
+@keyframes particle-rise {
+  0% {
+    transform: translateY(0) scale(0.5);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.8;
+  }
+  90% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateY(-100vh) scale(1);
+    opacity: 0;
+  }
+}
+
 .reward-panel {
   gap: 0.75rem;
   max-width: 90vw;

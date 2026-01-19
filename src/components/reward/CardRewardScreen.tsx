@@ -71,15 +71,38 @@ export function CardRewardScreen() {
   const canProceed = goldCollected && (bonusGold === 0 || bonusCollected);
 
   return (
-    <div className="reward-screen w-full h-screen bg-[var(--bg-darkest)] texture-noise vignette flex items-center justify-center relative overflow-hidden">
-      {/* 배경 효과 */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div
-          className="absolute inset-0"
-          style={{
-            background: 'radial-gradient(ellipse 80% 60% at center, rgba(201, 162, 39, 0.12) 0%, transparent 70%)',
-          }}
-        />
+    <div className="reward-screen w-full h-screen vignette flex items-center justify-center relative overflow-hidden">
+      {/* 배경 이미지 */}
+      <div
+        className="absolute inset-0"
+        style={{
+          backgroundImage: 'url(/maps/victory1.png)',
+          backgroundSize: 'auto 100%',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
+        }}
+      />
+      {/* 배경 오버레이 */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background: 'radial-gradient(ellipse 80% 60% at center, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.7) 100%)',
+        }}
+      />
+
+      {/* 파티클 효과 - 카드 뒤로 */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
+        {[...Array(20)].map((_, i) => (
+          <div
+            key={i}
+            className="reward-particle"
+            style={{
+              left: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 5}s`,
+              animationDuration: `${4 + Math.random() * 3}s`,
+            }}
+          />
+        ))}
       </div>
 
       {/* 중앙 컨테이너 - 모든 요소를 컴팩트하게 */}
