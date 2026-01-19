@@ -1420,7 +1420,7 @@ export function CombatScreen() {
         />
 
         {/* 에너지 오브 - 좌측 (안쪽으로) */}
-        <div className="absolute left-2 md:left-[6%] lg:left-[10%] bottom-2 md:bottom-8 lg:bottom-10 z-30 scale-[0.45] md:scale-90 lg:scale-110 origin-bottom-left">
+        <div className="absolute left-2 md:left-[6%] lg:left-[10%] bottom-8 md:bottom-14 lg:bottom-16 z-30 scale-[0.45] md:scale-90 lg:scale-110 origin-bottom-left">
           <EnergyOrb current={energy} max={maxEnergy} />
         </div>
 

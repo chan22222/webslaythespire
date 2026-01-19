@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { LightningIcon } from './icons';
 
 interface EnergyOrbProps {
   current: number;
@@ -14,7 +13,7 @@ export function EnergyOrb({ current, max }: EnergyOrbProps) {
   return (
     <div
       className="relative"
-      style={{ width: '90px', height: '90px' }}
+      style={{ width: '225px', height: '75px' }}
       onMouseEnter={() => setShowTooltip(true)}
       onMouseLeave={() => setShowTooltip(false)}
     >
@@ -55,245 +54,85 @@ export function EnergyOrb({ current, max }: EnergyOrbProps) {
           />
         </div>
       )}
-      {/* 외부 글로우 - 에너지 레벨에 따라 강도 변화 */}
+
+      {/* 글로우 레이어 (애니메이션) */}
       {hasEnergy && (
-        <>
-          <div
-            className="absolute -inset-6 rounded-full animate-energy transition-opacity duration-500"
-            style={{
-              background: `radial-gradient(circle, rgba(216, 104, 32, ${0.2 + fillPercent * 0.004}) 0%, transparent 60%)`,
-              opacity: fillPercent / 100,
-            }}
-          />
-          {/* 불꽃 파티클 효과 - 에너지 양에 따라 개수와 강도 변화 */}
-          <div className="absolute inset-0">
-            {[...Array(Math.ceil((fillPercent / 100) * 6))].map((_, i) => (
-              <div
-                key={i}
-                className="absolute w-2 h-2 rounded-full transition-opacity duration-300"
-                style={{
-                  background: 'radial-gradient(circle, #ffa850 0%, #d86820 100%)',
-                  left: '50%',
-                  top: '50%',
-                  transform: `rotate(${i * 60}deg) translateY(-50px)`,
-                  animation: `particle-float ${2 + i * 0.3}s ease-in-out infinite`,
-                  opacity: 0.3 + (fillPercent / 100) * 0.4,
-                }}
-              />
-            ))}
-          </div>
-        </>
+        <img
+          src="/energy_bar.png"
+          alt="Energy Glow"
+          className="absolute inset-0 w-full h-full pointer-events-none"
+          style={{
+            imageRendering: 'pixelated',
+            filter: 'drop-shadow(0 0 15px rgba(255, 150, 50, 0.8))',
+            animation: 'energy-glow 2s ease-in-out infinite',
+            opacity: 0.8,
+          }}
+        />
       )}
 
-      {/* 외부 장식 링 - 룬 패턴 */}
-      <svg className="absolute inset-0 w-full h-full" viewBox="0 0 90 90">
-        <defs>
-          <linearGradient id="runeRingGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor={hasEnergy ? 'var(--gold)' : '#444'} />
-            <stop offset="50%" stopColor={hasEnergy ? 'var(--gold-dark)' : '#333'} />
-            <stop offset="100%" stopColor={hasEnergy ? 'var(--gold-deep)' : '#222'} />
-          </linearGradient>
-          <filter id="runeGlow">
-            <feGaussianBlur stdDeviation="2" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
-
-        {/* 외부 링 */}
-        <circle
-          cx="45"
-          cy="45"
-          r="42"
-          fill="none"
-          stroke="url(#runeRingGradient)"
-          strokeWidth="3"
-          filter={hasEnergy ? 'url(#runeGlow)' : ''}
-        />
-
-        {/* 룬 마크 - 에너지 레벨에 따라 개수 표시 */}
-        {[...Array(8)].map((_, i) => {
-          // 에너지 레벨에 따라 룬 마크 활성화 (아래쪽부터 위쪽으로)
-          const activeRunes = Math.ceil((fillPercent / 100) * 8);
-          const isActive = hasEnergy && i < activeRunes;
-          return (
-            <circle
-              key={i}
-              cx={45 + 38 * Math.cos((i * Math.PI * 2) / 8 - Math.PI / 2)}
-              cy={45 + 38 * Math.sin((i * Math.PI * 2) / 8 - Math.PI / 2)}
-              r="3"
-              fill={isActive ? 'var(--gold)' : '#333'}
-              opacity={isActive ? 0.8 : 0.3}
-              style={{
-                transition: 'fill 0.3s ease, opacity 0.3s ease',
-                filter: isActive ? 'drop-shadow(0 0 3px var(--gold))' : 'none',
-              }}
-            />
-          );
-        })}
-
-        {/* 내부 장식 링 */}
-        <circle
-          cx="45"
-          cy="45"
-          r="35"
-          fill="none"
-          stroke={hasEnergy ? 'var(--gold-dark)' : '#222'}
-          strokeWidth="1.5"
-          strokeDasharray="8 4"
-        />
-      </svg>
-
-      {/* 내부 어두운 배경 */}
-      <div
-        className="absolute rounded-full"
+      {/* 프레임 배경 (활성/비활성) */}
+      <img
+        src={hasEnergy ? '/energy_bar.png' : '/energy_empty.png'}
+        alt="Energy Frame"
+        className="absolute inset-0 w-full h-full"
         style={{
-          inset: '8px',
-          background: 'radial-gradient(circle at 50% 50%, #1a1510 0%, #0a0805 100%)',
-          border: '2px solid var(--gold-deep)',
+          imageRendering: 'pixelated',
         }}
       />
 
-      {/* 메인 에너지 오브 */}
+      {/* 에너지 채움 바 - 실제 바 영역에 맞게 클리핑 */}
+      {/* 원본 180px 기준: 좌 21px, 우 81px 여백, 바영역 78px → 1.25배: 좌 26px, 바영역 97.5px */}
       <div
-        className="absolute rounded-full flex items-center justify-center overflow-hidden"
+        className="absolute overflow-hidden transition-all duration-300 ease-out"
         style={{
-          inset: '12px',
-          background: `
-            radial-gradient(circle at 30% 25%,
-              #555 0%,
-              #3a3a3a 40%,
-              #252525 70%,
-              #151515 100%)
-          `,
-          boxShadow: hasEnergy
-            ? `
-              0 0 40px rgba(216, 104, 32, ${0.3 + fillPercent * 0.005}),
-              0 0 80px rgba(216, 104, 32, ${0.1 + fillPercent * 0.003}),
-              inset 0 0 25px rgba(255, 200, 112, ${fillPercent * 0.004}),
-              inset -5px -5px 20px rgba(0, 0, 0, 0.5)
-            `
-            : 'inset -4px -4px 15px rgba(0,0,0,0.6)',
+          left: '26px',
+          top: '0',
+          height: '100%',
+          width: `${(fillPercent / 100) * 97.5}px`,
         }}
       >
-        {/* 에너지 채움 레벨 - 아래에서 위로 차오르는 효과 */}
-        <div
-          className="absolute inset-0 rounded-full transition-all duration-500 ease-out"
+        <img
+          src="/energy.png"
+          alt="Energy Fill"
+          className="absolute h-full"
           style={{
-            background: hasEnergy
-              ? `
-                radial-gradient(circle at 30% 25%,
-                  #ffc870 0%,
-                  #f0a040 15%,
-                  #d86820 35%,
-                  #a84010 60%,
-                  #6a2808 85%,
-                  #3a1404 100%)
-              `
-              : 'transparent',
-            clipPath: `inset(${100 - fillPercent}% 0 0 0)`,
+            imageRendering: 'pixelated',
+            width: '225px',
+            maxWidth: 'none',
+            left: '-26px',
           }}
         />
-
-        {/* 채움 레벨 경계선 효과 */}
-        {hasEnergy && fillPercent < 100 && (
-          <div
-            className="absolute left-0 right-0 h-1 transition-all duration-500 ease-out"
-            style={{
-              top: `${100 - fillPercent}%`,
-              background: 'linear-gradient(90deg, transparent 0%, rgba(255, 200, 112, 0.8) 50%, transparent 100%)',
-              boxShadow: '0 0 10px rgba(255, 200, 112, 0.6)',
-            }}
-          />
-        )}
-
-        {/* 에너지 흐름 효과 */}
-        {hasEnergy && (
-          <>
-            <div
-              className="absolute inset-0"
-              style={{
-                background: 'conic-gradient(from 0deg, transparent 0%, rgba(255,200,112,0.3) 25%, transparent 50%)',
-                animation: 'spin 4s linear infinite',
-                opacity: fillPercent / 100,
-              }}
-            />
-            <div
-              className="absolute inset-0"
-              style={{
-                background: 'conic-gradient(from 180deg, transparent 0%, rgba(255,150,80,0.2) 25%, transparent 50%)',
-                animation: 'spin 3s linear infinite reverse',
-                opacity: fillPercent / 100,
-              }}
-            />
-          </>
-        )}
-
-        {/* 하이라이트 */}
-        {hasEnergy && (
-          <div
-            className="absolute rounded-full transition-opacity duration-300"
-            style={{
-              top: '8px',
-              left: '12px',
-              width: '20px',
-              height: '15px',
-              background: 'radial-gradient(ellipse, rgba(255,255,255,0.6) 0%, transparent 70%)',
-              opacity: fillPercent / 100,
-            }}
-          />
-        )}
-
-        {/* 에너지 수치 */}
-        <span
-          className="font-title text-2xl font-bold relative z-10"
-          style={{
-            color: hasEnergy ? '#fff' : '#555',
-            textShadow: hasEnergy
-              ? '0 0 15px rgba(255, 200, 112, 0.8), 0 0 30px rgba(216, 104, 32, 0.6), 0 2px 4px rgba(0,0,0,0.8)'
-              : 'none',
-          }}
-        >
-          {current}
-        </span>
       </div>
 
-      {/* 최대 에너지 표시 */}
+      {/* 에너지 수치 텍스트 */}
       <div
-        className="absolute -bottom-2 left-1/2 -translate-x-1/2 px-2 py-1 rounded-full flex items-center gap-1"
-        style={{
-          background: 'linear-gradient(180deg, rgba(30,25,20,0.95) 0%, rgba(10,8,5,0.98) 100%)',
-          border: '2px solid var(--gold-dark)',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.5)',
-        }}
+        className="absolute inset-0 flex items-center justify-end"
+        style={{ paddingRight: '20px', paddingTop: '1px' }}
       >
-        <LightningIcon size={12} color={hasEnergy ? 'var(--gold-light)' : '#555'} />
         <span
-          className="font-title text-sm"
+          className="font-bold"
           style={{
-            color: hasEnergy ? 'var(--gold-light)' : '#555',
+            fontFamily: '"Press Start 2P", monospace',
+            fontSize: '13px',
+            color: hasEnergy ? '#fff' : '#666',
+            textShadow: hasEnergy
+              ? '0 0 10px rgba(255, 200, 112, 0.8), 0 2px 3px rgba(0,0,0,0.9)'
+              : '0 1px 2px rgba(0,0,0,0.5)',
+            letterSpacing: '2px',
           }}
         >
-          /{max}
+          {current}/{max}
         </span>
       </div>
 
       {/* 스타일 정의 */}
       <style>{`
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-        @keyframes particle-float {
+        @keyframes energy-glow {
           0%, 100% {
-            opacity: 0.7;
-            transform: rotate(var(--rotation)) translateY(-50px) scale(1);
+            opacity: 1;
           }
           50% {
-            opacity: 0.3;
-            transform: rotate(var(--rotation)) translateY(-55px) scale(0.6);
+            opacity: 0.7;
           }
         }
       `}</style>
