@@ -88,11 +88,66 @@ body {
   color: #e8e6e3;
 }
 
-/* 모바일 가로 모드 최적화 */
+/* ============================================
+   모바일 반응형 최적화
+   ============================================ */
+
+/* 모바일 가로 모드 기본 최적화 */
 @media (max-height: 500px) {
   .mobile-scale {
     transform: scale(0.85);
     transform-origin: center center;
+  }
+}
+
+/* 초소형 모바일 (480px 미만) */
+@media (max-width: 479px) and (orientation: landscape) {
+  /* 터치 영역 최소 크기 확보 */
+  button, [role="button"] {
+    min-height: 40px;
+    min-width: 40px;
+  }
+
+  /* 전투 UI 간격 최적화 */
+  .combat-arena {
+    --mobile-gap: 4px;
+  }
+}
+
+/* 소형 모바일 (480px - 639px) */
+@media (min-width: 480px) and (max-width: 639px) and (orientation: landscape) {
+  button, [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .combat-arena {
+    --mobile-gap: 8px;
+  }
+}
+
+/* 중형 모바일/태블릿 (640px - 767px) */
+@media (min-width: 640px) and (max-width: 767px) and (orientation: landscape) {
+  .combat-arena {
+    --mobile-gap: 12px;
+  }
+}
+
+/* 모바일에서 드래그 최적화 */
+@media (hover: none) and (pointer: coarse) {
+  /* 터치 디바이스에서 호버 효과 비활성화 */
+  .group:hover .group-hover\:opacity-100 {
+    opacity: 0;
+  }
+
+  /* 터치 시 피드백 강화 */
+  .active\:scale-95:active {
+    transform: scale(0.92);
+  }
+
+  /* 카드 드래그 시 터치 영역 확대 */
+  .card-draggable {
+    touch-action: none;
   }
 }
 
@@ -116,6 +171,231 @@ body {
 
   .game-content {
     display: none !important;
+  }
+}
+
+/* 매우 낮은 높이의 모바일 (가로 모드 아이폰 SE 등) */
+@media (max-height: 400px) and (orientation: landscape) {
+  /* 상단 UI 축소 */
+  .combat-top-ui {
+    transform: scale(0.9);
+    transform-origin: top center;
+  }
+}
+
+/* ============================================
+   모바일 가로 모드 강제 스케일 오버라이드
+   (높이 500px 미만 + 가로 모드 = 모바일 가로 모드)
+   PC 버전(높이 500px 이상)에는 영향 없음
+   ============================================ */
+
+/* 전투 UI 요소들에 적용할 스케일 클래스 */
+.combat-scale {
+  /* 기본값 - PC/태블릿 */
+}
+
+.combat-bottom-area {
+  /* 기본값 */
+}
+
+.combat-gap {
+  /* 기본값 */
+}
+
+/* 배틀로그 기본값 - PC에서는 PC용 표시, 모바일용 숨김 */
+.combat-log-pc {
+  display: block;
+}
+
+.combat-log-mobile {
+  display: none;
+}
+
+/* 높이 500px 미만 (Galaxy S20 Ultra 412px, iPhone Pro Max 390px 등) */
+@media (max-height: 500px) and (orientation: landscape) {
+  .combat-scale {
+    transform: scale(0.55) !important;
+  }
+
+  .combat-bottom-area {
+    height: 7rem !important;
+  }
+
+  .combat-gap {
+    gap: 0.25rem !important;
+  }
+
+  .combat-top-area {
+    height: 3.5rem !important;
+  }
+
+  /* 적 간격 줄이기 - 음수 마진으로 강제 겹침 */
+  .combat-enemy-gap {
+    gap: 0 !important;
+  }
+
+  .combat-enemy-gap > * {
+    margin-left: -5.5rem !important;
+  }
+
+  .combat-enemy-gap > *:first-child {
+    margin-left: 0 !important;
+  }
+
+  /* 전투 영역 위로 올리기 */
+  .combat-main-area {
+    margin-top: -4rem !important;
+  }
+
+  /* PC용 배틀로그 숨기기 */
+  .combat-log-pc {
+    display: none !important;
+  }
+
+  /* 모바일용 배틀로그 버튼 표시 및 위치 */
+  .combat-log-mobile {
+    display: block !important;
+    top: 1.5rem !important;
+    right: 3rem !important;
+  }
+
+  /* 플레이어-적 간격 좁히기 */
+  .combat-gap {
+    gap: 0 !important;
+  }
+
+  .combat-gap > * {
+    margin-left: -6rem !important;
+  }
+
+  .combat-gap > *:first-child {
+    margin-left: 0 !important;
+  }
+
+  /* 턴 표시 위치 수정 - 스케일 유지 */
+  .combat-turn-display {
+    left: 50% !important;
+    transform: translateX(-50%) scale(0.55) !important;
+    top: -1.25rem !important;
+  }
+}
+
+/* 높이 420px 미만 - 더 작은 스케일 */
+@media (max-height: 420px) and (orientation: landscape) {
+  .combat-scale {
+    transform: scale(0.5) !important;
+  }
+
+  .combat-bottom-area {
+    height: 6.5rem !important;
+  }
+
+  .combat-top-area {
+    height: 3rem !important;
+  }
+
+  /* 적 간격 더 줄이기 - 더 강하게 겹침 */
+  .combat-enemy-gap {
+    gap: 0 !important;
+  }
+
+  .combat-enemy-gap > * {
+    margin-left: -6rem !important;
+  }
+
+  .combat-enemy-gap > *:first-child {
+    margin-left: 0 !important;
+  }
+
+  /* 전투 영역 더 위로 */
+  .combat-main-area {
+    margin-top: -5rem !important;
+  }
+
+  /* 모바일용 배틀로그 버튼 위치 */
+  .combat-log-mobile {
+    top: 1.5rem !important;
+    right: 3rem !important;
+  }
+
+  /* 플레이어-적 간격 더 좁히기 */
+  .combat-gap {
+    gap: 0 !important;
+  }
+
+  .combat-gap > * {
+    margin-left: -6.5rem !important;
+  }
+
+  .combat-gap > *:first-child {
+    margin-left: 0 !important;
+  }
+
+  /* 턴 표시 위치 수정 - 스케일 유지 */
+  .combat-turn-display {
+    left: 50% !important;
+    transform: translateX(-50%) scale(0.5) !important;
+    top: -1.25rem !important;
+  }
+}
+
+/* 높이 380px 미만 (아이폰 SE 가로 등) - 최소 스케일 */
+@media (max-height: 380px) and (orientation: landscape) {
+  .combat-scale {
+    transform: scale(0.45) !important;
+  }
+
+  .combat-bottom-area {
+    height: 6rem !important;
+  }
+
+  /* 적 간격 최소 - 최대 겹침 */
+  .combat-enemy-gap {
+    gap: 0 !important;
+  }
+
+  .combat-enemy-gap > * {
+    margin-left: -6rem !important;
+  }
+
+  .combat-enemy-gap > *:first-child {
+    margin-left: 0 !important;
+  }
+
+  /* 전투 영역 최대로 위로 */
+  .combat-main-area {
+    margin-top: -6rem !important;
+  }
+
+  /* 모바일용 배틀로그 버튼 위치 */
+  .combat-log-mobile {
+    top: 1.5rem !important;
+    right: 3rem !important;
+  }
+
+  /* 플레이어-적 간격 더 좁히기 */
+  .combat-gap {
+    gap: 0 !important;
+  }
+
+  .combat-gap > * {
+    margin-left: -7rem !important;
+  }
+
+  .combat-gap > *:first-child {
+    margin-left: 0 !important;
+  }
+
+  /* 적 간격 최대 */
+  .combat-enemy-gap > * {
+    margin-left: -6.5rem !important;
+  }
+
+  /* 턴 표시 위치 수정 - 스케일 유지 */
+  .combat-turn-display {
+    left: 50% !important;
+    transform: translateX(-50%) scale(0.45) !important;
+    top: -1.25rem !important;
   }
 }
 

@@ -1,7 +1,35 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { CardInstance } from '../../types/card';
 import { DraggableCard } from './DraggableCard';
 import { useCombatStore } from '../../stores/combatStore';
+
+// 화면 크기에 따른 카드 간격 계산
+function useCardSpacing() {
+  const [containerWidth, setContainerWidth] = useState(900);
+
+  useEffect(() => {
+    const updateWidth = () => {
+      const width = window.innerWidth;
+      if (width < 480) {
+        setContainerWidth(260);  // 작은 모바일
+      } else if (width < 640) {
+        setContainerWidth(320);  // 큰 모바일 (더 작게 조정)
+      } else if (width < 768) {
+        setContainerWidth(480);  // 태블릿 세로
+      } else if (width < 1024) {
+        setContainerWidth(700);  // 태블릿 가로
+      } else {
+        setContainerWidth(900);  // 데스크톱
+      }
+    };
+
+    updateWidth();
+    window.addEventListener('resize', updateWidth);
+    return () => window.removeEventListener('resize', updateWidth);
+  }, []);
+
+  return containerWidth;
+}
 
 interface CardHandProps {
   cards: CardInstance[];
@@ -20,6 +48,7 @@ export function CardHand({
 }: CardHandProps) {
   const [hoveredCardId, setHoveredCardId] = useState<string | null>(null);
   const isPlayingCard = useCombatStore(state => state.isPlayingCard);
+  const containerWidth = useCardSpacing();
   // 새로 추가된 카드 추적
   const [newCardIds, setNewCardIds] = useState<Set<string>>(new Set());
   const [cardDelays, setCardDelays] = useState<Map<string, number>>(new Map());
@@ -88,8 +117,8 @@ export function CardHand({
     prevCardsRef.current = [...cards];
   }, [cards]);
 
-  // 슬더슬 스타일 부채꼴 배치 계산
-  const getCardTransform = (index: number, total: number) => {
+  // 슬더슬 스타일 부채꼴 배치 계산 (화면 크기 반응형)
+  const getCardTransform = useMemo(() => (index: number, total: number) => {
     if (total === 1) {
       return { rotation: 0, offsetY: 0, offsetX: 0 };
     }
@@ -97,18 +126,21 @@ export function CardHand({
     const midPoint = (total - 1) / 2;
     const normalizedIndex = (index - midPoint) / midPoint; // -1 ~ 1
 
-    // 회전: 중앙 0도, 양끝 ±10도
-    const rotation = normalizedIndex * 10;
+    // 회전: 중앙 0도, 양끝 ±10도 (모바일에서 더 작게)
+    const maxRotation = containerWidth < 480 ? 6 : containerWidth < 768 ? 8 : 10;
+    const rotation = normalizedIndex * maxRotation;
 
-    // Y 오프셋: 아치형 곡선 (중앙이 가장 높음)
-    const offsetY = Math.pow(Math.abs(normalizedIndex), 1.5) * 30;
+    // Y 오프셋: 아치형 곡선 (중앙이 가장 높음, 모바일에서 더 작게)
+    const maxOffsetY = containerWidth < 480 ? 15 : containerWidth < 768 ? 22 : 30;
+    const offsetY = Math.pow(Math.abs(normalizedIndex), 1.5) * maxOffsetY;
 
-    // X 오프셋: 겹침 조절
-    const spacing = Math.min(110, 650 / total);
+    // X 오프셋: 겹침 조절 (화면 크기에 맞게)
+    const baseSpacing = containerWidth * 0.72; // 컨테이너 너비의 72%를 카드 배치에 사용
+    const spacing = Math.min(containerWidth < 480 ? 55 : 110, baseSpacing / total);
     const offsetX = (index - midPoint) * spacing;
 
     return { rotation, offsetY, offsetX };
-  };
+  }, [containerWidth]);
 
   // 카드가 없고 버려지는 카드도 없으면 빈 공간
   if (cards.length === 0 && discardingCards.length === 0) {
@@ -125,7 +157,7 @@ export function CardHand({
       }}
     >
       {/* 카드 렌더링 */}
-      <div className="relative flex justify-center" style={{ width: '900px' }}>
+      <div className="relative flex justify-center w-[260px] xs:w-[320px] sm:w-[480px] md:w-[700px] lg:w-[900px]">
         {cards.map((card, index) => {
           const { rotation, offsetY, offsetX } = getCardTransform(index, cards.length);
           const isSelected = selectedCardId === card.instanceId;

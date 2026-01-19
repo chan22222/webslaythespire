@@ -587,6 +587,8 @@ export function CombatScreen() {
   const [isResizingLog, setIsResizingLog] = useState(false);
   const resizeStartY = useRef(0);
   const resizeStartHeight = useRef(0);
+  // 모바일 배틀로그 펼치기/접기
+  const [isMobileLogOpen, setIsMobileLogOpen] = useState(false);
 
   // isPlayerDying 상태를 ref에 동기화
   useEffect(() => {
@@ -1153,9 +1155,9 @@ export function CombatScreen() {
       </div>
 
       {/* ===== 상단 UI ===== */}
-      <div className="relative z-20 flex justify-between items-start px-2 md:px-[5%] lg:px-[8%] pt-1 md:pt-2 h-20 md:h-24 lg:h-28">
+      <div className="combat-top-area relative z-20 flex justify-between items-start px-2 xs:px-3 md:px-[5%] lg:px-[8%] pt-1 md:pt-2 h-14 xs:h-16 sm:h-18 md:h-24 lg:h-28">
         {/* 덱 더미들 - 카드 스타일 유지 */}
-        <div className="flex gap-2 md:gap-4 scale-[0.6] md:scale-100 lg:scale-110 origin-top-left">
+        <div className="combat-scale flex gap-1 xs:gap-2 md:gap-4 scale-[0.45] xs:scale-[0.5] sm:scale-[0.7] md:scale-100 lg:scale-110 origin-top-left">
           {/* 뽑기 더미 */}
           <button
             className="group relative transition-all duration-200 active:scale-95 hover:scale-105"
@@ -1238,7 +1240,7 @@ export function CombatScreen() {
         </div>
 
         {/* 턴 표시 - 중앙 고정 */}
-        <div className="absolute left-1/2 -translate-x-1/2 top-0 scale-[0.7] md:scale-90 lg:scale-100">
+        <div className="combat-turn-display absolute left-1/2 -translate-x-1/2 top-0 scale-[0.5] xs:scale-[0.55] sm:scale-[0.7] md:scale-90 lg:scale-100">
           <div className="relative">
             <img
               src="/turn.png"
@@ -1270,9 +1272,9 @@ export function CombatScreen() {
           </div>
         </div>
 
-        {/* 전투 로그 - absolute로 우측 상단 고정 (리사이즈 가능) */}
+        {/* 전투 로그 - PC용 */}
         <div
-          className="absolute top-1 md:top-2 right-2 md:right-[5%] lg:right-[8%] w-72 md:w-80 lg:w-96 overflow-hidden rounded-lg hidden md:block"
+          className="combat-log-pc absolute top-1 md:top-2 right-2 md:right-[5%] lg:right-[8%] w-72 md:w-80 lg:w-96 overflow-hidden rounded-lg"
           style={{
             height: `${battleLogHeight}px`,
             background: 'linear-gradient(180deg, rgba(20,18,15,0.98) 0%, rgba(8,6,5,0.99) 100%)',
@@ -1329,13 +1331,72 @@ export function CombatScreen() {
             />
           </div>
         </div>
+
+        {/* 모바일용 전투 로그 - 펼치기/접기 버튼 */}
+        <div className="combat-log-mobile absolute top-1 right-1 z-30">
+          <button
+            onClick={() => setIsMobileLogOpen(!isMobileLogOpen)}
+            className="flex items-center gap-1 px-2 py-1 rounded transition-all active:scale-95"
+            style={{
+              background: 'rgba(20,18,15,0.95)',
+              border: '1px solid rgba(212,168,75,0.5)',
+              boxShadow: isMobileLogOpen ? '0 0 10px rgba(212,168,75,0.3)' : 'none',
+            }}
+          >
+            <span className="font-display text-[8px] tracking-wider text-[var(--gold)]">LOG</span>
+            <svg
+              width="10"
+              height="10"
+              viewBox="0 0 10 10"
+              fill="none"
+              style={{
+                transform: isMobileLogOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                transition: 'transform 0.2s',
+              }}
+            >
+              <path d="M2 3.5L5 6.5L8 3.5" stroke="var(--gold)" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+          </button>
+
+          {/* 모바일 로그 패널 */}
+          {isMobileLogOpen && (
+            <div
+              className="absolute top-full right-0 mt-1 w-56 max-h-32 overflow-y-auto rounded-lg"
+              style={{
+                background: 'rgba(20,18,15,0.98)',
+                border: '1px solid rgba(212,168,75,0.4)',
+                boxShadow: '0 4px 15px rgba(0,0,0,0.6)',
+              }}
+            >
+              <div className="p-2">
+                {combatLog.length === 0 ? (
+                  <div className="text-[10px] text-gray-500 text-center py-2">로그 없음</div>
+                ) : (
+                  combatLog.slice(-10).map((log, i) => (
+                    <div
+                      key={i}
+                      className="py-0.5 text-[10px] font-card"
+                      style={{
+                        color: log.includes('피해') ? 'var(--attack-light)' :
+                               log.includes('방어') ? 'var(--block-light)' :
+                               log.includes('승리') ? 'var(--gold-light)' : '#888',
+                      }}
+                    >
+                      {log}
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* ===== 메인 전투 영역 ===== */}
-      <div className="flex-1 relative z-10 flex items-center justify-center">
-        <div className="flex items-center justify-center gap-8 md:gap-20 lg:gap-32">
+      <div className="combat-main-area flex-1 relative z-10 flex items-center justify-center -mt-4 xs:-mt-6 sm:-mt-8 md:mt-0">
+        <div className="combat-gap flex items-center justify-center gap-1 xs:gap-2 sm:gap-4 md:gap-20 lg:gap-32">
           {/* 플레이어 영역 - 좌측 */}
-          <div className="flex flex-col items-center scale-[0.45] md:scale-90 lg:scale-110 z-10" ref={playerRef}>
+          <div className="combat-scale combat-player flex flex-col items-center scale-[0.5] xs:scale-[0.55] sm:scale-[0.7] md:scale-90 lg:scale-110 z-10" ref={playerRef}>
             <PlayerStatus
               player={player}
               block={playerBlock}
@@ -1387,12 +1448,12 @@ export function CombatScreen() {
           </div>
 
           {/* 적 영역 - 우측 */}
-          <div className="flex items-end justify-center gap-1 md:gap-4 lg:gap-6">
+          <div className="combat-enemy-gap flex items-end justify-center gap-0.5 xs:gap-1 sm:gap-2 md:gap-4 lg:gap-6">
             {enemies.map((enemy, index) => (
               <div
                 key={enemy.instanceId}
                 ref={(el) => setEnemyRef(enemy.instanceId, el)}
-                className="transition-all duration-300 scale-[0.45] md:scale-90 lg:scale-110"
+                className="combat-scale transition-all duration-300 scale-[0.5] xs:scale-[0.55] sm:scale-[0.7] md:scale-90 lg:scale-110"
                 style={{
                   transform: `translateY(${index % 2 === 0 ? 0 : 10}px)`,
                 }}
@@ -1410,7 +1471,7 @@ export function CombatScreen() {
       </div>
 
       {/* ===== 하단 UI 영역 ===== */}
-      <div className="relative z-20 h-24 md:h-44 lg:h-56">
+      <div className="combat-bottom-area relative z-20 h-28 xs:h-32 sm:h-36 md:h-44 lg:h-56">
         {/* 바닥 그라데이션 */}
         <div
           className="absolute inset-0 pointer-events-none"
@@ -1420,13 +1481,13 @@ export function CombatScreen() {
         />
 
         {/* 에너지 오브 - 좌측 (안쪽으로) */}
-        <div className="absolute left-2 md:left-[6%] lg:left-[10%] bottom-12 md:bottom-18 lg:bottom-20 z-30 scale-[0.45] md:scale-90 lg:scale-110 origin-bottom-left">
+        <div className="combat-scale absolute left-1 xs:left-2 md:left-[6%] lg:left-[10%] bottom-14 xs:bottom-16 sm:bottom-18 md:bottom-18 lg:bottom-20 z-30 scale-[0.5] xs:scale-[0.55] sm:scale-[0.7] md:scale-90 lg:scale-110 origin-bottom-left">
           <EnergyOrb current={energy} max={maxEnergy} />
         </div>
 
         {/* 카드 패 - 중앙 하단 */}
         <div className="absolute inset-x-0 bottom-0 flex justify-center pointer-events-none">
-          <div className="pointer-events-auto scale-[0.45] md:scale-90 lg:scale-110 origin-bottom">
+          <div className="combat-scale pointer-events-auto scale-[0.5] xs:scale-[0.55] sm:scale-[0.7] md:scale-90 lg:scale-110 origin-bottom">
             <CardHand
               cards={hand}
               energy={energy}
@@ -1439,7 +1500,7 @@ export function CombatScreen() {
 
         {/* 턴 종료 버튼 - 우측 하단 */}
         <div
-          className="absolute right-2 md:right-[6%] lg:right-[10%] bottom-7 md:bottom-10 lg:bottom-[4.25rem] z-30 scale-[0.45] md:scale-90 lg:scale-110 origin-bottom-right"
+          className="combat-scale absolute right-1 xs:right-2 md:right-[6%] lg:right-[10%] bottom-8 xs:bottom-10 sm:bottom-12 md:bottom-10 lg:bottom-[4.25rem] z-30 scale-[0.5] xs:scale-[0.55] sm:scale-[0.7] md:scale-90 lg:scale-110 origin-bottom-right"
           onMouseEnter={() => setShowEndTurnTooltip(true)}
           onMouseLeave={() => setShowEndTurnTooltip(false)}
         >
