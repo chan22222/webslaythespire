@@ -1453,21 +1453,36 @@ export function CombatScreen() {
             disabled={isEndingTurn || isPlayerDying || isEndTurnLocked}
             className={`relative active:scale-95 transition-all duration-300 ${isEndingTurn || isEndTurnLocked ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'}`}
           >
-            <img
-              src="/turnend.png"
-              alt="턴 종료"
-              style={{
-                imageRendering: 'pixelated',
-                width: '165px',
-                height: '87px',
-                filter: energy === 0 && !isEndingTurn && !isEndTurnLocked
-                  ? 'drop-shadow(0 0 12px rgba(255, 200, 100, 0.8))'
-                  : 'drop-shadow(0 0 6px rgba(255, 150, 50, 0.4))',
-                animation: energy === 0 && !isEndingTurn && !isEndTurnLocked
-                  ? 'energy-glow 2s ease-in-out infinite'
-                  : 'none',
-              }}
-            />
+            <div className="relative">
+              <img
+                src="/turnend.png"
+                alt="턴 종료"
+                style={{
+                  imageRendering: 'pixelated',
+                  width: '165px',
+                  height: '87px',
+                  filter: energy === 0 && !isEndingTurn && !isEndTurnLocked
+                    ? 'drop-shadow(0 0 12px rgba(255, 200, 100, 0.8))'
+                    : 'drop-shadow(0 0 6px rgba(255, 150, 50, 0.4))',
+                  animation: energy === 0 && !isEndingTurn && !isEndTurnLocked
+                    ? 'energy-glow 2s ease-in-out infinite'
+                    : 'none',
+                }}
+              />
+              <span
+                className="absolute inset-0 flex items-center justify-center"
+                style={{
+                  fontFamily: '"NeoDunggeunmo", cursive',
+                  fontSize: '20px',
+                  color: energy === 0 ? '#f0d890' : '#d4b870',
+                  textShadow: energy === 0
+                    ? '0 0 8px rgba(212, 168, 75, 0.6), 0 2px 4px rgba(0,0,0,0.8)'
+                    : '0 2px 4px rgba(0,0,0,0.8)',
+                }}
+              >
+                턴 종료
+              </span>
+            </div>
           </button>
           {/* 턴 끝내기 툴팁 */}
           {showEndTurnTooltip && (
