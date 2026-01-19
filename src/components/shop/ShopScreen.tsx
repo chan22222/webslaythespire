@@ -29,7 +29,8 @@ export function ShopScreen() {
   const { player, setPhase, modifyGold, addCardToDeck, addRelic, removeCardFromDeck } = useGameStore();
   const [shopItems, setShopItems] = useState<ShopItem[]>([]);
   const [showRemoveModal, setShowRemoveModal] = useState(false);
-  const [selectedItem, setSelectedItem] = useState<{ item: ShopItem; index: number } | null>(null);
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [selectedRemoveCardId, setSelectedRemoveCardId] = useState<string | null>(null);
   const itemsContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -88,17 +89,13 @@ export function ShopScreen() {
   const handleSelectItem = (index: number) => {
     const item = shopItems[index];
     if (item.sold || item.type === 'remove') return;
-    setSelectedItem({ item, index });
+    // 토글: 같은 아이템 클릭 시 선택 해제
+    setSelectedIndex(selectedIndex === index ? null : index);
   };
 
-  const handleConfirmBuy = () => {
-    if (!selectedItem) return;
-    const { item, index } = selectedItem;
-
-    if (player.gold < item.price) {
-      setSelectedItem(null);
-      return;
-    }
+  const handleBuyItem = (index: number) => {
+    const item = shopItems[index];
+    if (item.sold || player.gold < item.price) return;
 
     if (item.type === 'card') {
       modifyGold(-item.price);
@@ -106,7 +103,7 @@ export function ShopScreen() {
     } else if (item.type === 'relic') {
       const relic = item.item as Relic;
       if (player.relics.some(r => r.id === relic.id)) {
-        setSelectedItem(null);
+        setSelectedIndex(null);
         return;
       }
       modifyGold(-item.price);
@@ -116,7 +113,7 @@ export function ShopScreen() {
     const newItems = [...shopItems];
     newItems[index].sold = true;
     setShopItems(newItems);
-    setSelectedItem(null);
+    setSelectedIndex(null);
   };
 
   const handleBuyRemove = (index: number) => {
@@ -125,7 +122,12 @@ export function ShopScreen() {
     setShowRemoveModal(true);
   };
 
-  const handleRemoveCard = (cardInstanceId: string) => {
+  const handleSelectRemoveCard = (cardInstanceId: string) => {
+    // 토글: 같은 카드 클릭 시 선택 해제
+    setSelectedRemoveCardId(selectedRemoveCardId === cardInstanceId ? null : cardInstanceId);
+  };
+
+  const handleConfirmRemoveCard = (cardInstanceId: string) => {
     const item = shopItems.find(i => i.type === 'remove' && !i.sold);
     if (!item) return;
 
@@ -139,6 +141,7 @@ export function ShopScreen() {
     }
     setShopItems(newItems);
     setShowRemoveModal(false);
+    setSelectedRemoveCardId(null);
   };
 
   const handleLeave = () => {
@@ -174,25 +177,14 @@ export function ShopScreen() {
         />
       </div>
 
-      {/* 상단: 골드 */}
-      <div
-        className="shop-gold flex items-center rounded-xl relative z-10"
-        style={{
-          background: 'linear-gradient(180deg, var(--bg-medium) 0%, var(--bg-dark) 100%)',
-          border: '2px solid var(--gold)',
-          boxShadow: '0 0 20px var(--gold-glow)',
-        }}
-      >
-        <span className="shop-gold-icon">💰</span>
-        <span className="shop-gold-text font-title text-[var(--gold-light)]">{player.gold}</span>
+      {/* 상단: 골드 - 맵 스타일 */}
+      <div className="shop-gold-wrapper flex items-center justify-center relative z-10">
+        <span className="shop-gold-text tabular-nums">
+          {player.gold}
+        </span>
       </div>
 
-      <h1
-        className="shop-title font-title text-[var(--gold-light)] relative z-10"
-        style={{
-          textShadow: '0 0 20px var(--gold-glow), 0 4px 8px rgba(0,0,0,0.8)',
-        }}
-      >
+      <h1 className="shop-title text-[var(--gold-light)] relative z-10">
         상점
       </h1>
 
@@ -223,6 +215,7 @@ export function ShopScreen() {
               const globalIndex = shopItems.indexOf(item);
 
               if (item.type === 'card') {
+                const isSelected = selectedIndex === globalIndex;
                 return (
                   <div key={idx} className="flex flex-col items-center shop-item flex-shrink-0">
                     <div
@@ -230,6 +223,7 @@ export function ShopScreen() {
                       className={`
                         transition-all duration-300
                         ${item.sold ? 'opacity-30 scale-95' : player.gold >= item.price ? 'cursor-pointer hover:scale-105 hover:-translate-y-2' : 'opacity-50'}
+                        ${isSelected ? 'scale-105 -translate-y-2' : ''}
                       `}
                     >
                       <Card
@@ -239,22 +233,29 @@ export function ShopScreen() {
                       />
                     </div>
                     <div
-                      className={`shop-price-tag flex items-center rounded-lg font-title ${
-                        item.sold ? 'text-gray-500' : player.gold >= item.price ? 'text-[var(--gold-light)]' : 'text-[var(--attack-light)]'
+                      onClick={() => isSelected && handleBuyItem(globalIndex)}
+                      className={`shop-price-tag flex items-center rounded-lg font-title transition-all duration-200 ${
+                        item.sold ? 'text-gray-500' :
+                        isSelected ? 'text-white cursor-pointer hover:brightness-110' :
+                        player.gold >= item.price ? 'text-[var(--gold-light)]' : 'text-[var(--attack-light)]'
                       }`}
                       style={{
-                        background: 'linear-gradient(180deg, var(--bg-medium) 0%, var(--bg-dark) 100%)',
-                        border: `1px solid ${item.sold ? '#444' : player.gold >= item.price ? 'var(--gold-dark)' : 'var(--attack-dark)'}`,
+                        background: isSelected
+                          ? 'linear-gradient(180deg, #22c55e 0%, #166534 100%)'
+                          : 'linear-gradient(180deg, var(--bg-medium) 0%, var(--bg-dark) 100%)',
+                        border: `2px solid ${item.sold ? '#444' : isSelected ? '#4ade80' : player.gold >= item.price ? 'var(--gold-dark)' : 'var(--attack-dark)'}`,
+                        boxShadow: isSelected ? '0 0 12px rgba(74, 222, 128, 0.5)' : 'none',
                       }}
                     >
-                      <span>💰</span>
-                      <span>{item.sold ? '판매됨' : item.price}</span>
+                      <span>{isSelected ? '✓' : '💰'}</span>
+                      <span>{item.sold ? '판매됨' : isSelected ? '구매' : item.price}</span>
                     </div>
                   </div>
                 );
               } else {
                 const relic = item.item as Relic;
                 const glowColor = getRelicGlowColor(relic.rarity);
+                const isSelected = selectedIndex === globalIndex;
                 return (
                   <div key={idx} className="flex flex-col items-center shop-item flex-shrink-0">
                     <div
@@ -262,6 +263,7 @@ export function ShopScreen() {
                       className={`
                         shop-relic-card flex flex-col items-center transition-all duration-300 overflow-hidden relative
                         ${item.sold ? 'opacity-30 scale-95' : player.gold >= item.price ? 'cursor-pointer hover:scale-105 hover:-translate-y-2' : 'opacity-50'}
+                        ${isSelected ? 'scale-105 -translate-y-2' : ''}
                       `}
                     >
                       {/* 배경 이미지 */}
@@ -303,16 +305,22 @@ export function ShopScreen() {
                       </div>
                     </div>
                     <div
-                      className={`shop-price-tag flex items-center rounded-lg font-title ${
-                        item.sold ? 'text-gray-500' : player.gold >= item.price ? 'text-[var(--gold-light)]' : 'text-[var(--attack-light)]'
+                      onClick={() => isSelected && handleBuyItem(globalIndex)}
+                      className={`shop-price-tag flex items-center rounded-lg font-title transition-all duration-200 ${
+                        item.sold ? 'text-gray-500' :
+                        isSelected ? 'text-white cursor-pointer hover:brightness-110' :
+                        player.gold >= item.price ? 'text-[var(--gold-light)]' : 'text-[var(--attack-light)]'
                       }`}
                       style={{
-                        background: 'linear-gradient(180deg, var(--bg-medium) 0%, var(--bg-dark) 100%)',
-                        border: `1px solid ${item.sold ? '#444' : player.gold >= item.price ? 'var(--gold-dark)' : 'var(--attack-dark)'}`,
+                        background: isSelected
+                          ? 'linear-gradient(180deg, #22c55e 0%, #166534 100%)'
+                          : 'linear-gradient(180deg, var(--bg-medium) 0%, var(--bg-dark) 100%)',
+                        border: `2px solid ${item.sold ? '#444' : isSelected ? '#4ade80' : player.gold >= item.price ? 'var(--gold-dark)' : 'var(--attack-dark)'}`,
+                        boxShadow: isSelected ? '0 0 12px rgba(74, 222, 128, 0.5)' : 'none',
                       }}
                     >
-                      <span>💰</span>
-                      <span>{item.sold ? '판매됨' : item.price}</span>
+                      <span>{isSelected ? '✓' : '💰'}</span>
+                      <span>{item.sold ? '판매됨' : isSelected ? '구매' : item.price}</span>
                     </div>
                   </div>
                 );
@@ -344,26 +352,24 @@ export function ShopScreen() {
             onClick={() => handleBuyRemove(shopItems.indexOf(removeItem))}
             disabled={removeItem.sold || player.gold < removeItem.price}
             className={`
-              shop-remove-btn rounded-xl font-title flex items-center
+              shop-action-btn shop-remove-btn relative flex items-center justify-center
               transition-all duration-300
               ${removeItem.sold ? 'opacity-30' :
-                player.gold >= removeItem.price ? 'hover:scale-105' : 'opacity-50 cursor-not-allowed'}
+                player.gold >= removeItem.price ? 'hover:scale-105 hover:brightness-110' : 'opacity-50 cursor-not-allowed'}
             `}
-            style={{
-              background: removeItem.sold ? 'var(--bg-dark)' :
-                player.gold >= removeItem.price
-                  ? 'linear-gradient(180deg, var(--attack) 0%, var(--attack-dark) 100%)'
-                  : 'var(--bg-dark)',
-              border: `2px solid ${removeItem.sold ? '#444' :
-                player.gold >= removeItem.price ? 'var(--attack-light)' : '#444'}`,
-              boxShadow: !removeItem.sold && player.gold >= removeItem.price
-                ? '0 0 15px var(--attack-glow)'
-                : 'none',
-            }}
           >
-            <span className="shop-remove-icon">🗑️</span>
-            <span className="text-white">
-              카드 제거 - 💰 {removeItem.sold ? '판매됨' : removeItem.price}
+            <img
+              src="/button_long.png"
+              alt=""
+              className="absolute inset-0 w-full h-full object-contain"
+              style={{
+                imageRendering: 'pixelated',
+                filter: removeItem.sold ? 'grayscale(1) brightness(0.5)' : 'sepia(1) saturate(3) hue-rotate(-10deg) brightness(0.8)',
+              }}
+              draggable={false}
+            />
+            <span className="shop-btn-text relative z-10 text-white font-bold">
+              카드 제거 - {removeItem.sold ? '판매됨' : `${removeItem.price}G`}
             </span>
           </button>
         )}
@@ -371,91 +377,20 @@ export function ShopScreen() {
         {/* 나가기 버튼 */}
         <button
           onClick={handleLeave}
-          className="shop-leave-btn btn-game"
+          className="shop-action-btn shop-leave-btn relative flex items-center justify-center transition-all duration-300 hover:scale-105 hover:brightness-110"
         >
-          상점 나가기
+          <img
+            src="/button_long.png"
+            alt=""
+            className="absolute inset-0 w-full h-full object-contain"
+            style={{ imageRendering: 'pixelated' }}
+            draggable={false}
+          />
+          <span className="shop-btn-text relative z-10 text-white font-bold">
+            상점 나가기
+          </span>
         </button>
       </div>
-
-      {/* 구매 확인 모달 */}
-      {selectedItem && (
-        <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-2">
-          <div
-            className="shop-confirm-modal rounded-xl flex flex-col items-center"
-            style={{
-              background: 'linear-gradient(135deg, var(--bg-medium) 0%, var(--bg-dark) 100%)',
-              border: '2px solid var(--gold)',
-              boxShadow: '0 0 40px rgba(0,0,0,0.8), 0 0 20px var(--gold-glow)',
-            }}
-          >
-            {selectedItem.item.type === 'card' ? (
-              <div className="shop-confirm-card">
-                <Card
-                  card={createCardInstance(selectedItem.item.item as CardType)}
-                  isPlayable={true}
-                  size="lg"
-                />
-              </div>
-            ) : (
-              <div className="shop-confirm-relic flex flex-col items-center">
-                <div className="shop-confirm-relic-icon flex items-center justify-center">
-                  {(selectedItem.item.item as Relic).icon ? (
-                    <img
-                      src={(selectedItem.item.item as Relic).icon}
-                      alt={(selectedItem.item.item as Relic).name}
-                      className="w-full h-full object-contain"
-                      style={{ imageRendering: 'pixelated' }}
-                    />
-                  ) : (
-                    <span className="text-6xl">❓</span>
-                  )}
-                </div>
-                <span className="shop-confirm-relic-name font-title text-[var(--gold-light)]">
-                  {(selectedItem.item.item as Relic).name}
-                </span>
-                <span className="shop-confirm-relic-desc font-card text-gray-400 text-center">
-                  {(selectedItem.item.item as Relic).description}
-                </span>
-              </div>
-            )}
-
-            <div className="shop-confirm-price font-title text-[var(--gold-light)]">
-              💰 {selectedItem.item.price}
-            </div>
-
-            <div className="shop-confirm-buttons flex">
-              <button
-                onClick={handleConfirmBuy}
-                disabled={player.gold < selectedItem.item.price}
-                className={`shop-confirm-buy rounded-lg font-title transition-all ${
-                  player.gold >= selectedItem.item.price
-                    ? 'hover:scale-105'
-                    : 'opacity-50 cursor-not-allowed'
-                }`}
-                style={{
-                  background: player.gold >= selectedItem.item.price
-                    ? 'linear-gradient(180deg, #22c55e 0%, #166534 100%)'
-                    : 'var(--bg-dark)',
-                  border: `2px solid ${player.gold >= selectedItem.item.price ? '#4ade80' : '#444'}`,
-                  color: player.gold >= selectedItem.item.price ? 'white' : '#666',
-                }}
-              >
-                구매
-              </button>
-              <button
-                onClick={() => setSelectedItem(null)}
-                className="shop-confirm-cancel rounded-lg font-title text-gray-400 hover:text-white transition-colors"
-                style={{
-                  background: 'linear-gradient(180deg, var(--bg-light) 0%, var(--bg-dark) 100%)',
-                  border: '1px solid var(--gold-dark)',
-                }}
-              >
-                취소
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* 카드 제거 모달 */}
       {showRemoveModal && (
@@ -473,15 +408,39 @@ export function ShopScreen() {
             </h2>
 
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-1 sm:gap-2 md:gap-3 lg:gap-4 scale-60 sm:scale-75 md:scale-90 lg:scale-100 origin-top">
-              {player.deck.map(card => (
-                <div
-                  key={card.instanceId}
-                  onClick={() => handleRemoveCard(card.instanceId)}
-                  className="cursor-pointer hover:scale-105 transition-transform"
-                >
-                  <Card card={card} size="sm" />
-                </div>
-              ))}
+              {player.deck.map(card => {
+                const isSelected = selectedRemoveCardId === card.instanceId;
+                return (
+                  <div
+                    key={card.instanceId}
+                    className="flex flex-col items-center gap-1"
+                  >
+                    <div
+                      onClick={() => handleSelectRemoveCard(card.instanceId)}
+                      className={`cursor-pointer transition-all duration-200 ${isSelected ? 'scale-110 -translate-y-1' : 'hover:scale-105'}`}
+                    >
+                      <Card card={card} size="sm" />
+                    </div>
+                    <button
+                      onClick={() => isSelected && handleConfirmRemoveCard(card.instanceId)}
+                      className={`px-2 py-1 rounded font-title text-xs transition-all duration-200 ${
+                        isSelected
+                          ? 'text-white cursor-pointer hover:brightness-110'
+                          : 'text-gray-500'
+                      }`}
+                      style={{
+                        background: isSelected
+                          ? 'linear-gradient(180deg, #ef4444 0%, #991b1b 100%)'
+                          : 'linear-gradient(180deg, var(--bg-medium) 0%, var(--bg-dark) 100%)',
+                        border: `2px solid ${isSelected ? '#f87171' : '#444'}`,
+                        boxShadow: isSelected ? '0 0 10px rgba(239, 68, 68, 0.5)' : 'none',
+                      }}
+                    >
+                      {isSelected ? '✓ 제거' : '선택'}
+                    </button>
+                  </div>
+                );
+              })}
             </div>
 
             <button
