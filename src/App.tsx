@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useGameStore } from './stores/gameStore';
+import { useAuthStore } from './stores/authStore';
 import { MainMenu } from './components/MainMenu';
 import { MapScreen } from './components/map/MapScreen';
 import { CombatScreen } from './components/combat/CombatScreen';
@@ -8,6 +9,7 @@ import { RestScreen } from './components/rest/RestScreen';
 import { ShopScreen } from './components/shop/ShopScreen';
 import { GameOver } from './components/GameOver';
 import { DeckBuildingScreen } from './components/deckbuilding/DeckBuildingScreen';
+import { LoginScreen } from './components/auth/LoginScreen';
 
 // 로딩 화면 컴포넌트 - 던전 러너 스타일
 function LoadingScreen({ onLoadComplete }: { onLoadComplete: () => void }) {
@@ -371,12 +373,21 @@ function LoadingScreen({ onLoadComplete }: { onLoadComplete: () => void }) {
 
 function App() {
   const { phase } = useGameStore();
+  const { showLoginScreen, isInitialized, initialize } = useAuthStore();
   const [isLoading, setIsLoading] = useState(true);
+
+  // 인증 초기화
+  useEffect(() => {
+    initialize();
+  }, [initialize]);
 
   return (
     <>
       {/* 로딩 화면 */}
       {isLoading && <LoadingScreen onLoadComplete={() => setIsLoading(false)} />}
+
+      {/* 로그인 화면 - 로딩 완료 후 표시 */}
+      {!isLoading && isInitialized && showLoginScreen && <LoginScreen />}
 
       {/* 세로 모드 회전 안내 */}
       <div className="rotate-device-overlay">
@@ -386,7 +397,7 @@ function App() {
       </div>
 
       <div className="game-content w-full min-h-screen bg-gray-900">
-      {phase === 'MAIN_MENU' && !isLoading && <MainMenu />}
+      {phase === 'MAIN_MENU' && !isLoading && !showLoginScreen && <MainMenu />}
       {phase === 'DECK_BUILDING' && <DeckBuildingScreen />}
       {phase === 'MAP' && <MapScreen />}
       {phase === 'COMBAT' && <CombatScreen />}

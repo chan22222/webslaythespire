@@ -69,7 +69,7 @@ const createSizeConfig = (width: number) => {
     nameFontSize: Math.round(9 * scale),
     // 타입: 중앙 하단 (설명 바로 위)
     typeBottom: Math.round(55 * scale),
-    typeFontSize: Math.round(9 * scale),
+    typeFontSize: Math.round(12 * scale),
     // 코스트: 좌상단
     costSize: Math.round(28 * scale),
     costTop: Math.round(7 * scale),
@@ -275,15 +275,18 @@ export function Card({
         style={{ bottom: `${s.typeBottom}px` }}
       >
         <span
-          className="font-card"
+          className="font-card font-bold"
           style={{
             fontSize: `${s.typeFontSize}px`,
             color: config.accentColor,
-            textShadow: '1px 1px 0 #000',
+            textShadow: `0 0 8px ${config.glowColor}, 0 0 12px ${config.glowColor}, 1px 1px 0 #000, -1px -1px 0 #000`,
           }}
         >
           {config.typeName}
-          <span style={{ color: rarityConfig[card.rarity].color }}>
+          <span style={{
+            color: rarityConfig[card.rarity].color,
+            textShadow: `0 0 8px ${rarityConfig[card.rarity].color}, 0 0 12px ${rarityConfig[card.rarity].color}, 1px 1px 0 #000, -1px -1px 0 #000`,
+          }}>
             {' '}- {rarityConfig[card.rarity].name}
           </span>
         </span>

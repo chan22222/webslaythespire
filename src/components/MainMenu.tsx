@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useGameStore } from '../stores/gameStore';
+import { useAuthStore } from '../stores/authStore';
 
 // 파티클 데이터를 컴포넌트 외부에서 한 번만 생성
 const PARTICLES = Array.from({ length: 25 }, (_, i) => ({
@@ -266,10 +267,14 @@ function BlackholeBackground() {
 
 export function MainMenu() {
   const { startNewGame, startDeckBuilding, playerName, setPlayerName, hasSaveData, loadGame, deleteSaveData } = useGameStore();
+  const { user, isGuest, signOut, setShowLoginScreen } = useAuthStore();
   const [isEditing, setIsEditing] = useState(false);
   const [tempName, setTempName] = useState(playerName);
   const [showWarning, setShowWarning] = useState(false);
   const canContinue = hasSaveData();
+
+  const isLoggedIn = !!user;
+  const displayName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || (isGuest ? '게스트' : '');
 
   const handleNewGame = () => {
     if (canContinue) {
@@ -289,6 +294,50 @@ export function MainMenu() {
     <div className="w-full h-screen bg-black flex flex-col items-center justify-center relative overflow-hidden">
       {/* 블랙홀 소용돌이 배경 */}
       <BlackholeBackground />
+
+      {/* 우측 상단 로그인/로그아웃 버튼 */}
+      <div className="absolute top-4 right-4 z-20 flex items-center gap-3">
+        {(isLoggedIn || isGuest) && (
+          <span
+            className="text-xs opacity-70"
+            style={{
+              fontFamily: '"NeoDunggeunmo", "Neo둥근모", cursive',
+              color: 'var(--gold-light)',
+            }}
+          >
+            {isGuest ? '게스트' : displayName}
+          </span>
+        )}
+        {isLoggedIn ? (
+          <button
+            onClick={signOut}
+            className="px-3 py-1.5 rounded-lg text-xs transition-all hover:scale-105 hover:brightness-125"
+            style={{
+              fontFamily: '"NeoDunggeunmo", "Neo둥근모", cursive',
+              background: 'linear-gradient(180deg, #3a2020 0%, #1a0a0a 100%)',
+              border: '1px solid #6b3030',
+              color: '#ff8080',
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
+            }}
+          >
+            로그아웃
+          </button>
+        ) : isGuest ? (
+          <button
+            onClick={() => setShowLoginScreen(true)}
+            className="px-3 py-1.5 rounded-lg text-xs transition-all hover:scale-105 hover:brightness-125"
+            style={{
+              fontFamily: '"NeoDunggeunmo", "Neo둥근모", cursive',
+              background: 'linear-gradient(180deg, #2a3520 0%, #1a2510 100%)',
+              border: '1px solid #4a6030',
+              color: '#a0d080',
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
+            }}
+          >
+            로그인
+          </button>
+        ) : null}
+      </div>
 
       {/* 타이틀 텍스트 */}
       <div className="menu-title absolute top-[15%] sm:top-[18%] z-10 text-center px-4">
