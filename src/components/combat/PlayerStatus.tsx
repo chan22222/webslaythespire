@@ -450,8 +450,16 @@ export function PlayerStatus({ player, block, statuses, animation = 'idle', atta
     const baseX = window.innerWidth * 0.35;
     const dx = attackTargetPos.x - baseX;
 
-    // 몹 마릿수에 따라 이동 비율 조절
-    const ratio = enemyCount === 1 ? 0.55 : enemyCount === 2 ? 0.65 : 0.75;
+    // 모바일 감지 (높이 500px 미만)
+    const isMobile = window.innerHeight < 500;
+
+    // 몹 마릿수에 따라 이동 비율 조절 (모바일에서는 더 크게)
+    let ratio;
+    if (isMobile) {
+      ratio = enemyCount === 1 ? 1.1 : enemyCount === 2 ? 1.3 : 1.8;
+    } else {
+      ratio = enemyCount === 1 ? 0.6 : enemyCount === 2 ? 0.8 : 0.95;
+    }
     const moveX = dx * ratio;
 
     return `translateX(${moveX}px)`;

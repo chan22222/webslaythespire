@@ -323,6 +323,16 @@ body {
     margin-left: 0 !important;
   }
 
+  /* 적 영역 최소 너비 - 적 수가 줄어도 간격 유지 */
+  .combat-enemy-gap {
+    min-width: 18rem !important;
+  }
+
+  /* 모바일에서 타겟팅 안내 숨김 */
+  .combat-release-hint {
+    display: none !important;
+  }
+
   /* 턴 표시 위치 수정 - 스케일 유지 */
   .combat-turn-display {
     left: 50% !important;
@@ -388,6 +398,11 @@ body {
 
   .combat-gap > *:first-child {
     margin-left: 0 !important;
+  }
+
+  /* 적 영역 최소 너비 */
+  .combat-enemy-gap {
+    min-width: 15rem !important;
   }
 
   /* 턴 표시 위치 수정 - 스케일 유지 */
@@ -456,6 +471,11 @@ body {
   /* 적 간격 최대 */
   .combat-enemy-gap > * {
     margin-left: -6.5rem !important;
+  }
+
+  /* 적 영역 최소 너비 */
+  .combat-enemy-gap {
+    min-width: 12rem !important;
   }
 
   /* 턴 표시 위치 수정 - 스케일 유지 */

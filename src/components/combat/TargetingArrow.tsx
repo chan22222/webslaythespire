@@ -17,7 +17,11 @@ interface SnapTarget {
   height: number;
 }
 
-const SNAP_DISTANCE = 100; // 자석 효과 범위 (px)
+// 모바일 감지
+const isMobile = () => window.innerHeight < 500;
+
+// 자석 효과 범위 (px) - 모바일에서 더 작게
+const getSnapDistance = () => isMobile() ? 60 : 100;
 
 export function TargetingArrow({ startX, startY, isActive, cardType, needsTarget }: TargetingArrowProps) {
   const [mousePos, setMousePos] = useState({ x: startX, y: startY });
@@ -67,7 +71,7 @@ export function TargetingArrow({ startX, startY, isActive, cardType, needsTarget
   // 가장 가까운 적 타겟 찾기
   const findClosestEnemy = useCallback((x: number, y: number): SnapTarget | null => {
     let closest: SnapTarget | null = null;
-    let minDistance = SNAP_DISTANCE;
+    let minDistance = getSnapDistance();
 
     for (const target of targetsRef.current) {
       const distance = Math.sqrt(
@@ -188,8 +192,11 @@ export function TargetingArrow({ startX, startY, isActive, cardType, needsTarget
   const gradientId = `arrowGradient-${uniqueId}`;
 
   const isSnapped = snappedTarget !== null;
-  const targetSize = isSnapped ? 70 : 50;
-  const crosshairSize = isSnapped ? 40 : 30;
+  const mobile = isMobile();
+  const targetSize = mobile ? (isSnapped ? 50 : 35) : (isSnapped ? 70 : 50);
+  const crosshairSize = mobile ? (isSnapped ? 28 : 20) : (isSnapped ? 40 : 30);
+  const strokeWidth = mobile ? 4 : 6;
+  const strokeDash = mobile ? "12 10" : "16 14";
 
   const content = (
     <div
@@ -235,8 +242,8 @@ export function TargetingArrow({ startX, startY, isActive, cardType, needsTarget
           d={pathD}
           fill="none"
           stroke={color.main}
-          strokeWidth="6"
-          strokeDasharray="16 14"
+          strokeWidth={strokeWidth}
+          strokeDasharray={strokeDash}
           strokeLinecap="round"
           markerEnd={`url(#${arrowheadId})`}
           className="targeting-dash-anim"

@@ -1593,9 +1593,9 @@ export function CombatScreen() {
         </div>
       </div>
 
-      {/* 타겟팅 안내 - 카드 드래그 시 */}
+      {/* 타겟팅 안내 - 카드 드래그 시 (모바일에서 숨김) */}
       {selectedCardId && (
-        <div className="absolute top-20 left-1/2 -translate-x-1/2 pointer-events-none z-40">
+        <div className="combat-release-hint absolute top-20 left-1/2 -translate-x-1/2 pointer-events-none z-40">
           <div
             className="px-5 py-2 rounded-lg font-title text-sm"
             style={{
