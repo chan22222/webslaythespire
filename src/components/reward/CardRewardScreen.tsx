@@ -71,7 +71,7 @@ export function CardRewardScreen() {
   const canProceed = goldCollected && (bonusGold === 0 || bonusCollected);
 
   return (
-    <div className="w-full h-screen bg-[var(--bg-darkest)] texture-noise vignette flex flex-col items-center justify-center relative overflow-hidden">
+    <div className="reward-screen w-full h-screen bg-[var(--bg-darkest)] texture-noise vignette flex flex-col items-center justify-center relative overflow-hidden">
       {/* 배경 효과 */}
       <div className="absolute inset-0 pointer-events-none">
         <div
@@ -83,27 +83,26 @@ export function CardRewardScreen() {
       </div>
 
       {/* 승리 타이틀 */}
-      <div className="relative z-10 text-center mb-4 sm:mb-8">
-        <div className="text-4xl sm:text-6xl mb-2 sm:mb-4 animate-float">🏆</div>
+      <div className="reward-header relative z-10 text-center">
+        <div className="reward-trophy animate-float">🏆</div>
         <h1
-          className="font-title text-3xl sm:text-5xl text-[var(--gold-light)] mb-1 sm:mb-2"
+          className="reward-title font-title text-[var(--gold-light)]"
           style={{
             textShadow: '0 0 30px var(--gold-glow), 0 4px 8px rgba(0,0,0,0.8)',
           }}
         >
           승리!
         </h1>
-        <p className="font-card text-sm sm:text-lg text-[var(--gold)]">전투에서 승리했습니다</p>
+        <p className="reward-subtitle font-card text-[var(--gold)]">전투에서 승리했습니다</p>
       </div>
 
       {/* 골드 보상 */}
-      <div className="mb-4 sm:mb-8 relative z-10 flex flex-col gap-3">
+      <div className="reward-gold relative z-10 flex flex-col">
         <button
           onClick={handleCollectGold}
           disabled={goldCollected}
           className={`
-            px-4 sm:px-8 py-2 sm:py-4 rounded-xl font-title text-base sm:text-xl
-            flex items-center gap-2 sm:gap-4
+            reward-gold-btn rounded-xl font-title flex items-center
             transition-all duration-300
             ${goldCollected
               ? 'bg-[var(--bg-dark)] text-gray-500 cursor-not-allowed border-2 border-gray-600'
@@ -111,7 +110,7 @@ export function CardRewardScreen() {
             }
           `}
         >
-          <span className="text-xl sm:text-3xl">💰</span>
+          <span className="reward-gold-icon">💰</span>
           <span>{goldCollected ? '획득 완료!' : `${goldReward} 골드 획득`}</span>
         </button>
 
@@ -121,8 +120,7 @@ export function CardRewardScreen() {
             onClick={handleCollectBonus}
             disabled={bonusCollected}
             className={`
-              px-4 sm:px-8 py-2 sm:py-4 rounded-xl font-title text-base sm:text-xl
-              flex items-center gap-2 sm:gap-4
+              reward-gold-btn rounded-xl font-title flex items-center
               transition-all duration-300
               ${bonusCollected
                 ? 'bg-[var(--bg-dark)] text-gray-500 cursor-not-allowed border-2 border-gray-600'
@@ -136,21 +134,21 @@ export function CardRewardScreen() {
               animation: 'pulse 1s ease-in-out infinite',
             } : {}}
           >
-            <span className="text-xl sm:text-3xl">✨</span>
+            <span className="reward-gold-icon">✨</span>
             <span className="text-black font-bold">{bonusCollected ? '보너스 획득!' : `${bonusGold} 보너스 골드!`}</span>
           </button>
         )}
       </div>
 
       {/* 카드 보상 */}
-      <div className="mb-4 sm:mb-8 relative z-10">
-        <h2 className="font-title text-sm sm:text-xl text-[var(--gold-light)] text-center mb-3 sm:mb-6 px-2">
+      <div className="reward-cards relative z-10">
+        <h2 className="reward-cards-title font-title text-[var(--gold-light)] text-center">
           {selectedCardIndex !== null
             ? `"${cardRewards[selectedCardIndex].name}" 선택됨`
             : '보상 카드를 선택하세요'}
         </h2>
 
-        <div className="flex gap-2 sm:gap-8 scale-60 sm:scale-75 md:scale-100 origin-top">
+        <div className="reward-cards-container">
           {cardRewards.map((card, index) => {
             const isSelected = selectedCardIndex === index;
             return (
@@ -158,11 +156,8 @@ export function CardRewardScreen() {
                 key={index}
                 onClick={() => handleSelectCard(index)}
                 className={`
-                  transition-all duration-300 cursor-pointer
-                  ${isSelected
-                    ? 'scale-110 -translate-y-4 sm:-translate-y-6'
-                    : 'hover:scale-105 hover:-translate-y-2'
-                  }
+                  reward-card-item transition-all duration-300 cursor-pointer
+                  ${isSelected ? 'reward-card-selected' : 'hover:scale-105 hover:-translate-y-2'}
                 `}
                 style={{
                   filter: selectedCardIndex !== null && !isSelected ? 'brightness(0.5)' : 'none',
@@ -184,14 +179,14 @@ export function CardRewardScreen() {
                   />
                   {isSelected && (
                     <div
-                      className="absolute -top-2 -right-2 sm:-top-3 sm:-right-3 w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center"
+                      className="reward-card-check absolute rounded-full flex items-center justify-center"
                       style={{
                         background: 'linear-gradient(135deg, #22c55e 0%, #166534 100%)',
                         border: '2px solid #4ade80',
                         boxShadow: '0 0 15px rgba(74, 222, 128, 0.6)',
                       }}
                     >
-                      <span className="text-white text-sm sm:text-lg">✓</span>
+                      <span className="text-white">✓</span>
                     </div>
                   )}
                 </div>
@@ -200,7 +195,7 @@ export function CardRewardScreen() {
           })}
         </div>
 
-        <p className="mt-2 sm:mt-4 text-center font-card text-xs sm:text-sm text-gray-400">
+        <p className="reward-cards-hint text-center font-card text-gray-400">
           카드를 선택하지 않고 진행할 수 있습니다
         </p>
       </div>
@@ -210,8 +205,7 @@ export function CardRewardScreen() {
         onClick={handleProceed}
         disabled={!canProceed}
         className={`
-          px-6 sm:px-10 py-2 sm:py-4 rounded-xl font-title text-base sm:text-xl
-          transition-all duration-300
+          reward-proceed-btn rounded-xl font-title transition-all duration-300
           ${canProceed
             ? 'btn-game text-white hover:scale-105'
             : 'bg-[var(--bg-dark)] text-gray-500 cursor-not-allowed border-2 border-gray-600'
