@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useGameStore } from '../stores/gameStore';
 import { useAuthStore } from '../stores/authStore';
 
@@ -266,12 +266,19 @@ function BlackholeBackground() {
 }
 
 export function MainMenu() {
-  const { startNewGame, startDeckBuilding, playerName, setPlayerName, hasSaveData, loadGame, deleteSaveData } = useGameStore();
+  const { startNewGame, startDeckBuilding, playerName, setPlayerName, hasSaveData, loadGame, deleteSaveData, checkSaveData, isSaveLoading } = useGameStore();
   const { user, isGuest, signOut, setShowLoginScreen } = useAuthStore();
   const [isEditing, setIsEditing] = useState(false);
   const [tempName, setTempName] = useState(playerName);
   const [showWarning, setShowWarning] = useState(false);
-  const canContinue = !isGuest && hasSaveData();
+  const canContinue = !isGuest && hasSaveData;
+
+  // 로그인 상태 변경 시 저장 데이터 확인
+  useEffect(() => {
+    if (user && !isGuest) {
+      checkSaveData();
+    }
+  }, [user, isGuest, checkSaveData]);
 
   const isLoggedIn = !!user;
   const displayName = user?.displayName || user?.email?.split('@')[0] || (isGuest ? '게스트' : '');
@@ -284,8 +291,8 @@ export function MainMenu() {
     }
   };
 
-  const confirmNewGame = () => {
-    deleteSaveData();
+  const confirmNewGame = async () => {
+    await deleteSaveData();
     setShowWarning(false);
     startNewGame();
   };
@@ -460,9 +467,9 @@ export function MainMenu() {
 
         {/* 이어하기 버튼 */}
         <button
-          onClick={() => canContinue && loadGame()}
-          disabled={!canContinue}
-          className={`relative ${canContinue ? 'transition-all duration-150 hover:scale-105 hover:brightness-125' : 'cursor-not-allowed'}`}
+          onClick={() => canContinue && !isSaveLoading && loadGame()}
+          disabled={!canContinue || isSaveLoading}
+          className={`relative ${canContinue && !isSaveLoading ? 'transition-all duration-150 hover:scale-105 hover:brightness-125' : 'cursor-not-allowed'}`}
           style={{
             animation: 'buttonFadeIn 0.5s ease-out 0.6s forwards',
             opacity: 0,
@@ -471,17 +478,17 @@ export function MainMenu() {
           <img
             src="/button_long.png"
             alt=""
-            className={`w-[160px] sm:w-[200px] h-auto ${!canContinue ? 'opacity-50' : ''}`}
+            className={`w-[160px] sm:w-[200px] h-auto ${!canContinue || isSaveLoading ? 'opacity-50' : ''}`}
             style={{ imageRendering: 'pixelated' }}
           />
           <span
-            className={`absolute inset-0 flex items-center justify-center text-[var(--gold-light)] text-sm sm:text-base ${!canContinue ? 'opacity-50' : ''}`}
+            className={`absolute inset-0 flex items-center justify-center text-[var(--gold-light)] text-sm sm:text-base ${!canContinue || isSaveLoading ? 'opacity-50' : ''}`}
             style={{
               fontFamily: '"NeoDunggeunmo", "Neo둥근모", cursive',
               textShadow: '2px 2px 0 #000',
             }}
           >
-            이어하기
+            {isSaveLoading ? '불러오는 중...' : '이어하기'}
           </span>
         </button>
 

@@ -8,6 +8,7 @@ import { createStarterDeck } from '../data/cards';
 import { STARTER_RELICS } from '../data/relics';
 import { generateMap } from '../utils/mapGenerator';
 import { useAuthStore } from './authStore';
+import { supabase } from '../lib/supabase';
 
 // 랜덤 시작 유물 선택
 const getRandomStarterRelic = () => {
@@ -16,8 +17,6 @@ const getRandomStarterRelic = () => {
 };
 
 export type GamePhase = 'MAIN_MENU' | 'DECK_BUILDING' | 'MAP' | 'COMBAT' | 'REWARD' | 'SHOP' | 'REST' | 'EVENT' | 'CARD_REWARD' | 'GAME_OVER' | 'VICTORY';
-
-const SAVE_KEY = 'shuffle_and_slash_save';
 
 interface GameState {
   // 게임 상태
@@ -33,10 +32,12 @@ interface GameState {
   startNewGame: () => void;
 
   // 저장/불러오기
-  saveGame: () => void;
-  loadGame: () => boolean;
-  hasSaveData: () => boolean;
-  deleteSaveData: () => void;
+  hasSaveData: boolean;
+  isSaveLoading: boolean;
+  saveGame: () => Promise<void>;
+  loadGame: () => Promise<boolean>;
+  checkSaveData: () => Promise<void>;
+  deleteSaveData: () => Promise<void>;
   startDeckBuilding: () => void;
   setDeck: (deck: CardInstance[]) => void;
   startGameWithDeck: () => void;
@@ -67,6 +68,8 @@ export const useGameStore = create<GameState>((set, get) => ({
   currentAct: 1,
   testEnemies: null,
   playerName: '모험가',
+  hasSaveData: false,
+  isSaveLoading: false,
 
   setPlayerName: (name: string) => {
     set({ playerName: name || '모험가' });
@@ -444,62 +447,111 @@ export const useGameStore = create<GameState>((set, get) => ({
     setTimeout(() => get().saveGame(), 100);
   },
 
-  // 게임 저장 (게스트는 저장 안 함)
-  saveGame: () => {
-    const { isGuest } = useAuthStore.getState();
-    if (isGuest) return;
+  // 저장 데이터 존재 여부 확인 (Supabase)
+  checkSaveData: async () => {
+    const { user, isGuest } = useAuthStore.getState();
+    if (isGuest || !user) {
+      set({ hasSaveData: false });
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('game_saves')
+        .select('id')
+        .eq('user_id', user.uid)
+        .single();
+
+      set({ hasSaveData: !error && !!data });
+    } catch {
+      set({ hasSaveData: false });
+    }
+  },
+
+  // 게임 저장 (Supabase)
+  saveGame: async () => {
+    const { user, isGuest } = useAuthStore.getState();
+    if (isGuest || !user) return;
 
     const { player, map, currentAct, playerName } = get();
     const saveData = {
       player,
       map,
       currentAct,
-      playerName,
       savedAt: Date.now(),
     };
+
     try {
-      localStorage.setItem(SAVE_KEY, JSON.stringify(saveData));
+      const { error } = await supabase
+        .from('game_saves')
+        .upsert({
+          user_id: user.uid,
+          player_name: playerName,
+          save_data: saveData,
+          updated_at: new Date().toISOString(),
+        }, {
+          onConflict: 'user_id'
+        });
+
+      if (error) {
+        console.error('게임 저장 실패:', error);
+      } else {
+        set({ hasSaveData: true });
+      }
     } catch (e) {
       console.error('게임 저장 실패:', e);
     }
   },
 
-  // 게임 불러오기
-  loadGame: () => {
-    try {
-      const savedData = localStorage.getItem(SAVE_KEY);
-      if (!savedData) return false;
+  // 게임 불러오기 (Supabase)
+  loadGame: async () => {
+    const { user, isGuest } = useAuthStore.getState();
+    if (isGuest || !user) return false;
 
-      const { player, map, currentAct, playerName } = JSON.parse(savedData);
+    set({ isSaveLoading: true });
+
+    try {
+      const { data, error } = await supabase
+        .from('game_saves')
+        .select('save_data, player_name')
+        .eq('user_id', user.uid)
+        .single();
+
+      if (error || !data) {
+        set({ isSaveLoading: false });
+        return false;
+      }
+
+      const { player, map, currentAct } = data.save_data;
       set({
         phase: 'MAP',
         player,
         map,
         currentAct,
-        playerName,
+        playerName: data.player_name || '모험가',
         testEnemies: null,
+        isSaveLoading: false,
       });
       return true;
     } catch (e) {
       console.error('게임 불러오기 실패:', e);
+      set({ isSaveLoading: false });
       return false;
     }
   },
 
-  // 저장 데이터 존재 여부 확인
-  hasSaveData: () => {
-    try {
-      const savedData = localStorage.getItem(SAVE_KEY);
-      return savedData !== null;
-    } catch {
-      return false;
-    }
-  },
+  // 저장 데이터 삭제 (Supabase)
+  deleteSaveData: async () => {
+    const { user, isGuest } = useAuthStore.getState();
+    if (isGuest || !user) return;
 
-  // 저장 데이터 삭제
-  deleteSaveData: () => {
     try {
-      localStorage.removeItem(SAVE_KEY);
+      await supabase
+        .from('game_saves')
+        .delete()
+        .eq('user_id', user.uid);
+
+      set({ hasSaveData: false });
     } catch (e) {
       console.error('저장 데이터 삭제 실패:', e);
     }
