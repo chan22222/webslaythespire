@@ -182,7 +182,7 @@ export function ShopScreen() {
       <div
         className="absolute inset-0"
         style={{
-          background: 'rgba(0,0,0,0.65)',
+          background: 'rgba(0,0,0,0.5)',
         }}
       />
 
