@@ -57,24 +57,20 @@ export const BASH: Card = {
   },
 };
 
-export const EXPOSE_WEAKNESS: Card = {
-  id: 'expose_weakness',
-  name: '약점 노출',
-  type: 'ATTACK',
+export const RELAX: Card = {
+  id: 'relax',
+  name: '휴식',
+  type: 'EFFECT',
   rarity: 'BASIC',
-  cost: 1,
-  image: '/cards/effect/expose_weakness.png',
-  description: '적에게 취약 1을 부여합니다.',
-  effects: [
-    { type: 'APPLY_STATUS', value: 1, target: 'SINGLE', status: 'VULNERABLE' },
-  ],
+  cost: 2,
+  image: '/cards/effect/relax.png',
+  description: '4 HP를 얻습니다.',
+  effects: [{ type: 'HEAL', value: 4 }],
   upgraded: false,
   upgradeEffect: {
-    name: '약점 노출+',
-    description: '적에게 취약 2를 부여합니다.',
-    effects: [
-      { type: 'APPLY_STATUS', value: 2, target: 'SINGLE', status: 'VULNERABLE' },
-    ],
+    name: '휴식+',
+    description: '7 HP를 얻습니다.',
+    effects: [{ type: 'HEAL', value: 7 }],
   },
 };
 
@@ -112,7 +108,7 @@ export function createStarterDeck(): Card[] {
     { ...DEFEND },
     { ...BASH },
     { ...BASH },
-    { ...EXPOSE_WEAKNESS },
+    { ...RELAX },
     { ...FLEXIBLE_RESPONSE },
   ];
 }
@@ -122,6 +118,6 @@ export const BASIC_CARDS: Card[] = [
   STRIKE,
   DEFEND,
   BASH,
-  EXPOSE_WEAKNESS,
+  RELAX,
   FLEXIBLE_RESPONSE,
 ];

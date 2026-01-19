@@ -869,6 +869,35 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
           get().addToCombatLog('추가 턴을 얻습니다!');
           break;
         }
+        case 'RANDOM_HEAL': {
+          // 야생 버섯 섭취: 랜덤 범위 HP 회복/손실
+          const minVal = effect.min ?? 0;
+          const maxVal = effect.value;
+          const critChance = effect.critChance ?? 0;
+          const critDamage = effect.critDamage ?? 0;
+
+          // 크리티컬 체크 (버섯 독)
+          if (Math.random() < critChance && critDamage > 0) {
+            useGameStore.getState().modifyHp(-critDamage);
+            get().addDamagePopup(critDamage, 'poison', 0, 0, 'player');
+            get().addToCombatLog(`독버섯! HP ${critDamage} 손실!`);
+          } else {
+            // 랜덤 힐/데미지
+            const randomValue = Math.floor(Math.random() * (maxVal - minVal + 1)) + minVal;
+            if (randomValue > 0) {
+              useGameStore.getState().healPlayer(randomValue);
+              get().addDamagePopup(randomValue, 'heal', 0, 0, 'player');
+              get().addToCombatLog(`HP ${randomValue} 회복!`);
+            } else if (randomValue < 0) {
+              useGameStore.getState().modifyHp(randomValue);
+              get().addDamagePopup(Math.abs(randomValue), 'damage', 0, 0, 'player');
+              get().addToCombatLog(`HP ${Math.abs(randomValue)} 손실!`);
+            } else {
+              get().addToCombatLog(`효과 없음...`);
+            }
+          }
+          break;
+        }
       }
     });
 

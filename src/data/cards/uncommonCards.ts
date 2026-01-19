@@ -133,6 +133,23 @@ export const SWEEPING: Card = {
   },
 };
 
+export const WILD_MUSHROOM: Card = {
+  id: 'wild_mushroom',
+  name: '야생 버섯 섭취',
+  type: 'EFFECT',
+  rarity: 'UNCOMMON',
+  cost: 1,
+  image: '/cards/effect/mushroom.png',
+  description: '-2 ~ 5 HP를 얻습니다. 3% 확률로 HP를 10 잃습니다.',
+  effects: [{ type: 'RANDOM_HEAL', value: 5, min: -2, critChance: 0.03, critDamage: 10 }],
+  upgraded: false,
+  upgradeEffect: {
+    name: '야생 버섯 섭취+',
+    description: '-3 ~ 8 HP를 얻습니다. 3% 확률로 HP를 10 잃습니다.',
+    effects: [{ type: 'RANDOM_HEAL', value: 8, min: -3, critChance: 0.03, critDamage: 10 }],
+  },
+};
+
 // 모든 언커먼 카드 목록
 export const UNCOMMON_CARDS: Card[] = [
   RAGE,
@@ -142,4 +159,5 @@ export const UNCOMMON_CARDS: Card[] = [
   FATAL_WOUND,
   BATTLE_TRANCE,
   SWEEPING,
+  WILD_MUSHROOM,
 ];

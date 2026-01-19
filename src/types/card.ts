@@ -26,12 +26,16 @@ export interface CardEffect {
     | 'INVULNERABLE'
     | 'HALVE_ENEMY_HP'
     | 'EXTRA_TURN'
-    | 'CONSUME_ENERGY_DRAW'; // 에너지 소비해서 카드 드로우
+    | 'CONSUME_ENERGY_DRAW' // 에너지 소비해서 카드 드로우
+    | 'RANDOM_HEAL'; // 랜덤 범위 HP 회복/손실
   value: number;
   target?: TargetType;
   status?: StatusType;
   ratio?: number; // 사선에서 카드용 (잃은 HP 비율)
   maxConsume?: number; // CONSUME_ENERGY_DRAW용 최대 소비 에너지
+  min?: number; // RANDOM_HEAL용 최소값
+  critChance?: number; // RANDOM_HEAL용 크리티컬 확률 (0~1)
+  critDamage?: number; // RANDOM_HEAL용 크리티컬 시 HP 손실량
 }
 
 export interface Card {

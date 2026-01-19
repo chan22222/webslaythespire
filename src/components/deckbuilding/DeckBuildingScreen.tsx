@@ -4,7 +4,7 @@ import { Card, CardInstance, createCardInstance } from '../../types/card';
 import { EnemyTemplate } from '../../types/enemy';
 import { Relic } from '../../types/relic';
 import { Card as CardComponent } from '../combat/Card';
-import { STRIKE, DEFEND, BASH, EXPOSE_WEAKNESS, FLEXIBLE_RESPONSE } from '../../data/cards/starterCards';
+import { STRIKE, DEFEND, BASH, RELAX, FLEXIBLE_RESPONSE } from '../../data/cards/starterCards';
 import { COMMON_CARDS } from '../../data/cards/commonCards';
 import { UNCOMMON_CARDS } from '../../data/cards/uncommonCards';
 import { RARE_CARDS } from '../../data/cards/rareCards';
@@ -41,7 +41,7 @@ const ALL_CARDS: Card[] = [
   STRIKE,
   DEFEND,
   BASH,
-  EXPOSE_WEAKNESS,
+  RELAX,
   FLEXIBLE_RESPONSE,
   ...COMMON_CARDS,
   ...UNCOMMON_CARDS,
