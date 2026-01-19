@@ -1020,8 +1020,10 @@ export function CombatScreen() {
         }
       }
     } else {
-      // 논타겟 카드는 화면 상단 절반에 놓으면 사용
-      if (y < window.innerHeight * 0.5) {
+      // 논타겟 카드는 화면 상단에 놓으면 사용 (모바일은 더 아래쪽까지 허용)
+      const isMobileLandscape = window.innerHeight < 500;
+      const threshold = isMobileLandscape ? 0.65 : 0.5;
+      if (y < window.innerHeight * threshold) {
         const blockEffect = card.effects.find(e => e.type === 'BLOCK');
         if (blockEffect) {
           showDamagePopup('player', blockEffect.value, 'block');
@@ -1449,13 +1451,17 @@ export function CombatScreen() {
 
           {/* 적 영역 - 우측 */}
           <div className="combat-enemy-gap flex items-end justify-center gap-0.5 xs:gap-1 sm:gap-2 md:gap-4 lg:gap-6">
-            {enemies.map((enemy, index) => (
+            {enemies.map((enemy, index) => {
+              // 적마다 다른 높이로 배치 (시각적 변화)
+              const yOffsets = [-15, 8, -5, 12, -8];
+              const yOffset = yOffsets[index % yOffsets.length];
+              return (
               <div
                 key={enemy.instanceId}
                 ref={(el) => setEnemyRef(enemy.instanceId, el)}
-                className="combat-scale transition-all duration-300 scale-[0.5] xs:scale-[0.55] sm:scale-[0.7] md:scale-90 lg:scale-110"
+                className={`combat-scale combat-enemy-${index} transition-all duration-300 scale-[0.5] xs:scale-[0.55] sm:scale-[0.7] md:scale-90 lg:scale-110`}
                 style={{
-                  transform: `translateY(${index % 2 === 0 ? 0 : 10}px)`,
+                  ['--enemy-offset' as string]: `${yOffset}px`,
                 }}
               >
                 <Enemy
@@ -1465,7 +1471,8 @@ export function CombatScreen() {
                   ignoreBlock={selectedCardId ? hand.find(c => c.instanceId === selectedCardId)?.effects.some(e => e.type === 'HALVE_ENEMY_HP') : false}
                 />
               </div>
-            ))}
+            );
+            })}
           </div>
         </div>
       </div>

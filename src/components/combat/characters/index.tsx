@@ -111,7 +111,8 @@ export function WarriorSprite({
         const nextFrame = prev + 1;
         if (nextFrame >= totalFrames) {
           if (animation !== 'idle' && onAnimationEndRef.current) {
-            onAnimationEndRef.current();
+            // setTimeout으로 다음 틱에서 실행하여 렌더링 중 setState 방지
+            setTimeout(() => onAnimationEndRef.current?.(), 0);
           }
           return animation === 'idle' ? 0 : totalFrames - 1;
         }

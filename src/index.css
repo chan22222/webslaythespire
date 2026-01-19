@@ -211,10 +211,19 @@ body {
   display: none;
 }
 
+/* 핸드 카드 영역 기본값 */
+.combat-hand {
+  /* 기본값 */
+}
+
 /* 높이 500px 미만 (Galaxy S20 Ultra 412px, iPhone Pro Max 390px 등) */
 @media (max-height: 500px) and (orientation: landscape) {
   .combat-scale {
-    transform: scale(0.55) !important;
+    transform: scale(0.55) translateY(var(--enemy-offset, 0px)) !important;
+  }
+
+  .combat-hand {
+    transform: translateY(-4rem) scale(1.2) !important;
   }
 
   .combat-bottom-area {
@@ -283,7 +292,11 @@ body {
 /* 높이 420px 미만 - 더 작은 스케일 */
 @media (max-height: 420px) and (orientation: landscape) {
   .combat-scale {
-    transform: scale(0.5) !important;
+    transform: scale(0.5) translateY(var(--enemy-offset, 0px)) !important;
+  }
+
+  .combat-hand {
+    transform: translateY(-4.5rem) scale(1.2) !important;
   }
 
   .combat-bottom-area {
@@ -342,7 +355,11 @@ body {
 /* 높이 380px 미만 (아이폰 SE 가로 등) - 최소 스케일 */
 @media (max-height: 380px) and (orientation: landscape) {
   .combat-scale {
-    transform: scale(0.45) !important;
+    transform: scale(0.45) translateY(var(--enemy-offset, 0px)) !important;
+  }
+
+  .combat-hand {
+    transform: translateY(-5rem) scale(1.2) !important;
   }
 
   .combat-bottom-area {

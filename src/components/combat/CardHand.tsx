@@ -149,7 +149,7 @@ export function CardHand({
 
   return (
     <div
-      className="relative flex justify-center items-end"
+      className="combat-hand relative flex justify-center items-end"
       style={{
         height: '280px',
         width: '100%',
