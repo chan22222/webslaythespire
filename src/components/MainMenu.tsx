@@ -271,10 +271,10 @@ export function MainMenu() {
   const [isEditing, setIsEditing] = useState(false);
   const [tempName, setTempName] = useState(playerName);
   const [showWarning, setShowWarning] = useState(false);
-  const canContinue = hasSaveData();
+  const canContinue = !isGuest && hasSaveData();
 
   const isLoggedIn = !!user;
-  const displayName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || (isGuest ? '게스트' : '');
+  const displayName = user?.displayName || user?.email?.split('@')[0] || (isGuest ? '게스트' : '');
 
   const handleNewGame = () => {
     if (canContinue) {

@@ -7,6 +7,7 @@ import { EnemyTemplate } from '../types/enemy';
 import { createStarterDeck } from '../data/cards';
 import { STARTER_RELICS } from '../data/relics';
 import { generateMap } from '../utils/mapGenerator';
+import { useAuthStore } from './authStore';
 
 // 랜덤 시작 유물 선택
 const getRandomStarterRelic = () => {
@@ -443,8 +444,11 @@ export const useGameStore = create<GameState>((set, get) => ({
     setTimeout(() => get().saveGame(), 100);
   },
 
-  // 게임 저장
+  // 게임 저장 (게스트는 저장 안 함)
   saveGame: () => {
+    const { isGuest } = useAuthStore.getState();
+    if (isGuest) return;
+
     const { player, map, currentAct, playerName } = get();
     const saveData = {
       player,
