@@ -64,7 +64,8 @@ type SortOrder = 'asc' | 'desc';
 const rarityOrder = { BASIC: 0, COMMON: 1, UNCOMMON: 2, RARE: 3, UNIQUE: 4 };
 
 export function DeckBuildingScreen() {
-  const { setDeck, setPhase, startTestBattle, startGameWithDeckAndRelics } = useGameStore();
+  const { setDeck, setPhase, startTestBattle, startGameWithDeckAndRelics, playerName } = useGameStore();
+  const isAdmin = playerName === 'adm1n';
   const [selectedCards, setSelectedCards] = useState<CardInstance[]>([]);
   const [filter, setFilter] = useState<'ALL' | 'ATTACK' | 'SHIELD' | 'GADGET' | 'EFFECT' | 'TERRAIN'>('ALL');
   const [sortBy, setSortBy] = useState<SortBy>('rarity');
@@ -134,14 +135,14 @@ export function DeckBuildingScreen() {
 
   const startGame = () => {
     if (selectedCards.length < MIN_DECK_SIZE) return;
+    if (selectedEnemies.length === 0 && !isAdmin) return; // 적 선택 필수 (관리자 제외)
 
     setDeck(selectedCards);
 
     if (selectedEnemies.length > 0) {
-      // 적 선택 시: 바로 테스트 전투 시작
       startTestBattle(selectedEnemies, selectedRelics);
     } else {
-      // 적 미선택 시: 맵으로 이동
+      // 관리자 전용: 적 미선택 시 맵으로 이동
       startGameWithDeckAndRelics(selectedRelics);
     }
   };
@@ -212,22 +213,25 @@ export function DeckBuildingScreen() {
             {selectedCards.length < MIN_DECK_SIZE && (
               <span className="text-red-400 ml-2 text-xs">(최소 {MIN_DECK_SIZE}장)</span>
             )}
+            {selectedCards.length >= MIN_DECK_SIZE && selectedEnemies.length === 0 && !isAdmin && (
+              <span className="text-red-400 ml-2 text-xs">(적 선택 필수)</span>
+            )}
           </div>
           <button
             onClick={startGame}
-            disabled={selectedCards.length < MIN_DECK_SIZE}
+            disabled={selectedCards.length < MIN_DECK_SIZE || (selectedEnemies.length === 0 && !isAdmin)}
             className={`px-6 py-2 rounded-lg font-title text-sm transition-all ${
-              selectedCards.length >= MIN_DECK_SIZE
+              selectedCards.length >= MIN_DECK_SIZE && (selectedEnemies.length > 0 || isAdmin)
                 ? 'hover:scale-105 cursor-pointer'
                 : 'opacity-50 cursor-not-allowed'
             }`}
             style={{
-              background: selectedCards.length >= MIN_DECK_SIZE
+              background: selectedCards.length >= MIN_DECK_SIZE && (selectedEnemies.length > 0 || isAdmin)
                 ? 'linear-gradient(180deg, #3a5a2a 0%, #1a2a10 100%)'
                 : 'linear-gradient(180deg, #2a2a2a 0%, #0a0a0a 100%)',
-              border: `2px solid ${selectedCards.length >= MIN_DECK_SIZE ? '#4ade80' : '#444'}`,
-              color: selectedCards.length >= MIN_DECK_SIZE ? '#4ade80' : '#666',
-              boxShadow: selectedCards.length >= MIN_DECK_SIZE
+              border: `2px solid ${selectedCards.length >= MIN_DECK_SIZE && (selectedEnemies.length > 0 || isAdmin) ? '#4ade80' : '#444'}`,
+              color: selectedCards.length >= MIN_DECK_SIZE && (selectedEnemies.length > 0 || isAdmin) ? '#4ade80' : '#666',
+              boxShadow: selectedCards.length >= MIN_DECK_SIZE && (selectedEnemies.length > 0 || isAdmin)
                 ? '0 0 15px rgba(74, 222, 128, 0.3)'
                 : 'none',
             }}

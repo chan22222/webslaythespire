@@ -5,7 +5,7 @@ import { Card, CardInstance, createCardInstance } from '../types/card';
 import { Relic } from '../types/relic';
 import { EnemyTemplate } from '../types/enemy';
 import { createStarterDeck } from '../data/cards';
-import { STARTER_RELICS } from '../data/relics';
+import { STARTER_RELICS, ALL_RELICS } from '../data/relics';
 import { generateMap } from '../utils/mapGenerator';
 import { useAuthStore } from './authStore';
 import { supabase } from '../lib/supabase';
@@ -26,6 +26,7 @@ interface GameState {
   currentAct: number;
   testEnemies: EnemyTemplate[] | null; // 테스트 모드용 적
   playerName: string; // 캐릭터 이름
+  deserterCount: number; // 전투 중 탈주 횟수
 
   // 액션
   setPlayerName: (name: string) => void;
@@ -59,6 +60,8 @@ interface GameState {
   clearTestEnemies: () => void;
   addNextFloorNode: () => void;
   goToNextFloor: () => void;
+  incrementDeserterCount: () => Promise<void>;
+  decrementDeserterCount: () => Promise<void>;
 }
 
 export const useGameStore = create<GameState>((set, get) => ({
@@ -68,6 +71,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   currentAct: 1,
   testEnemies: null,
   playerName: '모험가',
+  deserterCount: 0,
   hasSaveData: false,
   isSaveLoading: false,
 
@@ -173,6 +177,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       case 'ELITE':
       case 'BOSS':
         set({ phase: 'COMBAT' });
+        get().incrementDeserterCount(); // 전투 시작 시 탈주 카운트 증가
         break;
       case 'REST':
         set({ phase: 'REST' });
@@ -473,11 +478,12 @@ export const useGameStore = create<GameState>((set, get) => ({
     const { user, isGuest } = useAuthStore.getState();
     if (isGuest || !user) return;
 
-    const { player, map, currentAct, playerName } = get();
+    const { player, map, currentAct, playerName, phase } = get();
     const saveData = {
       player,
       map,
       currentAct,
+      phase, // 현재 phase도 저장 (전투 중 탈주 감지용)
       savedAt: Date.now(),
     };
 
@@ -513,7 +519,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     try {
       const { data, error } = await supabase
         .from('game_saves')
-        .select('save_data, player_name')
+        .select('save_data, player_name, deserter_count')
         .eq('user_id', user.uid)
         .single();
 
@@ -523,12 +529,27 @@ export const useGameStore = create<GameState>((set, get) => ({
       }
 
       const { player, map, currentAct } = data.save_data;
+      const deserterCount = data.deserter_count || 0;
+
+      // 탈주 3회 이상이면 이름을 "상습 탈주자"로 변경
+      const loadedPlayerName = deserterCount >= 3 ? '상습 탈주자' : (data.player_name || '모험가');
+
+      // 유물 복원: 저장된 유물 id를 기반으로 원본 유물 데이터(함수 포함) 복원
+      const restoredRelics = player.relics.map((savedRelic: Relic) => {
+        const originalRelic = ALL_RELICS.find(r => r.id === savedRelic.id);
+        return originalRelic || savedRelic;
+      });
+
       set({
         phase: 'MAP',
-        player,
+        player: {
+          ...player,
+          relics: restoredRelics,
+        },
         map,
         currentAct,
-        playerName: data.player_name || '모험가',
+        playerName: loadedPlayerName,
+        deserterCount,
         testEnemies: null,
         isSaveLoading: false,
       });
@@ -554,6 +575,44 @@ export const useGameStore = create<GameState>((set, get) => ({
       set({ hasSaveData: false });
     } catch (e) {
       console.error('저장 데이터 삭제 실패:', e);
+    }
+  },
+
+  // 전투 시작 시 탈주 카운트 증가
+  incrementDeserterCount: async () => {
+    const { user, isGuest } = useAuthStore.getState();
+    if (isGuest || !user) return;
+
+    const { deserterCount } = get();
+    const newCount = deserterCount + 1;
+    set({ deserterCount: newCount });
+
+    try {
+      await supabase
+        .from('game_saves')
+        .update({ deserter_count: newCount })
+        .eq('user_id', user.uid);
+    } catch (e) {
+      console.error('탈주 카운트 증가 실패:', e);
+    }
+  },
+
+  // 전투 승리 시 탈주 카운트 감소
+  decrementDeserterCount: async () => {
+    const { user, isGuest } = useAuthStore.getState();
+    if (isGuest || !user) return;
+
+    const { deserterCount } = get();
+    const newCount = Math.max(0, deserterCount - 1);
+    set({ deserterCount: newCount });
+
+    try {
+      await supabase
+        .from('game_saves')
+        .update({ deserter_count: newCount })
+        .eq('user_id', user.uid);
+    } catch (e) {
+      console.error('탈주 카운트 감소 실패:', e);
     }
   },
 }));

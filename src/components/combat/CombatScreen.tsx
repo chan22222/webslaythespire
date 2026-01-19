@@ -518,7 +518,7 @@ function SimpleTooltip({ show, text, position = 'bottom' }: {
 }
 
 export function CombatScreen() {
-  const { player, getCurrentNode, setPhase, healPlayer, testEnemies, clearTestEnemies } = useGameStore();
+  const { player, getCurrentNode, setPhase, healPlayer, testEnemies, clearTestEnemies, decrementDeserterCount } = useGameStore();
   const {
     enemies,
     hand,
@@ -662,6 +662,9 @@ export function CombatScreen() {
 
   // 승리 인트로 페이드 시작 핸들러 (백그라운드에서 다음 화면 로드)
   const handleVictoryFadeStart = useCallback(() => {
+    // 전투 승리 시 탈주 카운트 감소
+    decrementDeserterCount();
+
     // 테스트 모드면 메인 메뉴로, 아니면 카드 보상으로
     if (testEnemies && testEnemies.length > 0) {
       clearTestEnemies();
@@ -669,7 +672,7 @@ export function CombatScreen() {
     } else {
       setPhase('CARD_REWARD');
     }
-  }, [setPhase, testEnemies, clearTestEnemies]);
+  }, [setPhase, testEnemies, clearTestEnemies, decrementDeserterCount]);
 
   // 승리 인트로 완료 핸들러 (인트로 제거)
   const handleVictoryComplete = useCallback(() => {

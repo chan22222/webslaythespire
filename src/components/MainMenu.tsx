@@ -271,7 +271,12 @@ export function MainMenu() {
   const [isEditing, setIsEditing] = useState(false);
   const [tempName, setTempName] = useState(playerName);
   const [showWarning, setShowWarning] = useState(false);
+  const [showNameInput, setShowNameInput] = useState(false);
+  const [newGameName, setNewGameName] = useState('');
   const canContinue = !isGuest && hasSaveData;
+
+  // 상습 탈주자 여부 (이어하기로 불러왔을 때 이름이 변경됨)
+  const isDeserter = playerName === '상습 탈주자';
 
   // 로그인 상태 변경 시 저장 데이터 확인
   useEffect(() => {
@@ -287,13 +292,35 @@ export function MainMenu() {
     if (canContinue) {
       setShowWarning(true);
     } else {
-      startNewGame();
+      // 이미 이름이 설정되어 있으면 바로 시작
+      if (playerName !== '모험가') {
+        startNewGame();
+      } else {
+        setNewGameName('');
+        setShowNameInput(true);
+      }
     }
   };
 
   const confirmNewGame = async () => {
     await deleteSaveData();
     setShowWarning(false);
+    // 이미 이름이 설정되어 있으면 바로 시작
+    if (playerName !== '모험가') {
+      startNewGame();
+    } else {
+      setNewGameName('');
+      setShowNameInput(true);
+    }
+  };
+
+  const startGameWithName = () => {
+    if (newGameName.trim()) {
+      // "상습 탈주자"를 직접 입력하면 "관종"으로 변경
+      const finalName = newGameName.trim() === '상습 탈주자' ? '관종' : newGameName.trim();
+      setPlayerName(finalName);
+    }
+    setShowNameInput(false);
     startNewGame();
   };
 
@@ -359,7 +386,7 @@ export function MainMenu() {
           }}
           onClick={() => {
             if (!isEditing) {
-              setTempName(playerName === '모험가' ? '' : playerName);
+              setTempName(playerName === '모험가' || isDeserter ? '' : playerName);
               setIsEditing(true);
             }
           }}
@@ -401,12 +428,14 @@ export function MainMenu() {
                 value={tempName}
                 onChange={(e) => setTempName(e.target.value)}
                 onBlur={() => {
-                  setPlayerName(tempName);
+                  const finalName = tempName.trim() === '상습 탈주자' ? '관종' : tempName;
+                  setPlayerName(finalName);
                   setIsEditing(false);
                 }}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
-                    setPlayerName(tempName);
+                    const finalName = tempName.trim() === '상습 탈주자' ? '관종' : tempName;
+                    setPlayerName(finalName);
                     setIsEditing(false);
                   }
                 }}
@@ -421,15 +450,15 @@ export function MainMenu() {
               />
             ) : (
               <span
-                className={`text-sm transition-all duration-300 group-hover:text-[var(--gold)] relative z-10 ${playerName === '모험가' ? 'opacity-60' : ''}`}
+                className={`text-sm transition-all duration-300 relative z-10 ${!isDeserter && playerName === '모험가' ? 'opacity-60' : ''} ${!isDeserter ? 'group-hover:text-[var(--gold)]' : ''}`}
                 style={{
                   fontFamily: '"NeoDunggeunmo", "Neo둥근모", cursive',
-                  color: 'var(--gold-light)',
-                  textShadow: '0 0 6px var(--gold-glow)',
+                  color: isDeserter ? '#ff4444' : 'var(--gold-light)',
+                  textShadow: isDeserter ? '0 0 8px rgba(255, 68, 68, 0.6)' : '0 0 6px var(--gold-glow)',
                 }}
               >
-                <span className="group-hover:drop-shadow-[0_0_8px_var(--gold-glow)] transition-all duration-300">
-                  {playerName === '모험가' ? '당신의 이름을 알려주세요' : playerName}
+                <span className={`${!isDeserter ? 'group-hover:drop-shadow-[0_0_8px_var(--gold-glow)]' : ''} transition-all duration-300`}>
+                  {isDeserter ? '상습 탈주자' : (playerName === '모험가' ? '당신의 이름을 알려주세요' : playerName)}
                 </span>
               </span>
             )}
@@ -514,7 +543,7 @@ export function MainMenu() {
               textShadow: '2px 2px 0 #000',
             }}
           >
-            커스텀 모드
+            연습 모드
           </span>
         </button>
       </div>
@@ -571,13 +600,84 @@ export function MainMenu() {
         </div>
       )}
 
+      {/* 이름 입력 모달 */}
+      {showNameInput && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80">
+          <div
+            className="relative p-6 rounded-lg border-2 border-[var(--gold-dark)] max-w-sm mx-4"
+            style={{
+              background: 'linear-gradient(180deg, #1a1510 0%, #0d0a08 100%)',
+              boxShadow: '0 0 30px rgba(0,0,0,0.8), inset 0 1px 0 rgba(212,168,75,0.1)',
+            }}
+          >
+            <h3
+              className="text-[var(--gold)] text-center mb-4"
+              style={{
+                fontFamily: '"NeoDunggeunmo", "Neo둥근모", cursive',
+                textShadow: '0 0 10px var(--gold-glow)',
+              }}
+            >
+              모험가의 이름
+            </h3>
+            <p
+              className="text-[var(--gold-light)] text-xs text-center mb-4 opacity-70"
+              style={{
+                fontFamily: '"NeoDunggeunmo", "Neo둥근모", cursive',
+              }}
+            >
+              입력하지 않으면 "모험가"로 표시됩니다
+            </p>
+            <input
+              type="text"
+              value={newGameName}
+              onChange={(e) => setNewGameName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  startGameWithName();
+                }
+              }}
+              maxLength={10}
+              autoFocus
+              placeholder="이름을 입력하세요"
+              className="w-full px-3 py-2 rounded-lg outline-none transition-all focus:ring-2 focus:ring-[var(--gold-dark)] text-center mb-4"
+              style={{
+                background: 'rgba(0, 0, 0, 0.4)',
+                border: '1px solid var(--gold-dark)',
+                color: 'var(--gold-light)',
+                fontFamily: '"NeoDunggeunmo", "Neo둥근모", cursive',
+              }}
+            />
+            <div className="flex gap-3 justify-center">
+              <button
+                onClick={() => setShowNameInput(false)}
+                className="px-4 py-2 rounded border border-[var(--gold-dark)] text-[var(--gold-light)] text-sm hover:bg-[var(--gold-dark)]/20 transition-colors"
+                style={{
+                  fontFamily: '"NeoDunggeunmo", "Neo둥근모", cursive',
+                }}
+              >
+                취소
+              </button>
+              <button
+                onClick={startGameWithName}
+                className="px-4 py-2 rounded bg-[var(--gold-dark)]/30 border border-[var(--gold)] text-[var(--gold-light)] text-sm hover:bg-[var(--gold-dark)]/50 transition-colors"
+                style={{
+                  fontFamily: '"NeoDunggeunmo", "Neo둥근모", cursive',
+                }}
+              >
+                시작
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 하단 버전 정보 */}
       <div className="absolute bottom-4 sm:bottom-6 text-center z-10">
         <p
           className="text-[8px] sm:text-[10px] text-[var(--gold-dark)] opacity-60"
           style={{ fontFamily: '"Press Start 2P", monospace' }}
         >
-          v0.1.0 PROTOTYPE
+          v0.5.0 PROTOTYPE
         </p>
       </div>
     </div>

@@ -527,10 +527,13 @@ export function PlayerStatus({ player, block, statuses, animation = 'idle', atta
         }}
       >
         <span
-          className="text-base text-white"
+          className="text-base"
           style={{
             fontFamily: '"NeoDunggeunmo", cursive',
-            textShadow: '0 1px 2px rgba(0,0,0,0.8)'
+            color: playerName === '상습 탈주자' ? '#ff4444' : 'white',
+            textShadow: playerName === '상습 탈주자'
+              ? '0 0 8px rgba(255, 68, 68, 0.6)'
+              : '0 1px 2px rgba(0,0,0,0.8)'
           }}
         >
           {playerName}
