@@ -265,10 +265,25 @@ function BlackholeBackground() {
 }
 
 export function MainMenu() {
-  const { startNewGame, startDeckBuilding, playerName, setPlayerName, hasSaveData, loadGame } = useGameStore();
+  const { startNewGame, startDeckBuilding, playerName, setPlayerName, hasSaveData, loadGame, deleteSaveData } = useGameStore();
   const [isEditing, setIsEditing] = useState(false);
   const [tempName, setTempName] = useState(playerName);
+  const [showWarning, setShowWarning] = useState(false);
   const canContinue = hasSaveData();
+
+  const handleNewGame = () => {
+    if (canContinue) {
+      setShowWarning(true);
+    } else {
+      startNewGame();
+    }
+  };
+
+  const confirmNewGame = () => {
+    deleteSaveData();
+    setShowWarning(false);
+    startNewGame();
+  };
 
   return (
     <div className="w-full h-screen bg-black flex flex-col items-center justify-center relative overflow-hidden">
@@ -368,39 +383,12 @@ export function MainMenu() {
 
       {/* 메인 메뉴 버튼들 - 하단 배치 */}
       <div className="absolute bottom-32 sm:bottom-40 flex flex-col gap-2 sm:gap-3 z-10 items-center">
-        {/* 이어하기 버튼 */}
-        <button
-          onClick={() => canContinue && loadGame()}
-          disabled={!canContinue}
-          className={`relative ${canContinue ? 'transition-all duration-150 hover:scale-105 hover:brightness-125' : 'cursor-not-allowed'}`}
-          style={{
-            animation: 'buttonFadeIn 0.5s ease-out 0.5s forwards',
-            opacity: 0,
-          }}
-        >
-          <img
-            src="/button_long.png"
-            alt=""
-            className={`w-[160px] sm:w-[200px] h-auto ${!canContinue ? 'opacity-50' : ''}`}
-            style={{ imageRendering: 'pixelated' }}
-          />
-          <span
-            className={`absolute inset-0 flex items-center justify-center text-[var(--gold-light)] text-sm sm:text-base ${!canContinue ? 'opacity-50' : ''}`}
-            style={{
-              fontFamily: '"NeoDunggeunmo", "Neo둥근모", cursive',
-              textShadow: '2px 2px 0 #000',
-            }}
-          >
-            이어하기
-          </span>
-        </button>
-
         {/* 새 게임 버튼 */}
         <button
-          onClick={startNewGame}
+          onClick={handleNewGame}
           className="relative transition-all duration-150 hover:scale-105 hover:brightness-125"
           style={{
-            animation: 'buttonFadeIn 0.5s ease-out 0.6s forwards',
+            animation: 'buttonFadeIn 0.5s ease-out 0.5s forwards',
             opacity: 0,
           }}
         >
@@ -418,6 +406,33 @@ export function MainMenu() {
             }}
           >
             새로운 여정
+          </span>
+        </button>
+
+        {/* 이어하기 버튼 */}
+        <button
+          onClick={() => canContinue && loadGame()}
+          disabled={!canContinue}
+          className={`relative ${canContinue ? 'transition-all duration-150 hover:scale-105 hover:brightness-125' : 'cursor-not-allowed'}`}
+          style={{
+            animation: 'buttonFadeIn 0.5s ease-out 0.6s forwards',
+            opacity: 0,
+          }}
+        >
+          <img
+            src="/button_long.png"
+            alt=""
+            className={`w-[160px] sm:w-[200px] h-auto ${!canContinue ? 'opacity-50' : ''}`}
+            style={{ imageRendering: 'pixelated' }}
+          />
+          <span
+            className={`absolute inset-0 flex items-center justify-center text-[var(--gold-light)] text-sm sm:text-base ${!canContinue ? 'opacity-50' : ''}`}
+            style={{
+              fontFamily: '"NeoDunggeunmo", "Neo둥근모", cursive',
+              textShadow: '2px 2px 0 #000',
+            }}
+          >
+            이어하기
           </span>
         </button>
 
@@ -447,6 +462,58 @@ export function MainMenu() {
           </span>
         </button>
       </div>
+
+      {/* 경고 모달 */}
+      {showWarning && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80">
+          <div
+            className="relative p-6 rounded-lg border-2 border-[var(--gold-dark)] max-w-sm mx-4"
+            style={{
+              background: 'linear-gradient(180deg, #1a1510 0%, #0d0a08 100%)',
+              boxShadow: '0 0 30px rgba(0,0,0,0.8), inset 0 1px 0 rgba(212,168,75,0.1)',
+            }}
+          >
+            <h3
+              className="text-[var(--gold)] text-center mb-4"
+              style={{
+                fontFamily: '"NeoDunggeunmo", "Neo둥근모", cursive',
+                textShadow: '0 0 10px var(--gold-glow)',
+              }}
+            >
+              경고
+            </h3>
+            <p
+              className="text-[var(--gold-light)] text-sm text-center mb-6"
+              style={{
+                fontFamily: '"NeoDunggeunmo", "Neo둥근모", cursive',
+              }}
+            >
+              진행 중인 게임이 있습니다.<br />
+              새로운 게임을 시작하면 저장된 데이터가 삭제됩니다.
+            </p>
+            <div className="flex gap-3 justify-center">
+              <button
+                onClick={() => setShowWarning(false)}
+                className="px-4 py-2 rounded border border-[var(--gold-dark)] text-[var(--gold-light)] text-sm hover:bg-[var(--gold-dark)]/20 transition-colors"
+                style={{
+                  fontFamily: '"NeoDunggeunmo", "Neo둥근모", cursive',
+                }}
+              >
+                취소
+              </button>
+              <button
+                onClick={confirmNewGame}
+                className="px-4 py-2 rounded bg-red-900/80 border border-red-700 text-red-200 text-sm hover:bg-red-800/80 transition-colors"
+                style={{
+                  fontFamily: '"NeoDunggeunmo", "Neo둥근모", cursive',
+                }}
+              >
+                새로 시작
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 하단 버전 정보 */}
       <div className="absolute bottom-4 sm:bottom-6 text-center z-10">
