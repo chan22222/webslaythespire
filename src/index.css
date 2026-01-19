@@ -487,6 +487,417 @@ body {
 }
 
 /* ============================================
+   덱빌딩 화면 모바일 반응형
+   ============================================ */
+
+/* 높이 850px 미만 */
+@media (max-height: 850px) {
+  .deckbuild-header {
+    padding: 0.5rem 1.5rem !important;
+  }
+
+  .deckbuild-relics {
+    width: 22rem !important;
+  }
+
+  .deckbuild-deck {
+    width: 16rem !important;
+  }
+
+  .deckbuild-relic-icon {
+    width: 5rem !important;
+    height: 5rem !important;
+  }
+
+  .deckbuild-card {
+    width: 150px !important;
+    height: 210px !important;
+    transform: scale(0.85) !important;
+    transform-origin: top left !important;
+  }
+
+  .deckbuild-card-grid {
+    gap: 0.75rem !important;
+  }
+}
+
+/* 높이 700px 미만 */
+@media (max-height: 700px) {
+  .deckbuild-header {
+    padding: 0.4rem 1rem !important;
+  }
+
+  .deckbuild-filters {
+    transform: scale(0.9) !important;
+    transform-origin: top center !important;
+  }
+
+  .deckbuild-relics {
+    width: 18rem !important;
+  }
+
+  .deckbuild-deck {
+    width: 14rem !important;
+  }
+
+  .deckbuild-relic-icon {
+    width: 4rem !important;
+    height: 4rem !important;
+  }
+
+  .deckbuild-relic-name {
+    font-size: 0.8rem !important;
+  }
+
+  .deckbuild-relic-desc {
+    font-size: 0.7rem !important;
+  }
+
+  .deckbuild-deck-title,
+  .deckbuild-enemy-title {
+    font-size: 0.9rem !important;
+  }
+
+  .deckbuild-card {
+    width: 130px !important;
+    height: 182px !important;
+    transform: scale(0.7) !important;
+  }
+
+  .deckbuild-card-grid {
+    gap: 0.5rem !important;
+  }
+}
+
+/* 높이 500px 미만 - 모바일 가로 모드 */
+@media (max-height: 500px) and (orientation: landscape) {
+  .deckbuild-header {
+    padding: 0.2rem 0.5rem !important;
+  }
+
+  .deckbuild-header h1 {
+    font-size: 1rem !important;
+  }
+
+  .deckbuild-header button {
+    padding: 0.25rem 0.5rem !important;
+    font-size: 0.65rem !important;
+  }
+
+  .deckbuild-header .font-title {
+    font-size: 0.65rem !important;
+  }
+
+  .deckbuild-header .text-xl {
+    font-size: 0.9rem !important;
+  }
+
+  .deckbuild-cardpool {
+    padding: 0.5rem 0.5rem !important;
+  }
+
+  .deckbuild-filters {
+    gap: 0.5rem !important;
+    margin-bottom: 0.25rem !important;
+  }
+
+  .deckbuild-filters button {
+    padding: 0.2rem 0.4rem !important;
+    font-size: 0.6rem !important;
+  }
+
+  .deckbuild-filters button span {
+    font-size: 0.6rem !important;
+  }
+
+  .deckbuild-filters button span.px-1\.5 {
+    padding: 0.1rem 0.25rem !important;
+    font-size: 0.5rem !important;
+  }
+
+  .deckbuild-filters .flex.gap-2 {
+    gap: 0.25rem !important;
+  }
+
+  .deckbuild-filters .text-xs {
+    font-size: 0.55rem !important;
+  }
+
+  .deckbuild-relics {
+    width: 14rem !important;
+  }
+
+  .deckbuild-deck {
+    width: 12rem !important;
+  }
+
+  .deckbuild-relic-icon {
+    width: 3rem !important;
+    height: 3rem !important;
+  }
+
+  .deckbuild-relic-name {
+    font-size: 0.65rem !important;
+  }
+
+  .deckbuild-relic-desc {
+    font-size: 0.55rem !important;
+    -webkit-line-clamp: 2 !important;
+  }
+
+  .deckbuild-deck-header {
+    padding: 0.5rem !important;
+    flex-shrink: 0 !important;
+  }
+
+  .deckbuild-deck-title,
+  .deckbuild-enemy-title {
+    font-size: 0.7rem !important;
+  }
+
+  .deckbuild-enemy-section {
+    padding: 0.5rem !important;
+    max-height: 50% !important;
+    flex: 1 !important;
+    overflow-y: auto !important;
+  }
+
+  /* 내 덱 카드 목록 영역을 50%로 제한 */
+  .deckbuild-deck-list {
+    max-height: 50% !important;
+    flex: 1 !important;
+  }
+
+  .deckbuild-card {
+    width: 100px !important;
+    height: 140px !important;
+    transform: scale(0.55) !important;
+    transform-origin: top left !important;
+  }
+
+  .deckbuild-card-grid {
+    gap: 0.25rem !important;
+    padding: 0 0.25rem !important;
+  }
+}
+
+/* 높이 420px 미만 */
+@media (max-height: 420px) and (orientation: landscape) {
+  .deckbuild-header {
+    padding: 0.15rem 0.4rem !important;
+  }
+
+  .deckbuild-header h1 {
+    font-size: 0.85rem !important;
+  }
+
+  .deckbuild-header button {
+    padding: 0.2rem 0.4rem !important;
+    font-size: 0.55rem !important;
+  }
+
+  .deckbuild-header .font-title {
+    font-size: 0.55rem !important;
+  }
+
+  .deckbuild-header .text-xl {
+    font-size: 0.75rem !important;
+  }
+
+  .deckbuild-cardpool {
+    padding: 0.35rem 0.35rem !important;
+  }
+
+  .deckbuild-filters {
+    gap: 0.4rem !important;
+    margin-bottom: 0.2rem !important;
+  }
+
+  .deckbuild-filters button {
+    padding: 0.15rem 0.3rem !important;
+    font-size: 0.5rem !important;
+  }
+
+  .deckbuild-filters button span {
+    font-size: 0.5rem !important;
+  }
+
+  .deckbuild-filters button span.px-1\.5 {
+    padding: 0.1rem 0.2rem !important;
+    font-size: 0.45rem !important;
+  }
+
+  .deckbuild-filters .flex.gap-2 {
+    gap: 0.2rem !important;
+  }
+
+  .deckbuild-filters .text-xs {
+    font-size: 0.45rem !important;
+  }
+
+  .deckbuild-relics {
+    width: 12rem !important;
+  }
+
+  .deckbuild-deck {
+    width: 10rem !important;
+  }
+
+  .deckbuild-relic-icon {
+    width: 2.5rem !important;
+    height: 2.5rem !important;
+  }
+
+  .deckbuild-relic-name {
+    font-size: 0.6rem !important;
+  }
+
+  .deckbuild-relic-desc {
+    font-size: 0.5rem !important;
+  }
+
+  .deckbuild-deck-header {
+    padding: 0.4rem !important;
+    flex-shrink: 0 !important;
+  }
+
+  .deckbuild-deck-title,
+  .deckbuild-enemy-title {
+    font-size: 0.6rem !important;
+  }
+
+  .deckbuild-enemy-section {
+    padding: 0.4rem !important;
+    max-height: 50% !important;
+    flex: 1 !important;
+    overflow-y: auto !important;
+  }
+
+  .deckbuild-deck-list {
+    max-height: 50% !important;
+    flex: 1 !important;
+  }
+
+  .deckbuild-card {
+    width: 90px !important;
+    height: 126px !important;
+    transform: scale(0.5) !important;
+  }
+
+  .deckbuild-card-grid {
+    padding: 0 0.2rem !important;
+  }
+}
+
+/* 높이 380px 미만 */
+@media (max-height: 380px) and (orientation: landscape) {
+  .deckbuild-header {
+    padding: 0.1rem 0.3rem !important;
+  }
+
+  .deckbuild-header h1 {
+    font-size: 0.75rem !important;
+  }
+
+  .deckbuild-header button {
+    padding: 0.15rem 0.3rem !important;
+    font-size: 0.5rem !important;
+  }
+
+  .deckbuild-header .font-title {
+    font-size: 0.5rem !important;
+  }
+
+  .deckbuild-header .text-xl {
+    font-size: 0.65rem !important;
+  }
+
+  .deckbuild-cardpool {
+    padding: 0.25rem 0.25rem !important;
+  }
+
+  .deckbuild-filters {
+    gap: 0.3rem !important;
+    margin-bottom: 0.15rem !important;
+  }
+
+  .deckbuild-filters button {
+    padding: 0.1rem 0.25rem !important;
+    font-size: 0.45rem !important;
+  }
+
+  .deckbuild-filters button span {
+    font-size: 0.45rem !important;
+  }
+
+  .deckbuild-filters button span.px-1\.5 {
+    padding: 0.05rem 0.15rem !important;
+    font-size: 0.4rem !important;
+  }
+
+  .deckbuild-filters .flex.gap-2 {
+    gap: 0.15rem !important;
+  }
+
+  .deckbuild-filters .text-xs {
+    font-size: 0.4rem !important;
+  }
+
+  .deckbuild-relics {
+    width: 10rem !important;
+  }
+
+  .deckbuild-deck {
+    width: 9rem !important;
+  }
+
+  .deckbuild-relic-icon {
+    width: 2rem !important;
+    height: 2rem !important;
+  }
+
+  .deckbuild-relic-name {
+    font-size: 0.55rem !important;
+  }
+
+  .deckbuild-relic-desc {
+    font-size: 0.45rem !important;
+  }
+
+  .deckbuild-deck-header {
+    padding: 0.3rem !important;
+    flex-shrink: 0 !important;
+  }
+
+  .deckbuild-deck-title,
+  .deckbuild-enemy-title {
+    font-size: 0.55rem !important;
+  }
+
+  .deckbuild-enemy-section {
+    padding: 0.3rem !important;
+    max-height: 50% !important;
+    flex: 1 !important;
+    overflow-y: auto !important;
+  }
+
+  .deckbuild-deck-list {
+    max-height: 50% !important;
+    flex: 1 !important;
+  }
+
+  .deckbuild-card {
+    width: 80px !important;
+    height: 112px !important;
+    transform: scale(0.45) !important;
+  }
+
+  .deckbuild-card-grid {
+    padding: 0 0.15rem !important;
+  }
+}
+
+/* ============================================
    메인 메뉴 모바일 반응형
    ============================================ */
 

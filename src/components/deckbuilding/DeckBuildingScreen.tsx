@@ -180,7 +180,7 @@ export function DeckBuildingScreen() {
     <div className="w-full h-screen flex flex-col" style={{ background: 'var(--bg-darkest)' }}>
       {/* 헤더 */}
       <div
-        className="flex items-center justify-between px-6 py-3"
+        className="deckbuild-header flex items-center justify-between px-6 py-3"
         style={{
           background: 'linear-gradient(180deg, rgba(30,25,20,0.98) 0%, rgba(15,12,10,0.95) 100%)',
           borderBottom: '2px solid var(--gold-dark)',
@@ -240,9 +240,9 @@ export function DeckBuildingScreen() {
       {/* 메인 영역 */}
       <div className="flex-1 flex overflow-hidden">
         {/* 왼쪽: 카드 풀 */}
-        <div className="flex-1 flex flex-col p-4 overflow-hidden">
+        <div className="deckbuild-cardpool flex-1 flex flex-col p-4 overflow-hidden">
           {/* 필터 & 정렬 */}
-          <div className="flex items-center gap-4 mb-3 flex-wrap">
+          <div className="deckbuild-filters flex items-center gap-4 mb-3 flex-wrap">
             {/* 필터 */}
             <div className="flex gap-2 flex-wrap">
             {(['ALL', 'ATTACK', 'SHIELD', 'GADGET', 'EFFECT', 'TERRAIN'] as const).map(type => {
@@ -320,11 +320,11 @@ export function DeckBuildingScreen() {
 
           {/* 카드 목록 */}
           <div className="flex-1 overflow-y-auto pr-2">
-            <div className="flex flex-wrap gap-4 justify-start pt-4">
+            <div className="deckbuild-card-grid flex flex-wrap gap-4 justify-start pt-4">
               {filteredCards.map((card, index) => (
                 <div
                   key={`${card.id}-${index}`}
-                  className="cursor-pointer transition-transform hover:scale-105 hover:z-10 relative inline-block group"
+                  className="deckbuild-card cursor-pointer transition-transform hover:scale-105 hover:z-10 relative inline-block group"
                   style={{ width: '180px', height: '251px' }}
                   onClick={() => addCard(card)}
                 >
@@ -344,7 +344,7 @@ export function DeckBuildingScreen() {
 
         {/* 중간: 유물 선택 패널 */}
         <div
-          className="w-[26rem] flex flex-col overflow-hidden"
+          className="deckbuild-relics w-[26rem] flex flex-col overflow-hidden"
           style={{
             background: 'linear-gradient(180deg, rgba(20,18,15,0.95) 0%, rgba(10,8,5,0.98) 100%)',
             borderLeft: '2px solid var(--gold-dark)',
@@ -393,7 +393,7 @@ export function DeckBuildingScreen() {
                         <img
                           src={relic.icon}
                           alt={relic.name}
-                          className="w-24 h-24 object-contain"
+                          className="deckbuild-relic-icon w-24 h-24 object-contain"
                           style={{ imageRendering: 'auto' }}
                         />
                       ) : (
@@ -402,12 +402,12 @@ export function DeckBuildingScreen() {
                     </div>
                     <div className="flex-1">
                       <div
-                        className="font-title text-base"
+                        className="deckbuild-relic-name font-title text-base"
                         style={{ color: isSelected ? rarityColor : '#ccc' }}
                       >
                         {relic.name}
                       </div>
-                      <div className="text-sm line-clamp-3" style={{ color: '#999' }}>
+                      <div className="deckbuild-relic-desc text-sm line-clamp-3" style={{ color: '#999' }}>
                         {relic.description}
                       </div>
                     </div>
@@ -420,16 +420,16 @@ export function DeckBuildingScreen() {
 
         {/* 오른쪽: 현재 덱 + 적 선택 */}
         <div
-          className="w-72 flex flex-col overflow-hidden"
+          className="deckbuild-deck w-72 flex flex-col overflow-hidden"
           style={{
             background: 'linear-gradient(180deg, rgba(20,18,15,0.95) 0%, rgba(10,8,5,0.98) 100%)',
             borderLeft: '2px solid var(--gold-dark)',
           }}
         >
           {/* 덱 헤더 */}
-          <div className="p-3 border-b border-gray-800">
+          <div className="deckbuild-deck-header p-3 border-b border-gray-800">
             <div className="flex items-center justify-between mb-2">
-              <h2 className="font-title text-base" style={{ color: 'var(--gold-light)' }}>
+              <h2 className="deckbuild-deck-title font-title text-base" style={{ color: 'var(--gold-light)' }}>
                 내 덱
               </h2>
               {selectedCards.length > 0 && (
@@ -479,13 +479,13 @@ export function DeckBuildingScreen() {
 
           {/* 덱 카드 목록 */}
           {selectedCards.length === 0 ? (
-            <div className="flex-1 flex items-center justify-center p-4">
+            <div className="deckbuild-deck-list flex-1 flex items-center justify-center p-4">
               <p className="font-card text-xs text-gray-500 text-center">
                 왼쪽에서 카드를 클릭하여<br />덱에 추가하세요
               </p>
             </div>
           ) : (
-            <div className="flex-1 overflow-y-auto p-2">
+            <div className="deckbuild-deck-list flex-1 overflow-y-auto p-2">
               {/* 그룹화된 카드 리스트 */}
               <div className="space-y-1">
                 {groupedCards.map(({ card, count, instances }) => (
@@ -551,11 +551,11 @@ export function DeckBuildingScreen() {
 
           {/* 적 선택 섹션 */}
           <div
-            className="p-3 border-t-2 flex-1"
+            className="deckbuild-enemy-section p-3 border-t-2 flex-1"
             style={{ borderColor: 'var(--gold-dark)' }}
           >
             <div className="flex items-center justify-between mb-3">
-              <h2 className="font-title text-base" style={{ color: 'var(--gold-light)' }}>
+              <h2 className="deckbuild-enemy-title font-title text-base" style={{ color: 'var(--gold-light)' }}>
                 상대할 적
               </h2>
               <span className="text-xs text-gray-500">
