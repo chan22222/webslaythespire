@@ -1238,38 +1238,21 @@ export function CombatScreen() {
         </div>
 
         {/* 턴 표시 - 중앙 고정 */}
-        <div
-          className="absolute left-1/2 -translate-x-1/2 px-4 md:px-6 py-1.5 md:py-2 rounded-b-lg scale-[0.8] md:scale-100 lg:scale-110"
-          style={{
-            background: 'linear-gradient(180deg, #252020 0%, #0a0808 100%)',
-            borderLeft: '2px solid var(--gold)',
-            borderRight: '2px solid var(--gold)',
-            borderBottom: '3px solid var(--gold)',
-            boxShadow: '0 4px 15px rgba(0,0,0,0.6), 0 0 20px rgba(212, 168, 75, 0.15)',
-          }}
-        >
-          {/* 상단 장식 라인 */}
-          <div
-            className="absolute top-0 left-2 right-2 h-px"
-            style={{ background: 'linear-gradient(90deg, transparent, var(--gold-dark), transparent)' }}
-          />
-          <div className="flex items-center gap-2">
+        <div className="absolute left-1/2 -translate-x-1/2 top-0 scale-[0.7] md:scale-90 lg:scale-100">
+          <div className="relative">
+            <img
+              src="/turn.png"
+              alt="Turn"
+              className="w-auto h-16 md:h-20"
+              style={{ imageRendering: 'pixelated' }}
+            />
             <span
-              className="font-display text-[10px] md:text-xs tracking-widest"
-              style={{ color: 'var(--gold-dark)' }}
-            >
-              TURN
-            </span>
-            <span
-              className="font-title text-xl md:text-2xl text-white"
-              style={{ textShadow: '0 0 15px rgba(212, 168, 75, 0.4), 0 2px 4px rgba(0,0,0,0.8)' }}
+              className="absolute inset-0 flex items-center justify-center font-title text-xl md:text-2xl text-white pt-1"
+              style={{ textShadow: '0 0 10px rgba(0,0,0,0.8), 0 2px 4px rgba(0,0,0,0.9)' }}
             >
               {turn}
             </span>
           </div>
-          {/* 코너 장식 */}
-          <div className="absolute -bottom-1 left-0 w-2 h-2 border-l-2 border-b-2 border-[var(--gold)]" style={{ borderRadius: '0 0 0 4px' }} />
-          <div className="absolute -bottom-1 right-0 w-2 h-2 border-r-2 border-b-2 border-[var(--gold)]" style={{ borderRadius: '0 0 4px 0' }} />
         </div>
 
         {/* 전투 로그 - absolute로 우측 상단 고정 (리사이즈 가능) */}
