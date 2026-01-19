@@ -194,6 +194,10 @@ body {
   /* 기본값 - PC/태블릿 */
 }
 
+.combat-player {
+  transform: translateY(2rem) !important;
+}
+
 .combat-bottom-area {
   /* 기본값 */
 }
@@ -216,10 +220,48 @@ body {
   /* 기본값 */
 }
 
+/* 높이 850px 미만 */
+@media (max-height: 850px) {
+  .combat-scale {
+    transform: scale(0.85) translateY(var(--enemy-offset, 0px)) !important;
+  }
+
+  .combat-hand {
+    transform: translateY(-1rem) scale(1.05) !important;
+  }
+
+  .combat-bottom-area {
+    height: 9rem !important;
+  }
+}
+
+/* 높이 700px 미만 */
+@media (max-height: 700px) {
+  .combat-scale {
+    transform: scale(0.75) translateY(var(--enemy-offset, 0px)) !important;
+  }
+
+  .combat-hand {
+    transform: translateY(-2rem) scale(1.1) !important;
+  }
+
+  .combat-bottom-area {
+    height: 8rem !important;
+  }
+
+  .combat-top-area {
+    height: 4rem !important;
+  }
+}
+
 /* 높이 500px 미만 (Galaxy S20 Ultra 412px, iPhone Pro Max 390px 등) */
 @media (max-height: 500px) and (orientation: landscape) {
   .combat-scale {
     transform: scale(0.55) translateY(var(--enemy-offset, 0px)) !important;
+  }
+
+  .combat-player {
+    transform: scale(0.55) translateY(1rem) !important;
   }
 
   .combat-hand {
@@ -295,6 +337,10 @@ body {
     transform: scale(0.5) translateY(var(--enemy-offset, 0px)) !important;
   }
 
+  .combat-player {
+    transform: scale(0.5) translateY(1rem) !important;
+  }
+
   .combat-hand {
     transform: translateY(-4.5rem) scale(1.2) !important;
   }
@@ -356,6 +402,10 @@ body {
 @media (max-height: 380px) and (orientation: landscape) {
   .combat-scale {
     transform: scale(0.45) translateY(var(--enemy-offset, 0px)) !important;
+  }
+
+  .combat-player {
+    transform: scale(0.45) translateY(1rem) !important;
   }
 
   .combat-hand {
