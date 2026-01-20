@@ -1139,7 +1139,6 @@ export function CombatScreen() {
       {showA2HSPrompt && (
         <div
           className="fixed inset-0 z-[9998] flex flex-col items-center justify-start pt-4"
-          onClick={() => setShowA2HSPrompt(false)}
           style={{ background: 'rgba(0,0,0,0.7)' }}
         >
           {/* 위쪽 화살표 애니메이션 */}
@@ -1180,7 +1179,7 @@ export function CombatScreen() {
               브라우저 메뉴 (⋮ 또는 공유)에서
             </p>
             <p
-              className="text-sm mb-3"
+              className="text-sm mb-4"
               style={{
                 fontFamily: '"NeoDunggeunmo", cursive',
                 color: 'var(--gold-light)',
@@ -1188,15 +1187,19 @@ export function CombatScreen() {
             >
               "홈 화면에 추가" 선택
             </p>
-            <p
-              className="text-xs"
+            <button
+              onClick={() => setShowA2HSPrompt(false)}
+              className="px-6 py-2 transition-all hover:brightness-125 active:scale-95"
               style={{
                 fontFamily: '"NeoDunggeunmo", cursive',
-                color: 'rgba(255, 255, 255, 0.5)',
+                background: 'linear-gradient(180deg, var(--gold) 0%, var(--gold-dark) 100%)',
+                color: '#1a1205',
+                border: 'none',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.5)',
               }}
             >
-              (화면 아무 곳이나 터치하여 닫기)
-            </p>
+              닫기
+            </button>
           </div>
 
           <style>{`
