@@ -6,4 +6,9 @@ export default defineConfig({
   build: {
     chunkSizeWarningLimit: 1000,
   },
+  server: {
+    headers: {
+      'Cross-Origin-Opener-Policy': 'same-origin-allow-popups',
+    },
+  },
 })
