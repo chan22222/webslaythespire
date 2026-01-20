@@ -1138,54 +1138,73 @@ export function CombatScreen() {
       {/* 홈화면 추가 안내 (모바일 첫 전투 1회) */}
       {showA2HSPrompt && (
         <div
-          className="fixed inset-0 z-[9998] flex items-center justify-center bg-black/80"
+          className="fixed inset-0 z-[9998] flex flex-col items-center justify-start pt-4"
           onClick={() => setShowA2HSPrompt(false)}
+          style={{ background: 'rgba(0,0,0,0.7)' }}
         >
+          {/* 위쪽 화살표 애니메이션 */}
           <div
-            className="mx-4 p-6 max-w-sm text-center"
+            className="text-3xl mb-2"
+            style={{
+              color: 'var(--gold)',
+              animation: 'bounceUp 1s ease-in-out infinite',
+            }}
+          >
+            ↑
+          </div>
+
+          <div
+            className="mx-4 px-5 py-4 max-w-xs text-center"
             style={{
               background: 'linear-gradient(180deg, rgba(30, 25, 20, 0.98) 0%, rgba(15, 12, 10, 0.99) 100%)',
               border: '2px solid var(--gold-dark)',
               boxShadow: '0 0 30px rgba(0,0,0,0.9), 0 0 10px var(--gold-glow)',
             }}
-            onClick={(e) => e.stopPropagation()}
           >
-            <div className="text-4xl mb-4">📱</div>
             <h3
-              className="text-lg mb-3"
+              className="text-base mb-2"
               style={{
                 fontFamily: '"NeoDunggeunmo", cursive',
                 color: 'var(--gold)',
               }}
             >
-              전체화면으로 플레이하기
+              전체화면으로 플레이
             </h3>
             <p
-              className="text-sm mb-4 leading-relaxed"
+              className="text-sm mb-1 leading-relaxed"
               style={{
                 fontFamily: '"NeoDunggeunmo", cursive',
-                color: 'rgba(255, 255, 255, 0.8)',
+                color: 'rgba(255, 255, 255, 0.85)',
               }}
             >
-              브라우저 메뉴에서<br />
-              <span style={{ color: 'var(--gold-light)' }}>"홈 화면에 추가"</span>를 선택하면<br />
-              주소창 없이 전체화면으로<br />
-              플레이할 수 있습니다!
+              브라우저 메뉴 (⋮ 또는 공유)에서
             </p>
-            <button
-              onClick={() => setShowA2HSPrompt(false)}
-              className="px-6 py-2 transition-all hover:brightness-125"
+            <p
+              className="text-sm mb-3"
               style={{
                 fontFamily: '"NeoDunggeunmo", cursive',
-                background: 'linear-gradient(180deg, var(--gold) 0%, var(--gold-dark) 100%)',
-                color: '#1a1205',
-                border: 'none',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.5)',
+                color: 'var(--gold-light)',
               }}
             >
-              확인
-            </button>
+              "홈 화면에 추가" 선택
+            </p>
+            <p
+              className="text-xs"
+              style={{
+                fontFamily: '"NeoDunggeunmo", cursive',
+                color: 'rgba(255, 255, 255, 0.5)',
+              }}
+            >
+              (화면 아무 곳이나 터치하여 닫기)
+            </p>
           </div>
+
+          <style>{`
+            @keyframes bounceUp {
+              0%, 100% { transform: translateY(0); }
+              50% { transform: translateY(-8px); }
+            }
+          `}</style>
         </div>
       )}
 
