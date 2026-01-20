@@ -1247,7 +1247,7 @@ export function CombatScreen() {
                   color: 'var(--gold)',
                 }}
               >
-                브라우저 메뉴 (⋮ 또는 공유)
+                브라우저 메뉴 (☰ 또는 공유)
               </p>
               <div
                 className="text-xl"
@@ -1270,7 +1270,7 @@ export function CombatScreen() {
                 }}
               >
                 <span style={{ color: 'var(--gold)' }}>1.</span>
-                <span>"<span style={{ color: 'var(--gold-light)' }}>홈 화면에 추가</span>" 선택</span>
+                <span><span style={{ color: 'var(--gold-light)' }}>+ 추가</span> 버튼 클릭</span>
               </p>
               <p
                 className="text-sm flex items-start gap-2"
@@ -1280,7 +1280,7 @@ export function CombatScreen() {
                 }}
               >
                 <span style={{ color: 'var(--gold)' }}>2.</span>
-                <span>바탕화면의 아이콘으로 실행</span>
+                <span>"<span style={{ color: 'var(--gold-light)' }}>홈 화면에 추가</span>" 선택</span>
               </p>
               <p
                 className="text-sm flex items-start gap-2"
@@ -1290,6 +1290,16 @@ export function CombatScreen() {
                 }}
               >
                 <span style={{ color: 'var(--gold)' }}>3.</span>
+                <span>바탕화면의 아이콘으로 실행</span>
+              </p>
+              <p
+                className="text-sm flex items-start gap-2"
+                style={{
+                  fontFamily: '"NeoDunggeunmo", cursive',
+                  color: 'rgba(255, 255, 255, 0.9)',
+                }}
+              >
+                <span style={{ color: 'var(--gold)' }}>4.</span>
                 <span>전체화면으로 플레이!</span>
               </p>
             </div>
