@@ -564,6 +564,8 @@ export function CombatScreen() {
   // 전투 인트로 상태
   const [showIntro, setShowIntro] = useState(true);
   const [introComplete, setIntroComplete] = useState(false);
+  // 홈화면 추가 안내 팝업 (모바일 첫 전투 1회)
+  const [showA2HSPrompt, setShowA2HSPrompt] = useState(false);
   // 승리 인트로 상태
   const [showVictory, setShowVictory] = useState(false);
   // 툴팁 상태
@@ -658,6 +660,18 @@ export function CombatScreen() {
   const handleIntroComplete = useCallback(() => {
     setShowIntro(false);
     setIntroComplete(true);
+
+    // 모바일에서 첫 전투 시 홈화면 추가 안내 (1회성)
+    const isMobile = window.innerWidth <= 800 || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    const hasSeenA2HS = localStorage.getItem('hasSeenA2HSPrompt');
+    // PWA로 실행 중이면 안내 불필요
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+      || (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
+
+    if (isMobile && !hasSeenA2HS && !isStandalone) {
+      setShowA2HSPrompt(true);
+      localStorage.setItem('hasSeenA2HSPrompt', 'true');
+    }
   }, []);
 
   // 승리 인트로 페이드 시작 핸들러 (백그라운드에서 다음 화면 로드)
@@ -1119,6 +1133,60 @@ export function CombatScreen() {
       {/* 승리 인트로 */}
       {showVictory && (
         <VictoryIntro onFadeStart={handleVictoryFadeStart} onComplete={handleVictoryComplete} />
+      )}
+
+      {/* 홈화면 추가 안내 (모바일 첫 전투 1회) */}
+      {showA2HSPrompt && (
+        <div
+          className="fixed inset-0 z-[9998] flex items-center justify-center bg-black/80"
+          onClick={() => setShowA2HSPrompt(false)}
+        >
+          <div
+            className="mx-4 p-6 max-w-sm text-center"
+            style={{
+              background: 'linear-gradient(180deg, rgba(30, 25, 20, 0.98) 0%, rgba(15, 12, 10, 0.99) 100%)',
+              border: '2px solid var(--gold-dark)',
+              boxShadow: '0 0 30px rgba(0,0,0,0.9), 0 0 10px var(--gold-glow)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="text-4xl mb-4">📱</div>
+            <h3
+              className="text-lg mb-3"
+              style={{
+                fontFamily: '"NeoDunggeunmo", cursive',
+                color: 'var(--gold)',
+              }}
+            >
+              전체화면으로 플레이하기
+            </h3>
+            <p
+              className="text-sm mb-4 leading-relaxed"
+              style={{
+                fontFamily: '"NeoDunggeunmo", cursive',
+                color: 'rgba(255, 255, 255, 0.8)',
+              }}
+            >
+              브라우저 메뉴에서<br />
+              <span style={{ color: 'var(--gold-light)' }}>"홈 화면에 추가"</span>를 선택하면<br />
+              주소창 없이 전체화면으로<br />
+              플레이할 수 있습니다!
+            </p>
+            <button
+              onClick={() => setShowA2HSPrompt(false)}
+              className="px-6 py-2 transition-all hover:brightness-125"
+              style={{
+                fontFamily: '"NeoDunggeunmo", cursive',
+                background: 'linear-gradient(180deg, var(--gold) 0%, var(--gold-dark) 100%)',
+                color: '#1a1205',
+                border: 'none',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.5)',
+              }}
+            >
+              확인
+            </button>
+          </div>
+        </div>
       )}
 
       <div
