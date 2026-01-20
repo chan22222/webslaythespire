@@ -1707,7 +1707,7 @@ export function CombatScreen() {
         />
 
         {/* 에너지 오브 - 좌측 (안쪽으로) */}
-        <div className="combat-scale absolute left-1 xs:left-2 md:left-[6%] lg:left-[10%] bottom-14 xs:bottom-16 sm:bottom-18 md:bottom-18 lg:bottom-20 z-30 scale-[0.5] xs:scale-[0.55] sm:scale-[0.7] md:scale-90 lg:scale-110 origin-bottom-left">
+        <div className="combat-scale absolute left-1 xs:left-2 md:left-[6%] lg:left-[10%] bottom-8 xs:bottom-10 sm:bottom-12 md:bottom-18 lg:bottom-20 z-30 scale-[0.5] xs:scale-[0.55] sm:scale-[0.7] md:scale-90 lg:scale-110 origin-bottom-left">
           <EnergyOrb current={energy} max={maxEnergy} />
         </div>
 
@@ -1726,7 +1726,7 @@ export function CombatScreen() {
 
         {/* 턴 종료 버튼 - 우측 하단 */}
         <div
-          className="combat-scale absolute right-1 xs:right-2 md:right-[6%] lg:right-[10%] bottom-8 xs:bottom-10 sm:bottom-12 md:bottom-10 lg:bottom-[4.25rem] z-30 scale-[0.5] xs:scale-[0.55] sm:scale-[0.7] md:scale-90 lg:scale-110 origin-bottom-right"
+          className="combat-scale absolute right-1 xs:right-2 md:right-[6%] lg:right-[10%] bottom-2 xs:bottom-4 sm:bottom-6 md:bottom-10 lg:bottom-[4.25rem] z-30 scale-[0.5] xs:scale-[0.55] sm:scale-[0.7] md:scale-90 lg:scale-110 origin-bottom-right"
           onMouseEnter={() => setShowEndTurnTooltip(true)}
           onMouseLeave={() => setShowEndTurnTooltip(false)}
         >
