@@ -13,9 +13,11 @@ const PARTICLES = Array.from({ length: 25 }, (_, i) => ({
   opacity: Math.random() * 0.3 + 0.1,
 }));
 
-const MAP_WIDTH = 2050;
+const MAP_WIDTH_PC = 2050;
+const MAP_WIDTH_MOBILE = 1200; // 모바일에서 맵 너비 축소
 const MAP_PADDING = 80; // 맵 좌우 패딩
-const VIEW_STEP = 400; // 버튼 클릭시 이동 거리
+const VIEW_STEP_PC = 400; // PC 버튼 클릭시 이동 거리
+const VIEW_STEP_MOBILE = 150; // 모바일 버튼 클릭시 이동 거리
 
 export function MapScreen() {
   const { player, map, moveToNode, getAvailableNodes } = useGameStore();
@@ -24,9 +26,24 @@ export function MapScreen() {
   const [viewOffset, setViewOffset] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // 터치 드래그 상태
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStartX = useRef(0);
+  const dragStartOffset = useRef(0);
+
+  // 컨테이너 마운트 상태 (버튼 활성화 계산용)
+  const [containerReady, setContainerReady] = useState(false);
+
   // 처음 등장시에만 현재 노드 위치로 중앙 정렬
   const initializedRef = useRef(false);
   const prevNodesLengthRef = useRef(map.nodes.length);
+
+  // 컨테이너 마운트 감지
+  useEffect(() => {
+    if (containerRef.current) {
+      setContainerReady(true);
+    }
+  }, []);
 
   useEffect(() => {
     // 노드가 새로 추가되면 (NEXT_FLOOR 등) 스크롤 다시 초기화
@@ -47,26 +64,65 @@ export function MapScreen() {
       // 좌우 패딩 고려
       const containerWidth = containerRef.current.clientWidth;
       const effectiveWidth = containerWidth - MAP_PADDING * 2;
+      const mapWidth = window.innerWidth <= 800 ? MAP_WIDTH_MOBILE : MAP_WIDTH_PC;
+      const scale = window.innerWidth <= 800 ? MAP_WIDTH_MOBILE / MAP_WIDTH_PC : 1;
+      const scaledNodeX = currentNode.x * scale;
       const targetOffset = Math.max(0, Math.min(
-        MAP_WIDTH - effectiveWidth,
-        currentNode.x - effectiveWidth / 2
+        mapWidth - effectiveWidth,
+        scaledNodeX - effectiveWidth / 2
       ));
       setViewOffset(targetOffset);
       initializedRef.current = true;
     }
   }, [map.currentNodeId, availableNodes, map.nodes.length]);
 
+  const isMobile = () => window.innerWidth <= 800;
+
+  const getMapWidth = () => isMobile() ? MAP_WIDTH_MOBILE : MAP_WIDTH_PC;
+
+  const getMapScale = () => isMobile() ? MAP_WIDTH_MOBILE / MAP_WIDTH_PC : 1;
+
+  const getViewStep = () => {
+    // 모바일 (가로 800px 이하) 여부 확인
+    return isMobile() ? VIEW_STEP_MOBILE : VIEW_STEP_PC;
+  };
+
   const handleNavLeft = () => {
-    setViewOffset(prev => Math.max(0, prev - VIEW_STEP));
+    setViewOffset(prev => Math.max(0, prev - getViewStep()));
   };
 
   const handleNavRight = () => {
     if (containerRef.current) {
-      // 좌우 패딩 고려
-      const maxOffset = MAP_WIDTH - containerRef.current.clientWidth + MAP_PADDING * 2;
-      setViewOffset(prev => Math.min(maxOffset, prev + VIEW_STEP));
+      const maxOffset = getMaxOffset();
+      setViewOffset(prev => Math.min(maxOffset, prev + getViewStep()));
     }
   };
+
+  // 터치 드래그 핸들러
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setIsDragging(true);
+    dragStartX.current = e.touches[0].clientX;
+    dragStartOffset.current = viewOffset;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging) return;
+    const deltaX = dragStartX.current - e.touches[0].clientX;
+    const newOffset = Math.max(0, Math.min(getMaxOffset(), dragStartOffset.current + deltaX));
+    setViewOffset(newOffset);
+  };
+
+  const handleTouchEnd = () => {
+    setIsDragging(false);
+  };
+
+  // 터치 드래그 핸들러
+  const getMaxOffset = () => {
+    if (!containerRef.current) return 0;
+    const mapWidth = getMapWidth();
+    return Math.max(0, mapWidth - containerRef.current.clientWidth + MAP_PADDING * 2);
+  };
+
 
   // 연결선 렌더링
   const renderConnections = () => {
@@ -580,14 +636,23 @@ export function MapScreen() {
       </header>
 
       {/* 맵 영역 */}
-      <main ref={containerRef} className="map-main flex-1 relative pt-8" style={{ overflowX: 'hidden', overflowY: 'visible' }}>
+      <main
+        ref={containerRef}
+        className="map-main flex-1 relative pt-8 select-none"
+        style={{ overflowX: 'hidden', overflowY: 'visible', WebkitUserSelect: 'none', userSelect: 'none' }}
+        onContextMenu={(e) => e.preventDefault()}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+      >
         {/* 맵 컨테이너 - 좌우 여백 */}
         <div
-          className="map-container absolute top-0 h-full transition-transform duration-300 ease-out"
+          className="map-container absolute top-0 h-full origin-top-left"
           style={{
-            width: MAP_WIDTH,
-            left: MAP_PADDING,
-            transform: `translateX(-${viewOffset}px)`,
+            width: MAP_WIDTH_PC,
+            left: `${MAP_PADDING - viewOffset}px`,
+            transition: isDragging ? 'none' : 'left 0.3s ease-out',
+            transform: `scale(${getMapScale()})`,
           }}
         >
           <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ overflow: 'visible' }}>
@@ -604,37 +669,47 @@ export function MapScreen() {
             />
           ))}
         </div>
-
-        {/* 좌측 네비게이션 버튼 */}
-        <button
-          onClick={handleNavLeft}
-          disabled={viewOffset <= 0}
-          className="map-nav-btn absolute left-6 top-1/2 -translate-y-1/2 z-20 transition-all duration-150 hover:scale-125 disabled:opacity-30 disabled:cursor-not-allowed"
-        >
-          <img
-            src="/sprites/icon/left_arrow.png"
-            alt="Left"
-            className="w-14 h-auto"
-            style={{ imageRendering: 'pixelated' }}
-            draggable={false}
-          />
-        </button>
-
-        {/* 우측 네비게이션 버튼 */}
-        <button
-          onClick={handleNavRight}
-          disabled={containerRef.current ? viewOffset >= MAP_WIDTH - containerRef.current.clientWidth + MAP_PADDING * 2 : false}
-          className="map-nav-btn absolute right-6 top-1/2 -translate-y-1/2 z-20 transition-all duration-150 hover:scale-125 disabled:opacity-30 disabled:cursor-not-allowed"
-        >
-          <img
-            src="/sprites/icon/right_arrow.png"
-            alt="Right"
-            className="w-14 h-auto"
-            style={{ imageRendering: 'pixelated' }}
-            draggable={false}
-          />
-        </button>
       </main>
+
+      {/* 좌측 네비게이션 버튼 - main 밖으로 이동 */}
+      <button
+        onPointerDown={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (viewOffset > 0) handleNavLeft();
+        }}
+        disabled={containerReady && viewOffset <= 0}
+        className="map-nav-btn fixed left-2 sm:left-6 top-1/2 -translate-y-1/2 z-40 transition-all duration-150 hover:scale-125 active:scale-110 disabled:opacity-30 disabled:pointer-events-none p-4"
+        style={{ touchAction: 'none' }}
+      >
+        <img
+          src="/sprites/icon/left_arrow.png"
+          alt="Left"
+          className="w-10 sm:w-14 h-auto pointer-events-none select-none"
+          style={{ imageRendering: 'pixelated' }}
+          draggable={false}
+        />
+      </button>
+
+      {/* 우측 네비게이션 버튼 - main 밖으로 이동 */}
+      <button
+        onPointerDown={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          handleNavRight();
+        }}
+        disabled={containerReady && viewOffset >= getMaxOffset()}
+        className="map-nav-btn fixed right-2 sm:right-6 top-1/2 -translate-y-1/2 z-40 transition-all duration-150 hover:scale-125 active:scale-110 disabled:opacity-30 disabled:pointer-events-none p-4"
+        style={{ touchAction: 'none' }}
+      >
+        <img
+          src="/sprites/icon/right_arrow.png"
+          alt="Right"
+          className="w-10 sm:w-14 h-auto pointer-events-none select-none"
+          style={{ imageRendering: 'pixelated' }}
+          draggable={false}
+        />
+      </button>
 
       {/* 덱 모달 */}
       {showDeck && (

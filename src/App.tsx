@@ -382,7 +382,7 @@ function App() {
   }, [initialize]);
 
   return (
-    <>
+    <div onContextMenu={(e) => e.preventDefault()}>
       {/* 로딩 화면 */}
       {isLoading && <LoadingScreen onLoadComplete={() => setIsLoading(false)} />}
 
@@ -434,7 +434,7 @@ function App() {
         </div>
       )}
       </div>
-    </>
+    </div>
   );
 }
 
