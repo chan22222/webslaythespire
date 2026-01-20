@@ -1,6 +1,8 @@
 import { useEffect, useRef, useCallback, useMemo, useState } from 'react';
 import { useGameStore } from '../../stores/gameStore';
 import { useCombatStore } from '../../stores/combatStore';
+import { useAuthStore } from '../../stores/authStore';
+import { supabase } from '../../lib/supabase';
 import { CardHand } from './CardHand';
 import { Card } from './Card';
 import { Enemy } from './Enemy';
@@ -657,20 +659,84 @@ export function CombatScreen() {
   }, [currentNode, enemies.length, player.deck, initCombat, startPlayerTurn, testEnemies]);
 
   // 인트로 완료 핸들러
-  const handleIntroComplete = useCallback(() => {
+  const handleIntroComplete = useCallback(async () => {
     setShowIntro(false);
     setIntroComplete(true);
 
     // 모바일에서 첫 전투 시 홈화면 추가 안내 (1회성)
     const isMobile = window.innerWidth <= 800 || /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    const hasSeenA2HS = localStorage.getItem('hasSeenA2HSPrompt');
     // PWA로 실행 중이면 안내 불필요
     const isStandalone = window.matchMedia('(display-mode: standalone)').matches
       || (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
 
-    if (isMobile && !hasSeenA2HS && !isStandalone) {
-      setShowA2HSPrompt(true);
-      localStorage.setItem('hasSeenA2HSPrompt', 'true');
+    if (!isMobile || isStandalone) return;
+
+    const { user, isGuest } = useAuthStore.getState();
+
+    // 로그인 사용자: Supabase에서 확인
+    if (user && !isGuest) {
+      try {
+        const { data } = await supabase
+          .from('user_preferences')
+          .select('hide_a2hs_prompt')
+          .eq('user_id', user.uid)
+          .single();
+
+        if (!data?.hide_a2hs_prompt) {
+          setShowA2HSPrompt(true);
+        }
+      } catch {
+        // 레코드 없으면 표시
+        setShowA2HSPrompt(true);
+      }
+    } else {
+      // 게스트: localStorage 확인
+      const hasSeenA2HS = localStorage.getItem('hideA2HSPrompt');
+      if (!hasSeenA2HS) {
+        setShowA2HSPrompt(true);
+      }
+    }
+  }, []);
+
+  // A2HS 닫기 (로그인 사용자는 Supabase에 기록)
+  const handleA2HSClose = useCallback(async () => {
+    setShowA2HSPrompt(false);
+
+    const { user, isGuest } = useAuthStore.getState();
+    if (user && !isGuest) {
+      try {
+        await supabase
+          .from('user_preferences')
+          .upsert({
+            user_id: user.uid,
+            hide_a2hs_prompt: true,
+            updated_at: new Date().toISOString(),
+          });
+      } catch (e) {
+        // 실패해도 무시
+      }
+    }
+  }, []);
+
+  // A2HS 다시 보지 않기 (게스트는 localStorage에 기록)
+  const handleA2HSDontShowAgain = useCallback(async () => {
+    setShowA2HSPrompt(false);
+
+    const { user, isGuest } = useAuthStore.getState();
+    if (user && !isGuest) {
+      try {
+        await supabase
+          .from('user_preferences')
+          .upsert({
+            user_id: user.uid,
+            hide_a2hs_prompt: true,
+            updated_at: new Date().toISOString(),
+          });
+      } catch (e) {
+        // 실패해도 무시
+      }
+    } else {
+      localStorage.setItem('hideA2HSPrompt', 'true');
     }
   }, []);
 
@@ -1228,19 +1294,34 @@ export function CombatScreen() {
               </p>
             </div>
 
-            <button
-              onClick={() => setShowA2HSPrompt(false)}
-              className="w-full py-2 transition-all hover:brightness-125 active:scale-95"
-              style={{
-                fontFamily: '"NeoDunggeunmo", cursive',
-                background: 'linear-gradient(180deg, var(--gold) 0%, var(--gold-dark) 100%)',
-                color: '#1a1205',
-                border: 'none',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.5)',
-              }}
-            >
-              닫기
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={handleA2HSClose}
+                className="flex-1 py-2 transition-all hover:brightness-125 active:scale-95"
+                style={{
+                  fontFamily: '"NeoDunggeunmo", cursive',
+                  background: 'linear-gradient(180deg, var(--gold) 0%, var(--gold-dark) 100%)',
+                  color: '#1a1205',
+                  border: 'none',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.5)',
+                }}
+              >
+                닫기
+              </button>
+              <button
+                onClick={handleA2HSDontShowAgain}
+                className="flex-1 py-2 transition-all hover:brightness-110 active:scale-95"
+                style={{
+                  fontFamily: '"NeoDunggeunmo", cursive',
+                  background: 'rgba(60, 50, 40, 0.8)',
+                  color: 'rgba(255, 255, 255, 0.7)',
+                  border: '1px solid rgba(212, 168, 75, 0.3)',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.5)',
+                }}
+              >
+                다시 보지 않기
+              </button>
+            </div>
           </div>
 
           <style>{`
