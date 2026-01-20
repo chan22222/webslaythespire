@@ -1247,7 +1247,7 @@ export function CombatScreen() {
                   color: 'var(--gold)',
                 }}
               >
-                브라우저 메뉴 (☰ 또는 공유)
+                브라우저 메뉴 (⋮ 또는 ☰)
               </p>
               <div
                 className="text-xl"
