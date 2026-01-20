@@ -1138,58 +1138,99 @@ export function CombatScreen() {
       {/* 홈화면 추가 안내 (모바일 첫 전투 1회) */}
       {showA2HSPrompt && (
         <div
-          className="fixed inset-0 z-[9998] flex flex-col items-center justify-start pt-4"
-          style={{ background: 'rgba(0,0,0,0.7)' }}
+          className="fixed inset-0 z-[9998] flex flex-col items-center justify-start"
+          style={{ background: 'rgba(0,0,0,0.75)' }}
         >
-          {/* 위쪽 화살표 애니메이션 */}
-          <div
-            className="text-3xl mb-2"
-            style={{
-              color: 'var(--gold)',
-              animation: 'bounceUp 1s ease-in-out infinite',
-            }}
-          >
-            ↑
+          {/* 상단 영역: 주소창 안내 */}
+          <div className="w-full flex items-start justify-center pt-2 gap-2">
+            <div
+              className="text-2xl"
+              style={{
+                color: 'var(--gold)',
+                animation: 'bounceUp 1s ease-in-out infinite',
+              }}
+            >
+              ↑
+            </div>
+            <p
+              className="text-sm pt-1"
+              style={{
+                fontFamily: '"NeoDunggeunmo", cursive',
+                color: 'var(--gold-light)',
+              }}
+            >
+              주소창을 안보이게 할 수 있어요!
+            </p>
           </div>
 
+          {/* 메인 안내 박스 */}
           <div
-            className="mx-4 px-5 py-4 max-w-xs text-center"
+            className="mx-4 mt-3 px-5 py-4 max-w-xs"
             style={{
               background: 'linear-gradient(180deg, rgba(30, 25, 20, 0.98) 0%, rgba(15, 12, 10, 0.99) 100%)',
               border: '2px solid var(--gold-dark)',
               boxShadow: '0 0 30px rgba(0,0,0,0.9), 0 0 10px var(--gold-glow)',
             }}
           >
-            <h3
-              className="text-base mb-2"
-              style={{
-                fontFamily: '"NeoDunggeunmo", cursive',
-                color: 'var(--gold)',
-              }}
-            >
-              전체화면으로 플레이
-            </h3>
-            <p
-              className="text-sm mb-1 leading-relaxed"
-              style={{
-                fontFamily: '"NeoDunggeunmo", cursive',
-                color: 'rgba(255, 255, 255, 0.85)',
-              }}
-            >
-              브라우저 메뉴 (⋮ 또는 공유)에서
-            </p>
-            <p
-              className="text-sm mb-4"
-              style={{
-                fontFamily: '"NeoDunggeunmo", cursive',
-                color: 'var(--gold-light)',
-              }}
-            >
-              "홈 화면에 추가" 선택
-            </p>
+            {/* 메뉴 안내 */}
+            <div className="flex items-center justify-end gap-2 mb-3">
+              <p
+                className="text-sm"
+                style={{
+                  fontFamily: '"NeoDunggeunmo", cursive',
+                  color: 'var(--gold)',
+                }}
+              >
+                브라우저 메뉴 (⋮ 또는 공유)
+              </p>
+              <div
+                className="text-xl"
+                style={{
+                  color: 'var(--gold)',
+                  animation: 'bounceRight 1s ease-in-out infinite',
+                }}
+              >
+                →
+              </div>
+            </div>
+
+            {/* 단계별 안내 */}
+            <div className="text-left space-y-2 mb-4">
+              <p
+                className="text-sm flex items-start gap-2"
+                style={{
+                  fontFamily: '"NeoDunggeunmo", cursive',
+                  color: 'rgba(255, 255, 255, 0.9)',
+                }}
+              >
+                <span style={{ color: 'var(--gold)' }}>1.</span>
+                <span>"<span style={{ color: 'var(--gold-light)' }}>홈 화면에 추가</span>" 선택</span>
+              </p>
+              <p
+                className="text-sm flex items-start gap-2"
+                style={{
+                  fontFamily: '"NeoDunggeunmo", cursive',
+                  color: 'rgba(255, 255, 255, 0.9)',
+                }}
+              >
+                <span style={{ color: 'var(--gold)' }}>2.</span>
+                <span>바탕화면의 아이콘으로 실행</span>
+              </p>
+              <p
+                className="text-sm flex items-start gap-2"
+                style={{
+                  fontFamily: '"NeoDunggeunmo", cursive',
+                  color: 'rgba(255, 255, 255, 0.9)',
+                }}
+              >
+                <span style={{ color: 'var(--gold)' }}>3.</span>
+                <span>전체화면으로 플레이!</span>
+              </p>
+            </div>
+
             <button
               onClick={() => setShowA2HSPrompt(false)}
-              className="px-6 py-2 transition-all hover:brightness-125 active:scale-95"
+              className="w-full py-2 transition-all hover:brightness-125 active:scale-95"
               style={{
                 fontFamily: '"NeoDunggeunmo", cursive',
                 background: 'linear-gradient(180deg, var(--gold) 0%, var(--gold-dark) 100%)',
@@ -1206,6 +1247,10 @@ export function CombatScreen() {
             @keyframes bounceUp {
               0%, 100% { transform: translateY(0); }
               50% { transform: translateY(-8px); }
+            }
+            @keyframes bounceRight {
+              0%, 100% { transform: translateX(0); }
+              50% { transform: translateX(5px); }
             }
           `}</style>
         </div>
