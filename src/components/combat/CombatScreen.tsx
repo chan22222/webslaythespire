@@ -1297,7 +1297,7 @@ export function CombatScreen() {
             <div className="flex gap-2">
               <button
                 onClick={handleA2HSClose}
-                className="flex-1 py-2 transition-all hover:brightness-125 active:scale-95"
+                className="px-4 py-2 transition-all hover:brightness-125 active:scale-95"
                 style={{
                   fontFamily: '"NeoDunggeunmo", cursive',
                   background: 'linear-gradient(180deg, var(--gold) 0%, var(--gold-dark) 100%)',
