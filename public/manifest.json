@@ -1,0 +1,17 @@
+{
+  "name": "Shuffle & Slash",
+  "short_name": "Shuffle&Slash",
+  "description": "A roguelike deck-building game",
+  "start_url": "/",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#050508",
+  "theme_color": "#0a0b0f",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64",
+      "type": "image/x-icon"
+    }
+  ]
+}

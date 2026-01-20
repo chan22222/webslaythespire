@@ -94,15 +94,28 @@ input, textarea {
 html, body, #root {
   width: 100%;
   height: 100%;
+  height: 100dvh; /* 모바일 주소창/네비게이션 바 고려 */
   overflow: hidden;
   overscroll-behavior: none;
   touch-action: manipulation;
+}
+
+/* 모바일 viewport 대응 - h-screen을 dvh로 오버라이드 */
+@supports (height: 100dvh) {
+  .h-screen {
+    height: 100dvh !important;
+  }
+  .min-h-screen {
+    min-height: 100dvh !important;
+  }
 }
 
 body {
   font-family: 'Crimson Text', Georgia, serif;
   background-color: var(--bg-abyss);
   color: #e8e6e3;
+  /* 노치/라운드 코너 기기 safe area 대응 */
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
 }
 
 /* ============================================
