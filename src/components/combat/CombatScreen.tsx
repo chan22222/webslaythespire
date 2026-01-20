@@ -1712,7 +1712,7 @@ export function CombatScreen() {
         </div>
 
         {/* 카드 패 - 중앙 하단 */}
-        <div className="absolute inset-x-0 -bottom-4 xs:-bottom-3 sm:-bottom-2 md:bottom-0 flex justify-center pointer-events-none">
+        <div className="absolute inset-x-0 bottom-0 [@media(max-height:700px)]:-bottom-4 [@media(max-height:420px)]:-bottom-8 flex justify-center pointer-events-none">
           <div className="combat-scale pointer-events-auto scale-[0.5] xs:scale-[0.55] sm:scale-[0.7] md:scale-90 lg:scale-110 origin-bottom">
             <CardHand
               cards={hand}
