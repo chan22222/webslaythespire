@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useGameStore } from '../../stores/gameStore';
 import { Card } from '../combat/Card';
 import { Card as CardType, createCardInstance } from '../../types/card';
@@ -32,6 +32,66 @@ export function ShopScreen() {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [selectedRemoveCardId, setSelectedRemoveCardId] = useState<string | null>(null);
   const itemsContainerRef = useRef<HTMLDivElement>(null);
+  const [autoScrollEnabled, setAutoScrollEnabled] = useState(true);
+
+  // 자동 스크롤 중지
+  const stopAutoScroll = useCallback(() => {
+    setAutoScrollEnabled(false);
+  }, []);
+
+  // 자동 스크롤 효과 (한 번만 오른쪽으로 천천히 이동)
+  useEffect(() => {
+    if (!autoScrollEnabled) return;
+
+    const container = itemsContainerRef.current;
+    if (!container) return;
+
+    let animationId: number | null = null;
+    const scrollSpeed = 0.8; // 픽셀/프레임
+
+    const animate = () => {
+      const maxScroll = container.scrollWidth - container.clientWidth;
+
+      if (maxScroll <= 0 || container.scrollLeft >= maxScroll) {
+        return; // 끝에 도달하면 중지
+      }
+
+      container.scrollLeft += scrollSpeed;
+      animationId = requestAnimationFrame(animate);
+    };
+
+    // 0.5초 후 스크롤 시작
+    const timeout = setTimeout(() => {
+      animationId = requestAnimationFrame(animate);
+    }, 500);
+
+    return () => {
+      clearTimeout(timeout);
+      if (animationId) {
+        cancelAnimationFrame(animationId);
+      }
+    };
+  }, [autoScrollEnabled]);
+
+  // 터치/마우스 이벤트로 자동 스크롤 중지
+  useEffect(() => {
+    const container = itemsContainerRef.current;
+    if (!container) return;
+
+    const handleInteraction = () => {
+      stopAutoScroll();
+    };
+
+    container.addEventListener('touchstart', handleInteraction);
+    container.addEventListener('mousedown', handleInteraction);
+    container.addEventListener('wheel', handleInteraction);
+
+    return () => {
+      container.removeEventListener('touchstart', handleInteraction);
+      container.removeEventListener('mousedown', handleInteraction);
+      container.removeEventListener('wheel', handleInteraction);
+    };
+  }, [stopAutoScroll]);
 
   useEffect(() => {
     const cards = generateCardRewards(5);
@@ -154,12 +214,14 @@ export function ShopScreen() {
   const SCROLL_AMOUNT = 250;
 
   const handleScrollLeft = () => {
+    stopAutoScroll();
     if (itemsContainerRef.current) {
       itemsContainerRef.current.scrollBy({ left: -SCROLL_AMOUNT, behavior: 'smooth' });
     }
   };
 
   const handleScrollRight = () => {
+    stopAutoScroll();
     if (itemsContainerRef.current) {
       itemsContainerRef.current.scrollBy({ left: SCROLL_AMOUNT, behavior: 'smooth' });
     }
