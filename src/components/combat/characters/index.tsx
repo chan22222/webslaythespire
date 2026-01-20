@@ -423,8 +423,10 @@ export function FlyingEyeSprite({ size = 80, className = '', variant = 'red', is
     ? 'hue-rotate(90deg) saturate(1.2)'
     : 'none';
 
+  // frame이 totalFrames를 초과하지 않도록 보정
+  const safeFrame = ((frame % config.totalFrames) + config.totalFrames) % config.totalFrames;
   // 현재 프레임의 시작 위치 + crop offset
-  const bgX = -(frame * config.frameWidth + config.cropOffsetX) * scale;
+  const bgX = -(safeFrame * config.frameWidth + config.cropOffsetX) * scale;
   const bgY = -config.cropOffsetY * scale;
 
   const spriteUrl = isAttacking ? '/sprites/mob/flyingeye_Attack.png' : '/sprites/mob/flyingeye.png';
@@ -509,7 +511,9 @@ export function GoblinSprite({ size = 80, className = '', isAttacking = false }:
     return () => clearInterval(interval);
   }, [config.totalFrames, config.animationSpeed]);
 
-  const bgX = -(frame * config.frameWidth + config.cropOffsetX) * scale;
+  // frame이 totalFrames를 초과하지 않도록 보정
+  const safeFrame = frame % config.totalFrames;
+  const bgX = -(safeFrame * config.frameWidth + config.cropOffsetX) * scale;
   const bgY = -config.cropOffsetY * scale;
 
   const spriteUrl = isAttacking ? '/sprites/mob/goblin_Attack.png' : '/sprites/mob/goblin.png';
@@ -587,7 +591,9 @@ export function SkeletonSprite({ size = 80, className = '', isAttacking = false 
     return () => clearInterval(interval);
   }, [config.totalFrames, config.animationSpeed]);
 
-  const bgX = -(frame * config.frameWidth + config.cropOffsetX) * scale;
+  // frame이 totalFrames를 초과하지 않도록 보정
+  const safeFrame = frame % config.totalFrames;
+  const bgX = -(safeFrame * config.frameWidth + config.cropOffsetX) * scale;
   const bgY = -config.cropOffsetY * scale;
 
   const spriteUrl = isAttacking ? '/sprites/mob/skeleton_Attack.png' : '/sprites/mob/skeleton.png';
@@ -670,7 +676,9 @@ export function MushroomSprite({ size = 80, className = '', variant = 'normal', 
     ? 'hue-rotate(60deg) saturate(1.5)'
     : 'none';
 
-  const bgX = -(frame * config.frameWidth + config.cropOffsetX) * scale;
+  // frame이 totalFrames를 초과하지 않도록 보정
+  const safeFrame = frame % config.totalFrames;
+  const bgX = -(safeFrame * config.frameWidth + config.cropOffsetX) * scale;
   const bgY = -config.cropOffsetY * scale;
 
   const spriteUrl = isAttacking ? '/sprites/mob/mushroom_Attack.png' : '/sprites/mob/mushroom.png';
@@ -861,7 +869,9 @@ export function EvilWizardSprite({ size = 120, className = '', isAttacking = fal
     return () => clearInterval(interval);
   }, [isAttacking, config.totalFrames, config.animationSpeed]);
 
-  const bgX = -(frame * config.frameWidth + config.cropOffsetX) * scale;
+  // frame이 totalFrames를 초과하지 않도록 보정
+  const safeFrame = frame % config.totalFrames;
+  const bgX = -(safeFrame * config.frameWidth + config.cropOffsetX) * scale;
   const bgY = -config.cropOffsetY * scale;
   const spriteUrl = isAttacking ? '/sprites/mob/EvilWizard_Attack.png' : '/sprites/mob/EvilWizard.png';
 
@@ -948,7 +958,9 @@ export function NightBorneSprite({ size = 150, className = '', isAttacking = fal
     return () => clearInterval(interval);
   }, [totalFrames, speed]);
 
-  const bgX = -(frame * NIGHTBORNE_CONFIG.frameWidth + cropOffsetX) * scale;
+  // frame이 totalFrames를 초과하지 않도록 보정
+  const safeFrame = frame % totalFrames;
+  const bgX = -(safeFrame * NIGHTBORNE_CONFIG.frameWidth + cropOffsetX) * scale;
   const bgY = -(row * NIGHTBORNE_CONFIG.frameHeight + cropOffsetY) * scale;
 
   return (
