@@ -1,5 +1,5 @@
 // Shuffle & Slash 스타일 실루엣 캐릭터 SVG
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useLayoutEffect, useState, useRef } from 'react';
 
 interface CharacterProps {
   size?: number;
@@ -7,43 +7,25 @@ interface CharacterProps {
   isAttacking?: boolean;
 }
 
-// 스프라이트시트 설정
+// 스프라이트시트 설정 (character_sprite_1.png - 4x4 그리드, 256x256 프레임)
+// 1~6: idle, 7~14: skill, 15~16: 공란
 const SPRITE_CONFIG = {
-  frameWidth: 69,
-  frameHeight: 44,
-  columns: 6,
-  // 각 애니메이션의 시작 행과 프레임 수
-  // multiRow: true인 경우 startRow/startFrame ~ endRow/endFrame 까지 연속 재생
+  frameWidth: 256,
+  frameHeight: 256,
+  columns: 4,
+  sheetWidth: 1024,
+  sheetHeight: 1024,
   animations: {
-    idle: { row: 0, frames: 6, speed: 150 },
-    attack: {
-      multiRow: true,
-      startRow: 11, startFrame: 3,
-      endRow: 14, endFrame: 1,
-      speed: 50
-    },
-    hurt: {
-      multiRow: true,
-      startRow: 6, startFrame: 1,
-      endRow: 6, endFrame: 4,
-      speed: 150
-    },
-    skill: {
-      multiRow: true,
-      startRow: 2, startFrame: 2,
-      endRow: 3, endFrame: 3,
-      speed: 60
-    },
-    death: {
-      multiRow: true,
-      startRow: 4, startFrame: 2,
-      endRow: 6, endFrame: 0,
-      speed: 100
-    },
+    idle: { startFrame: 0, frames: 6, speed: 150 },
+    attack: { startFrame: 6, frames: 10, speed: 110 },
+    hurt: { startFrame: 0, frames: 6, speed: 110 },
+    skill: { startFrame: 6, frames: 10, speed: 110 },
+    death: { startFrame: 0, frames: 6, speed: 110 },
+    shield: { startFrame: 6, frames: 10, speed: 110 },
   },
 };
 
-type AnimationState = 'idle' | 'attack' | 'hurt' | 'skill' | 'death';
+type AnimationState = 'idle' | 'attack' | 'hurt' | 'skill' | 'death' | 'shield';
 
 interface WarriorSpriteProps {
   size?: number;
@@ -52,26 +34,7 @@ interface WarriorSpriteProps {
   onAnimationEnd?: () => void;
 }
 
-// multiRow 애니메이션의 총 프레임 수 계산
-function getMultiRowFrameCount(startRow: number, startFrame: number, endRow: number, endFrame: number): number {
-  const columns = SPRITE_CONFIG.columns;
-  const startIndex = startRow * columns + startFrame;
-  const endIndex = endRow * columns + endFrame;
-  return endIndex - startIndex + 1;
-}
-
-// 프레임 인덱스로부터 row, col 계산
-function getFramePosition(startRow: number, startFrame: number, frameIndex: number): { row: number; col: number } {
-  const columns = SPRITE_CONFIG.columns;
-  const startIndex = startRow * columns + startFrame;
-  const currentIndex = startIndex + frameIndex;
-  return {
-    row: Math.floor(currentIndex / columns),
-    col: currentIndex % columns,
-  };
-}
-
-// 워리어 스프라이트 캐릭터
+// 워리어 스프라이트 캐릭터 (character_sprite_1.png 사용)
 export function WarriorSprite({
   size = 120,
   className = '',
@@ -85,36 +48,27 @@ export function WarriorSprite({
   const onAnimationEndRef = useRef(onAnimationEnd);
   onAnimationEndRef.current = onAnimationEnd;
 
-  // 스케일 계산 (기본 44px 높이 기준)
-  const scale = size / 44;
+  // 스케일 계산 (256px 프레임 기준으로 size에 맞춤)
+  const scale = size / 190;
   const width = SPRITE_CONFIG.frameWidth * scale;
   const height = SPRITE_CONFIG.frameHeight * scale;
 
-  // multiRow 애니메이션인지 확인
-  const isMultiRow = 'multiRow' in config && config.multiRow;
+  const totalFrames = config.frames;
 
-  // 총 프레임 수 계산
-  const totalFrames = isMultiRow
-    ? getMultiRowFrameCount(
-        (config as { startRow: number; startFrame: number; endRow: number; endFrame: number }).startRow,
-        (config as { startRow: number; startFrame: number; endRow: number; endFrame: number }).startFrame,
-        (config as { startRow: number; startFrame: number; endRow: number; endFrame: number }).endRow,
-        (config as { startRow: number; startFrame: number; endRow: number; endFrame: number }).endFrame
-      )
-    : (config as { frames: number }).frames;
+  // 애니메이션 변경 시 즉시 프레임 리셋 (렌더링 전에 실행)
+  useLayoutEffect(() => {
+    setFrame(0);
+  }, [animation]);
 
   useEffect(() => {
-    setFrame(0); // 애니메이션 변경 시 프레임 리셋
-
     const interval = setInterval(() => {
       setFrame((prev) => {
         const nextFrame = prev + 1;
         if (nextFrame >= totalFrames) {
-          if (animation !== 'idle' && onAnimationEndRef.current) {
-            // setTimeout으로 다음 틱에서 실행하여 렌더링 중 setState 방지
+          if (animation !== 'idle' && animation !== 'shield' && onAnimationEndRef.current) {
             setTimeout(() => onAnimationEndRef.current?.(), 0);
           }
-          return animation === 'idle' ? 0 : totalFrames - 1;
+          return (animation === 'idle' || animation === 'shield') ? 0 : totalFrames - 1;
         }
         return nextFrame;
       });
@@ -123,20 +77,14 @@ export function WarriorSprite({
     return () => clearInterval(interval);
   }, [animation, totalFrames, config.speed]);
 
-  // background-position 계산
-  let bgX: number;
-  let bgY: number;
+  // 연속 프레임 인덱스에서 row/col 계산 (frame이 범위를 벗어나지 않도록 보정)
+  const safeFrame = Math.min(frame, totalFrames - 1);
+  const absoluteFrame = config.startFrame + safeFrame;
+  const col = absoluteFrame % SPRITE_CONFIG.columns;
+  const row = Math.floor(absoluteFrame / SPRITE_CONFIG.columns);
 
-  if (isMultiRow) {
-    const multiConfig = config as { startRow: number; startFrame: number };
-    const pos = getFramePosition(multiConfig.startRow, multiConfig.startFrame, frame);
-    bgX = -(pos.col * SPRITE_CONFIG.frameWidth) * scale;
-    bgY = -(pos.row * SPRITE_CONFIG.frameHeight) * scale;
-  } else {
-    const singleConfig = config as { row: number };
-    bgX = -(frame * SPRITE_CONFIG.frameWidth) * scale;
-    bgY = -(singleConfig.row * SPRITE_CONFIG.frameHeight) * scale;
-  }
+  const bgX = -(col * SPRITE_CONFIG.frameWidth) * scale;
+  const bgY = -(row * SPRITE_CONFIG.frameHeight) * scale;
 
   return (
     <div
@@ -144,9 +92,9 @@ export function WarriorSprite({
       style={{
         width: `${width}px`,
         height: `${height}px`,
-        backgroundImage: 'url(/sprites/warrior.png)',
+        backgroundImage: 'url(/sprites/character_sprite_1.png)',
         backgroundPosition: `${bgX}px ${bgY}px`,
-        backgroundSize: `${414 * scale}px ${748 * scale}px`,
+        backgroundSize: `${SPRITE_CONFIG.sheetWidth * scale}px ${SPRITE_CONFIG.sheetHeight * scale}px`,
         backgroundRepeat: 'no-repeat',
         imageRendering: 'pixelated',
       }}

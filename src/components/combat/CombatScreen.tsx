@@ -1099,7 +1099,7 @@ export function CombatScreen() {
             if (!hasLoseHpTarget) {
               setPlayerAnimation('idle');
             }
-          }, 550);
+          }, 1100);
         }
       }
     } else {
@@ -1161,7 +1161,7 @@ export function CombatScreen() {
             if (!hasLoseHp) {
               setPlayerAnimation('idle');
             }
-          }, 550);
+          }, 1100);
         }
       }
     }

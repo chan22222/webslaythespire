@@ -496,7 +496,7 @@ export function PlayerStatus({ player, block, statuses, animation = 'idle', atta
             transform: getAttackTransform(),
           }}
         >
-          <WarriorSprite size={180} animation={animation} onAnimationEnd={onAnimationEnd} />
+          <WarriorSprite size={180} animation={animation} onAnimationEnd={onAnimationEnd} className="relative -left-2" />
           {/* 바닥 그림자 */}
           <div
             className="absolute left-1/2"
