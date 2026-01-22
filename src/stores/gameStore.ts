@@ -97,6 +97,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       },
       map: newMap,
       currentAct: 1,
+      testEnemies: null, // 연습 모드 적 초기화
     });
     // 새 게임 시작 시 자동 저장
     setTimeout(() => get().saveGame(), 100);
@@ -118,6 +119,7 @@ export const useGameStore = create<GameState>((set, get) => ({
       },
       map: { nodes: [], currentNodeId: null, floor: 1 },
       currentAct: 1,
+      testEnemies: null, // 연습 모드 적 초기화
     });
   },
 
