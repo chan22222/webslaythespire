@@ -57,16 +57,152 @@ const isAttackAnimation = (animation: AnimationState) => animation === 'attack' 
 // 피격/사망 애니메이션인지 확인 (hurt, death는 character_sprite_hitdeath.png 사용)
 const isHitDeathAnimation = (animation: AnimationState) => animation === 'hurt' || animation === 'death';
 
+// 검 슬래시 이펙트 스프라이트시트 설정 (swordslash.png - 3x3 그리드, 플레이어 근처)
+const SLASH_EFFECT_CONFIG = {
+  frameWidth: Math.floor(1024 / 3),  // 341
+  frameHeight: Math.floor(468 / 3),  // 156
+  columns: 3,
+  sheetWidth: 1024,
+  sheetHeight: 468,
+  totalFrames: 9,
+  speed: 35,
+};
+
+// 타격 이펙트 스프라이트시트 설정 (slashhit.png - 2x3 그리드, 적에게 타격)
+const HIT_EFFECT_CONFIG = {
+  frameWidth: 600 / 2,  // 300
+  frameHeight: 900 / 3,  // 300
+  columns: 2,
+  sheetWidth: 600,
+  sheetHeight: 900,
+  totalFrames: 6,
+  speed: 50,
+};
+
 // 모든 스프라이트 이미지 미리 로드 (깜빡임 방지)
 const preloadImages = [
   '/sprites/character_sprite_1.png',
   '/sprites/character_sprite_dash.png',
   '/sprites/character_sprite_hitdeath.png',
+  '/sprites/swordslash.png',
+  '/sprites/slashhit.png',
 ];
 preloadImages.forEach(src => {
   const img = new Image();
   img.src = src;
 });
+
+// 검 슬래시 이펙트 컴포넌트
+interface SlashEffectProps {
+  x: number;
+  y: number;
+  size?: number;
+  onComplete?: () => void;
+}
+
+// 플레이어 근처 검 슬래시 이펙트 (swordslash.png)
+export function SwordSlashEffect({ x, y, size = 150, onComplete }: SlashEffectProps) {
+  const [frame, setFrame] = useState(0);
+  const [isVisible, setIsVisible] = useState(true);
+
+  const scale = size / SLASH_EFFECT_CONFIG.frameHeight;
+  const width = SLASH_EFFECT_CONFIG.frameWidth * scale;
+  const height = SLASH_EFFECT_CONFIG.frameHeight * scale;
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setFrame(prev => {
+        const nextFrame = prev + 1;
+        if (nextFrame >= SLASH_EFFECT_CONFIG.totalFrames) {
+          clearInterval(interval);
+          setIsVisible(false);
+          onComplete?.();
+          return prev;
+        }
+        return nextFrame;
+      });
+    }, SLASH_EFFECT_CONFIG.speed);
+
+    return () => clearInterval(interval);
+  }, [onComplete]);
+
+  if (!isVisible) return null;
+
+  const col = frame % SLASH_EFFECT_CONFIG.columns;
+  const row = Math.floor(frame / SLASH_EFFECT_CONFIG.columns);
+  const bgX = -(col * SLASH_EFFECT_CONFIG.frameWidth) * scale;
+  const bgY = -(row * SLASH_EFFECT_CONFIG.frameHeight) * scale;
+
+  return (
+    <div
+      className="fixed pointer-events-none z-50"
+      style={{
+        left: x - width / 2,
+        top: y - height / 2,
+        width,
+        height,
+        backgroundImage: 'url(/sprites/swordslash.png)',
+        backgroundPosition: `${bgX}px ${bgY}px`,
+        backgroundSize: `${SLASH_EFFECT_CONFIG.sheetWidth * scale}px ${SLASH_EFFECT_CONFIG.sheetHeight * scale}px`,
+        backgroundRepeat: 'no-repeat',
+        imageRendering: 'pixelated',
+        mixBlendMode: 'screen',
+      }}
+    />
+  );
+}
+
+// 적에게 타격 이펙트 (slashhit.png)
+export function SlashHitEffect({ x, y, size = 120, onComplete }: SlashEffectProps) {
+  const [frame, setFrame] = useState(0);
+  const [isVisible, setIsVisible] = useState(true);
+
+  const scale = size / HIT_EFFECT_CONFIG.frameHeight;
+  const width = HIT_EFFECT_CONFIG.frameWidth * scale;
+  const height = HIT_EFFECT_CONFIG.frameHeight * scale;
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setFrame(prev => {
+        const nextFrame = prev + 1;
+        if (nextFrame >= HIT_EFFECT_CONFIG.totalFrames) {
+          clearInterval(interval);
+          setIsVisible(false);
+          onComplete?.();
+          return prev;
+        }
+        return nextFrame;
+      });
+    }, HIT_EFFECT_CONFIG.speed);
+
+    return () => clearInterval(interval);
+  }, [onComplete]);
+
+  if (!isVisible) return null;
+
+  const col = frame % HIT_EFFECT_CONFIG.columns;
+  const row = Math.floor(frame / HIT_EFFECT_CONFIG.columns);
+  const bgX = -(col * HIT_EFFECT_CONFIG.frameWidth) * scale;
+  const bgY = -(row * HIT_EFFECT_CONFIG.frameHeight) * scale;
+
+  return (
+    <div
+      className="fixed pointer-events-none z-50"
+      style={{
+        left: x - width / 2,
+        top: y - height / 2,
+        width,
+        height,
+        backgroundImage: 'url(/sprites/slashhit.png)',
+        backgroundPosition: `${bgX}px ${bgY}px`,
+        backgroundSize: `${HIT_EFFECT_CONFIG.sheetWidth * scale}px ${HIT_EFFECT_CONFIG.sheetHeight * scale}px`,
+        backgroundRepeat: 'no-repeat',
+        imageRendering: 'pixelated',
+        mixBlendMode: 'screen',
+      }}
+    />
+  );
+}
 
 interface WarriorSpriteProps {
   size?: number;

@@ -446,7 +446,7 @@ export function PlayerStatus({ player, block, statuses, animation = 'idle', anim
   const getAttackTransform = () => {
     // attack 또는 attack_combo일 때 이동 (combo는 이미 이동한 상태 유지)
     if (animation !== 'attack' && animation !== 'attack_combo') return 'translateX(0)';
-    if (!attackTargetPos) return 'translateX(200px)'; // 기본값
+    if (!attackTargetPos) return 'translateX(150px)'; // 기본값
 
     // 플레이어 기준 위치 (화면 왼쪽 1/3 지점 정도)
     const baseX = window.innerWidth * 0.35;
@@ -458,9 +458,9 @@ export function PlayerStatus({ player, block, statuses, animation = 'idle', anim
     // 몹 마릿수에 따라 이동 비율 조절 (모바일에서는 더 크게)
     let ratio;
     if (isMobile) {
-      ratio = enemyCount === 1 ? 1.1 : enemyCount === 2 ? 1.3 : 1.8;
+      ratio = enemyCount === 1 ? 1.0 : enemyCount === 2 ? 1.2 : 1.65;
     } else {
-      ratio = enemyCount === 1 ? 0.6 : enemyCount === 2 ? 0.8 : 0.95;
+      ratio = enemyCount === 1 ? 0.55 : enemyCount === 2 ? 0.75 : 0.9;
     }
     const moveX = dx * ratio;
 

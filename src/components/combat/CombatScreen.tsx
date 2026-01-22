@@ -9,6 +9,7 @@ import { Enemy } from './Enemy';
 import { EnergyOrb } from './EnergyOrb';
 import { PlayerStatus } from './PlayerStatus';
 import { DamagePopupManager } from './DamagePopup';
+import { SwordSlashEffect, SlashHitEffect } from './characters';
 import { generateNormalEncounter, ELITE_ENEMIES, BOSS_ENEMIES, EASTER_EGG_ENCOUNTER } from '../../data/enemies';
 
 // 전투 시작 인트로 화면
@@ -549,6 +550,7 @@ export function CombatScreen() {
     isEndTurnLocked,
     lockEndTurn,
     dealDamageToEnemy,
+    resetCombat,
   } = useCombatStore();
 
   const currentNode = getCurrentNode();
@@ -582,6 +584,11 @@ export function CombatScreen() {
   const [animationKey, setAnimationKey] = useState(0);
   // 공격 타겟 위치
   const [attackTargetPos, setAttackTargetPos] = useState<{ x: number; y: number } | null>(null);
+  // 플레이어 슬래시 이펙트 (swordslash.png)
+  const [swordSlashEffects, setSwordSlashEffects] = useState<{ id: number; x: number; y: number }[]>([]);
+  // 적 타격 이펙트 (slashhit.png)
+  const [hitEffects, setHitEffects] = useState<{ id: number; x: number; y: number }[]>([]);
+  const effectIdRef = useRef(0);
   // 공격 중 여부 (카드 사용 불가)
   const [isAttacking, setIsAttacking] = useState(false);
   // 플레이어 사망 처리 중
@@ -762,12 +769,13 @@ export function CombatScreen() {
 
     // 테스트 모드면 메인 메뉴로, 아니면 카드 보상으로
     if (testEnemies && testEnemies.length > 0) {
+      resetCombat(); // 전투 상태 초기화 (적 HP 0 상태로 남아있는 문제 방지)
       clearTestEnemies();
       setPhase('MAIN_MENU');
     } else {
       setPhase('CARD_REWARD');
     }
-  }, [setPhase, testEnemies, clearTestEnemies, decrementDeserterCount]);
+  }, [setPhase, testEnemies, clearTestEnemies, decrementDeserterCount, resetCombat]);
 
   // 승리 인트로 완료 핸들러 (인트로 제거)
   const handleVictoryComplete = useCallback(() => {
@@ -876,6 +884,12 @@ export function CombatScreen() {
     if (hitIndex !== undefined && hitIndex > 0) {
       x += (hitIndex % 2 === 0 ? -1 : 1) * 20 * hitIndex;
       y -= 15 * hitIndex;
+    }
+
+    // 적에게 데미지 시 타격 이펙트 표시 (slashhit.png)
+    if (type === 'damage' && targetId !== 'player') {
+      const newEffectId = ++effectIdRef.current;
+      setHitEffects(prev => [...prev, { id: newEffectId, x, y: y + 60 }]);
     }
 
     addDamagePopup(value, type, x, y, undefined, modifier);
@@ -1103,9 +1117,22 @@ export function CombatScreen() {
           };
           setIsAttacking(true);
           setPlayerAnimation('attack');
+
           // 첫 번째 타격 데미지 팝업, 피격 효과, 실제 데미지 적용 (600ms 후)
           const firstHit = hits[0];
           setTimeout(() => {
+            // 이동한 플레이어 위치(적 근처)에 슬래시 이펙트 표시
+            const targetEl = enemyRefs.current.get(firstHit.targetId);
+            if (targetEl) {
+              const targetRect = targetEl.getBoundingClientRect();
+              const newEffectId = ++effectIdRef.current;
+              setSwordSlashEffects(prev => [...prev, {
+                id: newEffectId,
+                x: targetRect.left - 20,  // 적 왼쪽 (플레이어가 이동한 위치)
+                y: targetRect.top + targetRect.height / 2 - 35
+              }]);
+            }
+
             triggerEnemyHit(firstHit.targetId);
             showDamagePopup(firstHit.targetId, firstHit.baseValue, 'damage', firstHit.modifier, 0);
             dealDamageToEnemy(firstHit.targetId, firstHit.actualValue);
@@ -1165,8 +1192,24 @@ export function CombatScreen() {
           };
           setIsAttacking(true);
           setPlayerAnimation('attack');
+
           // 애니메이션 중간(600ms)에 모든 적에게 데미지 팝업, 피격, 실제 데미지 적용
           setTimeout(() => {
+            // 이동한 플레이어 위치(첫 번째 적 근처)에 슬래시 이펙트 표시
+            if (pendingAttackRef.current && pendingAttackRef.current.hits.length > 0) {
+              const firstTarget = pendingAttackRef.current.hits[0];
+              const targetEl = enemyRefs.current.get(firstTarget.targetId);
+              if (targetEl) {
+                const targetRect = targetEl.getBoundingClientRect();
+                const newEffectId = ++effectIdRef.current;
+                setSwordSlashEffects(prev => [...prev, {
+                  id: newEffectId,
+                  x: targetRect.left - 30,
+                  y: targetRect.top + targetRect.height / 2 - 25
+                }]);
+              }
+            }
+
             if (pendingAttackRef.current) {
               pendingAttackRef.current.hits.forEach(hit => {
                 triggerEnemyHit(hit.targetId);
@@ -1380,6 +1423,28 @@ export function CombatScreen() {
           popups={damagePopups}
           onPopupComplete={removeDamagePopup}
         />
+
+        {/* 플레이어 슬래시 이펙트 (swordslash.png) */}
+        {swordSlashEffects.map(effect => (
+          <SwordSlashEffect
+            key={effect.id}
+            x={effect.x}
+            y={effect.y}
+            size={200}
+            onComplete={() => setSwordSlashEffects(prev => prev.filter(e => e.id !== effect.id))}
+          />
+        ))}
+
+        {/* 적 타격 이펙트 (slashhit.png) */}
+        {hitEffects.map(effect => (
+          <SlashHitEffect
+            key={effect.id}
+            x={effect.x}
+            y={effect.y}
+            size={300}
+            onComplete={() => setHitEffects(prev => prev.filter(e => e.id !== effect.id))}
+          />
+        ))}
 
       {/* 배경 파티클 효과 */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden z-10">
