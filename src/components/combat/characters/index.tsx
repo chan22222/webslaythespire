@@ -17,10 +17,8 @@ const SPRITE_CONFIG = {
   sheetHeight: 1024,
   animations: {
     idle: { startFrame: 0, frames: 6, speed: 150 },
-    hurt: { startFrame: 0, frames: 6, speed: 100 },
-    skill: { startFrame: 6, frames: 10, speed: 100 },
-    death: { startFrame: 0, frames: 6, speed: 100 },
-    shield: { startFrame: 6, frames: 10, speed: 100 },
+    skill: { startFrame: 6, frames: 10, speed: 60 },
+    shield: { startFrame: 6, frames: 10, speed: 60 },
   },
 };
 
@@ -32,8 +30,22 @@ const ATTACK_SPRITE_CONFIG = {
   sheetWidth: 1024,
   sheetHeight: 1024,
   animations: {
-    attack: { startFrame: 0, frames: 16, speed: 60 },        // 전체 (달리기 + 공격)
-    attack_combo: { startFrame: 6, frames: 10, speed: 60 },  // 공격만 (6~15프레임)
+    attack: { startFrame: 0, frames: 16, speed: 50 },        // 전체 (달리기 + 공격)
+    attack_combo: { startFrame: 6, frames: 10, speed: 50 },  // 공격만 (6~15프레임)
+  },
+};
+
+// 피격/사망 스프라이트시트 설정 (character_sprite_hitdeath.png - 4x4 그리드, 256x256 프레임)
+// 0~5: 피격, 6~11: 사망
+const HITDEATH_SPRITE_CONFIG = {
+  frameWidth: 256,
+  frameHeight: 256,
+  columns: 4,
+  sheetWidth: 1024,
+  sheetHeight: 1024,
+  animations: {
+    hurt: { startFrame: 0, frames: 6, speed: 150 },
+    death: { startFrame: 6, frames: 10, speed: 150 },
   },
 };
 
@@ -42,28 +54,66 @@ type AnimationState = 'idle' | 'attack' | 'attack_combo' | 'hurt' | 'skill' | 'd
 // 공격 애니메이션인지 확인 (attack, attack_combo는 character_sprite_dash.png 사용)
 const isAttackAnimation = (animation: AnimationState) => animation === 'attack' || animation === 'attack_combo';
 
+// 피격/사망 애니메이션인지 확인 (hurt, death는 character_sprite_hitdeath.png 사용)
+const isHitDeathAnimation = (animation: AnimationState) => animation === 'hurt' || animation === 'death';
+
+// 모든 스프라이트 이미지 미리 로드 (깜빡임 방지)
+const preloadImages = [
+  '/sprites/character_sprite_1.png',
+  '/sprites/character_sprite_dash.png',
+  '/sprites/character_sprite_hitdeath.png',
+];
+preloadImages.forEach(src => {
+  const img = new Image();
+  img.src = src;
+});
+
 interface WarriorSpriteProps {
   size?: number;
   className?: string;
   animation?: AnimationState;
+  animationKey?: number; // 같은 애니메이션을 다시 트리거할 때 사용
   onAnimationEnd?: () => void;
 }
 
-// 워리어 스프라이트 캐릭터 (idle: character_sprite_1.png, attack: character_sprite_dash.png)
+// 워리어 스프라이트 캐릭터
+// - idle/skill/shield: character_sprite_1.png
+// - attack/attack_combo: character_sprite_dash.png
+// - hurt/death: character_sprite_hitdeath.png
 export function WarriorSprite({
   size = 120,
   className = '',
   animation = 'idle',
+  animationKey = 0,
   onAnimationEnd
 }: WarriorSpriteProps) {
   const [frame, setFrame] = useState(0);
 
-  // 공격 애니메이션인지에 따라 다른 config 사용
+  // death 애니메이션은 animationKey 무시
+  const effectiveKey = animation === 'death' ? 0 : animationKey;
+
+  // animation 또는 animationKey 변경 시 동기적으로 frame 리셋 (깜빡임 방지)
+  useLayoutEffect(() => {
+    setFrame(0);
+  }, [animation, effectiveKey]);
+
+  // 애니메이션 타입에 따라 다른 config 사용
   const useAttackSprite = isAttackAnimation(animation);
-  const spriteConfig = useAttackSprite ? ATTACK_SPRITE_CONFIG : SPRITE_CONFIG;
-  const config = useAttackSprite
-    ? ATTACK_SPRITE_CONFIG.animations[animation as 'attack' | 'attack_combo']
-    : SPRITE_CONFIG.animations[animation as 'idle' | 'hurt' | 'skill' | 'death' | 'shield'];
+  const useHitDeathSprite = isHitDeathAnimation(animation);
+
+  let spriteConfig;
+  let config;
+
+  if (useAttackSprite) {
+    spriteConfig = ATTACK_SPRITE_CONFIG;
+    config = ATTACK_SPRITE_CONFIG.animations[animation as 'attack' | 'attack_combo'];
+  } else if (useHitDeathSprite) {
+    spriteConfig = HITDEATH_SPRITE_CONFIG;
+    config = HITDEATH_SPRITE_CONFIG.animations[animation as 'hurt' | 'death'];
+  } else {
+    spriteConfig = SPRITE_CONFIG;
+    config = SPRITE_CONFIG.animations[animation as 'idle' | 'skill' | 'shield'];
+  }
 
   // onAnimationEnd를 ref로 관리하여 의존성 문제 방지
   const onAnimationEndRef = useRef(onAnimationEnd);
@@ -75,11 +125,6 @@ export function WarriorSprite({
   const height = spriteConfig.frameHeight * scale;
 
   const totalFrames = config.frames;
-
-  // 애니메이션 변경 시 즉시 프레임 리셋 (렌더링 전에 실행)
-  useLayoutEffect(() => {
-    setFrame(0);
-  }, [animation]);
 
   useEffect(() => {
     let hasEnded = false; // onAnimationEnd가 한 번만 호출되도록 추적
@@ -106,7 +151,7 @@ export function WarriorSprite({
     }, config.speed);
 
     return () => clearInterval(interval);
-  }, [animation, totalFrames, config.speed]);
+  }, [animation, effectiveKey, totalFrames, config.speed]);
 
   // 연속 프레임 인덱스에서 row/col 계산 (frame이 범위를 벗어나지 않도록 보정)
   const safeFrame = Math.min(frame, totalFrames - 1);
@@ -117,10 +162,13 @@ export function WarriorSprite({
   const bgX = -(col * spriteConfig.frameWidth) * scale;
   const bgY = -(row * spriteConfig.frameHeight) * scale;
 
-  // 공격 애니메이션은 dash 스프라이트, 그 외는 기본 스프라이트 사용
-  const spriteUrl = useAttackSprite
-    ? '/sprites/character_sprite_dash.png'
-    : '/sprites/character_sprite_1.png';
+  // 애니메이션 타입에 따라 다른 스프라이트 사용
+  let spriteUrl = '/sprites/character_sprite_1.png';
+  if (useAttackSprite) {
+    spriteUrl = '/sprites/character_sprite_dash.png';
+  } else if (useHitDeathSprite) {
+    spriteUrl = '/sprites/character_sprite_hitdeath.png';
+  }
 
   return (
     <div

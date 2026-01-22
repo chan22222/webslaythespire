@@ -578,6 +578,8 @@ export function CombatScreen() {
   const [viewingPile, setViewingPile] = useState<'draw' | 'discard' | null>(null);
   // 플레이어 애니메이션 상태
   const [playerAnimation, setPlayerAnimation] = useState<'idle' | 'attack' | 'attack_combo' | 'hurt' | 'skill' | 'death'>('idle');
+  // 애니메이션 키 (같은 애니메이션 재트리거용)
+  const [animationKey, setAnimationKey] = useState(0);
   // 공격 타겟 위치
   const [attackTargetPos, setAttackTargetPos] = useState<{ x: number; y: number } | null>(null);
   // 공격 중 여부 (카드 사용 불가)
@@ -600,18 +602,30 @@ export function CombatScreen() {
     isPlayerDyingRef.current = isPlayerDying;
   }, [isPlayerDying]);
 
+  // 피격 후 idle 복귀 타이머 ref
+  const hurtTimerRef = useRef<NodeJS.Timeout | null>(null);
+
   // 피격 콜백 설정
   useEffect(() => {
     setOnPlayerHit(() => {
       // 이미 사망 중이면 애니메이션 변경하지 않음
       if (isPlayerDyingRef.current) return;
+
+      // 이전 타이머 취소
+      if (hurtTimerRef.current) {
+        clearTimeout(hurtTimerRef.current);
+      }
+
       setPlayerAnimation('hurt');
-      setTimeout(() => {
+      setAnimationKey(prev => prev + 1); // 같은 애니메이션도 리셋되도록
+
+      hurtTimerRef.current = setTimeout(() => {
         // 사망 중이 아닐 때만 idle로 복귀
         if (!isPlayerDyingRef.current) {
           setPlayerAnimation('idle');
         }
-      }, 400);
+        hurtTimerRef.current = null;
+      }, 900); // 6프레임 × 150ms = 900ms
     });
     return () => setOnPlayerHit(null);
   }, [setOnPlayerHit]);
@@ -1105,7 +1119,7 @@ export function CombatScreen() {
             if (!hasLoseHpTarget) {
               setPlayerAnimation('idle');
             }
-          }, 1000);
+          }, 600);
         }
       }
     } else {
@@ -1171,7 +1185,7 @@ export function CombatScreen() {
             if (!hasLoseHp) {
               setPlayerAnimation('idle');
             }
-          }, 1000);
+          }, 600);
         }
       }
     }
@@ -1643,6 +1657,7 @@ export function CombatScreen() {
               block={playerBlock}
               statuses={playerStatuses}
               animation={playerAnimation}
+              animationKey={animationKey}
               attackTargetPos={attackTargetPos}
               enemyCount={enemies.filter(e => e.currentHp > 0).length}
               incomingDamage={calculatePlayerHpLoss()}

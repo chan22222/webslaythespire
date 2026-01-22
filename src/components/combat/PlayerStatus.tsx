@@ -230,6 +230,7 @@ interface PlayerStatusProps {
   block: number;
   statuses: Status[];
   animation?: 'idle' | 'attack' | 'attack_combo' | 'hurt' | 'skill' | 'death';
+  animationKey?: number; // 같은 애니메이션 재트리거용
   attackTargetPos?: { x: number; y: number } | null;
   enemyCount?: number;
   onAnimationEnd?: () => void;
@@ -422,7 +423,7 @@ function BlockBadge({ block }: { block: number }) {
   );
 }
 
-export function PlayerStatus({ player, block, statuses, animation = 'idle', attackTargetPos, enemyCount = 1, onAnimationEnd, incomingDamage = 0 }: PlayerStatusProps) {
+export function PlayerStatus({ player, block, statuses, animation = 'idle', animationKey = 0, attackTargetPos, enemyCount = 1, onAnimationEnd, incomingDamage = 0 }: PlayerStatusProps) {
   // 플레이어 이름
   const playerName = useGameStore(state => state.playerName);
 
@@ -497,7 +498,7 @@ export function PlayerStatus({ player, block, statuses, animation = 'idle', atta
             transform: getAttackTransform(),
           }}
         >
-          <WarriorSprite size={180} animation={animation} onAnimationEnd={onAnimationEnd} className="relative -left-2" />
+          <WarriorSprite size={180} animation={animation} animationKey={animationKey} onAnimationEnd={onAnimationEnd} className="relative -left-2" />
           {/* 바닥 그림자 */}
           <div
             className="absolute left-1/2"
