@@ -458,7 +458,7 @@ export function PlayerStatus({ player, block, statuses, animation = 'idle', anim
     // 몹 마릿수에 따라 이동 비율 조절 (모바일에서는 더 크게)
     let ratio;
     if (isMobile) {
-      ratio = enemyCount === 1 ? 1.0 : enemyCount === 2 ? 1.2 : 1.65;
+      ratio = enemyCount === 1 ? 0.9 : enemyCount === 2 ? 1.1 : 1.5;
     } else {
       ratio = enemyCount === 1 ? 0.55 : enemyCount === 2 ? 0.75 : 0.9;
     }

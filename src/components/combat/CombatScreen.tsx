@@ -889,7 +889,8 @@ export function CombatScreen() {
     // 적에게 데미지 시 타격 이펙트 표시 (slashhit.png)
     if (type === 'damage' && targetId !== 'player') {
       const newEffectId = ++effectIdRef.current;
-      setHitEffects(prev => [...prev, { id: newEffectId, x, y: y + 60 }]);
+      const isMobile = window.innerHeight < 500;
+      setHitEffects(prev => [...prev, { id: newEffectId, x, y: y + (isMobile ? 30 : 60) }]);
     }
 
     addDamagePopup(value, type, x, y, undefined, modifier);
@@ -1430,7 +1431,7 @@ export function CombatScreen() {
             key={effect.id}
             x={effect.x}
             y={effect.y}
-            size={200}
+            size={window.innerHeight < 500 ? 120 : 200}
             onComplete={() => setSwordSlashEffects(prev => prev.filter(e => e.id !== effect.id))}
           />
         ))}
@@ -1441,7 +1442,7 @@ export function CombatScreen() {
             key={effect.id}
             x={effect.x}
             y={effect.y}
-            size={300}
+            size={window.innerHeight < 500 ? 150 : 300}
             onComplete={() => setHitEffects(prev => prev.filter(e => e.id !== effect.id))}
           />
         ))}
