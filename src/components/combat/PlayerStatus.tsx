@@ -229,7 +229,7 @@ interface PlayerStatusProps {
   player: Player;
   block: number;
   statuses: Status[];
-  animation?: 'idle' | 'attack' | 'hurt' | 'skill' | 'death';
+  animation?: 'idle' | 'attack' | 'attack_combo' | 'hurt' | 'skill' | 'death';
   attackTargetPos?: { x: number; y: number } | null;
   enemyCount?: number;
   onAnimationEnd?: () => void;
@@ -443,7 +443,8 @@ export function PlayerStatus({ player, block, statuses, animation = 'idle', atta
 
   // 공격 시 타겟 위치에 따라 이동 거리 계산
   const getAttackTransform = () => {
-    if (animation !== 'attack') return 'translateX(0)';
+    // attack 또는 attack_combo일 때 이동 (combo는 이미 이동한 상태 유지)
+    if (animation !== 'attack' && animation !== 'attack_combo') return 'translateX(0)';
     if (!attackTargetPos) return 'translateX(200px)'; // 기본값
 
     // 플레이어 기준 위치 (화면 왼쪽 1/3 지점 정도)
@@ -488,7 +489,7 @@ export function PlayerStatus({ player, block, statuses, animation = 'idle', atta
 
         {/* 플레이어 캐릭터 SVG */}
         <div
-          className="relative transition-transform duration-200"
+          className="relative transition-transform duration-[400ms]"
           style={{
             filter: block > 0
               ? 'drop-shadow(0 0 15px rgba(40, 102, 168, 0.6))'

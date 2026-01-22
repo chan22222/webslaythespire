@@ -31,7 +31,7 @@ interface CombatStore extends CombatState {
 
   // 카드 관리
   drawCards: (count: number) => void;
-  playCard: (cardInstanceId: string, targetEnemyId?: string) => void;
+  playCard: (cardInstanceId: string, targetEnemyId?: string, skipDamage?: boolean) => void;
   discardHand: () => void;
   selectCard: (cardInstanceId: string | null) => void;
 
@@ -550,7 +550,7 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     });
   },
 
-  playCard: (cardInstanceId: string, targetEnemyId?: string) => {
+  playCard: (cardInstanceId: string, targetEnemyId?: string, skipDamage?: boolean) => {
     const { hand, energy, enemies } = get();
     const cardIndex = hand.findIndex(c => c.instanceId === cardInstanceId);
 
@@ -595,6 +595,9 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     card.effects.forEach(effect => {
       switch (effect.type) {
         case 'DAMAGE': {
+          // skipDamage가 true이면 데미지 처리 건너뛰기 (이미 애니메이션에서 처리됨)
+          if (skipDamage) break;
+
           // 기본 데미지 + 힘만 계산 (약화/취약은 dealDamageToEnemy에서 합연산 처리)
           let baseDamage = effect.value;
           const strength = get().playerStatuses.find(s => s.type === 'STRENGTH')?.stacks || 0;
@@ -1034,6 +1037,23 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     updatedEnemies[enemyIndex] = updatedEnemy;
 
     set({ enemies: updatedEnemies });
+
+    // ON_DAMAGE_DEALT 유물 효과 트리거
+    const relics = useGameStore.getState().player.relics;
+    relics.forEach(relic => {
+      relic.effects.forEach(effect => {
+        if (effect.trigger === 'ON_DAMAGE_DEALT') {
+          const context = {
+            damageDealt: remainingDamage, // 실제로 HP에 들어간 데미지
+            heal: (amount: number) => {
+              useGameStore.getState().healPlayer(amount);
+              get().addToCombatLog(`흡혈! HP ${amount} 회복!`);
+            },
+          };
+          effect.execute(context);
+        }
+      });
+    });
   },
 
   dealDamageToPlayer: (baseDamage: number, attackerEnemyId?: string) => {

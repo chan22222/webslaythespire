@@ -548,6 +548,7 @@ export function CombatScreen() {
     lockCardPlay,
     isEndTurnLocked,
     lockEndTurn,
+    dealDamageToEnemy,
   } = useCombatStore();
 
   const currentNode = getCurrentNode();
@@ -576,7 +577,7 @@ export function CombatScreen() {
   // 카드 목록 모달 상태
   const [viewingPile, setViewingPile] = useState<'draw' | 'discard' | null>(null);
   // 플레이어 애니메이션 상태
-  const [playerAnimation, setPlayerAnimation] = useState<'idle' | 'attack' | 'hurt' | 'skill' | 'death'>('idle');
+  const [playerAnimation, setPlayerAnimation] = useState<'idle' | 'attack' | 'attack_combo' | 'hurt' | 'skill' | 'death'>('idle');
   // 공격 타겟 위치
   const [attackTargetPos, setAttackTargetPos] = useState<{ x: number; y: number } | null>(null);
   // 공격 중 여부 (카드 사용 불가)
@@ -618,7 +619,7 @@ export function CombatScreen() {
   const pendingAttackRef = useRef<{
     cardInstanceId: string;
     targetEnemyId?: string;
-    hits: { targetId: string; value: number; modifier?: number }[]; // 각 타격 정보
+    hits: { targetId: string; baseValue: number; actualValue: number; modifier?: number }[]; // 각 타격 정보
     currentHit: number; // 현재 몇 번째 타격인지
     totalHits: number; // 총 타격 횟수
   } | null>(null);
@@ -866,37 +867,36 @@ export function CombatScreen() {
     addDamagePopup(value, type, x, y, undefined, modifier);
   }, [addDamagePopup]);
 
-  // 데미지 보정값 계산 (힘, 약화, 취약)
+  // 데미지 보정값 계산 (힘, 약화, 취약) - dealDamageToEnemy와 동일한 합연산 방식
   const calculateDamageModifier = useCallback((baseDamage: number, targetEnemyId?: string) => {
-    let currentDamage = baseDamage;
-    let modifier = 0;
-
     // 힘 적용
     const strength = playerStatuses.find(s => s.type === 'STRENGTH')?.stacks || 0;
-    currentDamage += strength;
-    modifier += strength;
+    const damageWithStrength = baseDamage + strength;
 
-    // 약화 적용 (25% 감소) - 실제 계산과 동일하게
+    // 합연산 방식으로 배수 계산 (기본 1.0 + 취약 0.5 - 약화 0.25)
+    let damageMultiplier = 1.0;
+
+    // 약화: -25%
     const weak = playerStatuses.find(s => s.type === 'WEAK');
     if (weak && weak.stacks > 0) {
-      const damageAfterWeak = Math.round(currentDamage * 0.75);
-      const weakReduction = currentDamage - damageAfterWeak;
-      modifier -= weakReduction;
-      currentDamage = damageAfterWeak;
+      damageMultiplier -= 0.25;
     }
 
-    // 취약 적용 (50% 추가) - 적 상태 확인
+    // 취약: +50%
     if (targetEnemyId) {
       const enemy = enemies.find(e => e.instanceId === targetEnemyId);
       if (enemy) {
         const vulnerable = enemy.statuses.find(s => s.type === 'VULNERABLE');
         if (vulnerable && vulnerable.stacks > 0) {
-          const damageAfterVulnerable = Math.round(currentDamage * 1.5);
-          const vulnerableBonus = damageAfterVulnerable - currentDamage;
-          modifier += vulnerableBonus;
+          damageMultiplier += 0.5;
         }
       }
     }
+
+    // 최종 데미지 (버림)
+    const finalDamage = Math.floor(damageWithStrength * damageMultiplier);
+    // 보정값 = 최종 데미지 - 기본 데미지
+    const modifier = finalDamage - baseDamage;
 
     return modifier;
   }, [playerStatuses, enemies]);
@@ -930,35 +930,27 @@ export function CombatScreen() {
     const enemy = enemies.find(e => e.instanceId === targetEnemyId);
     const vulnerable = enemy?.statuses.find(s => s.type === 'VULNERABLE');
 
+    // 합연산 방식으로 배수 계산 (기본 1.0 + 취약 0.5 - 약화 0.25)
+    let damageMultiplier = 1.0;
+    if (weak && weak.stacks > 0) {
+      damageMultiplier -= 0.25;
+    }
+    if (vulnerable && vulnerable.stacks > 0) {
+      damageMultiplier += 0.5;
+    }
+
     for (const effect of card.effects) {
       if (effect.type === 'DAMAGE' && (effect.target === 'SINGLE' || effect.target === 'ALL')) {
-        let damage = effect.value + strength;
-
-        // 약화 (25% 감소)
-        if (weak && weak.stacks > 0) {
-          damage = Math.round(damage * 0.75);
-        }
-
-        // 취약 (50% 추가)
-        if (vulnerable && vulnerable.stacks > 0) {
-          damage = Math.round(damage * 1.5);
-        }
-
+        const baseDamage = effect.value + strength;
+        const damage = Math.floor(baseDamage * damageMultiplier);
         totalDamage += Math.max(0, damage);
       } else if (effect.type === 'DAMAGE_PER_LOST_HP') {
         // 사선에서: 잃은 HP 기반 피해
         const gameState = useGameStore.getState();
         const lostHp = gameState.player.maxHp - gameState.player.currentHp;
         const ratio = effect.ratio || 1;
-        let damage = Math.floor((lostHp / ratio) * effect.value) + strength;
-
-        if (weak && weak.stacks > 0) {
-          damage = Math.round(damage * 0.75);
-        }
-        if (vulnerable && vulnerable.stacks > 0) {
-          damage = Math.round(damage * 1.5);
-        }
-
+        const baseDamage = Math.floor((lostHp / ratio) * effect.value) + strength;
+        const damage = Math.floor(baseDamage * damageMultiplier);
         totalDamage += Math.max(0, damage);
       } else if (effect.type === 'HALVE_ENEMY_HP') {
         // 신의 권능: 적 HP 절반 (최대 피해 제한)
@@ -969,15 +961,8 @@ export function CombatScreen() {
       } else if (effect.type === 'DAMAGE_PER_PLAYED' && effect.target === 'ALL') {
         // 종언의 일격: 사용한 카드 종류당 피해 (자기 자신 제외)
         const uniqueCount = usedCardTypes.filter(id => id !== 'final_strike').length;
-        let damage = effect.value * uniqueCount + strength;
-
-        if (weak && weak.stacks > 0) {
-          damage = Math.round(damage * 0.75);
-        }
-        if (vulnerable && vulnerable.stacks > 0) {
-          damage = Math.round(damage * 1.5);
-        }
-
+        const baseDamage = effect.value * uniqueCount + strength;
+        const damage = Math.floor(baseDamage * damageMultiplier);
         totalDamage += Math.max(0, damage);
       }
     }
@@ -1068,12 +1053,16 @@ export function CombatScreen() {
             const rect = targetEl.getBoundingClientRect();
             setAttackTargetPos({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
           }
-          // 각 타격별 정보 저장
-          const hits = damageEffects.map(effect => ({
-            targetId: confirmedTargetId,
-            value: effect.value,
-            modifier: calculateDamageModifier(effect.value, confirmedTargetId)
-          }));
+          // 각 타격별 정보 저장 (팝업용 기본값 + 실제 데미지용 힘 포함값)
+          const strength = playerStatuses.find(s => s.type === 'STRENGTH')?.stacks || 0;
+          const hits = damageEffects.map(effect => {
+            return {
+              targetId: confirmedTargetId,
+              baseValue: effect.value,  // 팝업 표시용
+              actualValue: effect.value + strength,  // 실제 데미지용
+              modifier: calculateDamageModifier(effect.value, confirmedTargetId)
+            };
+          });
           // 공격 대기 상태로 저장
           pendingAttackRef.current = {
             cardInstanceId,
@@ -1084,11 +1073,12 @@ export function CombatScreen() {
           };
           setIsAttacking(true);
           setPlayerAnimation('attack');
-          // 첫 번째 타격 데미지 팝업 및 피격 효과 (600ms 후)
+          // 첫 번째 타격 데미지 팝업, 피격 효과, 실제 데미지 적용 (600ms 후)
           const firstHit = hits[0];
           setTimeout(() => {
             triggerEnemyHit(firstHit.targetId);
-            showDamagePopup(firstHit.targetId, firstHit.value, 'damage', firstHit.modifier, 0);
+            showDamagePopup(firstHit.targetId, firstHit.baseValue, 'damage', firstHit.modifier, 0);
+            dealDamageToEnemy(firstHit.targetId, firstHit.actualValue);
           }, 600);
         } else {
           // 데미지 없는 타겟 카드는 스킬 애니메이션 후 실행
@@ -1099,7 +1089,7 @@ export function CombatScreen() {
             if (!hasLoseHpTarget) {
               setPlayerAnimation('idle');
             }
-          }, 1100);
+          }, 1000);
         }
       }
     } else {
@@ -1122,14 +1112,16 @@ export function CombatScreen() {
               setAttackTargetPos({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
             }
           }
-          // 공격 대기 상태로 저장 (각 적별로 modifier 계산, 기본 데미지와 보정값)
+          // 공격 대기 상태로 저장 (팝업용 기본값 + 실제 데미지용 힘 포함값)
+          const allStrength = playerStatuses.find(s => s.type === 'STRENGTH')?.stacks || 0;
           const allEnemyHits = enemies
             .filter(e => e.currentHp > 0)
             .map(e => {
               const modifier = calculateDamageModifier(damageEffect.value, e.instanceId);
               return {
                 targetId: e.instanceId,
-                value: damageEffect.value,
+                baseValue: damageEffect.value,  // 팝업 표시용
+                actualValue: damageEffect.value + allStrength,  // 실제 데미지용
                 modifier
               };
             });
@@ -1143,11 +1135,13 @@ export function CombatScreen() {
           };
           setIsAttacking(true);
           setPlayerAnimation('attack');
-          // 애니메이션 중간(600ms)에 모든 적에게 데미지 적용
+          // 애니메이션 중간(600ms)에 모든 적에게 데미지 팝업, 피격, 실제 데미지 적용
           setTimeout(() => {
             if (pendingAttackRef.current) {
               pendingAttackRef.current.hits.forEach(hit => {
-                showDamagePopup(hit.targetId, hit.value, 'damage', hit.modifier);
+                triggerEnemyHit(hit.targetId);
+                showDamagePopup(hit.targetId, hit.baseValue, 'damage', hit.modifier);
+                dealDamageToEnemy(hit.targetId, hit.actualValue);
               });
             }
           }, 600);
@@ -1161,7 +1155,7 @@ export function CombatScreen() {
             if (!hasLoseHp) {
               setPlayerAnimation('idle');
             }
-          }, 1100);
+          }, 1000);
         }
       }
     }
@@ -1647,23 +1641,21 @@ export function CombatScreen() {
                   const nextHit = currentHit + 1;
 
                   if (nextHit < totalHits) {
-                    // 다음 타격이 있으면 다시 공격 모션
+                    // 다음 타격이 있으면 제자리에서 바로 다음 공격 (idle 없이)
                     pendingAttackRef.current.currentHit = nextHit;
                     const hitData = hits[nextHit];
                     const hitIdx = nextHit;
-                    setPlayerAnimation('idle');
-                    // 약간의 딜레이 후 다음 공격
+                    // 바로 attack_combo로 전환 (달리기 없이 공격 모션만)
+                    setPlayerAnimation('attack_combo');
+                    // 데미지 팝업, 피격 효과, 실제 데미지 적용
                     setTimeout(() => {
-                      setPlayerAnimation('attack');
-                      // 데미지 팝업 및 피격 효과
-                      setTimeout(() => {
-                        triggerEnemyHit(hitData.targetId);
-                        showDamagePopup(hitData.targetId, hitData.value, 'damage', hitData.modifier, hitIdx);
-                      }, 600);
-                    }, 100);
+                      triggerEnemyHit(hitData.targetId);
+                      showDamagePopup(hitData.targetId, hitData.baseValue, 'damage', hitData.modifier, hitIdx);
+                      dealDamageToEnemy(hitData.targetId, hitData.actualValue);
+                    }, 300);
                   } else {
-                    // 모든 타격 완료, 카드 실행
-                    playCard(cardInstanceId, targetEnemyId);
+                    // 모든 타격 완료, 카드 실행 (데미지는 이미 적용됨)
+                    playCard(cardInstanceId, targetEnemyId, true);
                     pendingAttackRef.current = null;
                     setPlayerAnimation('idle');
                     setAttackTargetPos(null);
