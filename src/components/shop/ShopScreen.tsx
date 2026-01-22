@@ -138,7 +138,7 @@ export function ShopScreen() {
       })),
       {
         type: 'remove' as const,
-        price: 75,
+        price: 50,
         sold: false,
       },
     ];
@@ -188,20 +188,13 @@ export function ShopScreen() {
   };
 
   const handleConfirmRemoveCard = (cardInstanceId: string) => {
-    const item = shopItems.find(i => i.type === 'remove' && !i.sold);
-    if (!item) return;
+    const item = shopItems.find(i => i.type === 'remove');
+    if (!item || player.gold < item.price) return;
 
     modifyGold(-item.price);
     removeCardFromDeck(cardInstanceId);
-
-    const newItems = [...shopItems];
-    const removeIndex = newItems.findIndex(i => i.type === 'remove' && !i.sold);
-    if (removeIndex !== -1) {
-      newItems[removeIndex].sold = true;
-    }
-    setShopItems(newItems);
-    setShowRemoveModal(false);
     setSelectedRemoveCardId(null);
+    // 모달 유지 - 여러 장 제거 가능
   };
 
   const handleLeave = () => {
@@ -417,16 +410,15 @@ export function ShopScreen() {
 
       {/* 하단 버튼들 */}
       <div className="shop-bottom-section relative z-10 flex items-center gap-4">
-        {/* 카드 제거 서비스 */}
+        {/* 카드 제거 서비스 (여러 장 가능) */}
         {removeItem && (
           <button
             onClick={() => handleBuyRemove(shopItems.indexOf(removeItem))}
-            disabled={removeItem.sold || player.gold < removeItem.price}
+            disabled={player.gold < removeItem.price}
             className={`
               shop-action-btn shop-remove-btn relative flex items-center justify-center
               transition-all duration-300
-              ${removeItem.sold ? 'opacity-30' :
-                player.gold >= removeItem.price ? 'hover:scale-105 hover:brightness-110' : 'opacity-50 cursor-not-allowed'}
+              ${player.gold >= removeItem.price ? 'hover:scale-105 hover:brightness-110' : 'opacity-50 cursor-not-allowed'}
             `}
           >
             <img
@@ -435,12 +427,12 @@ export function ShopScreen() {
               className="absolute inset-0 w-full h-full object-contain"
               style={{
                 imageRendering: 'pixelated',
-                filter: removeItem.sold ? 'grayscale(1) brightness(0.5)' : 'sepia(1) saturate(3) hue-rotate(-10deg) brightness(0.8)',
+                filter: 'sepia(1) saturate(3) hue-rotate(-10deg) brightness(0.8)',
               }}
               draggable={false}
             />
             <span className="shop-btn-text relative z-10 text-white font-bold">
-              카드 제거 - {removeItem.sold ? '판매됨' : `${removeItem.price}G`}
+              카드 제거 - {removeItem.price}G
             </span>
           </button>
         )}
@@ -474,9 +466,12 @@ export function ShopScreen() {
               boxShadow: '0 0 40px rgba(0,0,0,0.8), 0 0 20px var(--attack-glow)',
             }}
           >
-            <h2 className="font-title text-base sm:text-lg md:text-xl lg:text-2xl text-[var(--attack-light)] mb-2 sm:mb-4 md:mb-6 text-center">
+            <h2 className="font-title text-base sm:text-lg md:text-xl lg:text-2xl text-[var(--attack-light)] mb-1 sm:mb-2 md:mb-3 text-center">
               제거할 카드 선택
             </h2>
+            <p className="font-card text-sm text-[var(--gold)] mb-2 sm:mb-4 md:mb-6 text-center">
+              비용: 50G | 보유: {player.gold}G
+            </p>
 
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-1 sm:gap-2 md:gap-3 lg:gap-4 scale-60 sm:scale-75 md:scale-90 lg:scale-100 origin-top">
               {player.deck.map(card => {
@@ -493,21 +488,22 @@ export function ShopScreen() {
                       <Card card={card} size="sm" />
                     </div>
                     <button
-                      onClick={() => isSelected && handleConfirmRemoveCard(card.instanceId)}
+                      onClick={() => isSelected && player.gold >= 50 && handleConfirmRemoveCard(card.instanceId)}
+                      disabled={!isSelected || player.gold < 50}
                       className={`px-2 py-1 rounded font-title text-xs transition-all duration-200 ${
-                        isSelected
+                        isSelected && player.gold >= 50
                           ? 'text-white cursor-pointer hover:brightness-110'
                           : 'text-gray-500'
                       }`}
                       style={{
-                        background: isSelected
+                        background: isSelected && player.gold >= 50
                           ? 'linear-gradient(180deg, #ef4444 0%, #991b1b 100%)'
                           : 'linear-gradient(180deg, var(--bg-medium) 0%, var(--bg-dark) 100%)',
-                        border: `2px solid ${isSelected ? '#f87171' : '#444'}`,
-                        boxShadow: isSelected ? '0 0 10px rgba(239, 68, 68, 0.5)' : 'none',
+                        border: `2px solid ${isSelected && player.gold >= 50 ? '#f87171' : '#444'}`,
+                        boxShadow: isSelected && player.gold >= 50 ? '0 0 10px rgba(239, 68, 68, 0.5)' : 'none',
                       }}
                     >
-                      {isSelected ? '✓ 제거' : '선택'}
+                      {isSelected ? (player.gold >= 50 ? '✓ 제거' : '골드 부족') : '선택'}
                     </button>
                   </div>
                 );
