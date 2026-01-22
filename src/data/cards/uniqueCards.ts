@@ -79,13 +79,13 @@ export const TIME_WARP: Card = {
   rarity: 'UNIQUE',
   cost: 3,
   image: '/cards/effect/time_warp.png',
-  description: '턴을 종료하고, 즉시 자신의 턴을 다시 시작합니다. 소멸.',
+  description: '턴이 끝나면, 곧바로 자신의 턴을 다시 시작합니다. 소멸.',
   effects: [{ type: 'EXTRA_TURN', value: 0 }],
   exhaust: true,
   upgraded: false,
   upgradeEffect: {
     name: '시간 왜곡+',
-    description: '턴을 종료하고, 즉시 자신의 턴을 다시 시작하며 2에너지를 추가로 얻습니다. 소멸.',
+    description: '턴이 끝나면, 곧바로 자신의 턴을 다시 시작하며 2에너지를 추가로 얻습니다. 소멸.',
     effects: [
       { type: 'EXTRA_TURN', value: 0 },
       { type: 'GAIN_ENERGY', value: 2 },

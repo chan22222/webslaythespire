@@ -55,11 +55,13 @@ export interface Card {
 
 export interface CardInstance extends Card {
   instanceId: string;
+  originalCost: number; // 코스트 감소 복구용
 }
 
 export function createCardInstance(card: Card): CardInstance {
   return {
     ...card,
     instanceId: `${card.id}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+    originalCost: card.cost,
   };
 }

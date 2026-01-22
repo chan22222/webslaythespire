@@ -942,8 +942,10 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
         const currentDiscard = get().discardPile;
         const cardInDiscard = currentDiscard.find(c => c.instanceId === card.instanceId);
         if (cardInDiscard) {
+          // 코스트 원래대로 복구
+          const restoredCard = { ...cardInDiscard, cost: cardInDiscard.originalCost };
           set({
-            hand: [...get().hand, cardInDiscard],
+            hand: [...get().hand, restoredCard],
             discardPile: currentDiscard.filter(c => c.instanceId !== card.instanceId),
           });
           get().addToCombatLog(`${card.name}이(가) 손으로 돌아왔습니다!`);
