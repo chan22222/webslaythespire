@@ -1,7 +1,3 @@
----
-name: Sprite Prompt Generator
-description: 사용자의 요청에 맞춰 4x4 픽셀 아트 스프라이트 시트 생성을 위한 프롬프트를 작성합니다 (단일/복합 동작 지원).
----
 
 # My Skill
 
@@ -28,9 +24,9 @@ VIBE: "Alive" and dynamic.
 FACE: Keep a neutral or action-appropriate expression. The face moves with the head.
 
 ### 2. [GRID CONFIG] (Keep Unchanged)
-TOTAL SIZE: 512x512 pixels.
+TOTAL SIZE: 2048x2048 pixels.
 GRID: 4 rows × 4 cols (16 cells).
-CELL SIZE: 128x128 px.
+CELL SIZE: 512x512 px.
 RESOLUTION: Sharp pixels, no blur.
 
 ### 3. [FRAME-BY-FRAME SCRIPT] (Dynamic Logic)

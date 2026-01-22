@@ -40,11 +40,14 @@ function LoadingScreen({ onLoadComplete }: { onLoadComplete: () => void }) {
     }))
   );
 
-  // 스프라이트 설정
-  const RUN_FRAMES = 8;
-  const SPRITE_WIDTH = 69;
-  const SPRITE_HEIGHT = 44;
-  const SPRITE_SCALE = 2.2;
+  // 스프라이트 설정 (4x4 그리드, 256x256)
+  const RUN_FRAMES = 6; // 0~5 프레임 (달리기)
+  const IDLE_FRAMES = 6; // 0~5 프레임 (idle)
+  const SPRITE_WIDTH = 256;
+  const SPRITE_HEIGHT = 256;
+  const SPRITE_COLUMNS = 4;
+  const SPRITE_SCALE = 0.35;
+  const [idleFrame, setIdleFrame] = useState(0);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -60,7 +63,7 @@ function LoadingScreen({ onLoadComplete }: { onLoadComplete: () => void }) {
     return () => clearInterval(interval);
   }, []);
 
-  // 캐릭터 뛰기 애니메이션 (도착 전까지만)
+  // 캐릭터 뛰기 애니메이션 (도착 전)
   useEffect(() => {
     if (isArrived) return;
     const runInterval = setInterval(() => {
@@ -69,7 +72,16 @@ function LoadingScreen({ onLoadComplete }: { onLoadComplete: () => void }) {
     return () => clearInterval(runInterval);
   }, [isArrived]);
 
-  // 50%쯤 되면 도착 (바로 앉은 상태로 고정)
+  // 캐릭터 idle 애니메이션 (도착 후)
+  useEffect(() => {
+    if (!isArrived) return;
+    const idleInterval = setInterval(() => {
+      setIdleFrame(prev => (prev + 1) % IDLE_FRAMES);
+    }, 150);
+    return () => clearInterval(idleInterval);
+  }, [isArrived]);
+
+  // 50%쯤 되면 도착
   useEffect(() => {
     if (progress >= 50 && !isArrived) {
       setIsArrived(true);
@@ -179,7 +191,7 @@ function LoadingScreen({ onLoadComplete }: { onLoadComplete: () => void }) {
           <div
             className="absolute"
             style={{
-              left: isArrived ? '95%' : `${Math.min(progress * 2, 95)}%`,
+              left: isArrived ? '90%' : `${Math.min(progress * 2, 90)}%`,
               bottom: '12px',
               transform: `translateX(-50%) translateY(${bounceY}px)`,
               transition: 'left 0.18s ease-out',
@@ -190,8 +202,8 @@ function LoadingScreen({ onLoadComplete }: { onLoadComplete: () => void }) {
               <div
                 className="absolute pointer-events-none text-lg"
                 style={{
-                  left: '35%',
-                  bottom: '50%',
+                  left: '30%',
+                  bottom: '80%',
                   opacity: 0,
                   animation: 'heartFloat 1.6s ease-out infinite',
                   animationDelay: '0.4s',
@@ -218,22 +230,15 @@ function LoadingScreen({ onLoadComplete }: { onLoadComplete: () => void }) {
               style={{
                 width: SPRITE_WIDTH * SPRITE_SCALE,
                 height: SPRITE_HEIGHT * SPRITE_SCALE,
-                backgroundImage: 'url(/sprites/warrior.png)',
-                backgroundSize: `${SPRITE_WIDTH * 6 * SPRITE_SCALE}px auto`,
+                backgroundImage: isArrived
+                  ? 'url(/sprites/character_sprite_1.png)'
+                  : 'url(/sprites/character_sprite_dash.png)',
+                backgroundSize: `${SPRITE_WIDTH * SPRITE_COLUMNS * SPRITE_SCALE}px auto`,
                 backgroundPosition: (() => {
-                  if (isArrived) {
-                    // 바로 앉은 상태(마지막 프레임) 고정
-                    const frameIndex = ARRIVAL_START_ROW * 6 + ARRIVAL_START_COL + (ARRIVAL_FRAMES - 1);
-                    const row = Math.floor(frameIndex / 6);
-                    const col = frameIndex % 6;
-                    return `-${col * SPRITE_WIDTH * SPRITE_SCALE}px -${row * SPRITE_HEIGHT * SPRITE_SCALE}px`;
-                  } else {
-                    // 달리기 애니메이션 (1,0 ~ 2,1)
-                    const startRow = 1;
-                    const col = runFrame < 6 ? runFrame : runFrame - 6;
-                    const row = runFrame < 6 ? startRow : startRow + 1;
-                    return `-${col * SPRITE_WIDTH * SPRITE_SCALE}px -${row * SPRITE_HEIGHT * SPRITE_SCALE}px`;
-                  }
+                  const frame = isArrived ? idleFrame : runFrame;
+                  const col = frame % SPRITE_COLUMNS;
+                  const row = Math.floor(frame / SPRITE_COLUMNS);
+                  return `-${col * SPRITE_WIDTH * SPRITE_SCALE}px -${row * SPRITE_HEIGHT * SPRITE_SCALE}px`;
                 })(),
                 imageRendering: 'pixelated',
                 filter: 'drop-shadow(0 4px 8px rgba(0, 0, 0, 0.8)) drop-shadow(0 0 20px rgba(255, 180, 50, 0.3))',
