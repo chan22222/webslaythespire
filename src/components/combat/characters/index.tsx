@@ -116,7 +116,6 @@ export function SwordSlashEffect({ x, y, size = 150, onComplete }: SlashEffectPr
         if (nextFrame >= SLASH_EFFECT_CONFIG.totalFrames) {
           clearInterval(interval);
           setIsVisible(false);
-          onComplete?.();
           return prev;
         }
         return nextFrame;
@@ -124,7 +123,14 @@ export function SwordSlashEffect({ x, y, size = 150, onComplete }: SlashEffectPr
     }, SLASH_EFFECT_CONFIG.speed);
 
     return () => clearInterval(interval);
-  }, [onComplete]);
+  }, []);
+
+  // 애니메이션 완료 시 콜백 호출
+  useEffect(() => {
+    if (!isVisible && onComplete) {
+      onComplete();
+    }
+  }, [isVisible, onComplete]);
 
   if (!isVisible) return null;
 
@@ -168,7 +174,6 @@ export function SlashHitEffect({ x, y, size = 120, onComplete }: SlashEffectProp
         if (nextFrame >= HIT_EFFECT_CONFIG.totalFrames) {
           clearInterval(interval);
           setIsVisible(false);
-          onComplete?.();
           return prev;
         }
         return nextFrame;
@@ -176,7 +181,14 @@ export function SlashHitEffect({ x, y, size = 120, onComplete }: SlashEffectProp
     }, HIT_EFFECT_CONFIG.speed);
 
     return () => clearInterval(interval);
-  }, [onComplete]);
+  }, []);
+
+  // 애니메이션 완료 시 콜백 호출
+  useEffect(() => {
+    if (!isVisible && onComplete) {
+      onComplete();
+    }
+  }, [isVisible, onComplete]);
 
   if (!isVisible) return null;
 

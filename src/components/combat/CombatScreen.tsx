@@ -591,6 +591,8 @@ export function CombatScreen() {
   const effectIdRef = useRef(0);
   // 공격 중 여부 (카드 사용 불가)
   const [isAttacking, setIsAttacking] = useState(false);
+  // 공격 중 카드 클릭 카운터 (버그 방지)
+  const attackClickCountRef = useRef(0);
   // 플레이어 사망 처리 중
   const [isPlayerDying, setIsPlayerDying] = useState(false);
   const isPlayerDyingRef = useRef(false);
@@ -801,6 +803,13 @@ export function CombatScreen() {
       setPlayerAnimation('death');
     }
   }, [player.currentHp, isPlayerDying]);
+
+  // HP 0이면 에너지 0으로 고정
+  useEffect(() => {
+    if (player.currentHp <= 0 && energy > 0) {
+      useCombatStore.setState({ energy: 0 });
+    }
+  }, [player.currentHp, energy]);
 
   // 사망 애니메이션 완료 후 게임오버
   const handleDeathAnimationEnd = useCallback(() => {
@@ -1019,9 +1028,20 @@ export function CombatScreen() {
   const handleCardDragEnd = useCallback((cardInstanceId: string, x: number, y: number, dragDistance: number) => {
     // 공격 중이면 카드 사용 불가
     if (isAttacking) {
+      attackClickCountRef.current++;
+      // 5번 이상 클릭 시 끝나지 않은 공격 모션 강제 종료
+      if (attackClickCountRef.current >= 5) {
+        pendingAttackRef.current = null;
+        setPlayerAnimation('idle');
+        setAttackTargetPos(null);
+        setIsAttacking(false);
+        attackClickCountRef.current = 0;
+      }
       selectCard(null);
       return;
     }
+    // 공격 시작 시 카운터 리셋
+    attackClickCountRef.current = 0;
 
     const card = hand.find(c => c.instanceId === cardInstanceId);
     if (!card || card.cost > energy) {
@@ -1129,7 +1149,7 @@ export function CombatScreen() {
               const newEffectId = ++effectIdRef.current;
               setSwordSlashEffects(prev => [...prev, {
                 id: newEffectId,
-                x: targetRect.left - 20,  // 적 왼쪽 (플레이어가 이동한 위치)
+                x: targetRect.left,  // 적 왼쪽 (플레이어가 이동한 위치)
                 y: targetRect.top + targetRect.height / 2 - 35
               }]);
             }
@@ -1744,8 +1764,19 @@ export function CombatScreen() {
                     const hitIdx = nextHit;
                     // 바로 attack_combo로 전환 (달리기 없이 공격 모션만)
                     setPlayerAnimation('attack_combo');
-                    // 데미지 팝업, 피격 효과, 실제 데미지 적용
+                    // 데미지 팝업, 피격 효과, 실제 데미지 적용 + 슬래시 이펙트
                     setTimeout(() => {
+                      // 슬래시 이펙트 추가
+                      const targetEl = enemyRefs.current.get(hitData.targetId);
+                      if (targetEl) {
+                        const targetRect = targetEl.getBoundingClientRect();
+                        const newEffectId = ++effectIdRef.current;
+                        setSwordSlashEffects(prev => [...prev, {
+                          id: newEffectId,
+                          x: targetRect.left,
+                          y: targetRect.top + targetRect.height / 2 - 35
+                        }]);
+                      }
                       triggerEnemyHit(hitData.targetId);
                       showDamagePopup(hitData.targetId, hitData.baseValue, 'damage', hitData.modifier, hitIdx);
                       dealDamageToEnemy(hitData.targetId, hitData.actualValue);
