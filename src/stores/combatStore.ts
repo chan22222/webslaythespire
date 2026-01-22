@@ -748,6 +748,9 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
           break;
         }
         case 'DAMAGE_PER_LOST_HP': {
+          // skipDamage가 true이면 데미지 처리 건너뛰기 (이미 애니메이션에서 처리됨)
+          if (skipDamage) break;
+
           // 사선에서: 잃은 HP 기반 피해
           const gameState = useGameStore.getState();
           const lostHp = gameState.player.maxHp - gameState.player.currentHp;
@@ -1047,6 +1050,7 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
             damageDealt: remainingDamage, // 실제로 HP에 들어간 데미지
             heal: (amount: number) => {
               useGameStore.getState().healPlayer(amount);
+              get().addDamagePopup(amount, 'heal', 0, 0, 'player');
               get().addToCombatLog(`흡혈! HP ${amount} 회복!`);
             },
           };

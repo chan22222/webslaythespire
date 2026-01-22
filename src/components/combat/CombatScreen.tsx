@@ -1044,8 +1044,12 @@ export function CombatScreen() {
 
       if (targetEnemyId) {
         const confirmedTargetId = targetEnemyId; // TypeScript를 위한 string 타입 확정
-        // 모든 DAMAGE 효과 찾기 (쌍둥이타격 등 다중 공격)
-        const damageEffects = card.effects.filter(e => e.type === 'DAMAGE' && e.target === 'SINGLE');
+        // 모든 공격 효과 찾기 (DAMAGE, DAMAGE_PER_LOST_HP)
+        // HALVE_ENEMY_HP는 방어도/배수 무시하므로 playCard에서 별도 처리
+        const damageEffects = card.effects.filter(e =>
+          (e.type === 'DAMAGE' && e.target === 'SINGLE') ||
+          (e.type === 'DAMAGE_PER_LOST_HP' && e.target === 'SINGLE')
+        );
         if (damageEffects.length > 0) {
           // 타겟 위치 저장
           const targetEl = enemyRefs.current.get(confirmedTargetId);
@@ -1056,11 +1060,23 @@ export function CombatScreen() {
           // 각 타격별 정보 저장 (팝업용 기본값 + 실제 데미지용 힘 포함값)
           const strength = playerStatuses.find(s => s.type === 'STRENGTH')?.stacks || 0;
           const hits = damageEffects.map(effect => {
+            let baseValue = effect.value;
+            let actualValue = effect.value + strength;
+
+            // DAMAGE_PER_LOST_HP: 잃은 HP 기반 피해
+            if (effect.type === 'DAMAGE_PER_LOST_HP') {
+              const gameState = useGameStore.getState();
+              const lostHp = gameState.player.maxHp - gameState.player.currentHp;
+              const ratio = effect.ratio || 1;
+              baseValue = Math.floor((lostHp / ratio) * effect.value);
+              actualValue = baseValue + strength;
+            }
+
             return {
               targetId: confirmedTargetId,
-              baseValue: effect.value,  // 팝업 표시용
-              actualValue: effect.value + strength,  // 실제 데미지용
-              modifier: calculateDamageModifier(effect.value, confirmedTargetId)
+              baseValue,  // 팝업 표시용
+              actualValue,  // 실제 데미지용
+              modifier: calculateDamageModifier(baseValue, confirmedTargetId)
             };
           });
           // 공격 대기 상태로 저장
