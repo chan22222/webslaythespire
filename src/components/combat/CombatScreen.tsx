@@ -1030,8 +1030,8 @@ export function CombatScreen() {
     // 공격 중이면 카드 사용 불가
     if (isAttacking) {
       attackClickCountRef.current++;
-      // 5번 이상 클릭 시 끝나지 않은 공격 모션 강제 종료
-      if (attackClickCountRef.current >= 5) {
+      // 2번 이상 클릭 시 끝나지 않은 공격 모션 강제 종료
+      if (attackClickCountRef.current >= 2) {
         pendingAttackRef.current = null;
         setPlayerAnimation('idle');
         setAttackTargetPos(null);

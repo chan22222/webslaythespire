@@ -23,6 +23,7 @@ export function MapScreen() {
   const { player, map, moveToNode, getAvailableNodes } = useGameStore();
   const availableNodes = getAvailableNodes();
   const [showDeck, setShowDeck] = useState(false);
+  const [showRelics, setShowRelics] = useState(false);
   const [viewOffset, setViewOffset] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -480,76 +481,132 @@ export function MapScreen() {
 
           {/* Deck & Relics */}
           <div className="map-hud-right flex items-center gap-2">
-            <div className="hidden md:flex items-center gap-0">
-              {player.relics.map(relic => (
-                <div
-                  key={relic.id}
-                  className="relative cursor-help group"
-                >
-                  {relic.icon ? (
-                    <img
-                      src={relic.icon}
-                      alt={relic.name}
-                      className="w-24 h-24 object-contain transition-all duration-150 group-hover:scale-110 group-hover:drop-shadow-[0_0_10px_rgba(212,168,75,0.9)]"
-                      style={{ imageRendering: 'auto' }}
-                    />
-                  ) : (
-                    <span
-                      className="text-sm font-bold"
-                      style={{
-                        fontFamily: '"NeoDunggeunmo", cursive',
-                        color: 'var(--gold)',
-                      }}
-                    >
-                      {relic.name.charAt(0)}
-                    </span>
-                  )}
-                  {/* 툴팁 */}
+            {/* 유물 표시 - 3개 이하면 개별 표시, 4개 이상이면 겹쳐서 표시 */}
+            <div className="hidden md:flex items-center">
+              {player.relics.length <= 3 ? (
+                // 3개 이하: 개별 표시
+                player.relics.map(relic => (
                   <div
-                    className="absolute z-50 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150"
-                    style={{
-                      left: '50%',
-                      top: 'calc(100% + 12px)',
-                      transform: 'translateX(-50%)',
-                      background: 'rgba(10, 8, 5, 0.95)',
-                      padding: '12px 18px',
-                      border: '2px solid var(--gold-dark)',
-                      boxShadow: '0 0 16px rgba(0,0,0,0.9), 0 0 6px var(--gold-glow)',
-                      minWidth: '280px',
-                    }}
+                    key={relic.id}
+                    className="relative cursor-help group"
                   >
+                    {relic.icon ? (
+                      <img
+                        src={relic.icon}
+                        alt={relic.name}
+                        className="w-24 h-24 object-contain transition-all duration-150 group-hover:scale-110 group-hover:drop-shadow-[0_0_10px_rgba(212,168,75,0.9)]"
+                        style={{ imageRendering: 'auto' }}
+                      />
+                    ) : (
+                      <span
+                        className="text-sm font-bold"
+                        style={{
+                          fontFamily: '"NeoDunggeunmo", cursive',
+                          color: 'var(--gold)',
+                        }}
+                      >
+                        {relic.name.charAt(0)}
+                      </span>
+                    )}
+                    {/* 툴팁 */}
                     <div
-                      className="absolute left-1/2 -top-[8px]"
+                      className="absolute z-50 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150"
                       style={{
+                        left: '50%',
+                        top: 'calc(100% + 12px)',
                         transform: 'translateX(-50%)',
-                        width: 0,
-                        height: 0,
-                        borderLeft: '8px solid transparent',
-                        borderRight: '8px solid transparent',
-                        borderBottom: '8px solid var(--gold-dark)',
-                      }}
-                    />
-                    <div
-                      className="text-sm font-bold"
-                      style={{
-                        fontFamily: '"NeoDunggeunmo", cursive',
-                        color: 'var(--gold)',
+                        background: 'rgba(10, 8, 5, 0.95)',
+                        padding: '12px 18px',
+                        border: '2px solid var(--gold-dark)',
+                        boxShadow: '0 0 16px rgba(0,0,0,0.9), 0 0 6px var(--gold-glow)',
+                        minWidth: '280px',
                       }}
                     >
-                      {relic.name}
-                    </div>
-                    <div
-                      className="text-sm mt-1 whitespace-normal max-w-80"
-                      style={{
-                        fontFamily: '"NeoDunggeunmo", cursive',
-                        color: 'rgba(255, 255, 255, 0.7)',
-                      }}
-                    >
-                      {relic.description}
+                      <div
+                        className="absolute left-1/2 -top-[8px]"
+                        style={{
+                          transform: 'translateX(-50%)',
+                          width: 0,
+                          height: 0,
+                          borderLeft: '8px solid transparent',
+                          borderRight: '8px solid transparent',
+                          borderBottom: '8px solid var(--gold-dark)',
+                        }}
+                      />
+                      <div
+                        className="text-sm font-bold"
+                        style={{
+                          fontFamily: '"NeoDunggeunmo", cursive',
+                          color: 'var(--gold)',
+                        }}
+                      >
+                        {relic.name}
+                      </div>
+                      <div
+                        className="text-sm mt-1 whitespace-normal max-w-80"
+                        style={{
+                          fontFamily: '"NeoDunggeunmo", cursive',
+                          color: 'rgba(255, 255, 255, 0.7)',
+                        }}
+                      >
+                        {relic.description}
+                      </div>
                     </div>
                   </div>
+                ))
+              ) : (
+                // 4개 이상: 겹쳐서 표시 + 클릭 시 모달
+                <div
+                  className="relative flex items-center cursor-pointer group"
+                  onClick={() => setShowRelics(true)}
+                >
+                  {player.relics.slice(0, 3).map((relic, index) => (
+                    <div
+                      key={relic.id}
+                      className="relative transition-all duration-150 group-hover:scale-105"
+                      style={{
+                        marginLeft: index === 0 ? 0 : -48,
+                        zIndex: 3 - index,
+                      }}
+                    >
+                      {relic.icon ? (
+                        <img
+                          src={relic.icon}
+                          alt={relic.name}
+                          className="w-24 h-24 object-contain drop-shadow-[0_0_4px_rgba(0,0,0,0.8)]"
+                          style={{ imageRendering: 'auto' }}
+                        />
+                      ) : (
+                        <span className="text-sm font-bold" style={{ color: 'var(--gold)' }}>
+                          {relic.name.charAt(0)}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                  {/* 추가 유물 개수 표시 */}
+                  <div
+                    className="absolute -right-2 -bottom-1 flex items-center justify-center rounded-full transition-all duration-150 group-hover:scale-110"
+                    style={{
+                      width: 28,
+                      height: 28,
+                      background: 'linear-gradient(135deg, var(--gold) 0%, var(--gold-dark) 100%)',
+                      border: '2px solid var(--gold-light)',
+                      boxShadow: '0 0 8px var(--gold-glow)',
+                      zIndex: 10,
+                    }}
+                  >
+                    <span
+                      className="text-xs font-bold"
+                      style={{
+                        fontFamily: '"Press Start 2P", monospace',
+                        color: '#1a1a1a',
+                      }}
+                    >
+                      {player.relics.length}
+                    </span>
+                  </div>
                 </div>
-              ))}
+              )}
             </div>
 
             <div className="relative group">
@@ -765,6 +822,110 @@ export function MapScreen() {
               <div className="flex flex-wrap justify-center gap-4">
                 {player.deck.map((card, index) => (
                   <Card key={card.instanceId || index} card={card} size="md" />
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 유물 모달 */}
+      {showRelics && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          style={{ background: 'rgba(0, 0, 0, 0.9)' }}
+          onClick={() => setShowRelics(false)}
+        >
+          <div
+            className="w-[94%] max-w-3xl max-h-[88vh] overflow-hidden flex flex-col"
+            style={{
+              background: 'linear-gradient(180deg, rgba(20, 16, 10, 0.98) 0%, rgba(10, 8, 5, 0.99) 100%)',
+              border: '3px solid var(--gold-dark)',
+              boxShadow: '0 0 50px rgba(0,0,0,0.9), 0 0 10px var(--gold-glow)',
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div
+              className="flex justify-between items-center px-6 py-4"
+              style={{ borderBottom: '2px solid rgba(212, 168, 75, 0.3)' }}
+            >
+              <div className="flex items-center gap-4">
+                <span
+                  className="text-xl font-bold"
+                  style={{
+                    fontFamily: '"NeoDunggeunmo", cursive',
+                    color: 'var(--gold)',
+                  }}
+                >
+                  보유 유물
+                </span>
+                <span
+                  className="text-sm"
+                  style={{
+                    fontFamily: '"Press Start 2P", monospace',
+                    color: 'var(--gold-dark)',
+                  }}
+                >
+                  {player.relics.length}개
+                </span>
+              </div>
+
+              <button
+                onClick={() => setShowRelics(false)}
+                className="w-10 h-10 flex items-center justify-center transition-all hover:brightness-125"
+                style={{ color: 'var(--gold)' }}
+              >
+                <span style={{ fontFamily: '"Press Start 2P", monospace', fontSize: '16px' }}>×</span>
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                {player.relics.map(relic => (
+                  <div
+                    key={relic.id}
+                    className="flex flex-col items-center p-4 rounded-lg transition-all hover:scale-105"
+                    style={{
+                      background: 'rgba(212, 168, 75, 0.1)',
+                      border: '1px solid rgba(212, 168, 75, 0.3)',
+                    }}
+                  >
+                    {relic.icon ? (
+                      <img
+                        src={relic.icon}
+                        alt={relic.name}
+                        className="w-20 h-20 object-contain mb-2"
+                        style={{ imageRendering: 'auto' }}
+                      />
+                    ) : (
+                      <div
+                        className="w-20 h-20 flex items-center justify-center mb-2"
+                        style={{ background: 'rgba(212, 168, 75, 0.2)', borderRadius: '8px' }}
+                      >
+                        <span className="text-2xl font-bold" style={{ color: 'var(--gold)' }}>
+                          {relic.name.charAt(0)}
+                        </span>
+                      </div>
+                    )}
+                    <div
+                      className="text-sm font-bold text-center mb-1"
+                      style={{
+                        fontFamily: '"NeoDunggeunmo", cursive',
+                        color: 'var(--gold)',
+                      }}
+                    >
+                      {relic.name}
+                    </div>
+                    <div
+                      className="text-xs text-center"
+                      style={{
+                        fontFamily: '"NeoDunggeunmo", cursive',
+                        color: 'rgba(255, 255, 255, 0.7)',
+                      }}
+                    >
+                      {relic.description}
+                    </div>
+                  </div>
                 ))}
               </div>
             </div>

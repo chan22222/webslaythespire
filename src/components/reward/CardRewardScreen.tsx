@@ -7,9 +7,12 @@ import { generateCardRewards } from '../../data/cards';
 import { randomInt } from '../../utils/shuffle';
 import { playButtonHover, playButtonClick, playCardBuy } from '../../utils/sound';
 
+const MAX_DECK_SIZE = 30;
+
 export function CardRewardScreen() {
-  const { setPhase, modifyGold, addCardToDeck, getCurrentNode, addNextFloorNode } = useGameStore();
+  const { player, setPhase, modifyGold, addCardToDeck, getCurrentNode, addNextFloorNode } = useGameStore();
   const { resetCombat, enemies } = useCombatStore();
+  const isDeckFull = player.deck.length >= MAX_DECK_SIZE;
   const [cardRewards, setCardRewards] = useState<CardType[]>([]);
   const [goldReward, setGoldReward] = useState(0);
   const [bonusGold, setBonusGold] = useState(0);
@@ -45,6 +48,9 @@ export function CardRewardScreen() {
   };
 
   const handleSelectCard = (index: number) => {
+    // 덱이 가득 찬 경우 선택 불가
+    if (isDeckFull) return;
+
     // 같은 카드 클릭 시 선택 해제
     if (selectedCardIndex === index) {
       setSelectedCardIndex(null);
@@ -166,10 +172,12 @@ export function CardRewardScreen() {
 
         {/* 카드 선택 영역 */}
         <div className="reward-cards">
-          <div className="reward-cards-title font-title text-[var(--gold)] text-center">
-            {selectedCardIndex !== null
-              ? `"${cardRewards[selectedCardIndex].name}" 선택`
-              : '카드를 선택해주세요.'}
+          <div className="reward-cards-title font-title text-center" style={{ color: isDeckFull ? 'var(--attack-light)' : 'var(--gold)' }}>
+            {isDeckFull
+              ? <>카드는 최대 30장까지만 보유할 수 있습니다.<br />상점에서 카드를 제거해주세요.</>
+              : selectedCardIndex !== null
+                ? `"${cardRewards[selectedCardIndex].name}" 선택`
+                : '카드를 선택해주세요.'}
           </div>
 
           <div className="reward-cards-container">
@@ -179,9 +187,9 @@ export function CardRewardScreen() {
                 <div
                   key={index}
                   onClick={() => handleSelectCard(index)}
-                  className={`reward-card-item transition-all duration-200 cursor-pointer ${!isSelected ? 'hover:-translate-y-1' : ''}`}
+                  className={`reward-card-item transition-all duration-200 ${isDeckFull ? 'cursor-not-allowed' : 'cursor-pointer'} ${!isSelected && !isDeckFull ? 'hover:-translate-y-1' : ''}`}
                   style={{
-                    opacity: selectedCardIndex !== null && !isSelected ? 0.4 : 1,
+                    opacity: isDeckFull ? 0.5 : (selectedCardIndex !== null && !isSelected ? 0.4 : 1),
                   }}
                 >
                   <div className="relative">

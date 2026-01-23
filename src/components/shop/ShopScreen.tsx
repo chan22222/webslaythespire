@@ -15,6 +15,8 @@ interface ShopItem {
   sold: boolean;
 }
 
+const MAX_DECK_SIZE = 30;
+
 // 유물 희귀도에 따른 글로우 색상
 const getRelicGlowColor = (rarity: string) => {
   switch (rarity) {
@@ -147,9 +149,13 @@ export function ShopScreen() {
     setShopItems(items);
   }, []);
 
+  const isDeckFull = player.deck.length >= MAX_DECK_SIZE;
+
   const handleSelectItem = (index: number) => {
     const item = shopItems[index];
     if (item.sold || item.type === 'remove') return;
+    // 덱이 가득 찬 경우 카드 선택 불가
+    if (item.type === 'card' && isDeckFull) return;
     // 토글: 같은 아이템 클릭 시 선택 해제
     setSelectedIndex(selectedIndex === index ? null : index);
   };
@@ -159,6 +165,8 @@ export function ShopScreen() {
     if (item.sold || player.gold < item.price) return;
 
     if (item.type === 'card') {
+      // 덱이 가득 찬 경우 카드 구매 불가
+      if (isDeckFull) return;
       modifyGold(-item.price);
       addCardToDeck(item.item as CardType);
     } else if (item.type === 'relic') {
@@ -281,41 +289,57 @@ export function ShopScreen() {
 
               if (item.type === 'card') {
                 const isSelected = selectedIndex === globalIndex;
+                const canBuyCard = !item.sold && player.gold >= item.price && !isDeckFull;
                 return (
-                  <div key={idx} className="flex flex-col items-center shop-item flex-shrink-0">
+                  <div key={idx} className="flex flex-col items-center shop-item flex-shrink-0 relative">
                     <div
                       onClick={() => handleSelectItem(globalIndex)}
-                      onMouseEnter={() => !item.sold && player.gold >= item.price && playButtonHover()}
+                      onMouseEnter={() => canBuyCard && playButtonHover()}
                       className={`
                         transition-all duration-300
-                        ${item.sold ? 'opacity-30 scale-95' : player.gold >= item.price ? 'cursor-pointer hover:scale-105 hover:-translate-y-2' : 'opacity-50'}
+                        ${item.sold ? 'opacity-30 scale-95' : canBuyCard ? 'cursor-pointer hover:scale-105 hover:-translate-y-2' : 'opacity-50 cursor-not-allowed'}
                         ${isSelected ? 'scale-105 -translate-y-2' : ''}
                       `}
                     >
                       <Card
                         card={createCardInstance(item.item as CardType)}
-                        isPlayable={!item.sold && player.gold >= item.price}
+                        isPlayable={canBuyCard}
                         size="md"
                       />
                     </div>
+                    {/* 덱 가득 참 메시지 */}
+                    {isDeckFull && !item.sold && (
+                      <div
+                        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center px-2 py-1 rounded"
+                        style={{
+                          background: 'rgba(0, 0, 0, 0.85)',
+                          border: '1px solid var(--attack)',
+                          whiteSpace: 'nowrap',
+                          zIndex: 10,
+                        }}
+                      >
+                        <span className="text-xs font-title text-[var(--attack-light)]">덱 30장</span>
+                      </div>
+                    )}
                     <div
                       onMouseEnter={() => isSelected && playButtonHover()}
                       onClick={() => { if (isSelected) { playCardBuy(); handleBuyItem(globalIndex); } }}
                       className={`shop-price-tag flex items-center rounded-lg font-title transition-all duration-200 ${
                         item.sold ? 'text-gray-500' :
+                        isDeckFull ? 'text-gray-500' :
                         isSelected ? 'text-white cursor-pointer hover:brightness-110' :
                         player.gold >= item.price ? 'text-[var(--gold-light)]' : 'text-[var(--attack-light)]'
                       }`}
                       style={{
-                        background: isSelected
+                        background: isSelected && !isDeckFull
                           ? 'linear-gradient(180deg, #22c55e 0%, #166534 100%)'
                           : 'linear-gradient(180deg, var(--bg-medium) 0%, var(--bg-dark) 100%)',
-                        border: `2px solid ${item.sold ? '#444' : isSelected ? '#4ade80' : player.gold >= item.price ? 'var(--gold-dark)' : 'var(--attack-dark)'}`,
-                        boxShadow: isSelected ? '0 0 12px rgba(74, 222, 128, 0.5)' : 'none',
+                        border: `2px solid ${item.sold || isDeckFull ? '#444' : isSelected ? '#4ade80' : player.gold >= item.price ? 'var(--gold-dark)' : 'var(--attack-dark)'}`,
+                        boxShadow: isSelected && !isDeckFull ? '0 0 12px rgba(74, 222, 128, 0.5)' : 'none',
                       }}
                     >
-                      <span>{isSelected ? '✓' : '💰'}</span>
-                      <span>{item.sold ? '판매됨' : isSelected ? '구매' : item.price}</span>
+                      <span>{isSelected && !isDeckFull ? '✓' : '💰'}</span>
+                      <span>{item.sold ? '판매됨' : isDeckFull ? '덱 초과' : isSelected ? '구매' : item.price}</span>
                     </div>
                   </div>
                 );
