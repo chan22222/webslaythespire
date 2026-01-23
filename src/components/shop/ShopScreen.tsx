@@ -6,7 +6,7 @@ import { Relic } from '../../types/relic';
 import { generateCardRewards } from '../../data/cards';
 import { generateRelicReward } from '../../data/relics';
 import { randomInt } from '../../utils/shuffle';
-import { playButtonHover, playButtonClick } from '../../utils/sound';
+import { playButtonHover, playButtonClick, playCardBuy } from '../../utils/sound';
 
 interface ShopItem {
   type: 'card' | 'relic' | 'remove';
@@ -285,6 +285,7 @@ export function ShopScreen() {
                   <div key={idx} className="flex flex-col items-center shop-item flex-shrink-0">
                     <div
                       onClick={() => handleSelectItem(globalIndex)}
+                      onMouseEnter={() => !item.sold && player.gold >= item.price && playButtonHover()}
                       className={`
                         transition-all duration-300
                         ${item.sold ? 'opacity-30 scale-95' : player.gold >= item.price ? 'cursor-pointer hover:scale-105 hover:-translate-y-2' : 'opacity-50'}
@@ -299,7 +300,7 @@ export function ShopScreen() {
                     </div>
                     <div
                       onMouseEnter={() => isSelected && playButtonHover()}
-                      onClick={() => { if (isSelected) { playButtonClick(); handleBuyItem(globalIndex); } }}
+                      onClick={() => { if (isSelected) { playCardBuy(); handleBuyItem(globalIndex); } }}
                       className={`shop-price-tag flex items-center rounded-lg font-title transition-all duration-200 ${
                         item.sold ? 'text-gray-500' :
                         isSelected ? 'text-white cursor-pointer hover:brightness-110' :
@@ -326,6 +327,7 @@ export function ShopScreen() {
                   <div key={idx} className="flex flex-col items-center shop-item flex-shrink-0">
                     <div
                       onClick={() => handleSelectItem(globalIndex)}
+                      onMouseEnter={() => !item.sold && player.gold >= item.price && playButtonHover()}
                       className={`
                         shop-relic-card flex flex-col items-center transition-all duration-300 overflow-hidden relative
                         ${item.sold ? 'opacity-30 scale-95' : player.gold >= item.price ? 'cursor-pointer hover:scale-105 hover:-translate-y-2' : 'opacity-50'}
@@ -372,7 +374,7 @@ export function ShopScreen() {
                     </div>
                     <div
                       onMouseEnter={() => isSelected && playButtonHover()}
-                      onClick={() => { if (isSelected) { playButtonClick(); handleBuyItem(globalIndex); } }}
+                      onClick={() => { if (isSelected) { playCardBuy(); handleBuyItem(globalIndex); } }}
                       className={`shop-price-tag flex items-center rounded-lg font-title transition-all duration-200 ${
                         item.sold ? 'text-gray-500' :
                         isSelected ? 'text-white cursor-pointer hover:brightness-110' :
@@ -488,13 +490,14 @@ export function ShopScreen() {
                   >
                     <div
                       onClick={() => handleSelectRemoveCard(card.instanceId)}
+                      onMouseEnter={playButtonHover}
                       className={`cursor-pointer transition-all duration-200 ${isSelected ? 'scale-110 -translate-y-1' : 'hover:scale-105'}`}
                     >
                       <Card card={card} size="sm" />
                     </div>
                     <button
                       onMouseEnter={() => isSelected && player.gold >= 50 && playButtonHover()}
-                      onClick={() => { if (isSelected && player.gold >= 50) { playButtonClick(); handleConfirmRemoveCard(card.instanceId); } }}
+                      onClick={() => { if (isSelected && player.gold >= 50) { playCardBuy(); handleConfirmRemoveCard(card.instanceId); } }}
                       disabled={!isSelected || player.gold < 50}
                       className={`px-2 py-1 rounded font-title text-xs transition-all duration-200 ${
                         isSelected && player.gold >= 50

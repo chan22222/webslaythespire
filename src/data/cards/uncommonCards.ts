@@ -81,7 +81,7 @@ export const FATAL_WOUND: Card = {
   rarity: 'UNCOMMON',
   cost: 2,
   image: '/cards/effect/fatal_wound.png',
-  description: '13 피해를 줍니다. 약화 1과 취약 1을 부여합니다.',
+  description: '13 피해를 줍니다. 무기손상 1과 장비파괴 1을 부여합니다.',
   effects: [
     { type: 'DAMAGE', value: 13, target: 'SINGLE' },
     { type: 'APPLY_STATUS', value: 1, target: 'SINGLE', status: 'WEAK' },
@@ -90,7 +90,7 @@ export const FATAL_WOUND: Card = {
   upgraded: false,
   upgradeEffect: {
     name: '치명상+',
-    description: '13 피해를 줍니다. 약화 2와 취약 2를 부여합니다.',
+    description: '13 피해를 줍니다. 무기손상 2와 장비파괴 2를 부여합니다.',
     effects: [
       { type: 'DAMAGE', value: 13, target: 'SINGLE' },
       { type: 'APPLY_STATUS', value: 2, target: 'SINGLE', status: 'WEAK' },

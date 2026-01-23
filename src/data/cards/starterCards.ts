@@ -41,7 +41,7 @@ export const BASH: Card = {
   rarity: 'BASIC',
   cost: 2,
   image: '/cards/effect/bash.png',
-  description: '8 피해를 주고 취약 1을 부여합니다.',
+  description: '8 피해를 주고 장비파괴 1을 부여합니다.',
   effects: [
     { type: 'DAMAGE', value: 8, target: 'SINGLE' },
     { type: 'APPLY_STATUS', value: 1, target: 'SINGLE', status: 'VULNERABLE' },
@@ -49,7 +49,7 @@ export const BASH: Card = {
   upgraded: false,
   upgradeEffect: {
     name: '갑옷 파괴+',
-    description: '10 피해를 주고 취약 2를 부여합니다.',
+    description: '10 피해를 주고 장비파괴 2를 부여합니다.',
     effects: [
       { type: 'DAMAGE', value: 10, target: 'SINGLE' },
       { type: 'APPLY_STATUS', value: 2, target: 'SINGLE', status: 'VULNERABLE' },

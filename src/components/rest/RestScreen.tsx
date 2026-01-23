@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useGameStore } from '../../stores/gameStore';
 import { Card } from '../combat/Card';
+import { playButtonHover, playButtonClick, playCardBuy } from '../../utils/sound';
 
 export function RestScreen() {
   const { player, setPhase, healPlayer, upgradeCard } = useGameStore();
@@ -24,14 +25,14 @@ export function RestScreen() {
   };
 
   const handleCardClick = (cardInstanceId: string) => {
-    if (selectedCardId === cardInstanceId) {
-      // 두 번째 클릭 - 선택 확정
-      upgradeCard(cardInstanceId);
+    setSelectedCardId(cardInstanceId);
+  };
+
+  const handleConfirmUpgrade = () => {
+    if (selectedCardId) {
+      upgradeCard(selectedCardId);
       setShowUpgradeModal(false);
       setActionTaken(true);
-    } else {
-      // 첫 번째 클릭 - 선택
-      setSelectedCardId(cardInstanceId);
     }
   };
 
@@ -79,7 +80,8 @@ export function RestScreen() {
         <div className="rest-options flex relative z-10">
           {/* 휴식 옵션 */}
           <button
-            onClick={handleRest}
+            onClick={() => { playCardBuy(); handleRest(); }}
+            onMouseEnter={playButtonHover}
             className="rest-option-btn group flex flex-col items-center rounded-xl transition-all duration-300 hover:scale-105"
             style={{
               background: 'linear-gradient(135deg, #2a1515 0%, #1a0a0a 100%)',
@@ -99,7 +101,8 @@ export function RestScreen() {
 
           {/* 대장간 옵션 */}
           <button
-            onClick={handleUpgrade}
+            onClick={() => { if (upgradableCards.length > 0) { playButtonClick(); handleUpgrade(); } }}
+            onMouseEnter={() => { if (upgradableCards.length > 0) playButtonHover(); }}
             disabled={upgradableCards.length === 0}
             className={`
               rest-option-btn group flex flex-col items-center rounded-xl transition-all duration-300
@@ -132,7 +135,8 @@ export function RestScreen() {
             휴식 완료!
           </div>
           <button
-            onClick={handleProceed}
+            onClick={() => { playButtonClick(); handleProceed(); }}
+            onMouseEnter={playButtonHover}
             className="rest-proceed-btn rounded-xl font-title text-white transition-all hover:scale-105"
             style={{
               background: 'linear-gradient(180deg, #22c55e 0%, #166534 100%)',
@@ -160,7 +164,7 @@ export function RestScreen() {
               업그레이드할 카드 선택
             </h2>
             <p className="rest-upgrade-hint text-center text-gray-400">
-              {selectedCardId ? '한 번 더 클릭하여 확정' : '카드를 선택하세요'}
+              {selectedCardId ? '선택 버튼을 눌러 확정하세요' : '카드를 선택하세요'}
             </p>
 
             <div className="rest-upgrade-grid">
@@ -169,20 +173,28 @@ export function RestScreen() {
                 return (
                   <div
                     key={card.instanceId}
-                    onClick={() => handleCardClick(card.instanceId)}
-                    className="cursor-pointer transition-all duration-200 relative"
+                    onClick={() => { playButtonClick(); handleCardClick(card.instanceId); }}
+                    onMouseEnter={playButtonHover}
+                    className="cursor-pointer transition-all duration-200 relative inline-flex"
                     style={{
                       transform: isSelected ? 'scale(1.05)' : 'scale(1)',
                       opacity: selectedCardId && !isSelected ? 0.5 : 1,
+                      width: 100,
+                      height: 139,
                     }}
                   >
                     <Card card={card} size="sm" />
                     {isSelected && (
                       <div
-                        className="absolute inset-0 pointer-events-none rounded-lg"
+                        className="absolute pointer-events-none rounded-lg"
                         style={{
+                          top: 0,
+                          left: 0,
+                          width: 100,
+                          height: 139,
                           border: '3px solid #4ade80',
                           boxShadow: '0 0 20px rgba(74, 222, 128, 0.6)',
+                          zIndex: 10,
                         }}
                       />
                     )}
@@ -191,16 +203,34 @@ export function RestScreen() {
               })}
             </div>
 
-            <button
-              onClick={() => setShowUpgradeModal(false)}
-              className="rest-upgrade-cancel rounded-lg text-gray-400 hover:text-white transition-colors block mx-auto"
-              style={{
-                background: 'linear-gradient(180deg, var(--bg-light) 0%, var(--bg-dark) 100%)',
-                border: '1px solid var(--gold-dark)',
-              }}
-            >
-              취소
-            </button>
+            <div className="flex justify-center gap-4 mt-4">
+              <button
+                onClick={() => { if (selectedCardId) { playCardBuy(); handleConfirmUpgrade(); } }}
+                onMouseEnter={() => { if (selectedCardId) playButtonHover(); }}
+                disabled={!selectedCardId}
+                className={`rest-upgrade-cancel rounded-lg transition-colors ${selectedCardId ? 'text-white hover:scale-105' : 'text-gray-600 cursor-not-allowed'}`}
+                style={{
+                  background: selectedCardId
+                    ? 'linear-gradient(180deg, #22c55e 0%, #166534 100%)'
+                    : 'linear-gradient(180deg, var(--bg-light) 0%, var(--bg-dark) 100%)',
+                  border: selectedCardId ? '2px solid #4ade80' : '1px solid #444',
+                  boxShadow: selectedCardId ? '0 0 15px rgba(74, 222, 128, 0.4)' : 'none',
+                }}
+              >
+                선택
+              </button>
+              <button
+                onClick={() => { playButtonClick(); setShowUpgradeModal(false); }}
+                onMouseEnter={playButtonHover}
+                className="rest-upgrade-cancel rounded-lg text-gray-400 hover:text-white transition-colors"
+                style={{
+                  background: 'linear-gradient(180deg, var(--bg-light) 0%, var(--bg-dark) 100%)',
+                  border: '1px solid var(--gold-dark)',
+                }}
+              >
+                취소
+              </button>
+            </div>
           </div>
         </div>
       )}

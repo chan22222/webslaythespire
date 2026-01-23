@@ -705,9 +705,9 @@ export function Enemy({ enemy, isTargetable = false, incomingDamage = 0, ignoreB
         if (debuffType === 'POISON') {
           return `중독 ${debuffStacks}을 부여합니다. (매 턴 피해)`;
         } else if (debuffType === 'WEAK') {
-          return `약화 ${debuffStacks}을 부여합니다. (피해량 25% 감소)`;
+          return `무기손상 ${debuffStacks}을 부여합니다. (피해량 25% 감소)`;
         } else if (debuffType === 'VULNERABLE') {
-          return `취약 ${debuffStacks}을 부여합니다. (받는 피해 50% 증가)`;
+          return `장비파괴 ${debuffStacks}을 부여합니다. (받는 피해 50% 증가)`;
         }
         return `디버프를 부여합니다.`;
       default:

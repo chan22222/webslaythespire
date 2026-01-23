@@ -267,13 +267,13 @@ export const MAGIC_RING: Relic = {
 export const MYSTIC_ORB: Relic = {
   id: 'mystic_orb',
   name: '신비한 구슬',
-  description: '전투 시작 시 모든 적에게 취약 1을 부여합니다.',
+  description: '전투 시작 시 모든 적에게 장비파괴 1을 부여합니다.',
   rarity: 'RARE',
   icon: '/sprites/item/신비한구슬.png',
   effects: [
     {
       trigger: 'ON_COMBAT_START',
-      description: '모든 적에게 취약 1',
+      description: '모든 적에게 장비파괴 1',
       execute: () => {
         // combatStore에서 처리
       },

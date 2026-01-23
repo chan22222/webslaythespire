@@ -5,7 +5,7 @@ import { Card } from '../combat/Card';
 import { Card as CardType, createCardInstance } from '../../types/card';
 import { generateCardRewards } from '../../data/cards';
 import { randomInt } from '../../utils/shuffle';
-import { playButtonHover, playButtonClick } from '../../utils/sound';
+import { playButtonHover, playButtonClick, playCardBuy } from '../../utils/sound';
 
 export function CardRewardScreen() {
   const { setPhase, modifyGold, addCardToDeck, getCurrentNode, addNextFloorNode } = useGameStore();
@@ -229,7 +229,7 @@ export function CardRewardScreen() {
         {/* 진행 버튼 */}
         <button
           onMouseEnter={() => canProceed && playButtonHover()}
-          onClick={() => { if (canProceed) { playButtonClick(); handleProceed(); } }}
+          onClick={() => { if (canProceed) { playCardBuy(); handleProceed(); } }}
           disabled={!canProceed}
           className={`
             reward-proceed-btn rounded-lg font-title transition-all duration-200

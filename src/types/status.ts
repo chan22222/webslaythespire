@@ -9,12 +9,12 @@ export interface Status {
 
 export const STATUS_INFO: Record<StatusType, { name: string; description: string; isDebuff: boolean }> = {
   VULNERABLE: {
-    name: '취약',
+    name: '장비파괴',
     description: '받는 피해가 50% 증가합니다.',
     isDebuff: true,
   },
   WEAK: {
-    name: '약화',
+    name: '무기손상',
     description: '주는 피해가 25% 감소합니다.',
     isDebuff: true,
   },

@@ -1000,14 +1000,14 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     const weak = playerStatuses.find(s => s.type === 'WEAK');
     if (weak && weak.stacks > 0) {
       damageMultiplier -= 0.25;
-      modifiers.push('약화-25%');
+      modifiers.push('무기손상-25%');
     }
 
     // 적 취약: +50% 데미지
     const vulnerable = enemy.statuses.find(s => s.type === 'VULNERABLE');
     if (vulnerable && vulnerable.stacks > 0) {
       damageMultiplier += 0.5;
-      modifiers.push('취약+50%');
+      modifiers.push('장비파괴+50%');
     }
 
     // 최종 데미지 계산 (버림 사용)
@@ -1084,7 +1084,7 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
         const attackerWeak = attacker.statuses.find(s => s.type === 'WEAK');
         if (attackerWeak && attackerWeak.stacks > 0) {
           damageMultiplier -= 0.25;
-          modifiers.push('약화-25%');
+          modifiers.push('무기손상-25%');
         }
       }
     }
@@ -1093,7 +1093,7 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     const vulnerable = playerStatuses.find(s => s.type === 'VULNERABLE');
     if (vulnerable && vulnerable.stacks > 0) {
       damageMultiplier += 0.5;
-      modifiers.push('취약+50%');
+      modifiers.push('장비파괴+50%');
     }
 
     // 최종 데미지 계산 (버림 사용)

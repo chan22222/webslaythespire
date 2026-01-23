@@ -99,7 +99,7 @@ export const NEUTRALIZE: Card = {
   rarity: 'COMMON',
   cost: 1,
   image: '/cards/effect/neutralize.png',
-  description: '10 피해를 주고 약화 2를 부여합니다.',
+  description: '10 피해를 주고 무기손상 2를 부여합니다.',
   effects: [
     { type: 'DAMAGE', value: 10, target: 'SINGLE' },
     { type: 'APPLY_STATUS', value: 2, target: 'SINGLE', status: 'WEAK' },
@@ -107,7 +107,7 @@ export const NEUTRALIZE: Card = {
   upgraded: false,
   upgradeEffect: {
     name: '무력화+',
-    description: '12 피해를 주고 약화 3을 부여합니다.',
+    description: '12 피해를 주고 무기손상 3을 부여합니다.',
     effects: [
       { type: 'DAMAGE', value: 12, target: 'SINGLE' },
       { type: 'APPLY_STATUS', value: 3, target: 'SINGLE', status: 'WEAK' },

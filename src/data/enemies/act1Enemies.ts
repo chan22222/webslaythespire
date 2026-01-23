@@ -78,7 +78,7 @@ export const FLYING_EYE: EnemyTemplate = {
   },
 };
 
-// 그린 플라잉아이 - 공격 → 약화 → 공격 패턴
+// 그린 플라잉아이 - 공격 → 무기손상 → 공격 패턴
 export const GREEN_FLYING_EYE: EnemyTemplate = {
   id: 'green_flying_eye',
   name: '그린 플라잉아이',
@@ -89,7 +89,7 @@ export const GREEN_FLYING_EYE: EnemyTemplate = {
     if (pattern === 1) {
       return { type: 'ATTACK', damage: 4 + Math.floor(Math.random() * 3) }; // 4-6
     } else if (pattern === 2) {
-      return { type: 'DEBUFF', statusType: 'WEAK', statusStacks: 1 }; // 약화 1
+      return { type: 'DEBUFF', statusType: 'WEAK', statusStacks: 1 }; // 무기손상 1
     }
     return { type: 'ATTACK', damage: 4 + Math.floor(Math.random() * 3) }; // 4-6
   },
@@ -173,7 +173,7 @@ export const GREMLIN_NOB: EnemyTemplate = {
   },
 };
 
-// 보스: 나이트본 - 공격 → 중독 5 → 취약 2 패턴 (3턴 주기)
+// 보스: 나이트본 - 공격 → 중독 5 → 장비파괴 2 패턴 (3턴 주기)
 export const SLIME_BOSS: EnemyTemplate = {
   id: 'slime_boss',
   name: '나이트본',
@@ -186,7 +186,7 @@ export const SLIME_BOSS: EnemyTemplate = {
     } else if (pattern === 2) {
       return { type: 'DEBUFF', statusType: 'POISON', statusStacks: 7 }; // 중독 7
     }
-    return { type: 'DEBUFF', statusType: 'VULNERABLE', statusStacks: 2 }; // 취약 2
+    return { type: 'DEBUFF', statusType: 'VULNERABLE', statusStacks: 2 }; // 장비파괴 2
   },
   executeIntent: (enemy: Enemy, dealDamageToPlayer: (damage: number) => void, applyStatusToPlayer: (status: Status) => void) => {
     if (enemy.intent.type === 'ATTACK') {
@@ -243,7 +243,7 @@ export const KKUCHU: EnemyTemplate = {
       return { type: 'BUFF', statusType: 'STRENGTH', statusStacks: 2 }; // 힘 +2
     }
     if (turn % 2 === 0) {
-      return { type: 'DEBUFF', statusType: 'WEAK', statusStacks: 1 }; // 약화 1
+      return { type: 'DEBUFF', statusType: 'WEAK', statusStacks: 1 }; // 무기손상 1
     }
     return { type: 'ATTACK', damage: 7 };
   },
