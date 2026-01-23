@@ -65,6 +65,8 @@ export function MapNode({ node, isAvailable, isCurrent, onClick }: MapNodeProps)
 
   // NEXT_FLOOR 노드가 흔들리는 중인지
   const isShaking = node.type === 'NEXT_FLOOR' && (nextFloorPhase === 'shake1' || nextFloorPhase === 'shake2');
+  // NEXT_FLOOR 노드는 reveal 상태일 때만 클릭 가능
+  const isNextFloorReady = node.type !== 'NEXT_FLOOR' || nextFloorPhase === 'reveal';
   const halfSize = config.size / 2;
   const isDisabled = !isAvailable && !node.visited;
 
@@ -77,8 +79,8 @@ export function MapNode({ node, isAvailable, isCurrent, onClick }: MapNodeProps)
 
   return (
     <div
-      onClick={() => { if (isAvailable) { playButtonClick(); onClick(); } }}
-      onMouseEnter={() => { setShowTooltip(true); if (isAvailable) playButtonHover(); }}
+      onClick={() => { if (isAvailable && isNextFloorReady) { playButtonClick(); onClick(); } }}
+      onMouseEnter={() => { setShowTooltip(true); if (isAvailable && isNextFloorReady) playButtonHover(); }}
       onMouseLeave={() => setShowTooltip(false)}
       className="absolute"
       style={{
@@ -139,7 +141,7 @@ export function MapNode({ node, isAvailable, isCurrent, onClick }: MapNodeProps)
           absolute inset-0
           flex items-center justify-center
           transition-all duration-150
-          ${isAvailable && !node.visited ? 'cursor-pointer hover:scale-110' : ''}
+          ${isAvailable && !node.visited && isNextFloorReady ? 'cursor-pointer hover:scale-110' : ''}
           ${isShaking ? 'animate-shake' : ''}
         `}
         style={{
