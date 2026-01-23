@@ -7,6 +7,7 @@ interface MapNodeProps {
   isAvailable: boolean;
   isCurrent: boolean;
   onClick: () => void;
+  scale?: number;
 }
 
 // 노드 타입별 설정 - 원본 비율 유지
@@ -21,10 +22,12 @@ const nodeConfig = {
   NEXT_FLOOR: { size: 72, label: '다음 층', description: '다음 층으로 이동', icon: '/sprites/icon/question.png' },
 };
 
-export function MapNode({ node, isAvailable, isCurrent, onClick }: MapNodeProps) {
+export function MapNode({ node, isAvailable, isCurrent, onClick, scale = 1 }: MapNodeProps) {
   const [showTooltip, setShowTooltip] = useState(false);
   const [nextFloorPhase, setNextFloorPhase] = useState<'hidden' | 'appearing' | 'shake1' | 'shake2' | 'flash' | 'reveal'>('hidden');
-  const config = nodeConfig[node.type] || nodeConfig.ENEMY;
+  const baseConfig = nodeConfig[node.type] || nodeConfig.ENEMY;
+  // 스케일 적용된 크기
+  const scaledSize = baseConfig.size * scale;
 
   // NEXT_FLOOR 노드 애니메이션
   useEffect(() => {
@@ -48,7 +51,7 @@ export function MapNode({ node, isAvailable, isCurrent, onClick }: MapNodeProps)
 
   // NEXT_FLOOR 노드의 현재 아이콘
   const getCurrentIcon = () => {
-    if (node.type !== 'NEXT_FLOOR') return config.icon;
+    if (node.type !== 'NEXT_FLOOR') return baseConfig.icon;
     if (nextFloorPhase === 'reveal') {
       return '/sprites/icon/question.png';
     }
@@ -67,7 +70,7 @@ export function MapNode({ node, isAvailable, isCurrent, onClick }: MapNodeProps)
   const isShaking = node.type === 'NEXT_FLOOR' && (nextFloorPhase === 'shake1' || nextFloorPhase === 'shake2');
   // NEXT_FLOOR 노드는 reveal 상태일 때만 클릭 가능
   const isNextFloorReady = node.type !== 'NEXT_FLOOR' || nextFloorPhase === 'reveal';
-  const halfSize = config.size / 2;
+  const halfSize = scaledSize / 2;
   const isDisabled = !isAvailable && !node.visited;
 
   const getFilter = () => {
@@ -84,10 +87,10 @@ export function MapNode({ node, isAvailable, isCurrent, onClick }: MapNodeProps)
       onMouseLeave={() => setShowTooltip(false)}
       className="absolute"
       style={{
-        left: node.x - halfSize,
-        top: node.y - halfSize,
-        width: config.size,
-        height: config.size,
+        left: node.x * scale - halfSize,
+        top: node.y * scale - halfSize,
+        width: scaledSize,
+        height: scaledSize,
       }}
     >
       {/* 현재 위치 펄스 */}
@@ -97,8 +100,8 @@ export function MapNode({ node, isAvailable, isCurrent, onClick }: MapNodeProps)
           style={{
             left: '50%',
             top: '50%',
-            width: config.size * 1.2,
-            height: config.size * 1.2,
+            width: scaledSize * 1.2,
+            height: scaledSize * 1.2,
             transform: 'translate(-50%, -50%)',
             border: '2px solid #ef4444',
             borderRadius: '6px',
@@ -115,8 +118,8 @@ export function MapNode({ node, isAvailable, isCurrent, onClick }: MapNodeProps)
           style={{
             left: '50%',
             top: '50%',
-            width: config.size * 2,
-            height: config.size * 2,
+            width: scaledSize * 2,
+            height: scaledSize * 2,
             transform: 'translate(-50%, -50%)',
             background: 'radial-gradient(circle, rgba(212, 168, 75, 0.5) 0%, transparent 70%)',
             animation: 'nodeGlow 2s ease-in-out infinite',
@@ -151,10 +154,10 @@ export function MapNode({ node, isAvailable, isCurrent, onClick }: MapNodeProps)
       >
         <img
           src={getCurrentIcon()}
-          alt={config.label}
+          alt={baseConfig.label}
           style={{
-            maxWidth: config.size,
-            maxHeight: config.size,
+            maxWidth: scaledSize,
+            maxHeight: scaledSize,
             width: 'auto',
             height: 'auto',
             imageRendering: 'pixelated',
@@ -169,7 +172,7 @@ export function MapNode({ node, isAvailable, isCurrent, onClick }: MapNodeProps)
           <div
             className="absolute inset-0 flex items-center justify-center"
             style={{
-              fontSize: config.size * 0.5,
+              fontSize: scaledSize * 0.5,
               color: '#4ade80',
               fontFamily: '"Press Start 2P", monospace',
               textShadow: '0 0 8px rgba(74, 222, 128, 0.8), 2px 2px 0 #000',
@@ -186,7 +189,7 @@ export function MapNode({ node, isAvailable, isCurrent, onClick }: MapNodeProps)
           className="absolute z-50 pointer-events-none whitespace-nowrap"
           style={{
             left: '50%',
-            top: config.size + 24,
+            top: scaledSize + 24,
             transform: 'translateX(-50%)',
             background: 'rgba(10, 8, 5, 0.95)',
             padding: '8px 14px',
@@ -212,7 +215,7 @@ export function MapNode({ node, isAvailable, isCurrent, onClick }: MapNodeProps)
               color: 'var(--gold)',
             }}
           >
-            {config.label}
+            {baseConfig.label}
           </div>
           <div
             className="text-xs mt-1"
@@ -221,7 +224,7 @@ export function MapNode({ node, isAvailable, isCurrent, onClick }: MapNodeProps)
               color: 'rgba(255, 255, 255, 0.7)',
             }}
           >
-            {config.description}
+            {baseConfig.description}
           </div>
         </div>
       )}

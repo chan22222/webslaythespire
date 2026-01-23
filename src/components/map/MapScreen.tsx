@@ -13,8 +13,7 @@ const PARTICLES = Array.from({ length: 25 }, (_, i) => ({
   opacity: Math.random() * 0.3 + 0.1,
 }));
 
-const MAP_WIDTH_PC = 2050;
-const MAP_WIDTH_MOBILE = 1200; // 모바일에서 맵 너비 축소
+const MAP_WIDTH = 2050; // 맵 기본 너비
 const MAP_PADDING = 80; // 맵 좌우 패딩
 const VIEW_STEP_PC = 400; // PC 버튼 클릭시 이동 거리
 const VIEW_STEP_MOBILE = 150; // 모바일 버튼 클릭시 이동 거리
@@ -35,15 +34,34 @@ export function MapScreen() {
   // 컨테이너 마운트 상태 (버튼 활성화 계산용)
   const [containerReady, setContainerReady] = useState(false);
 
+  // CSS 변수에서 맵 스케일 읽기 (초기값도 CSS에서 동기적으로 읽음)
+  const [mapScale, setMapScale] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--map-scale')) || 1;
+    }
+    return 1;
+  });
+
   // 처음 등장시에만 현재 노드 위치로 중앙 정렬
   const initializedRef = useRef(false);
   const prevNodesLengthRef = useRef(map.nodes.length);
 
-  // 컨테이너 마운트 감지
+  // 컨테이너 마운트 감지 및 CSS 변수에서 스케일 읽기
   useEffect(() => {
     if (containerRef.current) {
       setContainerReady(true);
     }
+
+    // CSS 변수에서 맵 스케일 읽기
+    const updateScale = () => {
+      const scale = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--map-scale')) || 1;
+      setMapScale(scale);
+    };
+    updateScale();
+
+    // 리사이즈 시 스케일 다시 읽기
+    window.addEventListener('resize', updateScale);
+    return () => window.removeEventListener('resize', updateScale);
   }, []);
 
   useEffect(() => {
@@ -65,23 +83,23 @@ export function MapScreen() {
       // 좌우 패딩 고려
       const containerWidth = containerRef.current.clientWidth;
       const effectiveWidth = containerWidth - MAP_PADDING * 2;
-      const mapWidth = window.innerWidth <= 800 ? MAP_WIDTH_MOBILE : MAP_WIDTH_PC;
-      const scale = window.innerWidth <= 800 ? MAP_WIDTH_MOBILE / MAP_WIDTH_PC : 1;
-      const scaledNodeX = currentNode.x * scale;
+      const scaledMapWidth = MAP_WIDTH * mapScale;
+      const scaledNodeX = currentNode.x * mapScale;
       const targetOffset = Math.max(0, Math.min(
-        mapWidth - effectiveWidth,
+        scaledMapWidth - effectiveWidth,
         scaledNodeX - effectiveWidth / 2
       ));
       setViewOffset(targetOffset);
       initializedRef.current = true;
     }
-  }, [map.currentNodeId, availableNodes, map.nodes.length]);
+  }, [map.currentNodeId, availableNodes, map.nodes.length, mapScale]);
 
   const isMobile = () => window.innerWidth <= 800;
 
-  const getMapWidth = () => isMobile() ? MAP_WIDTH_MOBILE : MAP_WIDTH_PC;
+  // 스케일 적용된 맵 너비
+  const getMapWidth = () => MAP_WIDTH * mapScale;
 
-  const getMapScale = () => isMobile() ? MAP_WIDTH_MOBILE / MAP_WIDTH_PC : 1;
+  const getMapScale = () => mapScale;
 
   const getViewStep = () => {
     // 모바일 (가로 800px 이하) 여부 확인
@@ -125,9 +143,10 @@ export function MapScreen() {
   };
 
 
-  // 연결선 렌더링
+  // 연결선 렌더링 (스케일 적용)
   const renderConnections = () => {
     const elements: JSX.Element[] = [];
+    const scale = mapScale;
 
     map.nodes.forEach(node => {
       node.connections.forEach(targetId => {
@@ -144,14 +163,14 @@ export function MapScreen() {
         elements.push(
           <line
             key={`line-${key}`}
-            x1={node.x}
-            y1={node.y}
-            x2={targetNode.x}
-            y2={targetNode.y}
+            x1={node.x * scale}
+            y1={node.y * scale}
+            x2={targetNode.x * scale}
+            y2={targetNode.y * scale}
             stroke={isAvailable ? 'rgba(212, 168, 75, 1)' : isVisited ? 'rgba(120, 105, 80, 0.7)' : 'rgba(100, 90, 70, 0.5)'}
-            strokeWidth={isAvailable ? 4 : 3}
+            strokeWidth={(isAvailable ? 4 : 3) * scale}
             strokeLinecap="round"
-            strokeDasharray="6,10"
+            strokeDasharray={`${6 * scale},${10 * scale}`}
             style={isAvailable ? { filter: 'drop-shadow(0 0 4px rgba(212, 168, 75, 0.8))' } : undefined}
           />
         );
@@ -696,20 +715,19 @@ export function MapScreen() {
       <main
         ref={containerRef}
         className="map-main flex-1 relative pt-8 select-none"
-        style={{ overflowX: 'hidden', overflowY: 'visible', WebkitUserSelect: 'none', userSelect: 'none' }}
+        style={{ overflow: 'hidden', WebkitUserSelect: 'none', userSelect: 'none' }}
         onContextMenu={(e) => e.preventDefault()}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
-        {/* 맵 컨테이너 - 좌우 여백 */}
+        {/* 맵 컨테이너 - 스케일 적용된 너비 */}
         <div
-          className="map-container absolute top-0 h-full origin-top-left"
+          className="map-container absolute top-0 h-full"
           style={{
-            width: MAP_WIDTH_PC,
+            width: getMapWidth(),
             left: `${MAP_PADDING - viewOffset}px`,
             transition: isDragging ? 'none' : 'left 0.3s ease-out',
-            transform: `scale(${getMapScale()})`,
           }}
         >
           <svg className="absolute inset-0 w-full h-full pointer-events-none" style={{ overflow: 'visible' }}>
@@ -723,6 +741,7 @@ export function MapScreen() {
               isAvailable={availableNodes.some(n => n.id === node.id)}
               isCurrent={map.currentNodeId === node.id}
               onClick={() => handleNodeClick(node.id)}
+              scale={mapScale}
             />
           ))}
         </div>

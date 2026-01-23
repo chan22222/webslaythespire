@@ -22,6 +22,9 @@ input, textarea {
 }
 
 :root {
+  /* 맵 스케일 - 미디어 쿼리에서 덮어씀 */
+  --map-scale: 1;
+
   /* 슬더슬 다크 팔레트 - 더 깊고 따뜻한 어둠 */
   --bg-abyss: #050508;
   --bg-darkest: #0a0b0f;
@@ -1043,9 +1046,8 @@ body {
     transform-origin: right center !important;
   }
 
-  .map-container {
-    transform-origin: top left !important;
-    scale: 0.9 !important;
+  :root {
+    --map-scale: 0.9;
   }
 }
 
@@ -1067,8 +1069,8 @@ body {
     margin-top: -1rem !important;
   }
 
-  .map-container {
-    scale: 0.8 !important;
+  :root {
+    --map-scale: 0.8;
   }
 }
 
@@ -1090,8 +1092,8 @@ body {
     margin-top: -2rem !important;
   }
 
-  .map-container {
-    scale: 0.65 !important;
+  :root {
+    --map-scale: 0.65;
   }
 }
 
@@ -1120,8 +1122,11 @@ body {
     margin-top: -2.5rem !important;
   }
 
+  :root {
+    --map-scale: 0.55;
+  }
+
   .map-container {
-    scale: 0.55 !important;
     transform: translateY(1.5rem) !important;
   }
 
@@ -1156,8 +1161,11 @@ body {
     margin-top: -3rem !important;
   }
 
+  :root {
+    --map-scale: 0.45;
+  }
+
   .map-container {
-    scale: 0.45 !important;
     transform: translateY(3rem) !important;
   }
 
@@ -1188,8 +1196,11 @@ body {
     margin-top: -3.5rem !important;
   }
 
+  :root {
+    --map-scale: 0.4;
+  }
+
   .map-container {
-    scale: 0.4 !important;
     transform: translateY(4.5rem) !important;
   }
 
