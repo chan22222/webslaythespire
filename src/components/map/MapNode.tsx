@@ -18,7 +18,7 @@ const nodeConfig = {
   SHOP: { size: 52, label: '상점', description: '카드와 아이템을 구매', icon: '/sprites/icon/shop.png' },
   EVENT: { size: 52, label: '이벤트', description: '무작위 이벤트 발생', icon: '/sprites/icon/gamble.png' },
   TREASURE: { size: 52, label: '보물', description: '유물 획득', icon: '/sprites/icon/treasure.png' },
-  NEXT_FLOOR: { size: 60, label: '다음 층', description: '다음 층으로 이동', icon: '/sprites/icon/question.png' },
+  NEXT_FLOOR: { size: 72, label: '다음 층', description: '다음 층으로 이동', icon: '/sprites/icon/question.png' },
 };
 
 export function MapNode({ node, isAvailable, isCurrent, onClick }: MapNodeProps) {
