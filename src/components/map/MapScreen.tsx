@@ -99,8 +99,6 @@ export function MapScreen() {
   // 스케일 적용된 맵 너비
   const getMapWidth = () => MAP_WIDTH * mapScale;
 
-  const getMapScale = () => mapScale;
-
   const getViewStep = () => {
     // 모바일 (가로 800px 이하) 여부 확인
     return isMobile() ? VIEW_STEP_MOBILE : VIEW_STEP_PC;
