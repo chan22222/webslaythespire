@@ -685,30 +685,38 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
           break;
         }
         case 'UPGRADE_HAND': {
-          // 손에 있는 업그레이드 가능한 카드 중 랜덤 1장 업그레이드
-          const currentHand = get().hand;
-          const upgradableCards = currentHand.filter(c => !c.upgraded && c.upgradeEffect);
-          if (upgradableCards.length > 0) {
+          // 손에 있는 업그레이드 가능한 카드 중 랜덤 N장 업그레이드
+          // 현재 사용 중인 카드(자기 자신)는 제외
+          const upgradeCount = effect.value || 1;
+          let currentHandUpgrade = get().hand;
+          let upgradedNames: string[] = [];
+
+          for (let i = 0; i < upgradeCount; i++) {
+            const upgradableCards = currentHandUpgrade.filter(c => !c.upgraded && c.upgradeEffect && c.instanceId !== cardInstanceId);
+            if (upgradableCards.length === 0) break;
+
             const randomCard = upgradableCards[Math.floor(Math.random() * upgradableCards.length)];
-            const upgradedCard = {
-              ...randomCard,
-              ...randomCard.upgradeEffect,
-              upgraded: true,
-            };
-            const newHand = currentHand.map(c =>
-              c.instanceId === randomCard.instanceId ? upgradedCard : c
+            upgradedNames.push(randomCard.name);
+
+            currentHandUpgrade = currentHandUpgrade.map(c =>
+              c.instanceId === randomCard.instanceId
+                ? { ...c, ...c.upgradeEffect, upgraded: true }
+                : c
             );
-            set({ hand: newHand });
-            get().addToCombatLog(`${randomCard.name}을(를) 업그레이드!`);
+          }
+
+          if (upgradedNames.length > 0) {
+            set({ hand: currentHandUpgrade });
+            get().addToCombatLog(`${upgradedNames.join(', ')}을(를) 업그레이드!`);
           }
           break;
         }
         case 'UPGRADE_ALL_HAND': {
-          // 손에 있는 모든 카드 업그레이드
+          // 손에 있는 모든 카드 업그레이드 (자기 자신 제외)
           const currentHandAll = get().hand;
           let upgradedCount = 0;
           const newHandAll = currentHandAll.map(c => {
-            if (!c.upgraded && c.upgradeEffect) {
+            if (!c.upgraded && c.upgradeEffect && c.instanceId !== cardInstanceId) {
               upgradedCount++;
               return {
                 ...c,
@@ -952,11 +960,12 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
         }
       }, 300);
     }
-    // 일반 카드는 버린 더미로
+    // 일반 카드는 버린 더미로 (코스트 복구)
     else {
+      const restoredCard = { ...card, cost: card.originalCost };
       set({
         hand: newHand,
-        discardPile: [...discardPile, card],
+        discardPile: [...discardPile, restoredCard],
         energy: currentEnergy - card.cost,
         selectedCardId: null,
         targetingMode: false,
@@ -970,9 +979,11 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
   discardHand: () => {
     const { hand, discardPile } = get();
 
+    // 버린 더미로 갈 때 코스트 복구
+    const restoredHand = hand.map(c => ({ ...c, cost: c.originalCost }));
     set({
       hand: [],
-      discardPile: [...discardPile, ...hand],
+      discardPile: [...discardPile, ...restoredHand],
     });
   },
 

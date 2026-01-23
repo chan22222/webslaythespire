@@ -1127,7 +1127,7 @@ body {
   }
 
   .map-container {
-    transform: translateY(1.5rem) !important;
+    transform: translateY(1rem) !important;
   }
 
   .map-nav-btn {
@@ -1166,7 +1166,7 @@ body {
   }
 
   .map-container {
-    transform: translateY(3rem) !important;
+    transform: translateY(2rem) !important;
   }
 
   .map-nav-btn {
@@ -1201,7 +1201,7 @@ body {
   }
 
   .map-container {
-    transform: translateY(4.5rem) !important;
+    transform: translateY(2.5rem) !important;
   }
 
   .map-nav-btn {
