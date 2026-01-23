@@ -274,6 +274,7 @@ export function MainMenu() {
   const [showWarning, setShowWarning] = useState(false);
   const [showNameInput, setShowNameInput] = useState(false);
   const [newGameName, setNewGameName] = useState('');
+  const [showPrivacy, setShowPrivacy] = useState(false);
   const canContinue = !isGuest && hasSaveData;
 
   // 상습 탈주자 여부 (이어하기로 불러왔을 때 이름이 변경됨)
@@ -682,7 +683,7 @@ export function MainMenu() {
       )}
 
       {/* 하단 버전 정보 */}
-      <div className="absolute bottom-4 sm:bottom-6 text-center z-10">
+      <div className="absolute bottom-4 sm:bottom-6 left-4 z-10">
         <p
           className="text-[8px] sm:text-[10px] text-[var(--gold-dark)] opacity-60"
           style={{ fontFamily: '"Press Start 2P", monospace' }}
@@ -690,6 +691,72 @@ export function MainMenu() {
           v0.5.0 PROTOTYPE
         </p>
       </div>
+
+      {/* 하단 우측 개인정보 처리방침 */}
+      <button
+        onClick={() => setShowPrivacy(true)}
+        className="absolute bottom-4 sm:bottom-6 right-4 z-10 text-[8px] sm:text-[10px] text-[var(--gold-dark)] opacity-60 hover:opacity-100 transition-opacity"
+        style={{ fontFamily: '"NeoDunggeunmo", cursive' }}
+      >
+        개인정보 처리방침
+      </button>
+
+      {/* 개인정보 처리방침 모달 */}
+      {showPrivacy && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80"
+          onClick={() => setShowPrivacy(false)}
+        >
+          <div
+            className="relative p-6 rounded-lg border-2 border-[var(--gold-dark)] max-w-lg mx-4 max-h-[80vh] overflow-y-auto"
+            style={{
+              background: 'linear-gradient(180deg, #1a1510 0%, #0d0a08 100%)',
+              boxShadow: '0 0 30px rgba(0,0,0,0.8), inset 0 1px 0 rgba(212,168,75,0.1)',
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <h3
+              className="text-[var(--gold)] text-center mb-4 text-lg"
+              style={{
+                fontFamily: '"NeoDunggeunmo", cursive',
+                textShadow: '0 0 10px var(--gold-glow)',
+              }}
+            >
+              개인정보 처리방침
+            </h3>
+            <div
+              className="text-[var(--gold-light)] text-xs space-y-3"
+              style={{ fontFamily: '"NeoDunggeunmo", cursive' }}
+            >
+              <p><strong>1. 수집하는 개인정보</strong></p>
+              <p>본 서비스는 Google 로그인 시 이메일 주소와 표시 이름을 수집합니다. 게스트 모드 이용 시 개인정보를 수집하지 않습니다.</p>
+
+              <p><strong>2. 개인정보의 이용 목적</strong></p>
+              <p>수집된 정보는 게임 진행 상황 저장 및 사용자 식별 목적으로만 사용됩니다.</p>
+
+              <p><strong>3. 개인정보의 보관 및 파기</strong></p>
+              <p>개인정보는 서비스 이용 기간 동안 보관되며, 회원 탈퇴 시 즉시 파기됩니다.</p>
+
+              <p><strong>4. 제3자 제공</strong></p>
+              <p>본 서비스는 수집된 개인정보를 제3자에게 제공하지 않습니다.</p>
+
+              <p><strong>5. 쿠키 및 광고</strong></p>
+              <p>본 서비스는 Google AdSense를 통해 광고를 게재하며, 이 과정에서 쿠키가 사용될 수 있습니다. 사용자는 브라우저 설정을 통해 쿠키를 관리할 수 있습니다.</p>
+
+              <p><strong>6. 문의</strong></p>
+              <p>개인정보 관련 문의사항은 게임 내 피드백을 통해 접수해 주세요.</p>
+            </div>
+            <button
+              onMouseEnter={playButtonHover}
+              onClick={() => { playButtonClick(); setShowPrivacy(false); }}
+              className="mt-4 w-full px-4 py-2 rounded border border-[var(--gold-dark)] text-[var(--gold-light)] text-sm hover:bg-[var(--gold-dark)]/20 transition-colors"
+              style={{ fontFamily: '"NeoDunggeunmo", cursive' }}
+            >
+              닫기
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
