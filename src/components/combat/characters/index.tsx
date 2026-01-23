@@ -581,7 +581,7 @@ export function FlyingEyeSprite({ size = 80, className = '', variant = 'red', is
   // 컨테이너는 idle 기준 고정
   const scaledSize = size * 1.7;
   const baseScale = scaledSize / FLYING_EYE_CONFIG.cropHeight;
-  const containerWidth = FLYING_EYE_CONFIG.cropWidth * baseScale;
+  const containerWidth = FLYING_EYE_CONFIG.cropWidth * baseScale * 1.1; // 좌우 여백 확대
   const containerHeight = FLYING_EYE_CONFIG.cropHeight * baseScale;
 
   // 실제 스프라이트 크기
@@ -756,7 +756,7 @@ export function SkeletonSprite({ size = 80, className = '', isAttacking = false 
   // 컨테이너는 idle 기준 고정
   const scaledSize = size * 2.1;
   const baseScale = scaledSize / SKELETON_CONFIG.cropHeight;
-  const containerWidth = SKELETON_CONFIG.cropWidth * baseScale;
+  const containerWidth = SKELETON_CONFIG.cropWidth * baseScale * 0.65; // 좌우 여백 축소
   const containerHeight = SKELETON_CONFIG.cropHeight * baseScale;
 
   // 실제 스프라이트 크기
