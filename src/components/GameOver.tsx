@@ -1,5 +1,6 @@
 import { useGameStore } from '../stores/gameStore';
 import { useCombatStore } from '../stores/combatStore';
+import { playButtonHover, playButtonClick } from '../utils/sound';
 
 export function GameOver() {
   const { player, setPhase } = useGameStore();
@@ -82,7 +83,8 @@ export function GameOver() {
       </div>
 
       <button
-        onClick={handleRestart}
+        onMouseEnter={playButtonHover}
+        onClick={() => { playButtonClick(); handleRestart(); }}
         className="gameover-button rounded-xl font-title text-white relative z-10 transition-all duration-300 hover:scale-105"
         style={{
           background: 'linear-gradient(180deg, var(--attack) 0%, var(--attack-dark) 100%)',

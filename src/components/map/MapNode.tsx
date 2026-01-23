@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { MapNode as MapNodeType } from '../../types/map';
+import { playButtonHover, playButtonClick } from '../../utils/sound';
 
 interface MapNodeProps {
   node: MapNodeType;
@@ -76,8 +77,8 @@ export function MapNode({ node, isAvailable, isCurrent, onClick }: MapNodeProps)
 
   return (
     <div
-      onClick={isAvailable ? onClick : undefined}
-      onMouseEnter={() => setShowTooltip(true)}
+      onClick={() => { if (isAvailable) { playButtonClick(); onClick(); } }}
+      onMouseEnter={() => { setShowTooltip(true); if (isAvailable) playButtonHover(); }}
       onMouseLeave={() => setShowTooltip(false)}
       className="absolute"
       style={{

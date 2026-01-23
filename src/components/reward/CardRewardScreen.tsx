@@ -5,6 +5,7 @@ import { Card } from '../combat/Card';
 import { Card as CardType, createCardInstance } from '../../types/card';
 import { generateCardRewards } from '../../data/cards';
 import { randomInt } from '../../utils/shuffle';
+import { playButtonHover, playButtonClick } from '../../utils/sound';
 
 export function CardRewardScreen() {
   const { setPhase, modifyGold, addCardToDeck, getCurrentNode, addNextFloorNode } = useGameStore();
@@ -122,7 +123,8 @@ export function CardRewardScreen() {
         {/* 골드 보상 - 가로 배치 */}
         <div className="reward-gold flex flex-row items-center justify-center">
           <button
-            onClick={handleCollectGold}
+            onMouseEnter={() => !goldCollected && playButtonHover()}
+            onClick={() => { if (!goldCollected) { playButtonClick(); handleCollectGold(); } }}
             disabled={goldCollected}
             className={`
               reward-gold-btn rounded-lg font-title flex items-center justify-center
@@ -139,7 +141,8 @@ export function CardRewardScreen() {
 
           {bonusGold > 0 && (
             <button
-              onClick={handleCollectBonus}
+              onMouseEnter={() => !bonusCollected && playButtonHover()}
+              onClick={() => { if (!bonusCollected) { playButtonClick(); handleCollectBonus(); } }}
               disabled={bonusCollected}
               className={`
                 reward-gold-btn rounded-lg font-title flex items-center justify-center
@@ -225,7 +228,8 @@ export function CardRewardScreen() {
 
         {/* 진행 버튼 */}
         <button
-          onClick={handleProceed}
+          onMouseEnter={() => canProceed && playButtonHover()}
+          onClick={() => { if (canProceed) { playButtonClick(); handleProceed(); } }}
           disabled={!canProceed}
           className={`
             reward-proceed-btn rounded-lg font-title transition-all duration-200

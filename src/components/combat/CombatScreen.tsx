@@ -11,6 +11,7 @@ import { PlayerStatus } from './PlayerStatus';
 import { DamagePopupManager } from './DamagePopup';
 import { SwordSlashEffect, SlashHitEffect } from './characters';
 import { generateNormalEncounter, ELITE_ENEMIES, BOSS_ENEMIES, EASTER_EGG_ENCOUNTER } from '../../data/enemies';
+import { playButtonHover, playButtonClick } from '../../utils/sound';
 
 // 전투 시작 인트로 화면
 function BattleIntro({
@@ -1502,9 +1503,9 @@ export function CombatScreen() {
           {/* 뽑기 더미 */}
           <button
             className="group relative transition-all duration-200 active:scale-95 hover:scale-105"
-            onMouseEnter={() => setHoveredPile('draw')}
+            onMouseEnter={() => { setHoveredPile('draw'); playButtonHover(); }}
             onMouseLeave={() => setHoveredPile(null)}
-            onClick={() => setViewingPile('draw')}
+            onClick={() => { playButtonClick(); setViewingPile('draw'); }}
           >
             {/* 글로우 효과 */}
             <div
@@ -1542,9 +1543,9 @@ export function CombatScreen() {
           {/* 버린 더미 */}
           <button
             className="group relative transition-all duration-200 active:scale-95 hover:scale-105"
-            onMouseEnter={() => setHoveredPile('discard')}
+            onMouseEnter={() => { setHoveredPile('discard'); playButtonHover(); }}
             onMouseLeave={() => setHoveredPile(null)}
-            onClick={() => setViewingPile('discard')}
+            onClick={() => { playButtonClick(); setViewingPile('discard'); }}
           >
             {/* 글로우 효과 */}
             <div
@@ -1864,8 +1865,10 @@ export function CombatScreen() {
           onMouseLeave={() => setShowEndTurnTooltip(false)}
         >
           <button
+            onMouseEnter={playButtonHover}
             onClick={() => {
               if (isEndingTurn || isPlayerDying || isEndTurnLocked) return;
+              playButtonClick();
               setIsEndingTurn(true);
               endPlayerTurn();
               setTimeout(() => setIsEndingTurn(false), 2500);
@@ -2002,7 +2005,8 @@ export function CombatScreen() {
             )}
 
             <button
-              onClick={() => setViewingPile(null)}
+              onMouseEnter={playButtonHover}
+              onClick={() => { playButtonClick(); setViewingPile(null); }}
               className="mt-4 sm:mt-6 px-6 py-2 rounded-lg font-title text-sm sm:text-base text-gray-300 hover:text-white transition-colors block mx-auto"
               style={{
                 background: 'linear-gradient(180deg, var(--bg-light) 0%, var(--bg-dark) 100%)',

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useGameStore } from '../stores/gameStore';
 import { useAuthStore } from '../stores/authStore';
+import { playButtonHover, playButtonClick } from '../utils/sound';
 
 // 파티클 데이터를 컴포넌트 외부에서 한 번만 생성
 const PARTICLES = Array.from({ length: 25 }, (_, i) => ({
@@ -344,7 +345,8 @@ export function MainMenu() {
         )}
         {isLoggedIn ? (
           <button
-            onClick={signOut}
+            onMouseEnter={playButtonHover}
+            onClick={() => { playButtonClick(); signOut(); }}
             className="px-3 py-1.5 rounded-lg text-xs transition-all hover:scale-105 hover:brightness-125"
             style={{
               fontFamily: '"NeoDunggeunmo", "Neo둥근모", cursive',
@@ -358,7 +360,8 @@ export function MainMenu() {
           </button>
         ) : isGuest ? (
           <button
-            onClick={() => setShowLoginScreen(true)}
+            onMouseEnter={playButtonHover}
+            onClick={() => { playButtonClick(); setShowLoginScreen(true); }}
             className="px-3 py-1.5 rounded-lg text-xs transition-all hover:scale-105 hover:brightness-125"
             style={{
               fontFamily: '"NeoDunggeunmo", "Neo둥근모", cursive',
@@ -470,7 +473,8 @@ export function MainMenu() {
       <div className="menu-buttons absolute bottom-32 sm:bottom-40 flex flex-col gap-2 sm:gap-3 z-10 items-center">
         {/* 새 게임 버튼 */}
         <button
-          onClick={handleNewGame}
+          onMouseEnter={playButtonHover}
+          onClick={() => { playButtonClick(); handleNewGame(); }}
           className="relative transition-all duration-150 hover:scale-105 hover:brightness-125"
           style={{
             animation: 'buttonFadeIn 0.5s ease-out 0.5s forwards',
@@ -496,7 +500,8 @@ export function MainMenu() {
 
         {/* 이어하기 버튼 */}
         <button
-          onClick={() => canContinue && !isSaveLoading && loadGame()}
+          onMouseEnter={() => canContinue && !isSaveLoading && playButtonHover()}
+          onClick={() => { if (canContinue && !isSaveLoading) { playButtonClick(); loadGame(); } }}
           disabled={!canContinue || isSaveLoading}
           className={`relative ${canContinue && !isSaveLoading ? 'transition-all duration-150 hover:scale-105 hover:brightness-125' : 'cursor-not-allowed'}`}
           style={{
@@ -523,7 +528,8 @@ export function MainMenu() {
 
         {/* 덱 빌딩 버튼 */}
         <button
-          onClick={startDeckBuilding}
+          onMouseEnter={playButtonHover}
+          onClick={() => { playButtonClick(); startDeckBuilding(); }}
           className="relative transition-all duration-150 hover:scale-105 hover:brightness-125"
           style={{
             animation: 'buttonFadeIn 0.5s ease-out 0.7s forwards',
@@ -578,7 +584,8 @@ export function MainMenu() {
             </p>
             <div className="flex gap-3 justify-center">
               <button
-                onClick={() => setShowWarning(false)}
+                onMouseEnter={playButtonHover}
+                onClick={() => { playButtonClick(); setShowWarning(false); }}
                 className="px-4 py-2 rounded border border-[var(--gold-dark)] text-[var(--gold-light)] text-sm hover:bg-[var(--gold-dark)]/20 transition-colors"
                 style={{
                   fontFamily: '"NeoDunggeunmo", "Neo둥근모", cursive',
@@ -587,7 +594,8 @@ export function MainMenu() {
                 취소
               </button>
               <button
-                onClick={confirmNewGame}
+                onMouseEnter={playButtonHover}
+                onClick={() => { playButtonClick(); confirmNewGame(); }}
                 className="px-4 py-2 rounded bg-red-900/80 border border-red-700 text-red-200 text-sm hover:bg-red-800/80 transition-colors"
                 style={{
                   fontFamily: '"NeoDunggeunmo", "Neo둥근모", cursive',
@@ -649,7 +657,8 @@ export function MainMenu() {
             />
             <div className="flex gap-3 justify-center">
               <button
-                onClick={() => setShowNameInput(false)}
+                onMouseEnter={playButtonHover}
+                onClick={() => { playButtonClick(); setShowNameInput(false); }}
                 className="px-4 py-2 rounded border border-[var(--gold-dark)] text-[var(--gold-light)] text-sm hover:bg-[var(--gold-dark)]/20 transition-colors"
                 style={{
                   fontFamily: '"NeoDunggeunmo", "Neo둥근모", cursive',
@@ -658,7 +667,8 @@ export function MainMenu() {
                 취소
               </button>
               <button
-                onClick={startGameWithName}
+                onMouseEnter={playButtonHover}
+                onClick={() => { playButtonClick(); startGameWithName(); }}
                 className="px-4 py-2 rounded bg-[var(--gold-dark)]/30 border border-[var(--gold)] text-[var(--gold-light)] text-sm hover:bg-[var(--gold-dark)]/50 transition-colors"
                 style={{
                   fontFamily: '"NeoDunggeunmo", "Neo둥근모", cursive',

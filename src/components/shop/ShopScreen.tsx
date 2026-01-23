@@ -6,6 +6,7 @@ import { Relic } from '../../types/relic';
 import { generateCardRewards } from '../../data/cards';
 import { generateRelicReward } from '../../data/relics';
 import { randomInt } from '../../utils/shuffle';
+import { playButtonHover, playButtonClick } from '../../utils/sound';
 
 interface ShopItem {
   type: 'card' | 'relic' | 'remove';
@@ -297,7 +298,8 @@ export function ShopScreen() {
                       />
                     </div>
                     <div
-                      onClick={() => isSelected && handleBuyItem(globalIndex)}
+                      onMouseEnter={() => isSelected && playButtonHover()}
+                      onClick={() => { if (isSelected) { playButtonClick(); handleBuyItem(globalIndex); } }}
                       className={`shop-price-tag flex items-center rounded-lg font-title transition-all duration-200 ${
                         item.sold ? 'text-gray-500' :
                         isSelected ? 'text-white cursor-pointer hover:brightness-110' :
@@ -369,7 +371,8 @@ export function ShopScreen() {
                       </div>
                     </div>
                     <div
-                      onClick={() => isSelected && handleBuyItem(globalIndex)}
+                      onMouseEnter={() => isSelected && playButtonHover()}
+                      onClick={() => { if (isSelected) { playButtonClick(); handleBuyItem(globalIndex); } }}
                       className={`shop-price-tag flex items-center rounded-lg font-title transition-all duration-200 ${
                         item.sold ? 'text-gray-500' :
                         isSelected ? 'text-white cursor-pointer hover:brightness-110' :
@@ -413,7 +416,8 @@ export function ShopScreen() {
         {/* 카드 제거 서비스 (여러 장 가능) */}
         {removeItem && (
           <button
-            onClick={() => handleBuyRemove(shopItems.indexOf(removeItem))}
+            onMouseEnter={() => player.gold >= removeItem.price && playButtonHover()}
+            onClick={() => { if (player.gold >= removeItem.price) { playButtonClick(); handleBuyRemove(shopItems.indexOf(removeItem)); } }}
             disabled={player.gold < removeItem.price}
             className={`
               shop-action-btn shop-remove-btn relative flex items-center justify-center
@@ -439,7 +443,8 @@ export function ShopScreen() {
 
         {/* 나가기 버튼 */}
         <button
-          onClick={handleLeave}
+          onMouseEnter={playButtonHover}
+          onClick={() => { playButtonClick(); handleLeave(); }}
           className="shop-action-btn shop-leave-btn relative flex items-center justify-center transition-all duration-300 hover:scale-105 hover:brightness-110"
         >
           <img
@@ -488,7 +493,8 @@ export function ShopScreen() {
                       <Card card={card} size="sm" />
                     </div>
                     <button
-                      onClick={() => isSelected && player.gold >= 50 && handleConfirmRemoveCard(card.instanceId)}
+                      onMouseEnter={() => isSelected && player.gold >= 50 && playButtonHover()}
+                      onClick={() => { if (isSelected && player.gold >= 50) { playButtonClick(); handleConfirmRemoveCard(card.instanceId); } }}
                       disabled={!isSelected || player.gold < 50}
                       className={`px-2 py-1 rounded font-title text-xs transition-all duration-200 ${
                         isSelected && player.gold >= 50
@@ -511,7 +517,8 @@ export function ShopScreen() {
             </div>
 
             <button
-              onClick={() => setShowRemoveModal(false)}
+              onMouseEnter={playButtonHover}
+              onClick={() => { playButtonClick(); setShowRemoveModal(false); }}
               className="mt-2 sm:mt-4 md:mt-6 px-3 sm:px-4 md:px-6 py-1.5 sm:py-2 rounded-lg font-card text-xs sm:text-sm md:text-base text-gray-400 hover:text-white transition-colors block mx-auto"
               style={{
                 background: 'linear-gradient(180deg, var(--bg-light) 0%, var(--bg-dark) 100%)',
