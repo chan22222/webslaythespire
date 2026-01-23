@@ -533,7 +533,6 @@ function EnemyStatusBadge({ status }: { status: { type: string; stacks: number }
 export function Enemy({ enemy, isTargetable = false, incomingDamage = 0, ignoreBlock = false }: EnemyProps) {
   const [showIntentTooltip, setShowIntentTooltip] = useState(false);
   const [isDying, setIsDying] = useState(false);
-  const [isCollapsed, setIsCollapsed] = useState(false);
   const [isRemoved, setIsRemoved] = useState(false);
   const [isHurt, setIsHurt] = useState(false);
   const [isSkillActive, setIsSkillActive] = useState(false);
@@ -598,17 +597,13 @@ export function Enemy({ enemy, isTargetable = false, incomingDamage = 0, ignoreB
           setIsHurt(false);
         }, 300);
       }
-      // 죽음 처리
+      // 죽음 처리 (공간 유지하고 페이드아웃만)
       if (enemy.currentHp <= 0 && !isDying) {
         setTimeout(() => {
           setIsDying(true);
-          // 페이드아웃 후 공간 축소
+          // 페이드아웃 후 visibility: hidden으로 전환 (공간 유지)
           setTimeout(() => {
-            setIsCollapsed(true);
-            // 공간 축소 후 완전히 제거
-            setTimeout(() => {
-              setIsRemoved(true);
-            }, 200);
+            setIsRemoved(true);
           }, 400);
         }, 300);
       }
@@ -737,25 +732,24 @@ export function Enemy({ enemy, isTargetable = false, incomingDamage = 0, ignoreB
     }
   };
 
-  if (isRemoved) return null;
-
+  // 죽은 적도 공간 유지 (visibility: hidden으로 처리)
   return (
     <div
       className="transition-all"
       style={{
-        maxWidth: isCollapsed ? 0 : '200px',
-        opacity: isCollapsed ? 0 : 1,
-        transitionDuration: '150ms',
+        minWidth: '100px',
+        visibility: isRemoved ? 'hidden' : 'visible',
+        opacity: isDying ? 0 : 1,
+        transitionDuration: '300ms',
         transitionTimingFunction: 'ease-out',
-        overflow: isCollapsed ? 'hidden' : 'visible',
       }}
     >
       <div
         data-enemy-id={enemy.instanceId}
         className="flex flex-col items-center transition-transform"
         style={{
-          transform: isCollapsed ? 'scale(0)' : 'scale(1)',
-          transitionDuration: '150ms',
+          transform: isDying ? 'scale(0.8)' : 'scale(1)',
+          transitionDuration: '300ms',
         }}
       >
       {/* 인텐트 표시 */}

@@ -22,11 +22,6 @@ function LoadingScreen({ onLoadComplete }: { onLoadComplete: () => void }) {
   // 마지막 프레임(앉은 상태)에서 시작하여 애니메이션 없이 바로 고정
   const [arrivalComplete, setArrivalComplete] = useState(false);
 
-  // 도착 애니메이션 프레임 (마지막 프레임 = 앉은 상태)
-  const ARRIVAL_FRAMES = 5;
-  const ARRIVAL_START_ROW = 10;
-  const ARRIVAL_START_COL = 3;
-
   // 배경 파티클 위치 고정 (초기화 시 한번만 생성)
   const [bgParticles] = useState(() =>
     [...Array(15)].map((_, i) => ({
