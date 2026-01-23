@@ -1745,7 +1745,7 @@ export function CombatScreen() {
               animation={playerAnimation}
               animationKey={animationKey}
               attackTargetPos={attackTargetPos}
-              enemyCount={enemies.filter(e => e.currentHp > 0).length}
+              enemyCount={enemies.length}
               incomingDamage={calculatePlayerHpLoss()}
               onAnimationEnd={() => {
                 // 사망 애니메이션 완료 시
@@ -1798,12 +1798,13 @@ export function CombatScreen() {
             />
           </div>
 
-          {/* 적 영역 - 우측 */}
+          {/* 적 영역 - 우측 (고정 슬롯 시스템) */}
           <div className="combat-enemy-gap flex items-end justify-center gap-0.5 xs:gap-1 sm:gap-2 md:gap-4 lg:gap-6">
             {enemies.map((enemy, index) => {
               // 적마다 다른 높이로 배치 (시각적 변화)
               const yOffsets = [-15, 8, -5, 12, -8];
               const yOffset = yOffsets[index % yOffsets.length];
+              const isDead = enemy.currentHp <= 0;
               return (
               <div
                 key={enemy.instanceId}
@@ -1811,6 +1812,8 @@ export function CombatScreen() {
                 className={`combat-scale combat-enemy-${index} transition-all duration-300 scale-[0.5] xs:scale-[0.55] sm:scale-[0.7] md:scale-90 lg:scale-110`}
                 style={{
                   ['--enemy-offset' as string]: `${yOffset}px`,
+                  // 죽은 적도 공간 유지 (최소 너비 고정)
+                  minWidth: isDead ? '150px' : undefined,
                 }}
               >
                 <Enemy
