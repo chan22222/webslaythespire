@@ -606,6 +606,8 @@ export function CombatScreen() {
   const resizeStartHeight = useRef(0);
   // 모바일 배틀로그 펼치기/접기
   const [isMobileLogOpen, setIsMobileLogOpen] = useState(false);
+  // 유물 모달 표시
+  const [showRelics, setShowRelics] = useState(false);
 
   // isPlayerDying 상태를 ref에 동기화
   useEffect(() => {
@@ -1579,6 +1581,61 @@ export function CombatScreen() {
             </div>
             <SimpleTooltip show={hoveredPile === 'discard'} text="버린 더미" />
           </button>
+
+          {/* 유물 버튼 */}
+          {player.relics.length > 0 && (
+            <div
+              className="relative flex items-center cursor-pointer group"
+              onClick={() => { playButtonClick(); setShowRelics(true); }}
+              onMouseEnter={() => playButtonHover()}
+            >
+              {player.relics.slice(0, 3).map((relic, index) => (
+                <div
+                  key={relic.id}
+                  className="relative transition-all duration-150 group-hover:scale-105"
+                  style={{
+                    marginLeft: index === 0 ? 0 : -32,
+                    zIndex: 3 - index,
+                  }}
+                >
+                  {relic.icon ? (
+                    <img
+                      src={relic.icon}
+                      alt={relic.name}
+                      className="w-16 h-16 md:w-20 md:h-20 object-contain drop-shadow-[0_0_4px_rgba(0,0,0,0.8)]"
+                      style={{ imageRendering: 'auto' }}
+                    />
+                  ) : (
+                    <span className="text-lg font-bold" style={{ color: 'var(--gold)' }}>
+                      {relic.name.charAt(0)}
+                    </span>
+                  )}
+                </div>
+              ))}
+              {/* 유물 개수 */}
+              <div
+                className="flex items-center justify-center rounded-full transition-all duration-150 group-hover:scale-110"
+                style={{
+                  width: 24,
+                  height: 24,
+                  marginLeft: -20,
+                  background: 'rgba(0, 0, 0, 0.8)',
+                  border: '2px solid var(--gold-dark)',
+                  zIndex: 10,
+                }}
+              >
+                <span
+                  className="text-[10px] font-bold"
+                  style={{
+                    fontFamily: '"Press Start 2P", monospace',
+                    color: 'var(--gold)',
+                  }}
+                >
+                  {player.relics.length}
+                </span>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* 턴 표시 - 중앙 고정 */}
@@ -2015,6 +2072,113 @@ export function CombatScreen() {
             >
               닫기
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* 유물 모달 */}
+      {showRelics && (
+        <div
+          className="fixed inset-0 z-[200] flex items-center justify-center"
+          style={{ background: 'rgba(0,0,0,0.85)' }}
+          onClick={() => setShowRelics(false)}
+        >
+          <div
+            className="relative w-[90vw] max-w-2xl max-h-[80vh] flex flex-col"
+            style={{
+              background: 'linear-gradient(180deg, rgba(30, 25, 20, 0.98) 0%, rgba(15, 12, 10, 0.99) 100%)',
+              border: '3px solid var(--gold-dark)',
+              boxShadow: '0 0 40px rgba(0,0,0,0.9), 0 0 15px var(--gold-glow)',
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            {/* 헤더 */}
+            <div
+              className="flex justify-between items-center px-6 py-4"
+              style={{ borderBottom: '2px solid rgba(212, 168, 75, 0.3)' }}
+            >
+              <div className="flex items-center gap-4">
+                <span
+                  className="text-xl font-bold"
+                  style={{
+                    fontFamily: '"NeoDunggeunmo", cursive',
+                    color: 'var(--gold)',
+                  }}
+                >
+                  보유 유물
+                </span>
+                <span
+                  className="text-sm"
+                  style={{
+                    fontFamily: '"Press Start 2P", monospace',
+                    color: 'var(--gold-dark)',
+                  }}
+                >
+                  {player.relics.length}개
+                </span>
+              </div>
+
+              <button
+                onClick={() => { playButtonClick(); setShowRelics(false); }}
+                onMouseEnter={() => playButtonHover()}
+                className="w-10 h-10 flex items-center justify-center transition-all hover:brightness-125"
+                style={{ color: 'var(--gold)' }}
+              >
+                <span style={{ fontFamily: '"Press Start 2P", monospace', fontSize: '16px' }}>×</span>
+              </button>
+            </div>
+
+            {/* 유물 목록 */}
+            <div className="flex-1 overflow-y-auto p-6">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                {player.relics.map(relic => (
+                  <div
+                    key={relic.id}
+                    className="flex flex-col items-center p-4 rounded-lg transition-all hover:scale-105"
+                    style={{
+                      background: 'rgba(212, 168, 75, 0.1)',
+                      border: '1px solid rgba(212, 168, 75, 0.3)',
+                    }}
+                  >
+                    {relic.icon ? (
+                      <img
+                        src={relic.icon}
+                        alt={relic.name}
+                        className="w-20 h-20 object-contain mb-2"
+                        style={{ imageRendering: 'auto' }}
+                      />
+                    ) : (
+                      <div
+                        className="w-20 h-20 flex items-center justify-center mb-2"
+                        style={{ background: 'rgba(212, 168, 75, 0.2)', borderRadius: '8px' }}
+                      >
+                        <span className="text-2xl font-bold" style={{ color: 'var(--gold)' }}>
+                          {relic.name.charAt(0)}
+                        </span>
+                      </div>
+                    )}
+                    <div
+                      className="text-sm font-bold text-center mb-1"
+                      style={{
+                        fontFamily: '"NeoDunggeunmo", cursive',
+                        color: 'var(--gold)',
+                      }}
+                    >
+                      {relic.name}
+                    </div>
+                    <div
+                      className="text-xs text-center"
+                      style={{
+                        fontFamily: '"NeoDunggeunmo", cursive',
+                        color: 'rgba(255, 255, 255, 0.7)',
+                      }}
+                    >
+                      {relic.description}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       )}
