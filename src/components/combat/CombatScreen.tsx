@@ -1925,13 +1925,13 @@ export function CombatScreen() {
         />
 
         {/* 에너지 오브 - 좌측 (안쪽으로) */}
-        <div className="combat-scale absolute left-1 xs:left-2 md:left-[6%] lg:left-[10%] bottom-8 xs:bottom-10 sm:bottom-12 md:bottom-18 lg:bottom-20 z-30 scale-[0.5] xs:scale-[0.55] sm:scale-[0.7] md:scale-90 lg:scale-110 origin-bottom-left">
+        <div className="combat-scale absolute left-1 xs:left-2 md:left-[6%] lg:left-[10%] bottom-8 xs:bottom-10 sm:bottom-12 md:bottom-18 lg:bottom-20 z-30 scale-[0.5] xs:scale-[0.55] sm:scale-[0.7] md:scale-90 lg:scale-110 origin-bottom-left pointer-events-auto">
           <EnergyOrb current={energy} max={maxEnergy} />
         </div>
 
         {/* 카드 패 - 중앙 하단 */}
-        <div className="absolute inset-x-0 bottom-0 [@media(max-height:700px)]:-bottom-4 [@media(max-height:420px)]:-bottom-8 flex justify-center pointer-events-none">
-          <div className="combat-scale pointer-events-auto scale-[0.5] xs:scale-[0.55] sm:scale-[0.7] md:scale-90 lg:scale-110 origin-bottom">
+        <div className="absolute inset-x-0 bottom-0 [@media(max-height:700px)]:-bottom-4 [@media(max-height:420px)]:-bottom-8 flex justify-center items-end pointer-events-none">
+          <div className="combat-scale scale-[0.5] xs:scale-[0.55] sm:scale-[0.7] md:scale-90 lg:scale-110 origin-bottom">
             <CardHand
               cards={hand}
               energy={energy}
@@ -1944,7 +1944,7 @@ export function CombatScreen() {
 
         {/* 턴 종료 버튼 - 우측 하단 */}
         <div
-          className="combat-scale absolute right-1 xs:right-2 md:right-[6%] lg:right-[10%] bottom-2 xs:bottom-4 sm:bottom-6 md:bottom-10 lg:bottom-[4.25rem] z-30 scale-[0.5] xs:scale-[0.55] sm:scale-[0.7] md:scale-90 lg:scale-110 origin-bottom-right"
+          className="combat-scale absolute right-1 xs:right-2 md:right-[6%] lg:right-[10%] bottom-2 xs:bottom-4 sm:bottom-6 md:bottom-10 lg:bottom-[4.25rem] z-30 scale-[0.5] xs:scale-[0.55] sm:scale-[0.7] md:scale-90 lg:scale-110 origin-bottom-right pointer-events-auto"
           onMouseEnter={() => setShowEndTurnTooltip(true)}
           onMouseLeave={() => setShowEndTurnTooltip(false)}
         >

@@ -149,7 +149,7 @@ export function CardHand({
 
   return (
     <div
-      className="combat-hand relative flex justify-center items-end"
+      className="combat-hand relative flex justify-center items-end pointer-events-none"
       style={{
         height: '280px',
         width: '100%',
@@ -173,7 +173,7 @@ export function CardHand({
           return (
             <div
               key={card.instanceId}
-              className="absolute transition-all duration-150 ease-out"
+              className="absolute transition-all duration-150 ease-out pointer-events-auto"
               style={{
                 left: '50%',
                 bottom: '0',

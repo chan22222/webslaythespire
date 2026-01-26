@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Player } from '../../types/player';
 import { Status } from '../../types/status';
 import { HealthBar } from '../common/HealthBar';
@@ -240,6 +241,8 @@ interface PlayerStatusProps {
 
 function StatusBadge({ status, index = 0, total = 1 }: { status: Status; index?: number; total?: number }) {
   const [showTooltip, setShowTooltip] = useState(false);
+  const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
+  const badgeRef = useRef<HTMLDivElement>(null);
   const info = STATUS_INFO[status.type];
 
   const getStatusIcon = (type: string) => {
@@ -267,11 +270,22 @@ function StatusBadge({ status, index = 0, total = 1 }: { status: Status; index?:
     }
   };
 
+  const handleMouseEnter = () => {
+    if (badgeRef.current) {
+      const rect = badgeRef.current.getBoundingClientRect();
+      setTooltipPos({
+        x: rect.left + rect.width / 2,
+        y: rect.top,
+      });
+    }
+    setShowTooltip(true);
+  };
+
   return (
     <div
+      ref={badgeRef}
       className="relative"
-      style={{ zIndex: showTooltip ? 9999 : (10 + index) }}
-      onMouseEnter={() => setShowTooltip(true)}
+      onMouseEnter={handleMouseEnter}
       onMouseLeave={() => setShowTooltip(false)}
     >
       <div
@@ -289,15 +303,19 @@ function StatusBadge({ status, index = 0, total = 1 }: { status: Status; index?:
         <span className="text-white font-title text-xs">{status.stacks}</span>
       </div>
 
-      {/* 툴팁 */}
-      {showTooltip && (
+      {/* 툴팁 - Portal로 body에 렌더링 */}
+      {showTooltip && createPortal(
         <div
-          className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-3 py-2 rounded-lg z-[9999] pointer-events-none"
+          className="fixed px-3 py-2 rounded-lg pointer-events-none"
           style={{
+            left: tooltipPos.x,
+            top: tooltipPos.y - 10,
+            transform: 'translate(-50%, -100%)',
             background: 'rgba(0, 0, 0, 0.95)',
             border: `2px solid ${info.isDebuff ? '#e04040' : '#4ade80'}`,
             boxShadow: '0 4px 20px rgba(0, 0, 0, 0.8)',
             width: '180px',
+            zIndex: 99999,
           }}
         >
           <div className="font-title text-sm mb-1 whitespace-nowrap text-center" style={{ color: info.isDebuff ? '#ff6b6b' : '#4ade80' }}>
@@ -317,7 +335,8 @@ function StatusBadge({ status, index = 0, total = 1 }: { status: Status; index?:
               borderTop: `8px solid ${info.isDebuff ? '#e04040' : '#4ade80'}`,
             }}
           />
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
@@ -558,11 +577,8 @@ export function PlayerStatus({ player, block, statuses, animation = 'idle', anim
         />
       </div>
 
-      {/* 상태 효과 - 고정 높이로 레이아웃 안정화 */}
-      <div
-        className="flex gap-x-2 gap-y-1 mt-3 flex-wrap justify-center max-w-40 min-h-[32px] -ml-14"
-        style={{ isolation: 'isolate' }}
-      >
+      {/* 상태 효과 */}
+      <div className="relative z-[100] flex gap-2 mt-3 flex-wrap justify-center max-w-40 -ml-14">
         {statuses.map((status, index) => (
           <StatusBadge key={index} status={status} index={index} total={statuses.length} />
         ))}
