@@ -212,8 +212,19 @@ function BlackholeBackground() {
           backgroundSize: 'auto 100%',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',
+          animation: 'breatheBg 6s ease-in-out infinite',
         }}
       />
+      <style>{`
+        @keyframes breatheBg {
+          0%, 100% {
+            transform: scale(1);
+          }
+          50% {
+            transform: scale(1.01);
+          }
+        }
+      `}</style>
 
       {/* 소용돌이 링들 */}
       <div className="absolute inset-0 flex items-center justify-center">
