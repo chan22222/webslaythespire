@@ -35,3 +35,25 @@ export const playDefeat = () => {
   sound.volume = 0.25;
   sound.play().catch(() => {});
 };
+
+export const playAttack = () => {
+  const sound = new Audio('/sfx/sound/attack.wav');
+  sound.volume = 0.4;
+  sound.play().catch(() => {});
+};
+
+export const playHit = () => {
+  const sound = new Audio('/sfx/sound/hit.wav');
+  sound.volume = 0.35;
+  sound.play().catch(() => {});
+};
+
+export const playFootsteps = () => {
+  for (let i = 0; i < 2; i++) {
+    setTimeout(() => {
+      const sound = new Audio('/sfx/sound/footstep.wav');
+      sound.volume = 0.3;
+      sound.play().catch(() => {});
+    }, i * 220);
+  }
+};

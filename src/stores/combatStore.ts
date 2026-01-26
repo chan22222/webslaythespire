@@ -5,7 +5,7 @@ import { EnemyInstance, EnemyTemplate, createEnemyInstance } from '../types/enem
 import { Status, STATUS_INFO } from '../types/status';
 import { shuffle } from '../utils/shuffle';
 import { useGameStore } from './gameStore';
-import { playCardDraw } from '../utils/sound';
+import { playCardDraw, playAttack, playHit } from '../utils/sound';
 
 // 데미지 팝업 타입
 export interface DamagePopup {
@@ -469,6 +469,9 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
 
         // 공격 애니메이션 재생 후 데미지 적용
         await new Promise(resolve => setTimeout(resolve, 400));
+
+        // 플레이어 피격 사운드
+        playHit();
 
         // 피격 콜백 호출
         const { onPlayerHit } = get();

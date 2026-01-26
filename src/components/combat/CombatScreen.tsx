@@ -11,7 +11,7 @@ import { PlayerStatus } from './PlayerStatus';
 import { DamagePopupManager } from './DamagePopup';
 import { SwordSlashEffect, SlashHitEffect } from './characters';
 import { generateNormalEncounter, ELITE_ENEMIES, BOSS_ENEMIES, EASTER_EGG_ENCOUNTER } from '../../data/enemies';
-import { playButtonHover, playButtonClick } from '../../utils/sound';
+import { playButtonHover, playButtonClick, playAttack, playFootsteps } from '../../utils/sound';
 
 // 전투 시작 인트로 화면
 function BattleIntro({
@@ -1140,11 +1140,13 @@ export function CombatScreen() {
             totalHits: hits.length
           };
           setIsAttacking(true);
+          playFootsteps(); // 발소리
           setPlayerAnimation('attack');
 
           // 첫 번째 타격 데미지 팝업, 피격 효과, 실제 데미지 적용 (600ms 후)
           const firstHit = hits[0];
           setTimeout(() => {
+            playAttack(); // 공격 사운드
             // 이동한 플레이어 위치(적 근처)에 슬래시 이펙트 표시
             const targetEl = enemyRefs.current.get(firstHit.targetId);
             if (targetEl) {
@@ -1215,10 +1217,12 @@ export function CombatScreen() {
             totalHits: 1 // 전체 공격은 1회 모션
           };
           setIsAttacking(true);
+          playFootsteps(); // 발소리
           setPlayerAnimation('attack');
 
           // 애니메이션 중간(600ms)에 모든 적에게 데미지 팝업, 피격, 실제 데미지 적용
           setTimeout(() => {
+            playAttack(); // 공격 사운드
             // 이동한 플레이어 위치(첫 번째 적 근처)에 슬래시 이펙트 표시
             if (pendingAttackRef.current && pendingAttackRef.current.hits.length > 0) {
               const firstTarget = pendingAttackRef.current.hits[0];
@@ -1851,6 +1855,7 @@ export function CombatScreen() {
                     setPlayerAnimation('attack_combo');
                     // 데미지 팝업, 피격 효과, 실제 데미지 적용 + 슬래시 이펙트
                     setTimeout(() => {
+                      playAttack(); // 콤보 공격 사운드
                       // 슬래시 이펙트 추가
                       const targetEl = enemyRefs.current.get(hitData.targetId);
                       if (targetEl) {
