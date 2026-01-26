@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { useGameStore } from '../../stores/gameStore';
 import { Card, CardInstance, createCardInstance } from '../../types/card';
 import { EnemyTemplate } from '../../types/enemy';
@@ -19,7 +19,7 @@ import {
   GREMLIN_NOB,
   SLIME_BOSS,
 } from '../../data/enemies/act1Enemies';
-import { ALL_RELICS, STARTER_RELICS } from '../../data/relics';
+import { ALL_RELICS } from '../../data/relics';
 
 // 선택 가능한 적 목록
 const ENEMY_OPTIONS: { template: EnemyTemplate; label: string; type: 'normal' | 'elite' | 'boss' }[] = [
