@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useGameStore } from '../../stores/gameStore';
 import { Card, CardInstance, createCardInstance } from '../../types/card';
 import { EnemyTemplate } from '../../types/enemy';
@@ -64,7 +64,7 @@ type SortOrder = 'asc' | 'desc';
 const rarityOrder = { BASIC: 0, COMMON: 1, UNCOMMON: 2, RARE: 3, UNIQUE: 4 };
 
 export function DeckBuildingScreen() {
-  const { setDeck, setPhase, startTestBattle, startGameWithDeckAndRelics, playerName, phase, ownedCardIds } = useGameStore();
+  const { setDeck, setPhase, startTestBattle, startGameWithDeckAndRelics, playerName, phase, ownedCardIds, ownedRelicIds } = useGameStore();
   const isNewGameMode = phase === 'NEW_GAME_DECK_BUILDING';
   const isAdmin = playerName === 'adm1n';
   const [selectedCards, setSelectedCards] = useState<CardInstance[]>([]);
@@ -73,6 +73,19 @@ export function DeckBuildingScreen() {
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
   const [selectedEnemies, setSelectedEnemies] = useState<EnemyTemplate[]>([]);
   const [selectedRelics, setSelectedRelics] = useState<Relic[]>([]);
+
+  // NEW_GAME_DECK_BUILDING 모드일 때 스타터 카드 2장씩 자동 추가
+  const STARTER_CARDS = [STRIKE, DEFEND, BASH, RELAX, FLEXIBLE_RESPONSE];
+  useEffect(() => {
+    if (isNewGameMode && selectedCards.length === 0) {
+      const initialDeck: CardInstance[] = [];
+      STARTER_CARDS.forEach(card => {
+        initialDeck.push(createCardInstance(card));
+        initialDeck.push(createCardInstance(card));
+      });
+      setSelectedCards(initialDeck);
+    }
+  }, [isNewGameMode]);
 
   const filteredCards = useMemo(() => {
     let cards = filter === 'ALL' ? [...ALL_CARDS] : ALL_CARDS.filter(card => card.type === filter);
@@ -118,6 +131,9 @@ export function DeckBuildingScreen() {
 
   const addCard = (card: Card) => {
     if (selectedCards.length >= MAX_DECK_SIZE) return;
+    // 같은 카드는 최대 2장까지만
+    const sameCardCount = selectedCards.filter(c => c.id === card.id).length;
+    if (sameCardCount >= 2) return;
     const cardInstance = createCardInstance(card);
     setSelectedCards([...selectedCards, cardInstance]);
   };
@@ -414,6 +430,7 @@ export function DeckBuildingScreen() {
             <div className="space-y-1">
               {ALL_RELICS.map((relic) => {
                 const isSelected = selectedRelics.some(r => r.id === relic.id);
+                const isOwned = !isNewGameMode || ownedRelicIds.includes(relic.id);
                 const rarityColor = relic.rarity === 'STARTER' ? '#4ade80'
                   : relic.rarity === 'COMMON' ? '#a3a3a3'
                   : relic.rarity === 'UNCOMMON' ? '#4a9eff'
@@ -428,15 +445,17 @@ export function DeckBuildingScreen() {
                 return (
                   <button
                     key={relic.id}
-                    onClick={() => toggleRelic(relic)}
-                    className="w-full p-2 rounded text-left transition-all hover:brightness-125 flex gap-2 items-center"
+                    onClick={() => isOwned && toggleRelic(relic)}
+                    className={`w-full p-2 rounded text-left transition-all flex gap-2 items-center ${isOwned ? 'hover:brightness-125' : 'cursor-not-allowed'}`}
                     style={{
                       background: isSelected ? rarityBg : 'rgba(0,0,0,0.3)',
                       border: `1px solid ${isSelected ? rarityColor : '#555'}`,
+                      filter: isOwned ? 'none' : 'grayscale(100%) brightness(0.5)',
+                      opacity: isOwned ? 1 : 0.6,
                     }}
                   >
                     {/* 유물 아이콘 */}
-                    <div className="flex-shrink-0">
+                    <div className="flex-shrink-0 relative">
                       {relic.icon ? (
                         <img
                           src={relic.icon}
@@ -446,6 +465,11 @@ export function DeckBuildingScreen() {
                         />
                       ) : (
                         <span className="text-3xl">❓</span>
+                      )}
+                      {!isOwned && (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <span className="text-gray-400 text-xs bg-black/50 px-1 rounded" style={{ fontFamily: '"NeoDunggeunmo", cursive' }}>미보유</span>
+                        </div>
                       )}
                     </div>
                     <div className="flex-1">

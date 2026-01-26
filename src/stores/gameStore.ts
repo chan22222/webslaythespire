@@ -28,6 +28,7 @@ interface GameState {
   playerName: string; // 캐릭터 이름
   deserterCount: number; // 전투 중 탈주 횟수
   ownedCardIds: string[]; // 보유한 카드 ID 목록
+  ownedRelicIds: string[]; // 보유한 유물 ID 목록
 
   // 액션
   setPlayerName: (name: string) => void;
@@ -76,6 +77,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   hasSaveData: false,
   isSaveLoading: false,
   ownedCardIds: ['strike', 'defend', 'bash', 'relax', 'flexible_response'], // 스타터 카드만 보유
+  ownedRelicIds: ['burning_blood', 'ring_of_the_snake', 'cracked_armor'], // 스타터 유물만 보유
 
   setPlayerName: (name: string) => {
     set({ playerName: name || '모험가' });
