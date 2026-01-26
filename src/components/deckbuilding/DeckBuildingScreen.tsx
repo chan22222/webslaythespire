@@ -458,7 +458,7 @@ export function DeckBuildingScreen() {
 
         {/* 중간: 유물 선택 패널 */}
         <div
-          className="deckbuild-relics w-[26rem] flex flex-col overflow-hidden"
+          className="deckbuild-relics w-[22rem] flex flex-col overflow-hidden"
           style={{
             background: 'linear-gradient(180deg, rgba(20,18,15,0.95) 0%, rgba(10,8,5,0.98) 100%)',
             borderLeft: '2px solid var(--gold-dark)',
@@ -529,7 +529,7 @@ export function DeckBuildingScreen() {
                       >
                         {relic.name}
                       </div>
-                      <div className="deckbuild-relic-desc text-base line-clamp-3" style={{ color: '#999' }}>
+                      <div className="deckbuild-relic-desc text-xl md:text-sm line-clamp-3" style={{ color: '#999' }}>
                         {relic.description}
                       </div>
                     </div>
@@ -542,7 +542,7 @@ export function DeckBuildingScreen() {
 
         {/* 오른쪽: 현재 덱 + 적 선택 */}
         <div
-          className="deckbuild-deck w-80 md:w-96 flex flex-col overflow-hidden"
+          className="deckbuild-deck w-96 flex flex-col overflow-hidden"
           style={{
             background: 'linear-gradient(180deg, rgba(20,18,15,0.95) 0%, rgba(10,8,5,0.98) 100%)',
             borderLeft: '2px solid var(--gold-dark)',
