@@ -239,17 +239,26 @@ export function DeckBuildingScreen() {
       {/* 카드 제한 메시지 토스트 */}
       {cardLimitMessage && (
         <div
-          className="fixed top-24 left-1/2 -translate-x-1/2 z-[9999] px-8 py-4 rounded-lg shadow-2xl pointer-events-none"
+          className="fixed top-24 left-1/2 -translate-x-1/2 z-[9999] px-8 py-4 rounded-lg pointer-events-none animate-fade-toast"
           style={{
-            background: 'linear-gradient(180deg, #dc2626 0%, #991b1b 100%)',
-            border: '3px solid #fca5a5',
+            background: 'rgba(180, 30, 30, 0.95)',
+            border: '2px solid #f87171',
             fontFamily: '"NeoDunggeunmo", cursive',
             color: '#fff',
-            fontSize: '18px',
-            textShadow: '2px 2px 4px rgba(0,0,0,0.5)',
-            boxShadow: '0 0 30px rgba(220, 38, 38, 0.8), 0 10px 40px rgba(0,0,0,0.5)',
+            fontSize: '16px',
           }}
         >
+          <style>{`
+            @keyframes fadeToast {
+              0% { opacity: 0; transform: translate(-50%, -10px); }
+              15% { opacity: 1; transform: translate(-50%, 0); }
+              85% { opacity: 1; transform: translate(-50%, 0); }
+              100% { opacity: 0; transform: translate(-50%, -10px); }
+            }
+            .animate-fade-toast {
+              animation: fadeToast 2s ease-in-out forwards;
+            }
+          `}</style>
           {cardLimitMessage}
         </div>
       )}
