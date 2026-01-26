@@ -1292,6 +1292,33 @@ export function CombatScreen() {
         <VictoryIntro onFadeStart={handleVictoryFadeStart} onComplete={handleVictoryComplete} />
       )}
 
+      {/* DANGER 효과 (15턴 이상) */}
+      {turn >= 15 && (
+        <>
+          {/* 빨간색 비네트 오버레이 */}
+          <div
+            className="fixed inset-0 pointer-events-none z-[100]"
+            style={{
+              background: 'radial-gradient(ellipse at center, transparent 40%, rgba(180, 0, 0, 0.4) 100%)',
+              animation: 'dangerPulse 2s ease-in-out infinite',
+            }}
+          />
+          {/* DANGER 텍스트 */}
+          <div
+            className="fixed top-28 left-1/2 -translate-x-1/2 z-[101] pointer-events-none"
+            style={{
+              fontFamily: '"NeoDunggeunmo", cursive',
+              fontSize: '1.5rem',
+              color: '#ff3333',
+              textShadow: '0 0 10px #ff0000, 0 0 20px #ff0000, 0 0 30px #ff0000',
+              animation: 'dangerBlink 1s ease-in-out infinite',
+            }}
+          >
+            ⚠️ DANGER ⚠️
+          </div>
+        </>
+      )}
+
       {/* 홈화면 추가 안내 (모바일 첫 전투 1회) */}
       {showA2HSPrompt && (
         <div
@@ -1795,7 +1822,7 @@ export function CombatScreen() {
       <div className="combat-main-area flex-1 relative z-10 flex items-center justify-center -mt-4 xs:-mt-6 sm:-mt-8 md:mt-0">
         <div className="combat-gap flex items-center justify-center gap-1 xs:gap-2 sm:gap-4 md:gap-20 lg:gap-32">
           {/* 플레이어 영역 - 좌측 */}
-          <div className="combat-scale combat-player flex flex-col items-center scale-[0.5] xs:scale-[0.55] sm:scale-[0.7] md:scale-90 lg:scale-110 z-10" ref={playerRef}>
+          <div className="combat-scale combat-player flex flex-col items-center scale-[0.5] xs:scale-[0.55] sm:scale-[0.7] md:scale-90 lg:scale-110 z-[60]" ref={playerRef}>
             <PlayerStatus
               player={player}
               block={playerBlock}
@@ -1888,7 +1915,7 @@ export function CombatScreen() {
       </div>
 
       {/* ===== 하단 UI 영역 ===== */}
-      <div className="combat-bottom-area relative z-20 h-28 xs:h-32 sm:h-36 md:h-44 lg:h-56">
+      <div className="combat-bottom-area relative z-20 h-28 xs:h-32 sm:h-36 md:h-44 lg:h-56 pointer-events-none">
         {/* 바닥 그라데이션 */}
         <div
           className="absolute inset-0 pointer-events-none"

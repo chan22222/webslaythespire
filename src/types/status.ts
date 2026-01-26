@@ -58,4 +58,9 @@ export const STATUS_INFO: Record<StatusType, { name: string; description: string
     description: '모든 피해를 받지 않습니다.',
     isDebuff: false,
   },
+  HEAL_REDUCTION: {
+    name: '치유 감소',
+    description: '받는 치유량이 50% 감소합니다.',
+    isDebuff: true,
+  },
 };

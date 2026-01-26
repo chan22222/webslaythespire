@@ -23,3 +23,15 @@ export const playCardBuy = () => {
   cardBuySound.currentTime = 0;
   cardBuySound.play().catch(() => {});
 };
+
+export const playCardDraw = () => {
+  const sound = new Audio('/sfx/sound/card_draw.wav');
+  sound.volume = 0.4;
+  sound.play().catch(() => {});
+};
+
+export const playDefeat = () => {
+  const sound = new Audio('/sfx/sound/music_box_defeated.wav');
+  sound.volume = 0.25;
+  sound.play().catch(() => {});
+};

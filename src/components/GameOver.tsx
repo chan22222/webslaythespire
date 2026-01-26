@@ -1,10 +1,15 @@
+import { useEffect } from 'react';
 import { useGameStore } from '../stores/gameStore';
 import { useCombatStore } from '../stores/combatStore';
-import { playButtonHover, playButtonClick } from '../utils/sound';
+import { playButtonHover, playButtonClick, playDefeat } from '../utils/sound';
 
 export function GameOver() {
   const { player, setPhase } = useGameStore();
   const { resetCombat } = useCombatStore();
+
+  useEffect(() => {
+    playDefeat();
+  }, []);
 
   const handleRestart = () => {
     resetCombat();

@@ -14,6 +14,7 @@ import {
   PoisonIcon,
   MetallicizeIcon,
   InvulnerableIcon,
+  HealReductionIcon,
 } from './icons';
 
 // 스킬 이펙트 컴포넌트 (export해서 Enemy에서도 사용)
@@ -237,7 +238,7 @@ interface PlayerStatusProps {
   incomingDamage?: number; // 예상 HP 손실 (LOSE_HP 카드)
 }
 
-function StatusBadge({ status }: { status: Status }) {
+function StatusBadge({ status, index = 0, total = 1 }: { status: Status; index?: number; total?: number }) {
   const [showTooltip, setShowTooltip] = useState(false);
   const info = STATUS_INFO[status.type];
 
@@ -259,6 +260,8 @@ function StatusBadge({ status }: { status: Status }) {
         return <MetallicizeIcon size={14} color="#94a3b8" />;
       case 'INVULNERABLE':
         return <InvulnerableIcon size={14} color="#fbbf24" />;
+      case 'HEAL_REDUCTION':
+        return <HealReductionIcon size={14} color="#ff6b6b" />;
       default:
         return null;
     }
@@ -267,6 +270,7 @@ function StatusBadge({ status }: { status: Status }) {
   return (
     <div
       className="relative"
+      style={{ zIndex: showTooltip ? 9999 : (10 + index) }}
       onMouseEnter={() => setShowTooltip(true)}
       onMouseLeave={() => setShowTooltip(false)}
     >
@@ -555,9 +559,12 @@ export function PlayerStatus({ player, block, statuses, animation = 'idle', anim
       </div>
 
       {/* 상태 효과 - 고정 높이로 레이아웃 안정화 */}
-      <div className="flex gap-2 mt-3 flex-wrap justify-center max-w-36 min-h-[32px] -ml-14">
+      <div
+        className="flex gap-x-2 gap-y-1 mt-3 flex-wrap justify-center max-w-40 min-h-[32px] -ml-14"
+        style={{ isolation: 'isolate' }}
+      >
         {statuses.map((status, index) => (
-          <StatusBadge key={index} status={status} />
+          <StatusBadge key={index} status={status} index={index} total={statuses.length} />
         ))}
       </div>
     </div>

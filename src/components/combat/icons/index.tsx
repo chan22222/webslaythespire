@@ -253,6 +253,33 @@ export function MetallicizeIcon({ size = 24, className = '', color = 'currentCol
   );
 }
 
+// 치유 감소 아이콘 (깨진 하트)
+export function HealReductionIcon({ size = 24, className = '', color = 'currentColor' }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} fill="none">
+      {/* 하트 */}
+      <path
+        d="M12 21.35L10.55 20.03C5.4 15.36 2 12.27 2 8.5C2 5.41 4.42 3 7.5 3C9.24 3 10.91 3.81 12 5.08C13.09 3.81 14.76 3 16.5 3C19.58 3 22 5.41 22 8.5C22 12.27 18.6 15.36 13.45 20.03L12 21.35Z"
+        fill={color}
+        opacity="0.6"
+      />
+      {/* X 표시 */}
+      <path
+        d="M8 8L16 16M16 8L8 16"
+        stroke="rgba(0,0,0,0.8)"
+        strokeWidth="3"
+        strokeLinecap="round"
+      />
+      <path
+        d="M8 8L16 16M16 8L8 16"
+        stroke="rgba(255,255,255,0.9)"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 // 무적 아이콘 (빛나는 방패)
 export function InvulnerableIcon({ size = 24, className = '', color = 'currentColor' }: IconProps) {
   return (

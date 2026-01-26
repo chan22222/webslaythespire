@@ -5,6 +5,7 @@ import { EnemyInstance, EnemyTemplate, createEnemyInstance } from '../types/enem
 import { Status, STATUS_INFO } from '../types/status';
 import { shuffle } from '../utils/shuffle';
 import { useGameStore } from './gameStore';
+import { playCardDraw } from '../utils/sound';
 
 // 데미지 팝업 타입
 export interface DamagePopup {
@@ -30,7 +31,7 @@ interface CombatStore extends CombatState {
   setOnPlayerHit: (callback: (() => void) | null) => void;
 
   // 카드 관리
-  drawCards: (count: number) => void;
+  drawCards: (count: number, silent?: boolean) => void;
   playCard: (cardInstanceId: string, targetEnemyId?: string, skipDamage?: boolean) => void;
   discardHand: () => void;
   selectCard: (cardInstanceId: string | null) => void;
@@ -252,6 +253,13 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     // 에너지 리셋
     set({ energy: maxEnergy });
 
+    // 15턴 이상: DANGER - 매 턴 취약과 치유 감소 2씩 부여 (유물 효과보다 먼저 적용)
+    if (turn >= 15) {
+      get().applyStatusToPlayer({ type: 'VULNERABLE', stacks: 2 });
+      get().applyStatusToPlayer({ type: 'HEAL_REDUCTION', stacks: 2 });
+      get().addToCombatLog(`⚠️ DANGER! 적이 조금 더 강력해집니다!`);
+    }
+
     // 유물 효과 트리거 (ON_TURN_START)
     const gameState = useGameStore.getState();
     const relics = gameState.player.relics;
@@ -279,8 +287,17 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
 
     // 턴 시작 유물 효과 적용
     if (turnHealAmount > 0) {
-      useGameStore.getState().healPlayer(turnHealAmount);
-      get().addToCombatLog(`유물 효과로 HP ${turnHealAmount} 회복!`);
+      // 치유 감소 상태 체크 (15턴 이상이거나 HEAL_REDUCTION 상태가 있으면 적용)
+      const currentStatuses = get().playerStatuses;
+      const healReductionTurn = currentStatuses.find(s => s.type === 'HEAL_REDUCTION');
+      const hasDangerHealReduction = turn >= 15 || (healReductionTurn && healReductionTurn.stacks > 0);
+      let finalTurnHeal = turnHealAmount;
+      if (hasDangerHealReduction) {
+        finalTurnHeal = Math.floor(turnHealAmount * 0.5);
+        get().addToCombatLog(`(치유 감소로 50% 감소)`);
+      }
+      useGameStore.getState().healPlayer(finalTurnHeal);
+      get().addToCombatLog(`유물 효과로 HP ${finalTurnHeal} 회복!`);
     }
     if (turnDamageToPlayer > 0) {
       get().dealDamageToPlayer(turnDamageToPlayer);
@@ -331,8 +348,9 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     }
 
     // 카드 5장 드로우 + 추가 드로우 (유물 효과)
+    // 첫 턴(전투 시작)에는 소리 없이 드로우
     const totalDraw = 5 + extraDrawNextTurn + turnExtraDraw;
-    get().drawCards(totalDraw);
+    get().drawCards(totalDraw, turn === 1);
 
     // 추가 드로우 리셋
     set({
@@ -391,11 +409,11 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       processedStatuses = processedStatuses.filter(s => s.type !== 'STRENGTH_DOWN');
     }
 
-    // 상태 효과 지속시간 감소 (약화, 취약, 방어도 유지, 무적)
+    // 상태 효과 지속시간 감소 (약화, 취약, 방어도 유지, 무적, 치유 감소)
     const updatedStatuses = processedStatuses
       .map(s => ({
         ...s,
-        stacks: (s.type === 'WEAK' || s.type === 'VULNERABLE' || s.type === 'BLOCK_RETAIN' || s.type === 'INVULNERABLE')
+        stacks: (s.type === 'WEAK' || s.type === 'VULNERABLE' || s.type === 'BLOCK_RETAIN' || s.type === 'INVULNERABLE' || s.type === 'HEAL_REDUCTION')
           ? s.stacks - 1
           : s.stacks,
       }))
@@ -523,11 +541,12 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     }
   },
 
-  drawCards: (count: number) => {
+  drawCards: (count: number, silent?: boolean) => {
     const { drawPile, hand, discardPile } = get();
     const newHand = [...hand];
     let newDrawPile = [...drawPile];
     let newDiscardPile = [...discardPile];
+    let drawnCount = 0;
 
     for (let i = 0; i < count; i++) {
       if (newDrawPile.length === 0) {
@@ -540,6 +559,11 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       const card = newDrawPile.pop();
       if (card) {
         newHand.push(card);
+        // 카드 드로우 사운드 재생 (딜레이를 줘서 순차 재생, silent면 재생 안 함)
+        if (!silent) {
+          setTimeout(() => playCardDraw(), drawnCount * 110);
+        }
+        drawnCount++;
       }
     }
 
@@ -678,7 +702,13 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
           break;
         }
         case 'HEAL': {
-          const healAmount = effect.value;
+          let healAmount = effect.value;
+          // 치유 감소 상태 체크
+          const healReduction = get().playerStatuses.find(s => s.type === 'HEAL_REDUCTION');
+          if (healReduction && healReduction.stacks > 0) {
+            healAmount = Math.floor(healAmount * 0.5);
+            get().addToCombatLog(`(치유 감소로 50% 감소)`);
+          }
           useGameStore.getState().healPlayer(healAmount);
           get().addDamagePopup(healAmount, 'heal', 0, 0, 'player');
           get().addToCombatLog(`HP ${healAmount} 회복!`);
@@ -836,6 +866,10 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
             hand: [...get().hand, ...cardsToReturn],
             discardPile: remainingDiscard,
           });
+          // 카드 드로우 사운드 재생 (딜레이를 줘서 순차 재생)
+          for (let i = 0; i < returnCount; i++) {
+            setTimeout(() => playCardDraw(), i * 110);
+          }
           get().addToCombatLog(`${returnCount}장의 카드가 손으로 돌아왔습니다!`);
           break;
         }
@@ -901,8 +935,14 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
             get().addToCombatLog(`독버섯! HP ${critDamage} 손실!`);
           } else {
             // 랜덤 힐/데미지
-            const randomValue = Math.floor(Math.random() * (maxVal - minVal + 1)) + minVal;
+            let randomValue = Math.floor(Math.random() * (maxVal - minVal + 1)) + minVal;
             if (randomValue > 0) {
+              // 치유 감소 상태 체크
+              const healReductionRandom = get().playerStatuses.find(s => s.type === 'HEAL_REDUCTION');
+              if (healReductionRandom && healReductionRandom.stacks > 0) {
+                randomValue = Math.floor(randomValue * 0.5);
+                get().addToCombatLog(`(치유 감소로 50% 감소)`);
+              }
               useGameStore.getState().healPlayer(randomValue);
               get().addDamagePopup(randomValue, 'heal', 0, 0, 'player');
               get().addToCombatLog(`HP ${randomValue} 회복!`);
@@ -956,6 +996,7 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
             hand: [...get().hand, restoredCard],
             discardPile: currentDiscard.filter(c => c.instanceId !== card.instanceId),
           });
+          playCardDraw();
           get().addToCombatLog(`${card.name}이(가) 손으로 돌아왔습니다!`);
         }
       }, 300);
@@ -1062,9 +1103,16 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
           const context = {
             damageDealt: remainingDamage, // 실제로 HP에 들어간 데미지
             heal: (amount: number) => {
-              useGameStore.getState().healPlayer(amount);
-              get().addDamagePopup(amount, 'heal', 0, 0, 'player');
-              get().addToCombatLog(`흡혈! HP ${amount} 회복!`);
+              // 치유 감소 상태 체크
+              const healReductionRelic = get().playerStatuses.find(s => s.type === 'HEAL_REDUCTION');
+              let finalHeal = amount;
+              if (healReductionRelic && healReductionRelic.stacks > 0) {
+                finalHeal = Math.floor(amount * 0.5);
+                get().addToCombatLog(`(치유 감소로 50% 감소)`);
+              }
+              useGameStore.getState().healPlayer(finalHeal);
+              get().addDamagePopup(finalHeal, 'heal', 0, 0, 'player');
+              get().addToCombatLog(`흡혈! HP ${finalHeal} 회복!`);
             },
           };
           effect.execute(context);
