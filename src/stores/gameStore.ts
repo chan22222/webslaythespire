@@ -128,16 +128,31 @@ export const useGameStore = create<GameState>((set, get) => ({
       return;
     }
 
-    // 로그인 유저는 덱빌딩 화면으로
+    // 로그인 유저도 바로 맵으로 이동
+    const starterRelic = STARTER_RELICS[Math.floor(Math.random() * STARTER_RELICS.length)];
+    const hasCrackedArmor = starterRelic.id === 'cracked_armor';
+    const newMap = generateMap();
+    const starterCards = [STRIKE, DEFEND, BASH, RELAX, FLEXIBLE_RESPONSE];
+    const starterDeck = starterCards.flatMap(card => [
+      createCardInstance(card),
+      createCardInstance(card),
+    ]);
+
     set({
-      phase: 'NEW_GAME_DECK_BUILDING',
+      phase: 'MAP',
       player: {
         ...initialPlayer,
-        deck: [],
-        relics: [],
+        deck: starterDeck,
+        relics: [starterRelic],
+        maxHp: hasCrackedArmor ? initialPlayer.maxHp + 15 : initialPlayer.maxHp,
+        currentHp: hasCrackedArmor ? initialPlayer.currentHp + 15 : initialPlayer.currentHp,
       },
-      ownedCardIds: ['strike', 'defend', 'bash', 'relax', 'flexible_response'],
-      map: { nodes: [], currentNodeId: null, floor: 1 },
+      ownedCardIds: [
+        'strike', 'defend', 'bash', 'relax', 'flexible_response',
+        'combo_attack', 'assault_shield', 'double_strike', 'equipment_check', 'neutralize', 'instant_focus', 'tactical_review',
+        'rage', 'diamond_body', 'life_exchange', 'desperate_strike', 'fatal_wound', 'battle_trance', 'sweeping', 'wild_mushroom',
+      ],
+      map: newMap,
       currentAct: 1,
       testEnemies: null,
     });
