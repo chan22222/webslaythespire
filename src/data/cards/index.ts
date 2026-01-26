@@ -16,6 +16,7 @@ export const ALL_OBTAINABLE_CARDS: Card[] = [
   ...COMMON_CARDS,
   ...UNCOMMON_CARDS,
   ...RARE_CARDS,
+  ...UNIQUE_CARDS,
 ];
 
 // 모든 카드 (유니크 카드 포함)
@@ -36,16 +37,18 @@ export function generateCardRewards(count: number = 3): Card[] {
   const availableCards = [...ALL_OBTAINABLE_CARDS];
 
   for (let i = 0; i < count && availableCards.length > 0; i++) {
-    // 희귀도 가중치: COMMON 60%, UNCOMMON 30%, RARE 10%
+    // 희귀도 가중치: COMMON 55%, UNCOMMON 30%, RARE 12%, UNIQUE 3%
     const roll = Math.random();
     let targetRarity: Card['rarity'];
 
-    if (roll < 0.60) {
+    if (roll < 0.55) {
       targetRarity = 'COMMON';
-    } else if (roll < 0.90) {
+    } else if (roll < 0.85) {
       targetRarity = 'UNCOMMON';
-    } else {
+    } else if (roll < 0.97) {
       targetRarity = 'RARE';
+    } else {
+      targetRarity = 'UNIQUE';
     }
 
     const eligibleCards = availableCards.filter(c => c.rarity === targetRarity);
