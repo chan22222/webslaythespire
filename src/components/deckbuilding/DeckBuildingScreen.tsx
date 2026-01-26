@@ -116,10 +116,10 @@ export function DeckBuildingScreen() {
 
   const addCard = (card: Card) => {
     if (selectedCards.length >= MAX_DECK_SIZE) return;
-    // 같은 카드는 최대 2장까지만
+    // 같은 카드는 최대 10장까지만
     const sameCardCount = selectedCards.filter(c => c.id === card.id).length;
-    if (sameCardCount >= 2) {
-      setCardLimitMessage('같은 카드는 최대 2장만 넣을 수 있습니다.');
+    if (sameCardCount >= 10) {
+      setCardLimitMessage('같은 카드는 최대 10장만 넣을 수 있습니다.');
       setTimeout(() => setCardLimitMessage(null), 2000);
       return;
     }

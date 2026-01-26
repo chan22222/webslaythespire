@@ -1032,7 +1032,7 @@ export function EvilWizardSprite({ size = 120, className = '', isAttacking = fal
   // 컨테이너는 idle 기준 crop 크기로 설정
   const scaledSize = size * 3.4;
   const baseScale = scaledSize / EVIL_WIZARD_CONFIG.cropHeight;
-  const containerWidth = EVIL_WIZARD_CONFIG.cropWidth * baseScale;
+  const containerWidth = EVIL_WIZARD_CONFIG.cropWidth * baseScale * 0.35; // 가로 축소
   const containerHeight = EVIL_WIZARD_CONFIG.cropHeight * baseScale * 0.45; // HP바 가깝게
 
   // 실제 스프라이트 크기
@@ -1123,7 +1123,7 @@ export function NightBorneSprite({ size = 150, className = '', isAttacking = fal
   // 컨테이너 크기 - idle 기준 고정
   const scaledSize = size * 2.4;
   const baseScale = scaledSize / NIGHTBORNE_CONFIG.idleCropHeight;
-  const containerWidth = NIGHTBORNE_CONFIG.idleCropWidth * baseScale;
+  const containerWidth = NIGHTBORNE_CONFIG.idleCropWidth * baseScale * 0.6; // 가로 축소
   const containerHeight = NIGHTBORNE_CONFIG.idleCropHeight * baseScale * 0.55; // HP바 가깝게
 
   // 실제 스프라이트 크기 - idle 기준 scale 고정
