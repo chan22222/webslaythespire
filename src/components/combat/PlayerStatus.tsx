@@ -239,7 +239,7 @@ interface PlayerStatusProps {
   incomingDamage?: number; // 예상 HP 손실 (LOSE_HP 카드)
 }
 
-function StatusBadge({ status, index = 0, total = 1 }: { status: Status; index?: number; total?: number }) {
+function StatusBadge({ status }: { status: Status }) {
   const [showTooltip, setShowTooltip] = useState(false);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
   const badgeRef = useRef<HTMLDivElement>(null);
@@ -580,7 +580,7 @@ export function PlayerStatus({ player, block, statuses, animation = 'idle', anim
       {/* 상태 효과 - 3줄 높이 고정 */}
       <div className="relative z-[100] flex gap-2 mt-3 flex-wrap justify-center content-start max-w-40 -ml-14 min-h-[100px]">
         {statuses.map((status, index) => (
-          <StatusBadge key={index} status={status} index={index} total={statuses.length} />
+          <StatusBadge key={index} status={status} />
         ))}
       </div>
     </div>

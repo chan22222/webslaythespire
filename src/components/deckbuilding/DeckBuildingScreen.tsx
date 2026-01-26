@@ -64,7 +64,8 @@ type SortOrder = 'asc' | 'desc';
 const rarityOrder = { BASIC: 0, COMMON: 1, UNCOMMON: 2, RARE: 3, UNIQUE: 4 };
 
 export function DeckBuildingScreen() {
-  const { setDeck, setPhase, startTestBattle, startGameWithDeckAndRelics, playerName } = useGameStore();
+  const { setDeck, setPhase, startTestBattle, startGameWithDeckAndRelics, playerName, phase, ownedCardIds } = useGameStore();
+  const isNewGameMode = phase === 'NEW_GAME_DECK_BUILDING';
   const isAdmin = playerName === 'adm1n';
   const [selectedCards, setSelectedCards] = useState<CardInstance[]>([]);
   const [filter, setFilter] = useState<'ALL' | 'ATTACK' | 'SHIELD' | 'GADGET' | 'EFFECT' | 'TERRAIN'>('ALL');
@@ -77,6 +78,14 @@ export function DeckBuildingScreen() {
     let cards = filter === 'ALL' ? [...ALL_CARDS] : ALL_CARDS.filter(card => card.type === filter);
 
     cards.sort((a, b) => {
+      // NEW_GAME_DECK_BUILDING 모드에서는 미보유 카드를 후순위로
+      if (isNewGameMode) {
+        const aOwned = ownedCardIds.includes(a.id);
+        const bOwned = ownedCardIds.includes(b.id);
+        if (aOwned && !bOwned) return -1;
+        if (!aOwned && bOwned) return 1;
+      }
+
       let comparison = 0;
       switch (sortBy) {
         case 'cost':
@@ -96,7 +105,7 @@ export function DeckBuildingScreen() {
     });
 
     return cards;
-  }, [filter, sortBy, sortOrder]);
+  }, [filter, sortBy, sortOrder, isNewGameMode, ownedCardIds]);
 
   const toggleSort = (newSortBy: SortBy) => {
     if (sortBy === newSortBy) {
@@ -135,7 +144,16 @@ export function DeckBuildingScreen() {
 
   const startGame = () => {
     if (selectedCards.length < MIN_DECK_SIZE) return;
-    if (selectedEnemies.length === 0 && !isAdmin) return; // 적 선택 필수 (관리자 제외)
+
+    // NEW_GAME_DECK_BUILDING 모드: 바로 맵으로 이동
+    if (isNewGameMode) {
+      setDeck(selectedCards);
+      startGameWithDeckAndRelics(selectedRelics);
+      return;
+    }
+
+    // 연습 모드: 적 선택 필수 (관리자 제외)
+    if (selectedEnemies.length === 0 && !isAdmin) return;
 
     setDeck(selectedCards);
 
@@ -189,8 +207,9 @@ export function DeckBuildingScreen() {
       >
         <button
           onClick={goBack}
-          className="px-4 py-2 rounded-lg font-title text-sm transition-all hover:scale-105"
+          className="px-4 py-2 rounded-lg text-sm transition-all hover:scale-105"
           style={{
+            fontFamily: '"NeoDunggeunmo", cursive',
             background: 'linear-gradient(180deg, #2a2015 0%, #0a0805 100%)',
             border: '1px solid var(--gold-dark)',
             color: 'var(--gold)',
@@ -200,44 +219,48 @@ export function DeckBuildingScreen() {
         </button>
 
         <h1
-          className="font-display text-2xl tracking-wider"
-          style={{ color: 'var(--gold-light)', textShadow: '0 0 20px rgba(212, 168, 75, 0.4)' }}
+          className="text-2xl tracking-wider"
+          style={{ fontFamily: '"NeoDunggeunmo", cursive', color: 'var(--gold-light)', textShadow: '0 0 20px rgba(212, 168, 75, 0.4)' }}
         >
           덱 빌딩
         </h1>
 
         <div className="flex items-center gap-4">
-          <div className="font-title text-sm" style={{ color: 'var(--gold)' }}>
+          <div className="text-sm" style={{ fontFamily: '"NeoDunggeunmo", cursive', color: 'var(--gold)' }}>
             <span className="text-xl font-bold">{selectedCards.length}</span>
             <span className="text-gray-400"> / {MAX_DECK_SIZE}</span>
             {selectedCards.length < MIN_DECK_SIZE && (
               <span className="text-red-400 ml-2 text-xs">(최소 {MIN_DECK_SIZE}장)</span>
             )}
-            {selectedCards.length >= MIN_DECK_SIZE && selectedEnemies.length === 0 && !isAdmin && (
+            {!isNewGameMode && selectedCards.length >= MIN_DECK_SIZE && selectedEnemies.length === 0 && !isAdmin && (
               <span className="text-red-400 ml-2 text-xs">(적 선택 필수)</span>
             )}
           </div>
+          {(() => {
+            const canStart = isNewGameMode
+              ? selectedCards.length >= MIN_DECK_SIZE
+              : selectedCards.length >= MIN_DECK_SIZE && (selectedEnemies.length > 0 || isAdmin);
+            return (
           <button
             onClick={startGame}
-            disabled={selectedCards.length < MIN_DECK_SIZE || (selectedEnemies.length === 0 && !isAdmin)}
-            className={`px-6 py-2 rounded-lg font-title text-sm transition-all ${
-              selectedCards.length >= MIN_DECK_SIZE && (selectedEnemies.length > 0 || isAdmin)
-                ? 'hover:scale-105 cursor-pointer'
-                : 'opacity-50 cursor-not-allowed'
+            disabled={!canStart}
+            className={`px-6 py-2 rounded-lg text-sm transition-all ${
+              canStart ? 'hover:scale-105 cursor-pointer' : 'opacity-50 cursor-not-allowed'
             }`}
             style={{
-              background: selectedCards.length >= MIN_DECK_SIZE && (selectedEnemies.length > 0 || isAdmin)
+              fontFamily: '"NeoDunggeunmo", cursive',
+              background: canStart
                 ? 'linear-gradient(180deg, #3a5a2a 0%, #1a2a10 100%)'
                 : 'linear-gradient(180deg, #2a2a2a 0%, #0a0a0a 100%)',
-              border: `2px solid ${selectedCards.length >= MIN_DECK_SIZE && (selectedEnemies.length > 0 || isAdmin) ? '#4ade80' : '#444'}`,
-              color: selectedCards.length >= MIN_DECK_SIZE && (selectedEnemies.length > 0 || isAdmin) ? '#4ade80' : '#666',
-              boxShadow: selectedCards.length >= MIN_DECK_SIZE && (selectedEnemies.length > 0 || isAdmin)
-                ? '0 0 15px rgba(74, 222, 128, 0.3)'
-                : 'none',
+              border: `2px solid ${canStart ? '#4ade80' : '#444'}`,
+              color: canStart ? '#4ade80' : '#666',
+              boxShadow: canStart ? '0 0 15px rgba(74, 222, 128, 0.3)' : 'none',
             }}
           >
-            {selectedEnemies.length > 0 ? '전투 시작' : '게임 시작'} →
+            {isNewGameMode ? '게임 시작' : (selectedEnemies.length > 0 ? '전투 시작' : '게임 시작')} →
           </button>
+            );
+          })()}
         </div>
       </div>
 
@@ -325,23 +348,44 @@ export function DeckBuildingScreen() {
           {/* 카드 목록 */}
           <div className="flex-1 overflow-y-auto pr-2">
             <div className="deckbuild-card-grid flex flex-wrap gap-4 justify-start pt-4">
-              {filteredCards.map((card, index) => (
+              {filteredCards.map((card, index) => {
+                const isOwned = !isNewGameMode || ownedCardIds.includes(card.id);
+                return (
                 <div
                   key={`${card.id}-${index}`}
-                  className="deckbuild-card cursor-pointer transition-transform hover:scale-105 hover:z-10 relative inline-block group"
-                  style={{ width: '180px', height: '251px' }}
-                  onClick={() => addCard(card)}
+                  className={`deckbuild-card transition-transform relative inline-block group ${
+                    isOwned ? 'cursor-pointer hover:scale-105 hover:z-10' : 'cursor-not-allowed'
+                  }`}
+                  style={{
+                    width: '180px',
+                    height: '251px',
+                    filter: isOwned ? 'none' : 'grayscale(100%) brightness(0.5)',
+                    opacity: isOwned ? 1 : 0.6,
+                  }}
+                  onClick={() => isOwned && addCard(card)}
                 >
                   <CardComponent card={card} size="lg" />
-                  {/* 추가 힌트 */}
-                  <div
-                    className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-lg pointer-events-none"
-                    style={{ background: 'rgba(74, 222, 128, 0.5)' }}
-                  >
-                    <span className="text-white text-2xl font-bold">+</span>
-                  </div>
+                  {/* 추가 힌트 - 보유 카드만 */}
+                  {isOwned && (
+                    <div
+                      className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-lg pointer-events-none"
+                      style={{ background: 'rgba(74, 222, 128, 0.5)' }}
+                    >
+                      <span className="text-white text-2xl font-bold">+</span>
+                    </div>
+                  )}
+                  {/* 미보유 표시 */}
+                  {!isOwned && (
+                    <div
+                      className="absolute inset-0 flex items-center justify-center rounded-lg pointer-events-none"
+                      style={{ background: 'rgba(0, 0, 0, 0.3)' }}
+                    >
+                      <span className="text-gray-400 text-xs" style={{ fontFamily: '"NeoDunggeunmo", cursive' }}>미보유</span>
+                    </div>
+                  )}
                 </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>
@@ -553,7 +597,8 @@ export function DeckBuildingScreen() {
             </div>
           )}
 
-          {/* 적 선택 섹션 */}
+          {/* 적 선택 섹션 - 연습 모드에서만 표시 */}
+          {!isNewGameMode && (
           <div
             className="deckbuild-enemy-section p-3 border-t-2 flex-1"
             style={{ borderColor: 'var(--gold-dark)' }}
@@ -635,6 +680,7 @@ export function DeckBuildingScreen() {
               </p>
             )}
           </div>
+          )}
         </div>
       </div>
     </div>

@@ -16,7 +16,7 @@ const getRandomStarterRelic = () => {
   return [STARTER_RELICS[index]];
 };
 
-export type GamePhase = 'MAIN_MENU' | 'DECK_BUILDING' | 'MAP' | 'COMBAT' | 'REWARD' | 'SHOP' | 'REST' | 'EVENT' | 'CARD_REWARD' | 'GAME_OVER' | 'VICTORY';
+export type GamePhase = 'MAIN_MENU' | 'DECK_BUILDING' | 'NEW_GAME_DECK_BUILDING' | 'MAP' | 'COMBAT' | 'REWARD' | 'SHOP' | 'REST' | 'EVENT' | 'CARD_REWARD' | 'GAME_OVER' | 'VICTORY';
 
 interface GameState {
   // 게임 상태
@@ -27,6 +27,7 @@ interface GameState {
   testEnemies: EnemyTemplate[] | null; // 테스트 모드용 적
   playerName: string; // 캐릭터 이름
   deserterCount: number; // 전투 중 탈주 횟수
+  ownedCardIds: string[]; // 보유한 카드 ID 목록
 
   // 액션
   setPlayerName: (name: string) => void;
@@ -74,33 +75,27 @@ export const useGameStore = create<GameState>((set, get) => ({
   deserterCount: 0,
   hasSaveData: false,
   isSaveLoading: false,
+  ownedCardIds: ['strike', 'defend', 'bash', 'relax', 'flexible_response'], // 스타터 카드만 보유
 
   setPlayerName: (name: string) => {
     set({ playerName: name || '모험가' });
   },
 
   startNewGame: () => {
-    const starterDeck = createStarterDeck().map(card => createCardInstance(card));
-    const newMap = generateMap();
-    const relics = getRandomStarterRelic();
-    const hasCrackedArmor = relics.some(r => r.id === 'cracked_armor');
     const initialPlayer = createInitialPlayer();
 
     set({
-      phase: 'MAP',
+      phase: 'NEW_GAME_DECK_BUILDING',
       player: {
         ...initialPlayer,
-        deck: starterDeck,
-        relics,
-        maxHp: hasCrackedArmor ? initialPlayer.maxHp + 15 : initialPlayer.maxHp,
-        currentHp: hasCrackedArmor ? initialPlayer.currentHp + 15 : initialPlayer.currentHp,
+        deck: [],
+        relics: [],
       },
-      map: newMap,
+      ownedCardIds: ['strike', 'defend', 'bash', 'relax', 'flexible_response'], // 스타터 카드만 보유
+      map: { nodes: [], currentNodeId: null, floor: 1 },
       currentAct: 1,
-      testEnemies: null, // 연습 모드 적 초기화
+      testEnemies: null,
     });
-    // 새 게임 시작 시 자동 저장
-    setTimeout(() => get().saveGame(), 100);
   },
 
   startDeckBuilding: () => {

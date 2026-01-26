@@ -5,7 +5,7 @@ import { EnemyInstance, EnemyTemplate, createEnemyInstance } from '../types/enem
 import { Status, STATUS_INFO } from '../types/status';
 import { shuffle } from '../utils/shuffle';
 import { useGameStore } from './gameStore';
-import { playCardDraw, playAttack, playHit, playBuff, playDebuff, playEnemyBuff, playWin } from '../utils/sound';
+import { playCardDraw, playHit, playBuff, playDebuff, playEnemyBuff, playWin } from '../utils/sound';
 
 // 데미지 팝업 타입
 export interface DamagePopup {

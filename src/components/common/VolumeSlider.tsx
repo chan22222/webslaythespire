@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { setGlobalVolume, getGlobalVolume } from '../../utils/sound';
+import { setGlobalVolume } from '../../utils/sound';
 
 export function VolumeSlider() {
   const [volume, setVolume] = useState(() => {
