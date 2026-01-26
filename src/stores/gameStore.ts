@@ -17,7 +17,7 @@ const getRandomStarterRelic = () => {
   return [STARTER_RELICS[index]];
 };
 
-export type GamePhase = 'MAIN_MENU' | 'DECK_BUILDING' | 'NEW_GAME_DECK_BUILDING' | 'MAP' | 'COMBAT' | 'REWARD' | 'SHOP' | 'REST' | 'EVENT' | 'CARD_REWARD' | 'GAME_OVER' | 'VICTORY';
+export type GamePhase = 'MAIN_MENU' | 'DECK_BUILDING' | 'MAP' | 'COMBAT' | 'REWARD' | 'SHOP' | 'REST' | 'EVENT' | 'CARD_REWARD' | 'GAME_OVER' | 'VICTORY';
 
 interface GameState {
   // 게임 상태

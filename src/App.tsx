@@ -398,7 +398,7 @@ function App() {
 
       <div className="game-content w-full min-h-screen bg-gray-900">
       {phase === 'MAIN_MENU' && !isLoading && !showLoginScreen && <MainMenu />}
-      {(phase === 'DECK_BUILDING' || phase === 'NEW_GAME_DECK_BUILDING') && <DeckBuildingScreen />}
+      {phase === 'DECK_BUILDING' && <DeckBuildingScreen />}
       {phase === 'MAP' && <MapScreen />}
       {phase === 'COMBAT' && <CombatScreen />}
       {phase === 'CARD_REWARD' && <CardRewardScreen />}

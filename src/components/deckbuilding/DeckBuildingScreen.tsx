@@ -64,8 +64,7 @@ type SortOrder = 'asc' | 'desc';
 const rarityOrder = { BASIC: 0, COMMON: 1, UNCOMMON: 2, RARE: 3, UNIQUE: 4 };
 
 export function DeckBuildingScreen() {
-  const { setDeck, setPhase, startTestBattle, startGameWithDeckAndRelics, playerName, phase, ownedCardIds, ownedRelicIds } = useGameStore();
-  const isNewGameMode = phase === 'NEW_GAME_DECK_BUILDING';
+  const { setDeck, setPhase, startTestBattle, startGameWithDeckAndRelics, playerName, ownedCardIds, ownedRelicIds } = useGameStore();
   const isAdmin = playerName === 'adm1n';
   const [selectedCards, setSelectedCards] = useState<CardInstance[]>([]);
   const [filter, setFilter] = useState<'ALL' | 'ATTACK' | 'SHIELD' | 'GADGET' | 'EFFECT' | 'TERRAIN'>('ALL');
@@ -74,27 +73,6 @@ export function DeckBuildingScreen() {
   const [selectedEnemies, setSelectedEnemies] = useState<EnemyTemplate[]>([]);
   const [selectedRelics, setSelectedRelics] = useState<Relic[]>([]);
   const [cardLimitMessage, setCardLimitMessage] = useState<string | null>(null);
-
-  // NEW_GAME_DECK_BUILDING 모드일 때 스타터 카드 2장씩 자동 추가 + 랜덤 스타터 유물 선택
-  const STARTER_CARDS = [STRIKE, DEFEND, BASH, RELAX, FLEXIBLE_RESPONSE];
-  useEffect(() => {
-    if (isNewGameMode) {
-      // 스타터 카드 2장씩 자동 추가
-      if (selectedCards.length === 0) {
-        const initialDeck: CardInstance[] = [];
-        STARTER_CARDS.forEach(card => {
-          initialDeck.push(createCardInstance(card));
-          initialDeck.push(createCardInstance(card));
-        });
-        setSelectedCards(initialDeck);
-      }
-      // 랜덤 스타터 유물 선택
-      if (selectedRelics.length === 0) {
-        const randomRelic = STARTER_RELICS[Math.floor(Math.random() * STARTER_RELICS.length)];
-        setSelectedRelics([randomRelic]);
-      }
-    }
-  }, [isNewGameMode]);
 
   const filteredCards = useMemo(() => {
     let cards = filter === 'ALL' ? [...ALL_CARDS] : ALL_CARDS.filter(card => card.type === filter);
@@ -162,34 +140,17 @@ export function DeckBuildingScreen() {
   };
 
   const toggleRelic = (relic: Relic) => {
-    const isStarterRelic = STARTER_RELICS.some(r => r.id === relic.id);
-
     if (selectedRelics.some(r => r.id === relic.id)) {
-      // 새 게임 모드에서 스타터 유물은 해제 불가 (1개 필수)
-      if (isNewGameMode && isStarterRelic) return;
       setSelectedRelics(selectedRelics.filter(r => r.id !== relic.id));
     } else if (selectedRelics.length < 5) {
-      // 스타터 유물은 1개만 선택 가능 (교체)
-      if (isStarterRelic) {
-        const nonStarterRelics = selectedRelics.filter(r => !STARTER_RELICS.some(sr => sr.id === r.id));
-        setSelectedRelics([...nonStarterRelics, relic]);
-      } else {
-        setSelectedRelics([...selectedRelics, relic]);
-      }
+      setSelectedRelics([...selectedRelics, relic]);
     }
   };
 
   const startGame = () => {
     if (selectedCards.length < MIN_DECK_SIZE) return;
 
-    // NEW_GAME_DECK_BUILDING 모드: 바로 맵으로 이동
-    if (isNewGameMode) {
-      setDeck(selectedCards);
-      startGameWithDeckAndRelics(selectedRelics);
-      return;
-    }
-
-    // 연습 모드: 적 선택 필수 (관리자 제외)
+    // 적 선택 필수 (관리자 제외)
     if (selectedEnemies.length === 0 && !isAdmin) return;
 
     setDeck(selectedCards);
@@ -296,14 +257,12 @@ export function DeckBuildingScreen() {
             {selectedCards.length < MIN_DECK_SIZE && (
               <span className="text-red-400 ml-2 text-xs">(최소 {MIN_DECK_SIZE}장)</span>
             )}
-            {!isNewGameMode && selectedCards.length >= MIN_DECK_SIZE && selectedEnemies.length === 0 && !isAdmin && (
+            {selectedCards.length >= MIN_DECK_SIZE && selectedEnemies.length === 0 && !isAdmin && (
               <span className="text-red-400 ml-2 text-xs">(적 선택 필수)</span>
             )}
           </div>
           {(() => {
-            const canStart = isNewGameMode
-              ? selectedCards.length >= MIN_DECK_SIZE
-              : selectedCards.length >= MIN_DECK_SIZE && (selectedEnemies.length > 0 || isAdmin);
+            const canStart = selectedCards.length >= MIN_DECK_SIZE && (selectedEnemies.length > 0 || isAdmin);
             return (
           <button
             onClick={startGame}
@@ -321,7 +280,7 @@ export function DeckBuildingScreen() {
               boxShadow: canStart ? '0 0 15px rgba(74, 222, 128, 0.3)' : 'none',
             }}
           >
-            {isNewGameMode ? '게임 시작' : (selectedEnemies.length > 0 ? '전투 시작' : '게임 시작')} →
+            {selectedEnemies.length > 0 ? '전투 시작' : '게임 시작'} →
           </button>
             );
           })()}
@@ -586,19 +545,13 @@ export function DeckBuildingScreen() {
 
           {/* 덱 카드 목록 */}
           {selectedCards.length === 0 ? (
-            <div
-              className="deckbuild-deck-list flex-1 flex items-center justify-center p-4"
-              style={isNewGameMode ? { maxHeight: 'none', flex: 1 } : {}}
-            >
+            <div className="deckbuild-deck-list flex-1 flex items-center justify-center p-4">
               <p className="font-card text-xs text-gray-500 text-center">
                 왼쪽에서 카드를 클릭하여<br />덱에 추가하세요
               </p>
             </div>
           ) : (
-            <div
-              className="deckbuild-deck-list flex-1 overflow-y-auto p-2"
-              style={isNewGameMode ? { maxHeight: 'none', flex: 1 } : {}}
-            >
+            <div className="deckbuild-deck-list flex-1 overflow-y-auto p-2">
               {/* 그룹화된 카드 리스트 */}
               <div className="space-y-1">
                 {groupedCards.map(({ card, count, instances }) => (
@@ -662,8 +615,7 @@ export function DeckBuildingScreen() {
             </div>
           )}
 
-          {/* 적 선택 섹션 - 연습 모드에서만 표시 */}
-          {!isNewGameMode && (
+          {/* 적 선택 섹션 */}
           <div
             className="deckbuild-enemy-section p-3 border-t-2 flex-1"
             style={{ borderColor: 'var(--gold-dark)' }}
@@ -745,7 +697,6 @@ export function DeckBuildingScreen() {
               </p>
             )}
           </div>
-          )}
         </div>
       </div>
     </div>
