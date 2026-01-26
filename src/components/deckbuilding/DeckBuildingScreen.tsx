@@ -542,7 +542,7 @@ export function DeckBuildingScreen() {
 
         {/* 오른쪽: 현재 덱 + 적 선택 */}
         <div
-          className="deckbuild-deck w-96 flex flex-col overflow-hidden"
+          className="deckbuild-deck min-w-[45vw] md:min-w-0 md:w-96 flex-shrink-0 flex flex-col overflow-hidden"
           style={{
             background: 'linear-gradient(180deg, rgba(20,18,15,0.95) 0%, rgba(10,8,5,0.98) 100%)',
             borderLeft: '2px solid var(--gold-dark)',
