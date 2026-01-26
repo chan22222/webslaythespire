@@ -19,7 +19,7 @@ import {
   GREMLIN_NOB,
   SLIME_BOSS,
 } from '../../data/enemies/act1Enemies';
-import { ALL_RELICS } from '../../data/relics';
+import { ALL_RELICS, STARTER_RELICS } from '../../data/relics';
 
 // 선택 가능한 적 목록
 const ENEMY_OPTIONS: { template: EnemyTemplate; label: string; type: 'normal' | 'elite' | 'boss' }[] = [
@@ -73,17 +73,26 @@ export function DeckBuildingScreen() {
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
   const [selectedEnemies, setSelectedEnemies] = useState<EnemyTemplate[]>([]);
   const [selectedRelics, setSelectedRelics] = useState<Relic[]>([]);
+  const [cardLimitMessage, setCardLimitMessage] = useState<string | null>(null);
 
-  // NEW_GAME_DECK_BUILDING 모드일 때 스타터 카드 2장씩 자동 추가
+  // NEW_GAME_DECK_BUILDING 모드일 때 스타터 카드 2장씩 자동 추가 + 랜덤 스타터 유물 선택
   const STARTER_CARDS = [STRIKE, DEFEND, BASH, RELAX, FLEXIBLE_RESPONSE];
   useEffect(() => {
-    if (isNewGameMode && selectedCards.length === 0) {
-      const initialDeck: CardInstance[] = [];
-      STARTER_CARDS.forEach(card => {
-        initialDeck.push(createCardInstance(card));
-        initialDeck.push(createCardInstance(card));
-      });
-      setSelectedCards(initialDeck);
+    if (isNewGameMode) {
+      // 스타터 카드 2장씩 자동 추가
+      if (selectedCards.length === 0) {
+        const initialDeck: CardInstance[] = [];
+        STARTER_CARDS.forEach(card => {
+          initialDeck.push(createCardInstance(card));
+          initialDeck.push(createCardInstance(card));
+        });
+        setSelectedCards(initialDeck);
+      }
+      // 랜덤 스타터 유물 선택
+      if (selectedRelics.length === 0) {
+        const randomRelic = STARTER_RELICS[Math.floor(Math.random() * STARTER_RELICS.length)];
+        setSelectedRelics([randomRelic]);
+      }
     }
   }, [isNewGameMode]);
 
@@ -133,7 +142,11 @@ export function DeckBuildingScreen() {
     if (selectedCards.length >= MAX_DECK_SIZE) return;
     // 같은 카드는 최대 2장까지만
     const sameCardCount = selectedCards.filter(c => c.id === card.id).length;
-    if (sameCardCount >= 2) return;
+    if (sameCardCount >= 2) {
+      setCardLimitMessage('같은 카드는 최대 2장만 넣을 수 있습니다.');
+      setTimeout(() => setCardLimitMessage(null), 2000);
+      return;
+    }
     const cardInstance = createCardInstance(card);
     setSelectedCards([...selectedCards, cardInstance]);
   };
@@ -151,10 +164,20 @@ export function DeckBuildingScreen() {
   };
 
   const toggleRelic = (relic: Relic) => {
+    const isStarterRelic = STARTER_RELICS.some(r => r.id === relic.id);
+
     if (selectedRelics.some(r => r.id === relic.id)) {
+      // 새 게임 모드에서 스타터 유물은 해제 불가 (1개 필수)
+      if (isNewGameMode && isStarterRelic) return;
       setSelectedRelics(selectedRelics.filter(r => r.id !== relic.id));
     } else if (selectedRelics.length < 5) {
-      setSelectedRelics([...selectedRelics, relic]);
+      // 스타터 유물은 1개만 선택 가능 (교체)
+      if (isStarterRelic) {
+        const nonStarterRelics = selectedRelics.filter(r => !STARTER_RELICS.some(sr => sr.id === r.id));
+        setSelectedRelics([...nonStarterRelics, relic]);
+      } else {
+        setSelectedRelics([...selectedRelics, relic]);
+      }
     }
   };
 
@@ -213,6 +236,21 @@ export function DeckBuildingScreen() {
 
   return (
     <div className="w-full h-screen flex flex-col" style={{ background: 'var(--bg-darkest)' }}>
+      {/* 카드 제한 메시지 토스트 */}
+      {cardLimitMessage && (
+        <div
+          className="fixed top-20 left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-lg animate-pulse"
+          style={{
+            background: 'rgba(220, 38, 38, 0.9)',
+            border: '2px solid #f87171',
+            fontFamily: '"NeoDunggeunmo", cursive',
+            color: '#fff',
+          }}
+        >
+          {cardLimitMessage}
+        </div>
+      )}
+
       {/* 헤더 */}
       <div
         className="deckbuild-header flex items-center justify-between px-6 py-3"

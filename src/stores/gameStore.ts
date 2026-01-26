@@ -4,7 +4,8 @@ import { GameMap, MapNode } from '../types/map';
 import { Card, CardInstance, createCardInstance } from '../types/card';
 import { Relic } from '../types/relic';
 import { EnemyTemplate } from '../types/enemy';
-import { createStarterDeck } from '../data/cards';
+import { createStarterDeck, STRIKE, DEFEND, BASH } from '../data/cards';
+import { RELAX, FLEXIBLE_RESPONSE } from '../data/cards/starterCards';
 import { STARTER_RELICS, ALL_RELICS } from '../data/relics';
 import { generateMap } from '../utils/mapGenerator';
 import { useAuthStore } from './authStore';
@@ -85,7 +86,38 @@ export const useGameStore = create<GameState>((set, get) => ({
 
   startNewGame: () => {
     const initialPlayer = createInitialPlayer();
+    const { isGuest } = useAuthStore.getState();
 
+    // 게스트는 바로 맵으로 이동 (스타터 덱 + 랜덤 스타터 유물)
+    if (isGuest) {
+      const starterRelic = STARTER_RELICS[Math.floor(Math.random() * STARTER_RELICS.length)];
+      const hasCrackedArmor = starterRelic.id === 'cracked_armor';
+      const newMap = generateMap();
+      // 스타터 카드 2장씩 생성
+      const starterCards = [STRIKE, DEFEND, BASH, RELAX, FLEXIBLE_RESPONSE];
+      const starterDeck = starterCards.flatMap(card => [
+        createCardInstance(card),
+        createCardInstance(card),
+      ]);
+
+      set({
+        phase: 'MAP',
+        player: {
+          ...initialPlayer,
+          deck: starterDeck,
+          relics: [starterRelic],
+          maxHp: hasCrackedArmor ? initialPlayer.maxHp + 15 : initialPlayer.maxHp,
+          currentHp: hasCrackedArmor ? initialPlayer.currentHp + 15 : initialPlayer.currentHp,
+        },
+        ownedCardIds: ['strike', 'defend', 'bash', 'relax', 'flexible_response'],
+        map: newMap,
+        currentAct: 1,
+        testEnemies: null,
+      });
+      return;
+    }
+
+    // 로그인 유저는 덱빌딩 화면으로
     set({
       phase: 'NEW_GAME_DECK_BUILDING',
       player: {
@@ -93,7 +125,7 @@ export const useGameStore = create<GameState>((set, get) => ({
         deck: [],
         relics: [],
       },
-      ownedCardIds: ['strike', 'defend', 'bash', 'relax', 'flexible_response'], // 스타터 카드만 보유
+      ownedCardIds: ['strike', 'defend', 'bash', 'relax', 'flexible_response'],
       map: { nodes: [], currentNodeId: null, floor: 1 },
       currentAct: 1,
       testEnemies: null,
