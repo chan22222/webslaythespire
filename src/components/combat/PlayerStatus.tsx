@@ -577,8 +577,8 @@ export function PlayerStatus({ player, block, statuses, animation = 'idle', anim
         />
       </div>
 
-      {/* 상태 효과 */}
-      <div className="relative z-[100] flex gap-2 mt-3 flex-wrap justify-center max-w-40 -ml-14">
+      {/* 상태 효과 - 3줄 높이 고정 */}
+      <div className="relative z-[100] flex gap-2 mt-3 flex-wrap justify-center content-start max-w-40 -ml-14 min-h-[100px]">
         {statuses.map((status, index) => (
           <StatusBadge key={index} status={status} index={index} total={statuses.length} />
         ))}
