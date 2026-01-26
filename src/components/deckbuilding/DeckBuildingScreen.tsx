@@ -440,15 +440,6 @@ export function DeckBuildingScreen() {
                       <span className="text-white text-2xl font-bold">+</span>
                     </div>
                   )}
-                  {/* 미보유 표시 */}
-                  {!isOwned && (
-                    <div
-                      className="absolute inset-0 flex items-center justify-center rounded-lg pointer-events-none"
-                      style={{ background: 'rgba(0, 0, 0, 0.3)' }}
-                    >
-                      <span className="text-gray-400 text-xs" style={{ fontFamily: '"NeoDunggeunmo", cursive' }}>미보유</span>
-                    </div>
-                  )}
                 </div>
                 );
               })}
@@ -505,7 +496,7 @@ export function DeckBuildingScreen() {
                     }}
                   >
                     {/* 유물 아이콘 */}
-                    <div className="flex-shrink-0 relative">
+                    <div className="flex-shrink-0">
                       {relic.icon ? (
                         <img
                           src={relic.icon}
@@ -515,11 +506,6 @@ export function DeckBuildingScreen() {
                         />
                       ) : (
                         <span className="text-3xl">❓</span>
-                      )}
-                      {!isOwned && (
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <span className="text-gray-400 text-xs bg-black/50 px-1 rounded" style={{ fontFamily: '"NeoDunggeunmo", cursive' }}>미보유</span>
-                        </div>
                       )}
                     </div>
                     <div className="flex-1">

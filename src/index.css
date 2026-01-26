@@ -878,11 +878,11 @@ body {
   }
 
   .deckbuild-relics {
-    width: 11rem !important;
+    width: 10rem !important;
   }
 
   .deckbuild-deck {
-    width: 11rem !important;
+    width: 12rem !important;
   }
 
   .deckbuild-relic-icon {
@@ -929,6 +929,11 @@ body {
 
   .deckbuild-card-grid {
     padding: 0 0.15rem !important;
+  }
+
+  .deckbuild-unowned-label {
+    font-size: 0.5rem !important;
+    padding: 0.1rem 0.25rem !important;
   }
 }
 
