@@ -11,7 +11,8 @@ import { PlayerStatus } from './PlayerStatus';
 import { DamagePopupManager } from './DamagePopup';
 import { SwordSlashEffect, SlashHitEffect } from './characters';
 import { generateNormalEncounter, ELITE_ENEMIES, BOSS_ENEMIES, EASTER_EGG_ENCOUNTER } from '../../data/enemies';
-import { playButtonHover, playButtonClick, playAttack, playFootsteps, playBuff } from '../../utils/sound';
+import { playButtonHover, playButtonClick, playAttack, playFootsteps, playBuff, playBGM } from '../../utils/sound';
+import { VolumeSlider } from '../common/VolumeSlider';
 
 // 전투 시작 인트로 화면
 function BattleIntro({
@@ -566,6 +567,11 @@ export function CombatScreen() {
       combatLogRef.current.scrollTop = combatLogRef.current.scrollHeight;
     }
   }, [combatLog]);
+
+  // 전투 BGM 재생
+  useEffect(() => {
+    playBGM('battle');
+  }, []);
 
   // 전투 인트로 상태
   const [showIntro, setShowIntro] = useState(true);
@@ -2216,6 +2222,11 @@ export function CombatScreen() {
           </div>
         </div>
       )}
+
+      {/* 볼륨 조절 */}
+      <div className="absolute bottom-4 right-4 z-50">
+        <VolumeSlider />
+      </div>
       </div>
     </>
   );

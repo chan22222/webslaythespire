@@ -6,7 +6,8 @@ import { Relic } from '../../types/relic';
 import { generateCardRewards } from '../../data/cards';
 import { generateRelicReward } from '../../data/relics';
 import { randomInt } from '../../utils/shuffle';
-import { playButtonHover, playButtonClick, playCardBuy } from '../../utils/sound';
+import { playButtonHover, playButtonClick, playCardBuy, playBGM } from '../../utils/sound';
+import { VolumeSlider } from '../common/VolumeSlider';
 
 interface ShopItem {
   type: 'card' | 'relic' | 'remove';
@@ -40,6 +41,11 @@ export function ShopScreen() {
   // 자동 스크롤 중지
   const stopAutoScroll = useCallback(() => {
     setAutoScrollEnabled(false);
+  }, []);
+
+  // 상점 BGM 재생
+  useEffect(() => {
+    playBGM('shop');
   }, []);
 
   // 자동 스크롤 효과 (한 번만 오른쪽으로 천천히 이동)
@@ -557,6 +563,11 @@ export function ShopScreen() {
           </div>
         </div>
       )}
+
+      {/* 볼륨 조절 */}
+      <div className="absolute bottom-4 right-4 z-50">
+        <VolumeSlider />
+      </div>
     </div>
   );
 }

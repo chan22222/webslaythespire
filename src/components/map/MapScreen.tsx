@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { useGameStore } from '../../stores/gameStore';
 import { MapNode } from './MapNode';
 import { Card } from '../combat/Card';
+import { playBGM, playButtonHover, playButtonClick } from '../../utils/sound';
+import { VolumeSlider } from '../common/VolumeSlider';
 
 // 파티클 데이터 - 타이틀과 동일
 const PARTICLES = Array.from({ length: 25 }, (_, i) => ({
@@ -45,6 +47,11 @@ export function MapScreen() {
   // 처음 등장시에만 현재 노드 위치로 중앙 정렬
   const initializedRef = useRef(false);
   const prevNodesLengthRef = useRef(map.nodes.length);
+
+  // 맵 BGM 재생 (타이틀과 동일)
+  useEffect(() => {
+    playBGM('title');
+  }, []);
 
   // 컨테이너 마운트 감지 및 CSS 변수에서 스케일 읽기
   useEffect(() => {
@@ -575,7 +582,8 @@ export function MapScreen() {
                 // 4개 이상: 겹쳐서 표시 + 클릭 시 모달
                 <div
                   className="relative flex items-center cursor-pointer group"
-                  onClick={() => setShowRelics(true)}
+                  onMouseEnter={playButtonHover}
+                  onClick={() => { playButtonClick(); setShowRelics(true); }}
                 >
                   {player.relics.slice(0, 3).map((relic, index) => (
                     <div
@@ -628,7 +636,8 @@ export function MapScreen() {
 
             <div className="relative group">
               <button
-                onClick={() => setShowDeck(true)}
+                onMouseEnter={playButtonHover}
+                onClick={() => { playButtonClick(); setShowDeck(true); }}
                 className="flex flex-col items-center justify-center gap-0 transition-all duration-150 hover:brightness-125"
                 style={{
                   backgroundImage: 'url(/card.png)',
@@ -747,10 +756,11 @@ export function MapScreen() {
 
       {/* 좌측 네비게이션 버튼 - main 밖으로 이동 */}
       <button
+        onMouseEnter={playButtonHover}
         onPointerDown={(e) => {
           e.preventDefault();
           e.stopPropagation();
-          if (viewOffset > 0) handleNavLeft();
+          if (viewOffset > 0) { playButtonClick(); handleNavLeft(); }
         }}
         disabled={containerReady && viewOffset <= 0}
         className="map-nav-btn fixed left-2 sm:left-6 top-1/2 -translate-y-1/2 z-40 transition-all duration-150 hover:scale-125 active:scale-110 disabled:opacity-30 disabled:pointer-events-none p-4"
@@ -767,10 +777,11 @@ export function MapScreen() {
 
       {/* 우측 네비게이션 버튼 - main 밖으로 이동 */}
       <button
+        onMouseEnter={playButtonHover}
         onPointerDown={(e) => {
           e.preventDefault();
           e.stopPropagation();
-          handleNavRight();
+          playButtonClick(); handleNavRight();
         }}
         disabled={containerReady && viewOffset >= getMaxOffset()}
         className="map-nav-btn fixed right-2 sm:right-6 top-1/2 -translate-y-1/2 z-40 transition-all duration-150 hover:scale-125 active:scale-110 disabled:opacity-30 disabled:pointer-events-none p-4"
@@ -790,7 +801,7 @@ export function MapScreen() {
         <div
           className="fixed inset-0 z-50 flex items-center justify-center"
           style={{ background: 'rgba(0, 0, 0, 0.9)' }}
-          onClick={() => setShowDeck(false)}
+          onClick={() => { playButtonClick(); setShowDeck(false); }}
         >
           <div
             className="w-[94%] max-w-5xl max-h-[88vh] overflow-hidden flex flex-col"
@@ -827,7 +838,8 @@ export function MapScreen() {
               </div>
 
               <button
-                onClick={() => setShowDeck(false)}
+                onMouseEnter={playButtonHover}
+                onClick={() => { playButtonClick(); setShowDeck(false); }}
                 className="w-10 h-10 flex items-center justify-center transition-all hover:brightness-125"
                 style={{ color: 'var(--gold)' }}
               >
@@ -851,7 +863,7 @@ export function MapScreen() {
         <div
           className="fixed inset-0 z-50 flex items-center justify-center"
           style={{ background: 'rgba(0, 0, 0, 0.9)' }}
-          onClick={() => setShowRelics(false)}
+          onClick={() => { playButtonClick(); setShowRelics(false); }}
         >
           <div
             className="w-[94%] max-w-3xl max-h-[88vh] overflow-hidden flex flex-col"
@@ -888,7 +900,8 @@ export function MapScreen() {
               </div>
 
               <button
-                onClick={() => setShowRelics(false)}
+                onMouseEnter={playButtonHover}
+                onClick={() => { playButtonClick(); setShowRelics(false); }}
                 className="w-10 h-10 flex items-center justify-center transition-all hover:brightness-125"
                 style={{ color: 'var(--gold)' }}
               >
@@ -981,6 +994,11 @@ export function MapScreen() {
           50% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
         }
       `}</style>
+
+      {/* 볼륨 조절 */}
+      <div className="absolute bottom-4 right-4 z-50">
+        <VolumeSlider />
+      </div>
     </div>
   );
 }

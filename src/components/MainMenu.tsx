@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useGameStore } from '../stores/gameStore';
 import { useAuthStore } from '../stores/authStore';
-import { playButtonHover, playButtonClick } from '../utils/sound';
+import { playButtonHover, playButtonClick, setGlobalVolume, playBGM } from '../utils/sound';
 
 // 파티클 데이터를 컴포넌트 외부에서 한 번만 생성
 const PARTICLES = Array.from({ length: 25 }, (_, i) => ({
@@ -275,6 +275,11 @@ export function MainMenu() {
   const [showNameInput, setShowNameInput] = useState(false);
   const [newGameName, setNewGameName] = useState('');
   const [showPrivacy, setShowPrivacy] = useState(false);
+  const [showAbout, setShowAbout] = useState(false);
+  const [showTerms, setShowTerms] = useState(false);
+  const [showCredits, setShowCredits] = useState(false);
+  const [showVolumePrompt, setShowVolumePrompt] = useState(false);
+  const [volume, setVolume] = useState(100);
   const canContinue = !isGuest && hasSaveData;
 
   // 상습 탈주자 여부 (이어하기로 불러왔을 때 이름이 변경됨)
@@ -286,6 +291,20 @@ export function MainMenu() {
       checkSaveData();
     }
   }, [user, isGuest, checkSaveData]);
+
+  // 세션당 한 번 볼륨 설정 모달 표시
+  useEffect(() => {
+    const alreadyShown = sessionStorage.getItem('volumePromptShown');
+    if (!alreadyShown) {
+      setShowVolumePrompt(true);
+    } else {
+      // 이미 설정된 경우 저장된 볼륨 적용
+      const savedVolume = localStorage.getItem('gameVolume');
+      const vol = savedVolume !== null ? parseInt(savedVolume) : 100;
+      setVolume(vol);
+      setGlobalVolume(vol / 100);
+    }
+  }, []);
 
   const isLoggedIn = !!user;
   const displayName = user?.displayName || user?.email?.split('@')[0] || (isGuest ? '게스트' : '');
@@ -682,24 +701,76 @@ export function MainMenu() {
         </div>
       )}
 
-      {/* 하단 버전 정보 */}
-      <div className="absolute bottom-4 sm:bottom-6 left-4 z-10">
+      {/* 하단 버전 정보 - 가운데 */}
+      <div className="absolute bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-10">
         <p
           className="text-[8px] sm:text-[10px] text-[var(--gold-dark)] opacity-60"
           style={{ fontFamily: '"Press Start 2P", monospace' }}
         >
-          v0.5.0 PROTOTYPE
+          v0.6.0
         </p>
       </div>
 
-      {/* 하단 우측 개인정보 처리방침 */}
-      <button
-        onClick={() => setShowPrivacy(true)}
-        className="absolute bottom-4 sm:bottom-6 right-4 z-10 text-[8px] sm:text-[10px] text-[var(--gold-dark)] opacity-60 hover:opacity-100 transition-opacity"
-        style={{ fontFamily: '"NeoDunggeunmo", cursive' }}
-      >
-        개인정보 처리방침
-      </button>
+      {/* 하단 좌측 링크들 */}
+      <div className="absolute bottom-4 sm:bottom-6 left-4 z-10 flex gap-3">
+        <button
+          onClick={() => setShowAbout(true)}
+          className="text-[10px] sm:text-xs text-[var(--gold-dark)] opacity-70 hover:opacity-100 transition-opacity"
+          style={{ fontFamily: '"NeoDunggeunmo", cursive' }}
+        >
+          About
+        </button>
+        <span className="text-[10px] sm:text-xs text-[var(--gold-dark)] opacity-40">|</span>
+        <button
+          onClick={() => setShowCredits(true)}
+          className="text-[10px] sm:text-xs text-[var(--gold-dark)] opacity-70 hover:opacity-100 transition-opacity"
+          style={{ fontFamily: '"NeoDunggeunmo", cursive' }}
+        >
+          크레딧
+        </button>
+        <span className="text-[10px] sm:text-xs text-[var(--gold-dark)] opacity-40">|</span>
+        <button
+          onClick={() => setShowTerms(true)}
+          className="text-[10px] sm:text-xs text-[var(--gold-dark)] opacity-70 hover:opacity-100 transition-opacity"
+          style={{ fontFamily: '"NeoDunggeunmo", cursive' }}
+        >
+          이용약관
+        </button>
+        <span className="text-[10px] sm:text-xs text-[var(--gold-dark)] opacity-40">|</span>
+        <button
+          onClick={() => setShowPrivacy(true)}
+          className="text-[10px] sm:text-xs text-[var(--gold-dark)] opacity-70 hover:opacity-100 transition-opacity"
+          style={{ fontFamily: '"NeoDunggeunmo", cursive' }}
+        >
+          개인정보 처리방침
+        </button>
+      </div>
+
+      {/* 하단 우측 볼륨 조절 */}
+      <div className="absolute bottom-4 sm:bottom-6 right-4 z-10 flex items-center gap-2">
+        <span
+          className="text-[10px] sm:text-xs text-[var(--gold-dark)] opacity-70"
+          style={{ fontFamily: '"NeoDunggeunmo", cursive' }}
+        >
+          {volume === 0 ? '🔇' : '🔊'}
+        </span>
+        <input
+          type="range"
+          min="0"
+          max="100"
+          value={volume}
+          className="w-16 sm:w-20 h-1 appearance-none bg-[var(--gold-dark)]/30 rounded-full cursor-pointer"
+          style={{
+            accentColor: 'var(--gold)',
+          }}
+          onChange={(e) => {
+            const vol = parseInt(e.target.value);
+            setVolume(vol);
+            setGlobalVolume(vol / 100);
+            localStorage.setItem('gameVolume', vol.toString());
+          }}
+        />
+      </div>
 
       {/* 개인정보 처리방침 모달 */}
       {showPrivacy && (
@@ -749,6 +820,265 @@ export function MainMenu() {
             <button
               onMouseEnter={playButtonHover}
               onClick={() => { playButtonClick(); setShowPrivacy(false); }}
+              className="mt-4 w-full px-4 py-2 rounded border border-[var(--gold-dark)] text-[var(--gold-light)] text-sm hover:bg-[var(--gold-dark)]/20 transition-colors"
+              style={{ fontFamily: '"NeoDunggeunmo", cursive' }}
+            >
+              닫기
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* About 모달 */}
+      {showAbout && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80"
+          onClick={() => setShowAbout(false)}
+        >
+          <div
+            className="relative p-6 rounded-lg border-2 border-[var(--gold-dark)] max-w-lg mx-4 max-h-[80vh] overflow-y-auto"
+            style={{
+              background: 'linear-gradient(180deg, #1a1510 0%, #0d0a08 100%)',
+              boxShadow: '0 0 30px rgba(0,0,0,0.8), inset 0 1px 0 rgba(212,168,75,0.1)',
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <h3
+              className="text-[var(--gold)] text-center mb-4 text-lg"
+              style={{
+                fontFamily: '"NeoDunggeunmo", cursive',
+                textShadow: '0 0 10px var(--gold-glow)',
+              }}
+            >
+              About
+            </h3>
+            <div
+              className="text-[var(--gold-light)] text-xs space-y-3"
+              style={{ fontFamily: '"NeoDunggeunmo", cursive' }}
+            >
+              <p className="text-center text-base mb-4">🎮 SHUFFLE & SLASH</p>
+
+              <p><strong>게임 소개</strong></p>
+              <p>Shuffle & Slash는 덱빌딩 로그라이크 장르의 웹 기반 게임입니다. 카드를 수집하고, 덱을 구축하며, 다양한 적들과 전투를 펼쳐보세요.</p>
+
+              <p><strong>게임 특징</strong></p>
+              <ul className="list-disc list-inside space-y-1 pl-2">
+                <li>전략적인 덱빌딩 시스템</li>
+                <li>다양한 카드와 유물</li>
+                <li>매 플레이마다 다른 경험</li>
+                <li>클라우드 저장 지원</li>
+              </ul>
+
+              <p className="text-center opacity-60 mt-4">Made with ❤️</p>
+            </div>
+            <button
+              onMouseEnter={playButtonHover}
+              onClick={() => { playButtonClick(); setShowAbout(false); }}
+              className="mt-4 w-full px-4 py-2 rounded border border-[var(--gold-dark)] text-[var(--gold-light)] text-sm hover:bg-[var(--gold-dark)]/20 transition-colors"
+              style={{ fontFamily: '"NeoDunggeunmo", cursive' }}
+            >
+              닫기
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 이용약관 모달 */}
+      {showTerms && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80"
+          onClick={() => setShowTerms(false)}
+        >
+          <div
+            className="relative p-6 rounded-lg border-2 border-[var(--gold-dark)] max-w-lg mx-4 max-h-[80vh] overflow-y-auto"
+            style={{
+              background: 'linear-gradient(180deg, #1a1510 0%, #0d0a08 100%)',
+              boxShadow: '0 0 30px rgba(0,0,0,0.8), inset 0 1px 0 rgba(212,168,75,0.1)',
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <h3
+              className="text-[var(--gold)] text-center mb-4 text-lg"
+              style={{
+                fontFamily: '"NeoDunggeunmo", cursive',
+                textShadow: '0 0 10px var(--gold-glow)',
+              }}
+            >
+              이용약관
+            </h3>
+            <div
+              className="text-[var(--gold-light)] text-xs space-y-3"
+              style={{ fontFamily: '"NeoDunggeunmo", cursive' }}
+            >
+              <p><strong>제1조 (목적)</strong></p>
+              <p>본 약관은 Shuffle & Slash(이하 "서비스")의 이용에 관한 조건 및 절차를 규정함을 목적으로 합니다.</p>
+
+              <p><strong>제2조 (서비스의 제공)</strong></p>
+              <p>서비스는 무료로 제공되며, 운영자의 판단에 따라 사전 고지 없이 변경되거나 중단될 수 있습니다.</p>
+
+              <p><strong>제3조 (이용자의 의무)</strong></p>
+              <ul className="list-disc list-inside space-y-1 pl-2">
+                <li>서비스를 불법적인 목적으로 사용해서는 안 됩니다.</li>
+                <li>다른 이용자의 서비스 이용을 방해해서는 안 됩니다.</li>
+                <li>서비스의 정상적인 운영을 방해하는 행위를 해서는 안 됩니다.</li>
+              </ul>
+
+              <p><strong>제4조 (지적재산권)</strong></p>
+              <p>본 서비스의 모든 콘텐츠(디자인, 코드, 그래픽 등)에 대한 저작권은 운영자에게 있습니다. 무단 복제, 배포, 수정은 금지됩니다.</p>
+
+              <p><strong>제5조 (면책조항)</strong></p>
+              <p>운영자는 서비스 이용으로 발생하는 어떠한 손해에 대해서도 책임을 지지 않습니다. 게임 데이터의 손실, 서비스 중단 등에 대한 책임은 이용자에게 있습니다.</p>
+
+              <p><strong>제6조 (계정 및 데이터)</strong></p>
+              <p>Google 로그인을 통해 생성된 계정의 관리 책임은 이용자에게 있습니다. 게스트 모드 이용 시 게임 데이터는 저장되지 않습니다.</p>
+
+              <p><strong>제7조 (약관의 변경)</strong></p>
+              <p>본 약관은 서비스 개선을 위해 사전 고지 후 변경될 수 있습니다.</p>
+
+              <p className="text-center opacity-60 mt-4">시행일: 2026년 1월 16일</p>
+            </div>
+            <button
+              onMouseEnter={playButtonHover}
+              onClick={() => { playButtonClick(); setShowTerms(false); }}
+              className="mt-4 w-full px-4 py-2 rounded border border-[var(--gold-dark)] text-[var(--gold-light)] text-sm hover:bg-[var(--gold-dark)]/20 transition-colors"
+              style={{ fontFamily: '"NeoDunggeunmo", cursive' }}
+            >
+              닫기
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 볼륨 설정 모달 (첫 방문) */}
+      {showVolumePrompt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80">
+          <div
+            className="relative p-6 rounded-lg border-2 border-[var(--gold-dark)] max-w-sm mx-4"
+            style={{
+              background: 'linear-gradient(180deg, #1a1510 0%, #0d0a08 100%)',
+              boxShadow: '0 0 30px rgba(0,0,0,0.8), inset 0 1px 0 rgba(212,168,75,0.1)',
+            }}
+          >
+            <h3
+              className="text-[var(--gold)] text-center mb-4 text-lg"
+              style={{
+                fontFamily: '"NeoDunggeunmo", cursive',
+                textShadow: '0 0 10px var(--gold-glow)',
+              }}
+            >
+              🔊 사운드 설정
+            </h3>
+            <p
+              className="text-[var(--gold-light)] text-sm text-center mb-6"
+              style={{
+                fontFamily: '"NeoDunggeunmo", cursive',
+              }}
+            >
+              게임 사운드를 켤까요?
+            </p>
+            <div className="flex gap-3 justify-center">
+              <button
+                onMouseEnter={playButtonHover}
+                onClick={() => {
+                  playButtonClick();
+                  setVolume(0);
+                  setGlobalVolume(0);
+                  localStorage.setItem('gameVolume', '0');
+                  sessionStorage.setItem('volumePromptShown', 'true');
+                  setShowVolumePrompt(false);
+                  playBGM('title');
+                }}
+                className="px-6 py-2 rounded border border-[var(--gold-dark)] text-[var(--gold-light)] text-sm hover:bg-[var(--gold-dark)]/20 transition-colors"
+                style={{
+                  fontFamily: '"NeoDunggeunmo", cursive',
+                }}
+              >
+                아니오
+              </button>
+              <button
+                onMouseEnter={playButtonHover}
+                onClick={() => {
+                  // 저장된 볼륨 불러오기 (없거나 0이면 100%)
+                  const savedVolume = localStorage.getItem('gameVolume');
+                  const savedVol = savedVolume !== null ? parseInt(savedVolume) : 0;
+                  const vol = savedVol > 0 ? savedVol : 100;
+                  setVolume(vol);
+                  setGlobalVolume(vol / 100);
+                  localStorage.setItem('gameVolume', vol.toString());
+                  sessionStorage.setItem('volumePromptShown', 'true');
+                  setShowVolumePrompt(false);
+                  playBGM('title');
+                  playButtonClick();
+                }}
+                className="px-6 py-2 rounded bg-[var(--gold-dark)]/30 border border-[var(--gold)] text-[var(--gold-light)] text-sm hover:bg-[var(--gold-dark)]/50 transition-colors"
+                style={{
+                  fontFamily: '"NeoDunggeunmo", cursive',
+                }}
+              >
+                예
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 크레딧 모달 */}
+      {showCredits && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80"
+          onClick={() => setShowCredits(false)}
+        >
+          <div
+            className="relative p-6 rounded-lg border-2 border-[var(--gold-dark)] max-w-lg mx-4 max-h-[80vh] overflow-y-auto"
+            style={{
+              background: 'linear-gradient(180deg, #1a1510 0%, #0d0a08 100%)',
+              boxShadow: '0 0 30px rgba(0,0,0,0.8), inset 0 1px 0 rgba(212,168,75,0.1)',
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            <h3
+              className="text-[var(--gold)] text-center mb-4 text-lg"
+              style={{
+                fontFamily: '"NeoDunggeunmo", cursive',
+                textShadow: '0 0 10px var(--gold-glow)',
+              }}
+            >
+              크레딧
+            </h3>
+            <div
+              className="text-[var(--gold-light)] text-xs space-y-4"
+              style={{ fontFamily: '"NeoDunggeunmo", cursive' }}
+            >
+              <div>
+                <p className="text-[var(--gold)] mb-2"><strong>🎮 개발</strong></p>
+                <p>chan22222</p>
+              </div>
+
+              <div>
+                <p className="text-[var(--gold)] mb-2"><strong>🎵 음악</strong></p>
+                <p>Douglas Gustafson from Pixabay</p>
+              </div>
+
+              <div>
+                <p className="text-[var(--gold)] mb-2"><strong>🎨 그래픽</strong></p>
+                <p>chan22222 & Nanobanana2</p>
+              </div>
+
+              <div>
+                <p className="text-[var(--gold)] mb-2"><strong>🔊 효과음</strong></p>
+                <p>itch.io</p>
+              </div>
+
+              <div>
+                <p className="text-[var(--gold)] mb-2"><strong>💡 영감</strong></p>
+                <p>Slay the Spire by Mega Crit Games</p>
+              </div>
+
+              <p className="text-center opacity-60 mt-6">감사합니다!</p>
+            </div>
+            <button
+              onMouseEnter={playButtonHover}
+              onClick={() => { playButtonClick(); setShowCredits(false); }}
               className="mt-4 w-full px-4 py-2 rounded border border-[var(--gold-dark)] text-[var(--gold-light)] text-sm hover:bg-[var(--gold-dark)]/20 transition-colors"
               style={{ fontFamily: '"NeoDunggeunmo", cursive' }}
             >
