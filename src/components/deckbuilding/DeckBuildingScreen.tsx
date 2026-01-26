@@ -239,12 +239,15 @@ export function DeckBuildingScreen() {
       {/* 카드 제한 메시지 토스트 */}
       {cardLimitMessage && (
         <div
-          className="fixed top-20 left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-lg animate-pulse"
+          className="fixed top-24 left-1/2 -translate-x-1/2 z-[9999] px-8 py-4 rounded-lg shadow-2xl pointer-events-none"
           style={{
-            background: 'rgba(220, 38, 38, 0.9)',
-            border: '2px solid #f87171',
+            background: 'linear-gradient(180deg, #dc2626 0%, #991b1b 100%)',
+            border: '3px solid #fca5a5',
             fontFamily: '"NeoDunggeunmo", cursive',
             color: '#fff',
+            fontSize: '18px',
+            textShadow: '2px 2px 4px rgba(0,0,0,0.5)',
+            boxShadow: '0 0 30px rgba(220, 38, 38, 0.8), 0 10px 40px rgba(0,0,0,0.5)',
           }}
         >
           {cardLimitMessage}
