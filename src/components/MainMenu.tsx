@@ -204,11 +204,14 @@ function AnimatedTitle() {
 function BlackholeBackground() {
   return (
     <div className="absolute inset-0 overflow-hidden">
-      {/* 깊은 우주 배경 */}
+      {/* 타이틀 배경 이미지 */}
       <div
         className="absolute inset-0"
         style={{
-          background: 'radial-gradient(ellipse at center, #15121a 0%, #0a0a10 50%, #000 100%)',
+          backgroundImage: 'url(/sprites/title_min.png)',
+          backgroundSize: 'auto 100%',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
         }}
       />
 
