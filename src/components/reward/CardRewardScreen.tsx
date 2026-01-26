@@ -186,7 +186,8 @@ export function CardRewardScreen() {
               return (
                 <div
                   key={index}
-                  onClick={() => handleSelectCard(index)}
+                  onMouseEnter={() => !isDeckFull && playButtonHover()}
+                  onClick={() => { if (!isDeckFull) { playButtonClick(); handleSelectCard(index); } }}
                   className={`reward-card-item transition-all duration-200 ${isDeckFull ? 'cursor-not-allowed' : 'cursor-pointer'} ${!isSelected && !isDeckFull ? 'hover:-translate-y-1' : ''}`}
                   style={{
                     opacity: isDeckFull ? 0.5 : (selectedCardIndex !== null && !isSelected ? 0.4 : 1),

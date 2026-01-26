@@ -5,7 +5,7 @@ import { EnemyInstance, EnemyTemplate, createEnemyInstance } from '../types/enem
 import { Status, STATUS_INFO } from '../types/status';
 import { shuffle } from '../utils/shuffle';
 import { useGameStore } from './gameStore';
-import { playCardDraw, playAttack, playHit } from '../utils/sound';
+import { playCardDraw, playAttack, playHit, playBuff, playDebuff, playEnemyBuff, playWin } from '../utils/sound';
 
 // 데미지 팝업 타입
 export interface DamagePopup {
@@ -486,10 +486,12 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
         await new Promise(resolve => setTimeout(resolve, 400));
       } else if (enemy.intent.type === 'DEFEND') {
         get().triggerEnemySkill(enemy.instanceId);
+        playEnemyBuff();
         enemy.block += enemy.intent.block || 0;
         await new Promise(resolve => setTimeout(resolve, 500));
       } else if (enemy.intent.type === 'BUFF') {
         get().triggerEnemySkill(enemy.instanceId);
+        playEnemyBuff();
         // intent에 정의된 statusType과 stacks 사용 (기본: 힘 +3)
         const statusType = enemy.intent.statusType || 'STRENGTH';
         const stacks = enemy.intent.statusStacks || 3;
@@ -1237,18 +1239,31 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     updatedEnemies[enemyIndex] = updatedEnemy;
 
     set({ enemies: updatedEnemies });
-    const statusName = STATUS_INFO[status.type]?.name || status.type;
+    const statusInfo = STATUS_INFO[status.type];
+    const statusName = statusInfo?.name || status.type;
+    // 적에게 버프일 때만 사운드 (디버프는 플레이어가 거는 것이므로 무음)
+    if (!statusInfo?.isDebuff) {
+      playBuff();
+    }
     get().addToCombatLog(`${enemy.name}에게 ${statusName} ${status.stacks} 부여!`);
   },
 
   applyStatusToPlayer: (status: Status) => {
     const { playerStatuses } = get();
     const existingStatus = playerStatuses.find(s => s.type === status.type);
+    const statusInfo = STATUS_INFO[status.type];
 
     // 디버프(약화, 취약, 중독)일 경우 이펙트 트리거
     const debuffTypes = ['WEAK', 'VULNERABLE', 'POISON'];
     if (debuffTypes.includes(status.type)) {
       get().triggerPlayerDebuff();
+    }
+
+    // 버프/디버프 사운드
+    if (statusInfo?.isDebuff) {
+      playDebuff();
+    } else {
+      playBuff();
     }
 
     if (existingStatus) {
@@ -1263,7 +1278,7 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       set({ playerStatuses: [...playerStatuses, { ...status }] });
     }
     const pName = useGameStore.getState().playerName;
-    const statusName = STATUS_INFO[status.type]?.name || status.type;
+    const statusName = statusInfo?.name || status.type;
     get().addToCombatLog(`${pName}(이)가 ${statusName} ${status.stacks} 획득!`);
   },
 
@@ -1289,6 +1304,7 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
         playerStatuses: [],
         playerBlock: 0
       });
+      playWin();
       get().addToCombatLog('승리!');
       return 'VICTORY';
     }

@@ -11,7 +11,7 @@ import { PlayerStatus } from './PlayerStatus';
 import { DamagePopupManager } from './DamagePopup';
 import { SwordSlashEffect, SlashHitEffect } from './characters';
 import { generateNormalEncounter, ELITE_ENEMIES, BOSS_ENEMIES, EASTER_EGG_ENCOUNTER } from '../../data/enemies';
-import { playButtonHover, playButtonClick, playAttack, playFootsteps } from '../../utils/sound';
+import { playButtonHover, playButtonClick, playAttack, playFootsteps, playBuff } from '../../utils/sound';
 
 // 전투 시작 인트로 화면
 function BattleIntro({
@@ -1167,6 +1167,7 @@ export function CombatScreen() {
           // 데미지 없는 타겟 카드는 스킬 애니메이션 후 실행
           const hasLoseHpTarget = card.effects.some(e => e.type === 'LOSE_HP');
           setPlayerAnimation('skill');
+          playBuff(); // 스킬 사운드
           setTimeout(() => {
             playCard(cardInstanceId, confirmedTargetId);
             if (!hasLoseHpTarget) {
@@ -1250,6 +1251,7 @@ export function CombatScreen() {
           // 데미지 없는 카드는 스킬 애니메이션 후 실행
           const hasLoseHp = card.effects.some(e => e.type === 'LOSE_HP');
           setPlayerAnimation('skill');
+          playBuff(); // 스킬 사운드
           setTimeout(() => {
             playCard(cardInstanceId);
             // LOSE_HP가 있으면 hurt 애니메이션이 실행되므로 idle 설정 안함

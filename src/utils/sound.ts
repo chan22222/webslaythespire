@@ -57,3 +57,27 @@ export const playFootsteps = () => {
     }, i * 220);
   }
 };
+
+export const playBuff = () => {
+  const sound = new Audio('/sfx/sound/buff.wav');
+  sound.volume = 0.25;
+  sound.play().catch(() => {});
+};
+
+export const playEnemyBuff = () => {
+  const sound = new Audio('/sfx/sound/enemy_buff.wav');
+  sound.volume = 0.35;
+  sound.play().catch(() => {});
+};
+
+export const playDebuff = () => {
+  const sound = new Audio('/sfx/sound/debuff.wav');
+  sound.volume = 0.6;
+  sound.play().catch(() => {});
+};
+
+export const playWin = () => {
+  const sound = new Audio('/sfx/sound/win.wav');
+  sound.volume = 0.25;
+  sound.play().catch(() => {});
+};
