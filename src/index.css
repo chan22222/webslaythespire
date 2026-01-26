@@ -530,11 +530,11 @@ body {
   }
 
   .deckbuild-relics {
-    width: 22rem !important;
+    width: 18rem !important;
   }
 
   .deckbuild-deck {
-    width: 16rem !important;
+    width: 20rem !important;
   }
 
   .deckbuild-relic-icon {
@@ -566,11 +566,11 @@ body {
   }
 
   .deckbuild-relics {
-    width: 18rem !important;
+    width: 14rem !important;
   }
 
   .deckbuild-deck {
-    width: 14rem !important;
+    width: 18rem !important;
   }
 
   .deckbuild-relic-icon {
@@ -657,11 +657,11 @@ body {
   }
 
   .deckbuild-relics {
-    width: 14rem !important;
+    width: 15rem !important;
   }
 
   .deckbuild-deck {
-    width: 12rem !important;
+    width: 14rem !important;
   }
 
   .deckbuild-relic-icon {
@@ -674,8 +674,9 @@ body {
   }
 
   .deckbuild-relic-desc {
-    font-size: 0.55rem !important;
-    -webkit-line-clamp: 2 !important;
+    font-size: 0.75rem !important;
+    -webkit-line-clamp: 3 !important;
+    line-height: 1.2 !important;
   }
 
   .deckbuild-deck-header {
@@ -695,9 +696,8 @@ body {
     overflow-y: auto !important;
   }
 
-  /* 내 덱 카드 목록 영역을 50%로 제한 */
+  /* 내 덱 카드 목록 영역 */
   .deckbuild-deck-list {
-    max-height: 50% !important;
     flex: 1 !important;
   }
 
@@ -769,11 +769,11 @@ body {
   }
 
   .deckbuild-relics {
-    width: 12rem !important;
+    width: 13rem !important;
   }
 
   .deckbuild-deck {
-    width: 10rem !important;
+    width: 13rem !important;
   }
 
   .deckbuild-relic-icon {
@@ -786,7 +786,9 @@ body {
   }
 
   .deckbuild-relic-desc {
-    font-size: 0.5rem !important;
+    font-size: 0.65rem !important;
+    -webkit-line-clamp: 3 !important;
+    line-height: 1.2 !important;
   }
 
   .deckbuild-deck-header {
@@ -807,7 +809,6 @@ body {
   }
 
   .deckbuild-deck-list {
-    max-height: 50% !important;
     flex: 1 !important;
   }
 
@@ -877,11 +878,11 @@ body {
   }
 
   .deckbuild-relics {
-    width: 10rem !important;
+    width: 11rem !important;
   }
 
   .deckbuild-deck {
-    width: 9rem !important;
+    width: 11rem !important;
   }
 
   .deckbuild-relic-icon {
@@ -894,7 +895,9 @@ body {
   }
 
   .deckbuild-relic-desc {
-    font-size: 0.45rem !important;
+    font-size: 0.6rem !important;
+    -webkit-line-clamp: 3 !important;
+    line-height: 1.2 !important;
   }
 
   .deckbuild-deck-header {
@@ -915,7 +918,6 @@ body {
   }
 
   .deckbuild-deck-list {
-    max-height: 50% !important;
     flex: 1 !important;
   }
 

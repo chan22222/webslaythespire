@@ -542,8 +542,9 @@ export function DeckBuildingScreen() {
 
         {/* 오른쪽: 현재 덱 + 적 선택 */}
         <div
-          className="deckbuild-deck min-w-[45vw] md:min-w-0 md:w-96 flex-shrink-0 flex flex-col overflow-hidden"
+          className="deckbuild-deck flex-shrink-0 flex flex-col overflow-hidden"
           style={{
+            width: 'clamp(280px, 35vw, 320px)',
             background: 'linear-gradient(180deg, rgba(20,18,15,0.95) 0%, rgba(10,8,5,0.98) 100%)',
             borderLeft: '2px solid var(--gold-dark)',
           }}
@@ -601,13 +602,19 @@ export function DeckBuildingScreen() {
 
           {/* 덱 카드 목록 */}
           {selectedCards.length === 0 ? (
-            <div className="deckbuild-deck-list flex-1 flex items-center justify-center p-4">
+            <div
+              className="deckbuild-deck-list flex-1 flex items-center justify-center p-4"
+              style={isNewGameMode ? { maxHeight: 'none', flex: 1 } : {}}
+            >
               <p className="font-card text-xs text-gray-500 text-center">
                 왼쪽에서 카드를 클릭하여<br />덱에 추가하세요
               </p>
             </div>
           ) : (
-            <div className="deckbuild-deck-list flex-1 overflow-y-auto p-2">
+            <div
+              className="deckbuild-deck-list flex-1 overflow-y-auto p-2"
+              style={isNewGameMode ? { maxHeight: 'none', flex: 1 } : {}}
+            >
               {/* 그룹화된 카드 리스트 */}
               <div className="space-y-1">
                 {groupedCards.map(({ card, count, instances }) => (
