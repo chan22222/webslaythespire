@@ -100,13 +100,11 @@ export function DeckBuildingScreen() {
     let cards = filter === 'ALL' ? [...ALL_CARDS] : ALL_CARDS.filter(card => card.type === filter);
 
     cards.sort((a, b) => {
-      // NEW_GAME_DECK_BUILDING 모드에서는 미보유 카드를 후순위로
-      if (isNewGameMode) {
-        const aOwned = ownedCardIds.includes(a.id);
-        const bOwned = ownedCardIds.includes(b.id);
-        if (aOwned && !bOwned) return -1;
-        if (!aOwned && bOwned) return 1;
-      }
+      // 미보유 카드를 후순위로
+      const aOwned = ownedCardIds.includes(a.id);
+      const bOwned = ownedCardIds.includes(b.id);
+      if (aOwned && !bOwned) return -1;
+      if (!aOwned && bOwned) return 1;
 
       let comparison = 0;
       switch (sortBy) {
@@ -127,7 +125,7 @@ export function DeckBuildingScreen() {
     });
 
     return cards;
-  }, [filter, sortBy, sortOrder, isNewGameMode, ownedCardIds]);
+  }, [filter, sortBy, sortOrder, ownedCardIds]);
 
   const toggleSort = (newSortBy: SortBy) => {
     if (sortBy === newSortBy) {
@@ -415,7 +413,7 @@ export function DeckBuildingScreen() {
           <div className="flex-1 overflow-y-auto pr-2">
             <div className="deckbuild-card-grid flex flex-wrap gap-4 justify-start pt-4">
               {filteredCards.map((card, index) => {
-                const isOwned = !isNewGameMode || ownedCardIds.includes(card.id);
+                const isOwned = ownedCardIds.includes(card.id);
                 return (
                 <div
                   key={`${card.id}-${index}`}
@@ -431,10 +429,10 @@ export function DeckBuildingScreen() {
                   onClick={() => isOwned && addCard(card)}
                 >
                   <CardComponent card={card} size="lg" />
-                  {/* 추가 힌트 - 보유 카드만 */}
+                  {/* 추가 힌트 - 보유 카드만, PC에서만 표시 */}
                   {isOwned && (
                     <div
-                      className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-lg pointer-events-none"
+                      className="absolute inset-0 hidden md:flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-lg pointer-events-none"
                       style={{ background: 'rgba(74, 222, 128, 0.5)' }}
                     >
                       <span className="text-white text-2xl font-bold">+</span>
@@ -471,7 +469,7 @@ export function DeckBuildingScreen() {
             <div className="space-y-1">
               {ALL_RELICS.map((relic) => {
                 const isSelected = selectedRelics.some(r => r.id === relic.id);
-                const isOwned = !isNewGameMode || ownedRelicIds.includes(relic.id);
+                const isOwned = ownedRelicIds.includes(relic.id);
                 const rarityColor = relic.rarity === 'STARTER' ? '#4ade80'
                   : relic.rarity === 'COMMON' ? '#a3a3a3'
                   : relic.rarity === 'UNCOMMON' ? '#4a9eff'
