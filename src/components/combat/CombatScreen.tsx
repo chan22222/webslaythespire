@@ -646,11 +646,6 @@ export function CombatScreen() {
     });
     return () => setOnPlayerHit(null);
   }, [setOnPlayerHit]);
-  // 대기 중인 공격 (애니메이션 완료 후 카드 실행)
-  const pendingAttackRef = useRef<{
-    cardInstanceId: string;
-    targetEnemyId?: string;
-  } | null>(null);
 
   // 전투 초기화 (인트로와 동시에 백그라운드에서 로드)
   useEffect(() => {
@@ -1036,7 +1031,6 @@ export function CombatScreen() {
       attackClickCountRef.current++;
       // 2번 이상 클릭 시 끝나지 않은 공격 모션 강제 종료
       if (attackClickCountRef.current >= 2) {
-        pendingAttackRef.current = null;
         setPlayerAnimation('idle');
         setAttackTargetPos(null);
         setIsAttacking(false);
@@ -1130,11 +1124,6 @@ export function CombatScreen() {
               modifier: calculateDamageModifier(baseValue, confirmedTargetId)
             };
           });
-          // 공격 대기 상태로 저장
-          pendingAttackRef.current = {
-            cardInstanceId,
-            targetEnemyId: confirmedTargetId,
-          };
           setIsAttacking(true);
           playFootsteps(); // 발소리
           setPlayerAnimation('attack');
@@ -1162,7 +1151,20 @@ export function CombatScreen() {
                 dealDamageToEnemy(hit.targetId, hit.actualValue);
               }, idx * 100);
             });
+
+            // 마지막 데미지 후 카드 실행
+            const lastHitDelay = (hits.length - 1) * 100;
+            setTimeout(() => {
+              playCard(cardInstanceId, confirmedTargetId, true);
+            }, lastHitDelay + 50);
           }, 600);
+
+          // 1200ms 후 강제 idle 복귀 (애니메이션 끝나지 않아도)
+          setTimeout(() => {
+            setPlayerAnimation('idle');
+            setAttackTargetPos(null);
+            setIsAttacking(false);
+          }, 1200);
         } else {
           // 데미지 없는 타겟 카드는 스킬 애니메이션 후 실행
           const hasLoseHpTarget = card.effects.some(e => e.type === 'LOSE_HP');
@@ -1196,11 +1198,6 @@ export function CombatScreen() {
               setAttackTargetPos({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
             }
           }
-          // 공격 대기 상태로 저장
-          pendingAttackRef.current = {
-            cardInstanceId,
-            targetEnemyId: undefined,
-          };
           // 전체 공격 데이터 준비
           const allStrength = playerStatuses.find(s => s.type === 'STRENGTH')?.stacks || 0;
           const allEnemyHits = enemies
@@ -1240,7 +1237,19 @@ export function CombatScreen() {
               showDamagePopup(hit.targetId, hit.baseValue, 'damage', hit.modifier);
               dealDamageToEnemy(hit.targetId, hit.actualValue);
             });
+
+            // 데미지 후 카드 실행
+            setTimeout(() => {
+              playCard(cardInstanceId, undefined, true);
+            }, 50);
           }, 600);
+
+          // 1200ms 후 강제 idle 복귀
+          setTimeout(() => {
+            setPlayerAnimation('idle');
+            setAttackTargetPos(null);
+            setIsAttacking(false);
+          }, 1200);
         } else {
           // 데미지 없는 카드는 스킬 애니메이션 후 실행
           const hasLoseHp = card.effects.some(e => e.type === 'LOSE_HP');
@@ -1839,12 +1848,7 @@ export function CombatScreen() {
                   handleDeathAnimationEnd();
                   return;
                 }
-                // 공격 완료 시 카드 실행 (데미지는 이미 적용됨)
-                if (pendingAttackRef.current) {
-                  const { cardInstanceId, targetEnemyId } = pendingAttackRef.current;
-                  playCard(cardInstanceId, targetEnemyId, true);
-                  pendingAttackRef.current = null;
-                }
+                // 공격/스킬 완료 시 idle로 복귀 (카드 실행은 타임아웃에서 처리)
                 setPlayerAnimation('idle');
                 setAttackTargetPos(null);
                 setIsAttacking(false);
