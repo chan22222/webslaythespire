@@ -1,5 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useGameStore } from '../../stores/gameStore';
+import { useAuthStore } from '../../stores/authStore';
+import { useStatsStore } from '../../stores/statsStore';
 import { Card, CardInstance, createCardInstance } from '../../types/card';
 import { EnemyTemplate } from '../../types/enemy';
 import { Relic } from '../../types/relic';
@@ -9,6 +11,7 @@ import { COMMON_CARDS } from '../../data/cards/commonCards';
 import { UNCOMMON_CARDS } from '../../data/cards/uncommonCards';
 import { RARE_CARDS } from '../../data/cards/rareCards';
 import { UNIQUE_CARDS } from '../../data/cards/uniqueCards';
+import { ACHIEVEMENTS } from '../../data/achievements';
 import {
   GOBLIN,
   SKELETON,
@@ -65,7 +68,26 @@ const rarityOrder = { BASIC: 0, COMMON: 1, UNCOMMON: 2, RARE: 3, UNIQUE: 4 };
 
 export function DeckBuildingScreen() {
   const { setDeck, setPhase, startTestBattle, startGameWithDeckAndRelics, playerName, ownedCardIds, ownedRelicIds } = useGameStore();
+  const { isGuest } = useAuthStore();
+  const { unlockedAchievements } = useStatsStore();
   const isAdmin = playerName === 'adm1n';
+
+  // 업적으로 해금된 카드 ID 목록
+  const unlockedCardIds = useMemo(() => {
+    const cardIds: string[] = [];
+    unlockedAchievements.forEach(achievementId => {
+      const achievement = ACHIEVEMENTS.find(a => a.id === achievementId);
+      if (achievement?.unlocksCard) {
+        cardIds.push(achievement.unlocksCard);
+      }
+    });
+    return cardIds;
+  }, [unlockedAchievements]);
+
+  // 전체 보유 카드 ID (기본 + 업적 해금)
+  const allOwnedCardIds = useMemo(() => {
+    return [...new Set([...ownedCardIds, ...unlockedCardIds])];
+  }, [ownedCardIds, unlockedCardIds]);
   const [selectedCards, setSelectedCards] = useState<CardInstance[]>([]);
   const [filter, setFilter] = useState<'ALL' | 'ATTACK' | 'SHIELD' | 'GADGET' | 'EFFECT' | 'TERRAIN'>('ALL');
   const [sortBy, setSortBy] = useState<SortBy>('rarity');
@@ -79,8 +101,8 @@ export function DeckBuildingScreen() {
 
     cards.sort((a, b) => {
       // 미보유 카드를 후순위로
-      const aOwned = ownedCardIds.includes(a.id);
-      const bOwned = ownedCardIds.includes(b.id);
+      const aOwned = allOwnedCardIds.includes(a.id);
+      const bOwned = allOwnedCardIds.includes(b.id);
       if (aOwned && !bOwned) return -1;
       if (!aOwned && bOwned) return 1;
 
@@ -103,7 +125,7 @@ export function DeckBuildingScreen() {
     });
 
     return cards;
-  }, [filter, sortBy, sortOrder, ownedCardIds]);
+  }, [filter, sortBy, sortOrder, allOwnedCardIds]);
 
   const toggleSort = (newSortBy: SortBy) => {
     if (sortBy === newSortBy) {
@@ -372,7 +394,8 @@ export function DeckBuildingScreen() {
           <div className="flex-1 overflow-y-auto pr-2">
             <div className="deckbuild-card-grid flex flex-wrap gap-4 justify-start pt-4">
               {filteredCards.map((card, index) => {
-                const isOwned = isAdmin || ownedCardIds.includes(card.id);
+                // 관리자 또는 연습모드면 모든 카드 사용 가능
+                const isOwned = isAdmin || isGuest || allOwnedCardIds.includes(card.id);
                 return (
                 <div
                   key={`${card.id}-${index}`}

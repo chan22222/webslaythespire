@@ -35,7 +35,8 @@ export function getCardsByRarity(rarity: Card['rarity']): Card[] {
 // 랜덤 카드 보상 생성 (3장)
 // deckCardIds: 덱에 있는 카드 ID 배열 (unique 카드 필터링용)
 // unlockedAchievements: 해금된 업적 ID 배열 (해금된 카드만 등장)
-export function generateCardRewards(count: number = 3, deckCardIds: string[] = [], unlockedAchievements: string[] = []): Card[] {
+// isGuest: 연습모드 여부 (true면 모든 카드 해금)
+export function generateCardRewards(count: number = 3, deckCardIds: string[] = [], unlockedAchievements: string[] = [], isGuest: boolean = false): Card[] {
   const rewards: Card[] = [];
   // unique 카드가 이미 덱에 있거나, 해금되지 않은 카드는 보상 후보에서 제외
   const availableCards = ALL_OBTAINABLE_CARDS.filter(card => {
@@ -43,8 +44,8 @@ export function generateCardRewards(count: number = 3, deckCardIds: string[] = [
     if (card.unique && deckCardIds.includes(card.id)) {
       return false;
     }
-    // 해금되지 않은 카드는 제외
-    if (!isCardUnlocked(card.id, unlockedAchievements)) {
+    // 연습모드가 아닐 때만 해금 체크
+    if (!isGuest && !isCardUnlocked(card.id, unlockedAchievements)) {
       return false;
     }
     return true;

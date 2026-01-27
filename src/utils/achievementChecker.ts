@@ -90,9 +90,9 @@ export const recordBlockReduced = () => {
   battleState.blockNotReducedThisTurn = false;
 };
 
-// 에너지 0일 때 피해 입음 기록
-export const recordDamageTakenWithZeroEnergy = (energy: number) => {
-  if (energy === 0) {
+// 에너지를 쓰지 않고(풀 에너지 상태에서) 피해 입음 기록
+export const recordDamageTakenWithFullEnergy = (energy: number, maxEnergy: number) => {
+  if (energy === maxEnergy && maxEnergy > 0) {
     battleState.tookDamageWithZeroEnergy = true;
   }
 };

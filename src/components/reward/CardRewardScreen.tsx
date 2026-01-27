@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useGameStore } from '../../stores/gameStore';
 import { useCombatStore } from '../../stores/combatStore';
 import { useStatsStore } from '../../stores/statsStore';
+import { useAuthStore } from '../../stores/authStore';
 import { Card } from '../combat/Card';
 import { Card as CardType, createCardInstance } from '../../types/card';
 import { generateCardRewards } from '../../data/cards';
@@ -31,7 +32,9 @@ export function CardRewardScreen() {
     const deckCardIds = player.deck.map(card => card.id);
     // 해금된 업적 목록
     const unlockedAchievements = useStatsStore.getState().unlockedAchievements;
-    setCardRewards(generateCardRewards(3, deckCardIds, unlockedAchievements));
+    // 연습모드 여부
+    const isGuest = useAuthStore.getState().isGuest;
+    setCardRewards(generateCardRewards(3, deckCardIds, unlockedAchievements, isGuest));
     setGoldReward(randomInt(20, 50));
     if (hasEasterEggEnemy) {
       setBonusGold(2000);

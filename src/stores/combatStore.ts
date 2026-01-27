@@ -15,7 +15,7 @@ import {
   recordBlockGained,
   recordDamageToEnemy,
   recordBlockReduced,
-  recordDamageTakenWithZeroEnergy,
+  recordDamageTakenWithFullEnergy,
   recordWeakAndVulnerable,
   recordKillWithCard,
   checkBattleEndAchievements,
@@ -1509,9 +1509,9 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       // 통계 업데이트: 데미지 받음
       useStatsStore.getState().addDamageTaken(remainingDamage);
 
-      // 업적 추적: 에너지 0일 때 피해 입음, HP 변경
-      const { energy } = get();
-      recordDamageTakenWithZeroEnergy(energy);
+      // 업적 추적: 에너지를 쓰지 않고(풀 에너지) 피해 입음, HP 변경
+      const { energy, maxEnergy } = get();
+      recordDamageTakenWithFullEnergy(energy, maxEnergy);
       const finalHp = useGameStore.getState().player.currentHp;
       checkHpChangeAchievements(finalHp);
     }
