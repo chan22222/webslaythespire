@@ -1127,6 +1127,8 @@ export function CombatScreen() {
           setIsAttacking(true);
           playFootsteps(); // 발소리
           setPlayerAnimation('attack');
+          // 카드 즉시 사용 (손에서 제거, 데미지는 따로 처리)
+          playCard(cardInstanceId, confirmedTargetId, true);
 
           // 600ms 후에 데미지 처리 (팝업은 100ms 간격으로)
           setTimeout(() => {
@@ -1151,12 +1153,6 @@ export function CombatScreen() {
                 dealDamageToEnemy(hit.targetId, hit.actualValue);
               }, idx * 100);
             });
-
-            // 마지막 데미지 후 카드 실행
-            const lastHitDelay = (hits.length - 1) * 100;
-            setTimeout(() => {
-              playCard(cardInstanceId, confirmedTargetId, true);
-            }, lastHitDelay + 50);
           }, 600);
 
           // 1200ms 후 강제 idle 복귀 (애니메이션 끝나지 않아도)
@@ -1214,6 +1210,8 @@ export function CombatScreen() {
           setIsAttacking(true);
           playFootsteps(); // 발소리
           setPlayerAnimation('attack');
+          // 카드 즉시 사용 (손에서 제거, 데미지는 따로 처리)
+          playCard(cardInstanceId, undefined, true);
 
           // 600ms 후에 모든 적에게 데미지
           setTimeout(() => {
@@ -1237,11 +1235,6 @@ export function CombatScreen() {
               showDamagePopup(hit.targetId, hit.baseValue, 'damage', hit.modifier);
               dealDamageToEnemy(hit.targetId, hit.actualValue);
             });
-
-            // 데미지 후 카드 실행
-            setTimeout(() => {
-              playCard(cardInstanceId, undefined, true);
-            }, 50);
           }, 600);
 
           // 1200ms 후 강제 idle 복귀
