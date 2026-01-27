@@ -181,15 +181,17 @@ export const checkImmediateAchievements = () => {
 
 // 플레이어 턴 시작 시 방어도 체크 (적 턴 후)
 export const checkBlockNotReducedAchievement = (currentBlock: number) => {
-  const statsStore = useStatsStore.getState();
+  const beforeBlock = battleState.blockBeforeEnemyTurn;
+
+  // 체크 후 바로 초기화 (중복 달성 방지)
+  battleState.blockBeforeEnemyTurn = 0;
 
   // 이전 턴에 방어도가 있었고, 적 턴을 거친 후에도 방어도가 줄지 않았으면 달성
-  if (battleState.blockBeforeEnemyTurn > 0 && currentBlock >= battleState.blockBeforeEnemyTurn) {
+  // 현재 방어도도 0보다 커야 함 (방어도가 실제로 유지되었음을 확인)
+  if (beforeBlock > 0 && currentBlock > 0 && currentBlock >= beforeBlock) {
+    const statsStore = useStatsStore.getState();
     statsStore.unlockAchievement('block_not_reduced');
   }
-
-  // 체크 후 초기화
-  battleState.blockBeforeEnemyTurn = 0;
 };
 
 // 턴 종료 시 체크 (현재 사용 안 함, 호환성 유지)
