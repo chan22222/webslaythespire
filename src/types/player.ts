@@ -13,8 +13,8 @@ export interface Player {
 }
 
 export const createInitialPlayer = (): Player => ({
-  maxHp: 80,
-  currentHp: 80,
+  maxHp: 100,
+  currentHp: 100,
   gold: 200,
   deck: [],
   relics: [],

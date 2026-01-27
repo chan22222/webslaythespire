@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useGameStore } from '../../stores/gameStore';
 import { Card } from '../combat/Card';
+import { CardInstance } from '../../types/card';
 import { playButtonHover, playButtonClick, playCardBuy } from '../../utils/sound';
 
 export function RestScreen() {
@@ -11,6 +12,22 @@ export function RestScreen() {
 
   const healAmount = Math.floor(player.maxHp * 0.3);
   const upgradableCards = player.deck.filter(card => !card.upgraded && card.upgradeEffect);
+
+  // 선택된 카드의 강화 미리보기 생성
+  const upgradedPreview = useMemo((): CardInstance | null => {
+    if (!selectedCardId) return null;
+    const card = upgradableCards.find(c => c.instanceId === selectedCardId);
+    if (!card || !card.upgradeEffect) return null;
+
+    // 강화 효과 적용한 미리보기 카드 생성
+    return {
+      ...card,
+      ...card.upgradeEffect,
+      upgraded: true,
+      name: card.upgradeEffect.name || card.name + '+',
+      instanceId: card.instanceId + '_preview',
+    };
+  }, [selectedCardId, upgradableCards]);
 
   const handleRest = () => {
     healPlayer(healAmount);
@@ -166,6 +183,19 @@ export function RestScreen() {
             <p className="rest-upgrade-hint text-center text-gray-400">
               {selectedCardId ? '선택 버튼을 눌러 확정하세요' : '카드를 선택하세요'}
             </p>
+
+            {/* 강화 미리보기 */}
+            {upgradedPreview && (
+              <div className="flex items-center justify-center gap-4 mb-4 p-4 rounded-lg" style={{ background: 'rgba(0,0,0,0.3)' }}>
+                <div style={{ width: 100, height: 139 }}>
+                  <Card card={upgradableCards.find(c => c.instanceId === selectedCardId)!} size="sm" />
+                </div>
+                <div className="text-2xl text-[var(--gold)]">→</div>
+                <div style={{ width: 100, height: 139 }}>
+                  <Card card={upgradedPreview} size="sm" />
+                </div>
+              </div>
+            )}
 
             <div className="rest-upgrade-grid">
               {upgradableCards.map(card => {
