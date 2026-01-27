@@ -10,11 +10,24 @@ const formatNumber = (num: number): string => {
   return num.toLocaleString();
 };
 
-export function StatsPanel() {
-  const [isOpen, setIsOpen] = useState(false);
+interface StatsPanelProps {
+  // 외부 제어 모드 (버튼 없이 모달만)
+  externalControl?: boolean;
+  isOpen?: boolean;
+  onClose?: () => void;
+  // 버튼 숨기기 (저장 정보)
+  hideSaveInfo?: boolean;
+}
+
+export function StatsPanel({ externalControl, isOpen: externalIsOpen, onClose, hideSaveInfo }: StatsPanelProps = {}) {
+  const [internalIsOpen, setInternalIsOpen] = useState(false);
   const { stats, unlockedAchievements, loadStats, isLoading } = useStatsStore();
   const { hasSaveData, map, player } = useGameStore();
   const { user, isGuest } = useAuthStore();
+
+  // 실제 사용할 상태
+  const isOpen = externalControl ? externalIsOpen : internalIsOpen;
+  const handleClose = externalControl ? onClose : () => setInternalIsOpen(false);
 
   // 로그인 시 통계 불러오기
   useEffect(() => {
@@ -28,31 +41,32 @@ export function StatsPanel() {
 
   return (
     <>
-      {/* 통계 버튼 */}
-      <button
-        onMouseEnter={playButtonHover}
-        onClick={() => {
-          playButtonClick();
-          setIsOpen(true);
-        }}
-        className="px-3 py-2 rounded-lg transition-all hover:scale-105 hover:brightness-125 flex items-center gap-2"
-        style={{
-          fontFamily: '"NeoDunggeunmo", cursive',
-          background: 'linear-gradient(180deg, rgba(30, 25, 18, 0.9) 0%, rgba(15, 12, 8, 0.9) 100%)',
-          border: '1px solid var(--gold-dark)',
-          color: 'var(--gold-light)',
-          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.4)',
-        }}
-      >
-        <span style={{ fontSize: '16px' }}>📊</span>
-        <span className="text-sm">통계</span>
-      </button>
+      {/* 통계 버튼 (외부 제어 모드가 아닐 때만) */}
+      {!externalControl && (
+        <button
+          onMouseEnter={playButtonHover}
+          onClick={() => {
+            playButtonClick();
+            setInternalIsOpen(true);
+          }}
+          className="px-3 py-2 rounded-lg transition-all hover:scale-105 hover:brightness-125 flex items-center gap-2"
+          style={{
+            fontFamily: '"NeoDunggeunmo", cursive',
+            background: 'linear-gradient(180deg, rgba(30, 25, 18, 0.9) 0%, rgba(15, 12, 8, 0.9) 100%)',
+            border: '1px solid var(--gold-dark)',
+            color: 'var(--gold-light)',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.4)',
+          }}
+        >
+          <span className="text-sm">통계</span>
+        </button>
+      )}
 
       {/* 통계 모달 */}
       {isOpen && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/80"
-          onClick={() => setIsOpen(false)}
+          onClick={handleClose}
         >
           <div
             className="relative p-6 rounded-lg border-2 border-[var(--gold-dark)] max-w-md w-full mx-4 max-h-[85vh] overflow-y-auto"
@@ -64,13 +78,12 @@ export function StatsPanel() {
           >
             {/* 헤더 */}
             <h3
-              className="text-[var(--gold)] text-center mb-4 text-xl flex items-center justify-center gap-2"
+              className="text-[var(--gold)] text-center mb-4 text-xl"
               style={{
                 fontFamily: '"NeoDunggeunmo", cursive',
                 textShadow: '0 0 10px var(--gold-glow)',
               }}
             >
-              <span>📊</span>
               플레이어 통계
             </h3>
 
@@ -91,7 +104,7 @@ export function StatsPanel() {
             ) : null}
 
             {/* 저장 정보 */}
-            {hasSaveData && !isGuest && (
+            {hasSaveData && !isGuest && !hideSaveInfo && (
               <div
                 className="mb-4 p-3 rounded-lg"
                 style={{
@@ -103,7 +116,7 @@ export function StatsPanel() {
                   className="text-[var(--gold)] text-base mb-2 flex items-center gap-2"
                   style={{ fontFamily: '"NeoDunggeunmo", cursive' }}
                 >
-                  <span>💾</span> 저장된 게임
+                  저장된 게임
                 </h4>
                 <div
                   className="text-[var(--gold-light)] text-sm space-y-1"
@@ -127,8 +140,8 @@ export function StatsPanel() {
                   border: '1px solid rgba(212, 168, 75, 0.2)',
                 }}
               >
-                <h4 className="text-[var(--gold)] text-base mb-2 flex items-center gap-2">
-                  <span>⚔️</span> 처치한 적
+                <h4 className="text-[var(--gold)] text-base mb-2">
+                  처치한 적
                 </h4>
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <div className="flex justify-between">
@@ -158,8 +171,8 @@ export function StatsPanel() {
                   border: '1px solid rgba(212, 168, 75, 0.2)',
                 }}
               >
-                <h4 className="text-[var(--gold)] text-base mb-2 flex items-center gap-2">
-                  <span>🃏</span> 카드 사용
+                <h4 className="text-[var(--gold)] text-base mb-2">
+                  카드 사용
                 </h4>
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <div className="flex justify-between">
@@ -197,8 +210,8 @@ export function StatsPanel() {
                   border: '1px solid rgba(212, 168, 75, 0.2)',
                 }}
               >
-                <h4 className="text-[var(--gold)] text-base mb-2 flex items-center gap-2">
-                  <span>💥</span> 전투 통계
+                <h4 className="text-[var(--gold)] text-base mb-2">
+                  전투 통계
                 </h4>
                 <div className="grid grid-cols-1 gap-2 text-sm">
                   <div className="flex justify-between">
@@ -236,8 +249,8 @@ export function StatsPanel() {
                   border: '1px solid rgba(212, 168, 75, 0.2)',
                 }}
               >
-                <h4 className="text-[var(--gold)] text-base mb-2 flex items-center gap-2">
-                  <span>🎮</span> 게임 진행
+                <h4 className="text-[var(--gold)] text-base mb-2">
+                  게임 진행
                 </h4>
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <div className="flex justify-between">
@@ -268,9 +281,7 @@ export function StatsPanel() {
                 }}
               >
                 <h4 className="text-[var(--gold)] text-base mb-3 flex items-center justify-between">
-                  <span className="flex items-center gap-2">
-                    <span>🏆</span> 업적
-                  </span>
+                  <span>업적</span>
                   <span className="text-sm text-gray-400">
                     {unlockedCount} / {totalAchievements}
                   </span>
@@ -315,7 +326,7 @@ export function StatsPanel() {
               onMouseEnter={playButtonHover}
               onClick={() => {
                 playButtonClick();
-                setIsOpen(false);
+                handleClose?.();
               }}
               className="mt-4 w-full px-4 py-2 rounded border border-[var(--gold-dark)] text-[var(--gold-light)] text-base hover:bg-[var(--gold-dark)]/20 transition-colors"
               style={{ fontFamily: '"NeoDunggeunmo", cursive' }}
