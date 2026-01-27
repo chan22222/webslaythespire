@@ -5,6 +5,7 @@ import { EnemyInstance, EnemyTemplate, createEnemyInstance } from '../types/enem
 import { Status, STATUS_INFO } from '../types/status';
 import { shuffle } from '../utils/shuffle';
 import { useGameStore } from './gameStore';
+import { useStatsStore } from './statsStore';
 import { playCardDraw, playHit, playBuff, playDebuff, playEnemyBuff, playWin } from '../utils/sound';
 
 // 데미지 팝업 타입
@@ -623,6 +624,9 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     const pName = useGameStore.getState().playerName;
     get().addToCombatLog(`${pName}(이)가 ${card.name} 사용!`);
 
+    // 통계 업데이트: 카드 사용
+    useStatsStore.getState().incrementCardPlayed(card.type);
+
     // 사용한 카드 종류 기록 (중복 제외)
     const usedCardTypes = get().usedCardTypes;
     if (!usedCardTypes.includes(card.id)) {
@@ -715,6 +719,9 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
               onPlayerHit();
             }
             get().addToCombatLog(`HP ${effect.value} 감소!`);
+
+            // 통계 업데이트: 카드로 HP 손실
+            useStatsStore.getState().addHpLostByCard(effect.value);
           }
           break;
         }
@@ -737,6 +744,9 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
             useGameStore.getState().healPlayer(healAmount);
             get().addDamagePopup(healAmount, 'heal', 0, 0, 'player');
             get().addToCombatLog(`HP ${healAmount} 회복!`);
+
+            // 통계 업데이트: 회복량
+            useStatsStore.getState().addHealing(healAmount);
           }
           break;
         }
@@ -980,6 +990,9 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
                 useGameStore.getState().healPlayer(randomValue);
                 get().addDamagePopup(randomValue, 'heal', 0, 0, 'player');
                 get().addToCombatLog(`HP ${randomValue} 회복!`);
+
+                // 통계 업데이트: 회복량
+                useStatsStore.getState().addHealing(randomValue);
               }
             } else if (randomValue < 0) {
               useGameStore.getState().modifyHp(randomValue);
@@ -1130,6 +1143,24 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
 
     set({ enemies: updatedEnemies });
 
+    // 통계 업데이트: 데미지 입힘
+    if (remainingDamage > 0) {
+      useStatsStore.getState().addDamageDealt(remainingDamage);
+    }
+
+    // 통계 업데이트: 적 처치 (저장은 전투 승리 시 한 번에)
+    if (newHp <= 0 && enemy.currentHp > 0) {
+      const currentNode = useGameStore.getState().getCurrentNode();
+      const nodeType = currentNode?.type || 'ENEMY';
+      if (nodeType === 'BOSS') {
+        useStatsStore.getState().incrementKill('boss');
+      } else if (nodeType === 'ELITE') {
+        useStatsStore.getState().incrementKill('elite');
+      } else {
+        useStatsStore.getState().incrementKill('mob');
+      }
+    }
+
     // ON_DAMAGE_DEALT 유물 효과 트리거
     const relics = useGameStore.getState().player.relics;
     relics.forEach(relic => {
@@ -1241,6 +1272,9 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       get().addToCombatLog(`${pName}(이)가 ${remainingDamage} 피해를 입었습니다!`);
       // gameStore의 HP를 실제로 감소
       useGameStore.getState().modifyHp(-remainingDamage);
+
+      // 통계 업데이트: 데미지 받음
+      useStatsStore.getState().addDamageTaken(remainingDamage);
     }
 
     return remainingDamage;
@@ -1251,6 +1285,9 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     set({ playerBlock: playerBlock + amount });
     const pName = useGameStore.getState().playerName;
     get().addToCombatLog(`${pName}(이)가 방어도 ${amount} 획득!`);
+
+    // 통계 업데이트: 방어도 획득
+    useStatsStore.getState().addBlockGained(amount);
   },
 
   applyStatusToEnemy: (enemyId: string, status: Status) => {
@@ -1319,6 +1356,11 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     const pName = useGameStore.getState().playerName;
     const statusName = statusInfo?.name || status.type;
     get().addToCombatLog(`${pName}(이)가 ${statusName} ${status.stacks} 획득!`);
+
+    // 통계 업데이트: 힘 획득
+    if (status.type === 'STRENGTH' && status.stacks > 0) {
+      useStatsStore.getState().addStrengthGained(status.stacks);
+    }
   },
 
   gainEnergy: (amount: number) => {
@@ -1345,6 +1387,10 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       });
       playWin();
       get().addToCombatLog('승리!');
+
+      // 전투 승리 시 통계 한 번에 저장
+      useStatsStore.getState().saveStats();
+
       return 'VICTORY';
     }
 

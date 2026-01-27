@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useGameStore } from '../stores/gameStore';
 import { useAuthStore } from '../stores/authStore';
 import { playButtonHover, playButtonClick, setGlobalVolume, playBGM } from '../utils/sound';
+import { StatsPanel } from './stats/StatsPanel';
 
 // 파티클 데이터를 컴포넌트 외부에서 한 번만 생성
 const PARTICLES = Array.from({ length: 25 }, (_, i) => ({
@@ -363,6 +364,11 @@ export function MainMenu() {
     <div className="w-full h-screen bg-black flex flex-col items-center justify-center relative overflow-hidden">
       {/* 블랙홀 소용돌이 배경 */}
       <BlackholeBackground />
+
+      {/* 좌측 상단 통계 버튼 */}
+      <div className="absolute top-4 left-4 z-20">
+        <StatsPanel />
+      </div>
 
       {/* 우측 상단 로그인/로그아웃 버튼 */}
       <div className="absolute top-4 right-4 z-20 flex items-center gap-3">

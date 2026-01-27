@@ -10,6 +10,7 @@ import { STARTER_RELICS, ALL_RELICS } from '../data/relics';
 import { generateMap } from '../utils/mapGenerator';
 import { useAuthStore } from './authStore';
 import { supabase } from '../lib/supabase';
+import { useStatsStore } from './statsStore';
 
 // 랜덤 시작 유물 선택
 const getRandomStarterRelic = () => {
@@ -94,6 +95,9 @@ export const useGameStore = create<GameState>((set, get) => ({
   startNewGame: () => {
     const initialPlayer = createInitialPlayer();
     const { isGuest } = useAuthStore.getState();
+
+    // 통계 업데이트: 게임 시작
+    useStatsStore.getState().recordGameStart();
 
     // 게스트는 바로 맵으로 이동 (스타터 덱 + 랜덤 스타터 유물)
     if (isGuest) {
@@ -198,14 +202,22 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   setPhase: (phase: GamePhase) => {
+    const { map } = get();
     set({ phase });
     // MAP 화면 진입 시 자동 저장
     if (phase === 'MAP') {
       setTimeout(() => get().saveGame(), 100);
     }
-    // 게임 오버 또는 승리 시 저장 데이터 삭제
-    if (phase === 'GAME_OVER' || phase === 'VICTORY') {
+    // 게임 오버 또는 승리 시 저장 데이터 삭제 및 통계 기록
+    if (phase === 'GAME_OVER') {
       get().deleteSaveData();
+      // 통계 업데이트: 패배
+      useStatsStore.getState().recordDefeat(map.floor);
+    }
+    if (phase === 'VICTORY') {
+      get().deleteSaveData();
+      // 통계 업데이트: 승리
+      useStatsStore.getState().recordVictory(map.floor);
     }
   },
 
