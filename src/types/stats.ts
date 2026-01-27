@@ -42,14 +42,6 @@ export interface PlayerStats {
   lastUpdated: number;
 }
 
-export interface Achievement {
-  id: string;
-  name: string;
-  description: string;
-  icon: string;
-  condition: (stats: PlayerStats) => boolean;
-}
-
 export const createInitialStats = (): PlayerStats => ({
   totalKills: 0,
   mobKills: 0,

@@ -289,11 +289,11 @@ export function StatsPanel({ externalControl, isOpen: externalIsOpen, onClose, h
                 <div className="grid grid-cols-6 gap-2">
                   {ACHIEVEMENTS.map((achievement) => {
                     const isUnlocked = unlockedAchievements.includes(achievement.id);
+                    const isHidden = achievement.hidden && !isUnlocked;
                     return (
                       <div
                         key={achievement.id}
                         className="relative group"
-                        title={`${achievement.name}: ${achievement.description}`}
                       >
                         <div
                           className={`w-8 h-8 flex items-center justify-center rounded transition-all ${
@@ -302,7 +302,7 @@ export function StatsPanel({ externalControl, isOpen: externalIsOpen, onClose, h
                               : 'bg-gray-800 border border-gray-700 opacity-40'
                           }`}
                         >
-                          <span className="text-sm">{achievement.icon}</span>
+                          <span className="text-sm">{isHidden ? '?' : achievement.icon}</span>
                         </div>
                         {/* 툴팁 */}
                         <div
@@ -310,9 +310,9 @@ export function StatsPanel({ externalControl, isOpen: externalIsOpen, onClose, h
                           style={{ fontSize: '12px' }}
                         >
                           <p className={`font-bold ${isUnlocked ? 'text-yellow-400' : 'text-gray-400'}`}>
-                            {achievement.name}
+                            {isHidden ? '???' : achievement.name}
                           </p>
-                          <p className="text-gray-300">{achievement.description}</p>
+                          <p className="text-gray-300">{isHidden ? '???' : achievement.description}</p>
                         </div>
                       </div>
                     );
