@@ -10,6 +10,7 @@ import { ShopScreen } from './components/shop/ShopScreen';
 import { GameOver } from './components/GameOver';
 import { DeckBuildingScreen } from './components/deckbuilding/DeckBuildingScreen';
 import { LoginScreen } from './components/auth/LoginScreen';
+import { AchievementNotification } from './components/combat/AchievementNotification';
 
 // 로딩 화면 컴포넌트 - 던전 러너 스타일
 function LoadingScreen({ onLoadComplete }: { onLoadComplete: () => void }) {
@@ -397,6 +398,9 @@ function App() {
       </div>
 
       <div className="game-content w-full min-h-screen bg-gray-900">
+      {/* 업적 달성 알림 (전역) */}
+      <AchievementNotification />
+
       {phase === 'MAIN_MENU' && !isLoading && !showLoginScreen && <MainMenu />}
       {phase === 'DECK_BUILDING' && <DeckBuildingScreen />}
       {phase === 'MAP' && <MapScreen />}

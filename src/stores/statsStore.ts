@@ -302,7 +302,7 @@ export const useStatsStore = create<StatsStore>((set, get) => ({
     get().saveStats();
   },
 
-  // SQL에서 통계 불러오기
+  // SQL에서 통계 불러오기 (save_data JSONB 안에 저장)
   loadStats: async () => {
     const { user, isGuest } = useAuthStore.getState();
     if (isGuest || !user) return;
@@ -312,7 +312,7 @@ export const useStatsStore = create<StatsStore>((set, get) => ({
     try {
       const { data, error } = await supabase
         .from('game_saves')
-        .select('player_stats, achievements')
+        .select('save_data')
         .eq('user_id', user.uid)
         .single();
 
@@ -327,10 +327,11 @@ export const useStatsStore = create<StatsStore>((set, get) => ({
         return;
       }
 
-      if (data?.player_stats) {
+      const saveData = data?.save_data;
+      if (saveData?.player_stats) {
         set({
-          stats: { ...createInitialStats(), ...data.player_stats },
-          unlockedAchievements: data.achievements || [],
+          stats: { ...createInitialStats(), ...saveData.player_stats },
+          unlockedAchievements: saveData.achievements || [],
           isLoading: false,
         });
       } else {
@@ -342,7 +343,7 @@ export const useStatsStore = create<StatsStore>((set, get) => ({
     }
   },
 
-  // SQL에 통계 저장
+  // SQL에 통계 저장 (save_data JSONB 안에 저장)
   saveStats: async () => {
     const { user, isGuest } = useAuthStore.getState();
     if (isGuest || !user) return;
@@ -350,12 +351,25 @@ export const useStatsStore = create<StatsStore>((set, get) => ({
     const { stats, unlockedAchievements } = get();
 
     try {
+      // 기존 save_data 가져오기
+      const { data: existingData } = await supabase
+        .from('game_saves')
+        .select('save_data')
+        .eq('user_id', user.uid)
+        .single();
+
+      // 기존 save_data에 통계 추가
+      const updatedSaveData = {
+        ...(existingData?.save_data || {}),
+        player_stats: stats,
+        achievements: unlockedAchievements,
+      };
+
       const { error } = await supabase
         .from('game_saves')
         .upsert({
           user_id: user.uid,
-          player_stats: stats,
-          achievements: unlockedAchievements,
+          save_data: updatedSaveData,
           updated_at: new Date().toISOString(),
         }, {
           onConflict: 'user_id',

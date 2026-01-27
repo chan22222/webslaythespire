@@ -3,7 +3,14 @@ import { useStatsStore } from '../../stores/statsStore';
 import { useGameStore } from '../../stores/gameStore';
 import { useAuthStore } from '../../stores/authStore';
 import { ACHIEVEMENTS } from '../../data/achievements';
+import { ALL_CARDS } from '../../data/cards';
 import { playButtonHover, playButtonClick } from '../../utils/sound';
+
+// 카드 ID로 카드 이름 찾기
+const getCardNameById = (cardId: string): string | null => {
+  const card = ALL_CARDS.find(c => c.id === cardId);
+  return card ? card.name : null;
+};
 
 // 숫자 포맷팅 (1000 -> 1,000)
 const formatNumber = (num: number): string => {
@@ -21,6 +28,7 @@ interface StatsPanelProps {
 
 export function StatsPanel({ externalControl, isOpen: externalIsOpen, onClose, hideSaveInfo }: StatsPanelProps = {}) {
   const [internalIsOpen, setInternalIsOpen] = useState(false);
+  const [selectedAchievementId, setSelectedAchievementId] = useState<string | null>(null);
   const { stats, unlockedAchievements, loadStats, isLoading } = useStatsStore();
   const { hasSaveData, map, player } = useGameStore();
   const { user, isGuest } = useAuthStore();
@@ -28,6 +36,11 @@ export function StatsPanel({ externalControl, isOpen: externalIsOpen, onClose, h
   // 실제 사용할 상태
   const isOpen = externalControl ? externalIsOpen : internalIsOpen;
   const handleClose = externalControl ? onClose : () => setInternalIsOpen(false);
+
+  // 선택된 업적 정보
+  const selectedAchievement = selectedAchievementId
+    ? ACHIEVEMENTS.find(a => a.id === selectedAchievementId)
+    : null;
 
   // 로그인 시 통계 불러오기
   useEffect(() => {
@@ -272,60 +285,77 @@ export function StatsPanel({ externalControl, isOpen: externalIsOpen, onClose, h
                 </div>
               </div>
 
-            </div>
-
-            {/* 업적 (스크롤 영역 밖) */}
-            <div
-              className="p-3 rounded-lg mt-4 overflow-visible"
-              style={{
-                background: 'rgba(0, 0, 0, 0.3)',
-                border: '1px solid rgba(212, 168, 75, 0.2)',
-                fontFamily: '"NeoDunggeunmo", cursive',
-              }}
-            >
-              <h4 className="text-[var(--gold)] text-base mb-3 flex items-center justify-between">
-                <span>업적</span>
-                <span className="text-sm text-gray-400">
-                  {unlockedCount} / {totalAchievements}
-                </span>
-              </h4>
-              <div className="grid grid-cols-6 gap-2 overflow-visible">
-                {ACHIEVEMENTS.map((achievement) => {
-                  const isUnlocked = unlockedAchievements.includes(achievement.id);
-                  const isHidden = achievement.hidden && !isUnlocked;
-                  return (
-                    <div
-                      key={achievement.id}
-                      className="relative group"
-                    >
+              {/* 업적 (스크롤 영역 안) */}
+              <div
+                className="p-3 rounded-lg"
+                style={{
+                  background: 'rgba(0, 0, 0, 0.3)',
+                  border: '1px solid rgba(212, 168, 75, 0.2)',
+                }}
+              >
+                <h4 className="text-[var(--gold)] text-base mb-3 flex items-center justify-between">
+                  <span>업적</span>
+                  <span className="text-sm text-gray-400">
+                    {unlockedCount} / {totalAchievements}
+                  </span>
+                </h4>
+                <div className="grid grid-cols-6 gap-2">
+                  {ACHIEVEMENTS.map((achievement) => {
+                    const isUnlocked = unlockedAchievements.includes(achievement.id);
+                    const isHidden = achievement.hidden && !isUnlocked;
+                    const isSelected = selectedAchievementId === achievement.id;
+                    return (
                       <div
+                        key={achievement.id}
+                        onClick={() => setSelectedAchievementId(isSelected ? null : achievement.id)}
+                        onMouseEnter={() => setSelectedAchievementId(achievement.id)}
                         className={`w-8 h-8 flex items-center justify-center rounded transition-all cursor-pointer ${
                           isUnlocked
                             ? 'bg-gradient-to-br from-yellow-600 to-yellow-800 border border-yellow-500'
                             : 'bg-gray-800 border border-gray-700 opacity-40'
-                        }`}
+                        } ${isSelected ? 'ring-2 ring-white scale-110' : ''}`}
                       >
                         <span className="text-sm">{isHidden ? '?' : achievement.icon}</span>
                       </div>
-                      {/* 툴팁 - 위로 표시, 높은 z-index */}
-                      <div
-                        className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 rounded bg-black border-2 border-[var(--gold-dark)] opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-[100]"
-                        style={{
-                          fontSize: '12px',
-                          minWidth: '150px',
-                          whiteSpace: 'normal',
-                          boxShadow: '0 0 15px rgba(0,0,0,0.9)',
-                        }}
-                      >
-                        <p className={`font-bold ${isUnlocked ? 'text-yellow-400' : 'text-gray-400'}`}>
-                          {isHidden ? '???' : achievement.name}
-                        </p>
-                        <p className="text-gray-300 text-xs mt-1">{isHidden ? '???' : achievement.description}</p>
-                      </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
+                {/* 선택된 업적 정보 (인라인, 고정 높이) */}
+                <div
+                  className="mt-3 p-3 rounded"
+                  style={{
+                    background: 'rgba(0, 0, 0, 0.4)',
+                    border: '1px solid var(--gold-dark)',
+                    minHeight: '80px',
+                  }}
+                >
+                  {selectedAchievement ? (
+                    (() => {
+                      const isUnlocked = unlockedAchievements.includes(selectedAchievement.id);
+                      const isHidden = selectedAchievement.hidden && !isUnlocked;
+                      return (
+                        <>
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="text-lg">{isHidden ? '?' : selectedAchievement.icon}</span>
+                            <span className={`font-bold text-base ${isUnlocked ? 'text-yellow-400' : 'text-gray-400'}`}>
+                              {isHidden ? '???' : selectedAchievement.name}
+                            </span>
+                          </div>
+                          <p className="text-gray-300 text-sm">{isHidden ? '???' : selectedAchievement.description}</p>
+                          {selectedAchievement.unlocksCard && !isHidden && (
+                            <p className="text-cyan-400 text-sm mt-2">
+                              해금: {getCardNameById(selectedAchievement.unlocksCard) || selectedAchievement.unlocksCard}
+                            </p>
+                          )}
+                        </>
+                      );
+                    })()
+                  ) : (
+                    <p className="text-gray-500 text-sm">업적을 선택하면 상세 정보가 표시됩니다</p>
+                  )}
+                </div>
               </div>
+
             </div>
 
             {/* 닫기 버튼 */}

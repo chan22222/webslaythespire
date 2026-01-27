@@ -9,8 +9,6 @@ import { Enemy } from './Enemy';
 import { EnergyOrb } from './EnergyOrb';
 import { PlayerStatus } from './PlayerStatus';
 import { DamagePopupManager } from './DamagePopup';
-import { AchievementNotification } from './AchievementNotification';
-import { StatsPanel } from '../stats/StatsPanel';
 import { SwordSlashEffect, SlashHitEffect } from './characters';
 import { generateNormalEncounter, ELITE_ENEMIES, BOSS_ENEMIES, EASTER_EGG_ENCOUNTER } from '../../data/enemies';
 import { playButtonHover, playButtonClick, playAttack, playFootsteps, playBuff, playBGM } from '../../utils/sound';
@@ -615,8 +613,6 @@ export function CombatScreen() {
   const [isMobileLogOpen, setIsMobileLogOpen] = useState(false);
   // 유물 모달 표시
   const [showRelics, setShowRelics] = useState(false);
-  // 통계 모달 표시
-  const [showStats, setShowStats] = useState(false);
 
   // isPlayerDying 상태를 ref에 동기화
   useEffect(() => {
@@ -1294,9 +1290,6 @@ export function CombatScreen() {
 
   return (
     <>
-      {/* 업적 달성 알림 */}
-      <AchievementNotification />
-
       {/* 전투 시작 인트로 */}
       {showIntro && (
         <BattleIntro
@@ -1682,27 +1675,6 @@ export function CombatScreen() {
             </div>
           )}
 
-          {/* 통계 버튼 */}
-          <button
-            onClick={() => { playButtonClick(); setShowStats(true); }}
-            onMouseEnter={() => playButtonHover()}
-            className="flex items-center justify-center w-10 h-10 rounded-lg transition-all hover:scale-105 hover:brightness-125"
-            style={{
-              background: 'linear-gradient(180deg, rgba(30, 25, 18, 0.9) 0%, rgba(15, 12, 8, 0.9) 100%)',
-              border: '1px solid var(--gold-dark)',
-              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.4)',
-            }}
-          >
-            <span
-              className="text-xs font-bold"
-              style={{
-                fontFamily: '"NeoDunggeunmo", cursive',
-                color: 'var(--gold-light)',
-              }}
-            >
-              통계
-            </span>
-          </button>
         </div>
 
         {/* 턴 표시 - 중앙 고정 */}
@@ -2144,13 +2116,6 @@ export function CombatScreen() {
         </div>
       )}
 
-      {/* 통계 모달 */}
-      <StatsPanel
-        externalControl
-        isOpen={showStats}
-        onClose={() => setShowStats(false)}
-        hideSaveInfo
-      />
 
       {/* 유물 모달 */}
       {showRelics && (
