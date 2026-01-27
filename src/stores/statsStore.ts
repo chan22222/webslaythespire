@@ -2,15 +2,21 @@ import { create } from 'zustand';
 import { PlayerStats, createInitialStats } from '../types/stats';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from './authStore';
+import { checkAchievements as checkStatAchievements } from '../data/achievements';
 
 interface StatsStore {
   stats: PlayerStats;
   unlockedAchievements: string[];
   isLoading: boolean;
 
-  // 업적 알림용
+  // 업적 알림용 (큐 시스템)
+  achievementQueue: string[];
   recentUnlockedAchievement: string | null;
   clearRecentAchievement: () => void;
+  processNextAchievement: () => void;
+
+  // 통계 기반 업적 체크
+  checkStatBasedAchievements: () => void;
 
   // 통계 업데이트 액션
   incrementKill: (type: 'mob' | 'elite' | 'boss') => void;
@@ -48,10 +54,57 @@ export const useStatsStore = create<StatsStore>((set, get) => ({
   stats: createInitialStats(),
   unlockedAchievements: [],
   isLoading: false,
+  achievementQueue: [],
   recentUnlockedAchievement: null,
 
   clearRecentAchievement: () => {
     set({ recentUnlockedAchievement: null });
+    // 다음 업적 처리
+    setTimeout(() => {
+      get().processNextAchievement();
+    }, 500);
+  },
+
+  processNextAchievement: () => {
+    const { achievementQueue } = get();
+    if (achievementQueue.length > 0) {
+      const [next, ...rest] = achievementQueue;
+      set({
+        achievementQueue: rest,
+        recentUnlockedAchievement: next,
+      });
+    }
+  },
+
+  // 통계 기반 업적 체크 (타이틀 또는 승리 시 호출)
+  checkStatBasedAchievements: () => {
+    const { isGuest } = useAuthStore.getState();
+    if (isGuest) return;
+
+    const { stats, unlockedAchievements } = get();
+    const newlyUnlocked = checkStatAchievements(stats, unlockedAchievements);
+
+    if (newlyUnlocked.length > 0) {
+      const { achievementQueue, recentUnlockedAchievement } = get();
+
+      // 이미 표시 중인 업적이 있으면 큐에 추가
+      if (recentUnlockedAchievement) {
+        set({
+          unlockedAchievements: [...unlockedAchievements, ...newlyUnlocked],
+          achievementQueue: [...achievementQueue, ...newlyUnlocked],
+        });
+      } else {
+        // 첫 번째는 바로 표시, 나머지는 큐에
+        const [first, ...rest] = newlyUnlocked;
+        set({
+          unlockedAchievements: [...unlockedAchievements, ...newlyUnlocked],
+          recentUnlockedAchievement: first,
+          achievementQueue: [...achievementQueue, ...rest],
+        });
+      }
+
+      get().saveStats();
+    }
   },
 
   // 적 처치 (전투 승리 시 한 번에 저장)
@@ -256,6 +309,10 @@ export const useStatsStore = create<StatsStore>((set, get) => ({
       },
     }));
     get().saveStats();
+    // 승리 시 통계 기반 업적 체크
+    setTimeout(() => {
+      get().checkStatBasedAchievements();
+    }, 500);
   },
 
   // 패배
@@ -293,23 +350,32 @@ export const useStatsStore = create<StatsStore>((set, get) => ({
     });
   },
 
-  // 업적 해금
+  // 업적 해금 (큐 시스템 적용)
   unlockAchievement: (achievementId) => {
     const { isGuest } = useAuthStore.getState();
     // 연습모드에서는 업적 달성 불가
     if (isGuest) {
       return;
     }
-    const { unlockedAchievements } = get();
+    const { unlockedAchievements, achievementQueue, recentUnlockedAchievement } = get();
     // 이미 달성한 업적이면 무시
     if (unlockedAchievements.includes(achievementId)) {
       return;
     }
-    // 새 업적 달성
-    set({
-      unlockedAchievements: [...unlockedAchievements, achievementId],
-      recentUnlockedAchievement: achievementId,
-    });
+    // 새 업적 달성 - 큐 시스템 사용
+    if (recentUnlockedAchievement) {
+      // 이미 표시 중인 업적이 있으면 큐에 추가
+      set({
+        unlockedAchievements: [...unlockedAchievements, achievementId],
+        achievementQueue: [...achievementQueue, achievementId],
+      });
+    } else {
+      // 바로 표시
+      set({
+        unlockedAchievements: [...unlockedAchievements, achievementId],
+        recentUnlockedAchievement: achievementId,
+      });
+    }
     get().saveStats();
   },
 

@@ -115,7 +115,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     icon: '💓',
     hidden: false,
     isSpecialCondition: true,
-    unlocksCard: 'from_the_edge', // 사선에서
+    unlocksCard: 'on_the_edge', // 사선에서
   },
   {
     id: 'attack_cards_5_in_hand',
@@ -245,7 +245,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     icon: '👔',
     hidden: true,
     condition: (s) => s.bossKills >= 10,
-    unlocksCard: 'gods_power', // 신의 권능
+    unlocksCard: 'divine_power', // 신의 권능
   },
   {
     id: 'turn_25_in_battle',

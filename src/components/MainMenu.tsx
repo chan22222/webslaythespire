@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useGameStore } from '../stores/gameStore';
 import { useAuthStore } from '../stores/authStore';
+import { useStatsStore } from '../stores/statsStore';
 import { playButtonHover, playButtonClick, setGlobalVolume, playBGM } from '../utils/sound';
 import { StatsPanel } from './stats/StatsPanel';
 
@@ -300,12 +301,25 @@ export function MainMenu() {
   // 상습 탈주자 여부 (이어하기로 불러왔을 때 이름이 변경됨)
   const isDeserter = playerName === '상습 탈주자';
 
+  const { checkStatBasedAchievements, isLoading: isStatsLoading } = useStatsStore();
+
   // 로그인 상태 변경 시 저장 데이터 확인
   useEffect(() => {
     if (user && !isGuest) {
       checkSaveData();
     }
   }, [user, isGuest, checkSaveData]);
+
+  // 타이틀 진입 시 통계 기반 업적 체크 (승리 시 안 뜬 것들 처리)
+  useEffect(() => {
+    if (user && !isGuest && !isStatsLoading) {
+      // 통계 로드가 완료된 후 체크
+      const timer = setTimeout(() => {
+        checkStatBasedAchievements();
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [user, isGuest, isStatsLoading, checkStatBasedAchievements]);
 
   // 세션당 한 번 볼륨 설정 모달 표시
   useEffect(() => {

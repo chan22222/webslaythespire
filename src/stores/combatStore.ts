@@ -306,6 +306,29 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       get().addToCombatLog(`⚠️ DANGER! 적이 조금 더 강력해집니다!`);
     }
 
+    // 25턴 진입 시 업적 즉시 달성
+    if (turn === 25) {
+      useStatsStore.getState().updateMaxTurnInBattle(turn);
+      useStatsStore.getState().unlockAchievement('turn_25_in_battle');
+    }
+
+    // 25턴 이상: 매 턴 모든 적 힘 +3
+    if (turn >= 25) {
+      const { enemies } = get();
+      const updatedEnemies = enemies.map(enemy => {
+        if (enemy.currentHp <= 0) return enemy;
+        const existingStrength = enemy.statuses.find(s => s.type === 'STRENGTH');
+        if (existingStrength) {
+          existingStrength.stacks += 3;
+        } else {
+          enemy.statuses.push({ type: 'STRENGTH', stacks: 3 });
+        }
+        return enemy;
+      });
+      set({ enemies: updatedEnemies });
+      get().addToCombatLog(`💀 적들의 힘이 3 증가했습니다!`);
+    }
+
     // 유물 효과 트리거 (ON_TURN_START)
     const gameState = useGameStore.getState();
     const relics = gameState.player.relics;

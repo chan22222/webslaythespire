@@ -350,7 +350,7 @@ export function StatsPanel({ externalControl, isOpen: externalIsOpen, onClose, h
                           <p className="text-gray-300 text-sm">{isHidden ? '???' : selectedAchievement.description}</p>
                           {selectedAchievement.unlocksCard && (
                             <p className="text-cyan-400 text-sm mt-2">
-                              해금: {isHidden ? '???' : (getCardNameById(selectedAchievement.unlocksCard) || selectedAchievement.unlocksCard)}
+                              해금: {getCardNameById(selectedAchievement.unlocksCard) || selectedAchievement.unlocksCard}
                             </p>
                           )}
                         </>
