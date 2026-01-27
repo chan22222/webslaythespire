@@ -278,6 +278,11 @@ body {
     transform: translateY(-2rem) scale(1.1) !important;
   }
 
+  /* 카드 영역 내리기 */
+  .combat-card-area {
+    bottom: -1rem !important;
+  }
+
   .combat-bottom-area {
     height: 8rem !important;
   }
@@ -298,7 +303,12 @@ body {
   }
 
   .combat-hand {
-    transform: translateY(-4rem) scale(1.2) !important;
+    transform: translateY(-2rem) scale(1.2) !important;
+  }
+
+  /* 카드 영역 더 내리기 */
+  .combat-card-area {
+    bottom: -1rem !important;
   }
 
   .combat-bottom-area {
@@ -385,7 +395,12 @@ body {
   }
 
   .combat-hand {
-    transform: translateY(-4.5rem) scale(1.2) !important;
+    transform: translateY(-3.5rem) scale(1.2) !important;
+  }
+
+  /* 카드 영역 내리기 */
+  .combat-card-area {
+    bottom: -1.5rem !important;
   }
 
   .combat-bottom-area {
@@ -516,6 +531,85 @@ body {
     left: 50% !important;
     transform: translateX(-50%) scale(0.45) !important;
     top: -1.25rem !important;
+  }
+
+  /* 에너지 오브 위치 */
+  .combat-energy-orb {
+    bottom: 3.5rem !important;
+  }
+
+  /* 턴종료 버튼 위치 */
+  .combat-end-turn {
+    bottom: 3.5rem !important;
+  }
+
+  /* 카드 영역 올리기 */
+  .combat-card-area {
+    bottom: -1rem !important;
+  }
+}
+
+/* 높이 340px 미만 - 극소형 화면 */
+@media (max-height: 340px) and (orientation: landscape) {
+  .combat-scale {
+    transform: scale(0.4) translateY(var(--enemy-offset, 0px)) !important;
+  }
+
+  .combat-player {
+    transform: scale(0.4) translateY(1.5rem) !important;
+  }
+
+  .combat-hand {
+    transform: translateY(-5rem) scale(1.4) !important;
+  }
+
+  .combat-bottom-area {
+    height: 5rem !important;
+  }
+
+  /* 전투 영역 더 위로 */
+  .combat-main-area {
+    margin-top: -8rem !important;
+  }
+
+  /* 플레이어-적 간격 더 좁히기 */
+  .combat-gap {
+    gap: 0 !important;
+  }
+
+  .combat-gap > * {
+    margin-left: -8rem !important;
+  }
+
+  .combat-gap > *:first-child {
+    margin-left: 0 !important;
+  }
+
+  /* 적 간격 */
+  .combat-enemy-gap > * {
+    margin-left: -7rem !important;
+  }
+
+  /* 턴 표시 위치 */
+  .combat-turn-display {
+    left: 50% !important;
+    transform: translateX(-50%) scale(0.4) !important;
+    top: -1.5rem !important;
+  }
+
+  /* 에너지 오브 위치 */
+  .combat-energy-orb {
+    bottom: 5rem !important;
+  }
+
+  /* 턴종료 버튼 위치 */
+  .combat-end-turn {
+    bottom: 5rem !important;
+  }
+
+  /* 카드 영역 */
+  .combat-card-area {
+    bottom: 0.5rem !important;
   }
 }
 
