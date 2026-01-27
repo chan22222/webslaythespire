@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback, useId, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import { useCombatStore } from '../../stores/combatStore';
 
 interface TargetingArrowProps {
   startX: number;
@@ -31,6 +32,7 @@ export function TargetingArrow({ startX, startY, isActive, cardType, needsTarget
   const uniqueId = useId();
   const rafRef = useRef<number | null>(null);
   const pendingPosRef = useRef<{ x: number; y: number } | null>(null);
+  const setTargetedEnemyId = useCombatStore(state => state.setTargetedEnemyId);
 
   // 타겟 요소들의 위치를 업데이트
   const updateTargets = useCallback(() => {
@@ -97,6 +99,8 @@ export function TargetingArrow({ startX, startY, isActive, cardType, needsTarget
       // 타겟 필요: 적에게 스냅
       const closest = findClosestEnemy(clientX, clientY);
       setSnappedTarget(closest);
+      // 적 타겟팅 시 combatStore에 저장 (player가 아닌 경우만)
+      setTargetedEnemyId(closest && closest.id !== 'player' ? closest.id : null);
 
       if (closest) {
         setMousePos({ x: closest.x, y: closest.y - 20 });
@@ -114,11 +118,13 @@ export function TargetingArrow({ startX, startY, isActive, cardType, needsTarget
         setSnappedTarget(null);
         setMousePos({ x: clientX, y: clientY });
       }
+      // 논타겟 카드는 적 타겟팅 없음
+      setTargetedEnemyId(null);
     }
 
     pendingPosRef.current = null;
     rafRef.current = null;
-  }, [updateTargets, findClosestEnemy, needsTarget]);
+  }, [updateTargets, findClosestEnemy, needsTarget, setTargetedEnemyId]);
 
   const handleMove = useCallback((clientX: number, clientY: number) => {
     pendingPosRef.current = { x: clientX, y: clientY };
@@ -151,9 +157,11 @@ export function TargetingArrow({ startX, startY, isActive, cardType, needsTarget
           cancelAnimationFrame(rafRef.current);
           rafRef.current = null;
         }
+        // 드래그 종료 시 타겟팅 초기화
+        setTargetedEnemyId(null);
       };
     }
-  }, [isActive, handleMouseMove, handleTouchMove, startX, startY, updateTargets]);
+  }, [isActive, handleMouseMove, handleTouchMove, startX, startY, updateTargets, setTargetedEnemyId]);
 
   if (!isActive) return null;
 

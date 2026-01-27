@@ -131,22 +131,20 @@ export function Card({
     [playerStatuses]
   );
 
-  // 데미지 수정치 계산
+  // 데미지 수정치 계산 (combatStore와 동일한 합연산 방식 + 버림)
   const calculateModifiedDamage = useCallback((baseDamage: number) => {
-    let damage = baseDamage;
-
     // 힘 적용
-    damage += strength;
+    const damageWithStrength = baseDamage + strength;
 
-    // 약화 적용 (25% 감소)
+    // 합연산 배수 계산 (기본 1.0 - 약화 0.25)
+    let damageMultiplier = 1.0;
+
+    // 약화 적용 (-25%)
     if (weak && weak.stacks > 0) {
-      damage = Math.round(damage * 0.75);
+      damageMultiplier -= 0.25;
     }
 
-    // 단일 타겟이고 취약한 적이 있으면 취약 보너스 표시 (참고용)
-    // 실제 적용은 적마다 다르므로 여기선 기본 데미지만 계산
-
-    return Math.max(0, damage);
+    return Math.max(0, Math.floor(damageWithStrength * damageMultiplier));
   }, [strength, weak]);
 
   // 데미지가 수정되었는지 확인하고 설명 업데이트

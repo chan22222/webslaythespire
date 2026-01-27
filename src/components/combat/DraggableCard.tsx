@@ -82,22 +82,34 @@ export function DraggableCard({
   // 전투 중인 경우 플레이어 상태 가져오기
   const playerStatuses = useCombatStore(state => state.playerStatuses);
   const usedCardTypes = useCombatStore(state => state.usedCardTypes);
+  const enemies = useCombatStore(state => state.enemies);
+  const targetedEnemyId = useCombatStore(state => state.targetedEnemyId);
 
-  // 데미지 수정치 계산
-  const calculateModifiedDamage = (baseDamage: number) => {
-    let damage = baseDamage;
+  // 타겟팅된 적의 장비파괴(VULNERABLE) 상태 확인 (instanceId로 찾음)
+  const targetedEnemy = targetedEnemyId ? enemies.find(e => e.instanceId === targetedEnemyId) : null;
+  const targetVulnerable = targetedEnemy?.statuses.find(s => s.type === 'VULNERABLE');
 
+  // 데미지 수정치 계산 (combatStore와 동일한 합연산 방식 + 버림)
+  const calculateModifiedDamage = (baseDamage: number, includeVulnerable = false) => {
     // 힘 적용
     const strength = playerStatuses.find(s => s.type === 'STRENGTH')?.stacks || 0;
-    damage += strength;
+    const damageWithStrength = baseDamage + strength;
 
-    // 약화 적용 (25% 감소)
+    // 합연산 배수 계산 (기본 1.0 + 취약 0.5 - 약화 0.25)
+    let damageMultiplier = 1.0;
+
+    // 약화 적용 (-25%)
     const weak = playerStatuses.find(s => s.type === 'WEAK');
     if (weak && weak.stacks > 0) {
-      damage = Math.round(damage * 0.75);
+      damageMultiplier -= 0.25;
     }
 
-    return Math.max(0, damage);
+    // 타겟의 장비파괴 적용 (+50%)
+    if (includeVulnerable && targetVulnerable && targetVulnerable.stacks > 0) {
+      damageMultiplier += 0.5;
+    }
+
+    return Math.max(0, Math.floor(damageWithStrength * damageMultiplier));
   };
 
   // 데미지가 수정되었는지 확인하고 설명 업데이트
@@ -138,7 +150,7 @@ export function DraggableCard({
 
     const strength = playerStatuses.find(s => s.type === 'STRENGTH')?.stacks || 0;
     const weak = playerStatuses.find(s => s.type === 'WEAK');
-    const hasModifier = strength !== 0 || (weak && weak.stacks > 0);
+    const hasModifier = strength !== 0 || (weak && weak.stacks > 0) || (targetVulnerable && targetVulnerable.stacks > 0);
 
     if (!hasModifier) {
       return description;
@@ -147,7 +159,9 @@ export function DraggableCard({
     for (const effect of card.effects) {
       if (effect.type === 'DAMAGE') {
         const baseDamage = effect.value;
-        const modifiedDamage = calculateModifiedDamage(baseDamage);
+        // 단일 대상 공격이고 타겟팅된 적이 있을 때만 VULNERABLE 반영
+        const isSingleTarget = effect.target === 'SINGLE';
+        const modifiedDamage = calculateModifiedDamage(baseDamage, isSingleTarget && !!targetedEnemyId);
 
         if (baseDamage !== modifiedDamage) {
           const pattern = new RegExp(`${baseDamage} 피해`, 'g');
@@ -171,7 +185,8 @@ export function DraggableCard({
     for (const effect of card.effects) {
       if (effect.type === 'DAMAGE') {
         const baseDamage = effect.value;
-        const modifiedDamage = calculateModifiedDamage(baseDamage);
+        const isSingleTarget = effect.target === 'SINGLE';
+        const modifiedDamage = calculateModifiedDamage(baseDamage, isSingleTarget && !!targetedEnemyId);
 
         if (modifiedDamage > baseDamage) return '#4ade80';
         if (modifiedDamage < baseDamage) return '#ff6b6b';
