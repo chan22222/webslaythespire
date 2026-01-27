@@ -127,13 +127,23 @@ export const QUAD_STRIKE: Card = {
   rarity: 'RARE',
   cost: 2,
   image: '/cards/effect/quad_strike.png',
-  description: '4 피해를 4번 줍니다.',
-  effects: [{ type: 'MULTI_HIT', value: 4, hits: 4, target: 'SINGLE' }],
+  description: '8 피해를 4번 줍니다.',
+  effects: [
+    { type: 'DAMAGE', value: 8, target: 'SINGLE' },
+    { type: 'DAMAGE', value: 8, target: 'SINGLE' },
+    { type: 'DAMAGE', value: 8, target: 'SINGLE' },
+    { type: 'DAMAGE', value: 8, target: 'SINGLE' },
+  ],
   upgraded: false,
   upgradeEffect: {
     name: '4연속 베기+',
-    description: '6 피해를 4번 줍니다.',
-    effects: [{ type: 'MULTI_HIT', value: 6, hits: 4, target: 'SINGLE' }],
+    description: '12 피해를 4번 줍니다.',
+    effects: [
+      { type: 'DAMAGE', value: 12, target: 'SINGLE' },
+      { type: 'DAMAGE', value: 12, target: 'SINGLE' },
+      { type: 'DAMAGE', value: 12, target: 'SINGLE' },
+      { type: 'DAMAGE', value: 12, target: 'SINGLE' },
+    ],
   },
 };
 

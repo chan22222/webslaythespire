@@ -1065,10 +1065,7 @@ export function CombatScreen() {
 
     // 카드 사용 시작 즉시 다른 카드 사용 불가 (0.4초) 및 턴종료 버튼 잠금
     lockCardPlay();
-    // 다중 히트 카드는 더 긴 잠금 시간 (히트당 약 1초)
-    const damageHitCount = card.effects.filter(e => e.type === 'DAMAGE').length;
-    const lockDuration = damageHitCount > 1 ? damageHitCount * 1000 : 1000;
-    lockEndTurn(lockDuration);
+    lockEndTurn(1000); // 카드 사용 시 1초간 턴종료 잠금
 
     const needsTarget = card.effects.some(e =>
       (e.type === 'DAMAGE' && e.target === 'SINGLE') ||
@@ -1136,37 +1133,41 @@ export function CombatScreen() {
               modifier: calculateDamageModifier(baseValue, confirmedTargetId)
             };
           });
-          // 공격 대기 상태로 저장
+          // 공격 대기 상태로 저장 (모션 1번만)
           pendingAttackRef.current = {
             cardInstanceId,
             targetEnemyId: confirmedTargetId,
             hits,
             currentHit: 0,
-            totalHits: hits.length
+            totalHits: 1 // 모션은 1번만
           };
           setIsAttacking(true);
           playFootsteps(); // 발소리
           setPlayerAnimation('attack');
 
-          // 첫 번째 타격 데미지 팝업, 피격 효과, 실제 데미지 적용 (600ms 후)
-          const firstHit = hits[0];
+          // 모든 타격을 600ms 후에 한번에 처리 (데미지 팝업은 약간씩 딜레이)
           setTimeout(() => {
             playAttack(); // 공격 사운드
-            // 이동한 플레이어 위치(적 근처)에 슬래시 이펙트 표시
-            const targetEl = enemyRefs.current.get(firstHit.targetId);
+            // 슬래시 이펙트 표시
+            const targetEl = enemyRefs.current.get(confirmedTargetId);
             if (targetEl) {
               const targetRect = targetEl.getBoundingClientRect();
               const newEffectId = ++effectIdRef.current;
               setSwordSlashEffects(prev => [...prev, {
                 id: newEffectId,
-                x: targetRect.left,  // 적 왼쪽 (플레이어가 이동한 위치)
+                x: targetRect.left,
                 y: targetRect.top + targetRect.height / 2 - 35
               }]);
             }
 
-            triggerEnemyHit(firstHit.targetId);
-            showDamagePopup(firstHit.targetId, firstHit.baseValue, 'damage', firstHit.modifier, 0);
-            dealDamageToEnemy(firstHit.targetId, firstHit.actualValue);
+            // 모든 타격 데미지 처리 (팝업은 100ms 간격으로)
+            hits.forEach((hit, idx) => {
+              setTimeout(() => {
+                if (idx === 0) triggerEnemyHit(hit.targetId); // 피격 이펙트는 1번만
+                showDamagePopup(hit.targetId, hit.baseValue, 'damage', hit.modifier, idx);
+                dealDamageToEnemy(hit.targetId, hit.actualValue);
+              }, idx * 100);
+            });
           }, 600);
         } else {
           // 데미지 없는 타겟 카드는 스킬 애니메이션 후 실행
