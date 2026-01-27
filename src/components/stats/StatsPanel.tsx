@@ -24,9 +24,11 @@ interface StatsPanelProps {
   onClose?: () => void;
   // 버튼 숨기기 (저장 정보)
   hideSaveInfo?: boolean;
+  // 커스텀 버튼 렌더링
+  renderButton?: (onClick: () => void) => React.ReactNode;
 }
 
-export function StatsPanel({ externalControl, isOpen: externalIsOpen, onClose, hideSaveInfo }: StatsPanelProps = {}) {
+export function StatsPanel({ externalControl, isOpen: externalIsOpen, onClose, hideSaveInfo, renderButton }: StatsPanelProps = {}) {
   const [internalIsOpen, setInternalIsOpen] = useState(false);
   const [selectedAchievementId, setSelectedAchievementId] = useState<string | null>(null);
   const { stats, unlockedAchievements, loadStats, isLoading } = useStatsStore();
@@ -56,23 +58,27 @@ export function StatsPanel({ externalControl, isOpen: externalIsOpen, onClose, h
     <>
       {/* 통계 버튼 (외부 제어 모드가 아닐 때만) */}
       {!externalControl && (
-        <button
-          onMouseEnter={playButtonHover}
-          onClick={() => {
-            playButtonClick();
-            setInternalIsOpen(true);
-          }}
-          className="px-3 py-2 rounded-lg transition-all hover:scale-105 hover:brightness-125 flex items-center gap-2"
-          style={{
-            fontFamily: '"NeoDunggeunmo", cursive',
-            background: 'linear-gradient(180deg, rgba(30, 25, 18, 0.9) 0%, rgba(15, 12, 8, 0.9) 100%)',
-            border: '1px solid var(--gold-dark)',
-            color: 'var(--gold-light)',
-            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.4)',
-          }}
-        >
-          <span className="text-sm">통계</span>
-        </button>
+        renderButton ? (
+          renderButton(() => setInternalIsOpen(true))
+        ) : (
+          <button
+            onMouseEnter={playButtonHover}
+            onClick={() => {
+              playButtonClick();
+              setInternalIsOpen(true);
+            }}
+            className="px-3 py-2 rounded-lg transition-all hover:scale-105 hover:brightness-125 flex items-center gap-2"
+            style={{
+              fontFamily: '"NeoDunggeunmo", cursive',
+              background: 'linear-gradient(180deg, rgba(30, 25, 18, 0.9) 0%, rgba(15, 12, 8, 0.9) 100%)',
+              border: '1px solid var(--gold-dark)',
+              color: 'var(--gold-light)',
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.4)',
+            }}
+          >
+            <span className="text-sm">통계&업적</span>
+          </button>
+        )
       )}
 
       {/* 통계 모달 */}
@@ -307,7 +313,7 @@ export function StatsPanel({ externalControl, isOpen: externalIsOpen, onClose, h
                     return (
                       <div
                         key={achievement.id}
-                        onClick={() => setSelectedAchievementId(isSelected ? null : achievement.id)}
+                        onClick={() => setSelectedAchievementId(achievement.id)}
                         onMouseEnter={() => setSelectedAchievementId(achievement.id)}
                         className={`w-8 h-8 flex items-center justify-center rounded transition-all cursor-pointer ${
                           isUnlocked

@@ -518,7 +518,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     setTimeout(() => get().saveGame(), 100);
   },
 
-  // 저장 데이터 존재 여부 확인 (Supabase)
+  // 저장 데이터 존재 여부 확인 (Supabase) - 게임 진행 데이터가 있을 때만 true
   checkSaveData: async () => {
     const { user, isGuest } = useAuthStore.getState();
     if (isGuest || !user) {
@@ -529,31 +529,42 @@ export const useGameStore = create<GameState>((set, get) => ({
     try {
       const { data, error } = await supabase
         .from('game_saves')
-        .select('id')
+        .select('save_data')
         .eq('user_id', user.uid)
-        .single();
+        .maybeSingle();
 
-      set({ hasSaveData: !error && !!data });
+      // 게임 진행 데이터(player, map)가 있는지 확인
+      const hasGameData = !error && data?.save_data?.player && data?.save_data?.map;
+      set({ hasSaveData: hasGameData });
     } catch {
       set({ hasSaveData: false });
     }
   },
 
-  // 게임 저장 (Supabase)
+  // 게임 저장 (Supabase) - 기존 통계/업적 유지
   saveGame: async () => {
     const { user, isGuest } = useAuthStore.getState();
     if (isGuest || !user) return;
 
     const { player, map, currentAct, playerName, phase } = get();
-    const saveData = {
-      player,
-      map,
-      currentAct,
-      phase, // 현재 phase도 저장 (전투 중 탈주 감지용)
-      savedAt: Date.now(),
-    };
 
     try {
+      // 기존 save_data에서 통계/업적 가져오기
+      const { data: existingData } = await supabase
+        .from('game_saves')
+        .select('save_data')
+        .eq('user_id', user.uid)
+        .maybeSingle();
+
+      const saveData = {
+        ...(existingData?.save_data || {}), // 기존 통계/업적 유지
+        player,
+        map,
+        currentAct,
+        phase, // 현재 phase도 저장 (전투 중 탈주 감지용)
+        savedAt: Date.now(),
+      };
+
       const { error } = await supabase
         .from('game_saves')
         .upsert({
@@ -587,10 +598,16 @@ export const useGameStore = create<GameState>((set, get) => ({
         .from('game_saves')
         .select('save_data, player_name, deserter_count')
         .eq('user_id', user.uid)
-        .single();
+        .maybeSingle();
 
       if (error || !data) {
         set({ isSaveLoading: false });
+        return false;
+      }
+
+      // 게임 진행 데이터가 없으면 불러오기 실패
+      if (!data.save_data?.player || !data.save_data?.map) {
+        set({ isSaveLoading: false, hasSaveData: false });
         return false;
       }
 
@@ -627,18 +644,34 @@ export const useGameStore = create<GameState>((set, get) => ({
     }
   },
 
-  // 저장 데이터 삭제 (Supabase)
+  // 저장 데이터 삭제 (Supabase) - 맵/게임 진행만 삭제, 통계/업적은 유지
   deleteSaveData: async () => {
     const { user, isGuest } = useAuthStore.getState();
     if (isGuest || !user) return;
 
     try {
-      await supabase
+      // 기존 데이터에서 통계/업적만 가져오기
+      const { data: existingData } = await supabase
         .from('game_saves')
-        .delete()
-        .eq('user_id', user.uid);
+        .select('save_data')
+        .eq('user_id', user.uid)
+        .maybeSingle();
 
-      set({ hasSaveData: false });
+      if (existingData?.save_data) {
+        // 통계/업적만 유지하고 게임 진행 데이터는 삭제
+        const { player_stats, achievements } = existingData.save_data;
+
+        await supabase
+          .from('game_saves')
+          .update({
+            save_data: { player_stats, achievements },
+            deserter_count: 0,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('user_id', user.uid);
+      }
+
+      set({ hasSaveData: false, deserterCount: 0 });
     } catch (e) {
       console.error('저장 데이터 삭제 실패:', e);
     }

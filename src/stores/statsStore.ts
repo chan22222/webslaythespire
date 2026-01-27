@@ -289,6 +289,11 @@ export const useStatsStore = create<StatsStore>((set, get) => ({
 
   // 업적 해금
   unlockAchievement: (achievementId) => {
+    const { isGuest } = useAuthStore.getState();
+    // 연습모드에서는 업적 달성 불가
+    if (isGuest) {
+      return;
+    }
     const { unlockedAchievements } = get();
     // 이미 달성한 업적이면 무시
     if (unlockedAchievements.includes(achievementId)) {
@@ -314,7 +319,7 @@ export const useStatsStore = create<StatsStore>((set, get) => ({
         .from('game_saves')
         .select('save_data')
         .eq('user_id', user.uid)
-        .single();
+        .maybeSingle();
 
       if (error) {
         // 데이터가 없으면 초기값 사용
@@ -356,7 +361,7 @@ export const useStatsStore = create<StatsStore>((set, get) => ({
         .from('game_saves')
         .select('save_data')
         .eq('user_id', user.uid)
-        .single();
+        .maybeSingle();
 
       // 기존 save_data에 통계 추가
       const updatedSaveData = {

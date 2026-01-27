@@ -1049,6 +1049,52 @@ body {
     transform-origin: bottom center !important;
     gap: 0.4rem !important;
   }
+
+  .menu-footer {
+    transform: scale(0.95) !important;
+    transform-origin: center !important;
+  }
+
+  .menu-footer-left {
+    transform: scale(0.95) !important;
+    transform-origin: bottom left !important;
+  }
+
+  .menu-footer-right {
+    transform: scale(0.95) !important;
+    transform-origin: bottom right !important;
+  }
+}
+
+/* 높이 775px 미만 */
+@media (max-height: 775px) {
+  .menu-title {
+    top: 13% !important;
+    transform: scale(0.85) !important;
+    transform-origin: top center !important;
+  }
+
+  .menu-buttons {
+    bottom: 5.5rem !important;
+    transform: scale(0.875) !important;
+    transform-origin: bottom center !important;
+    gap: 0.35rem !important;
+  }
+
+  .menu-footer {
+    transform: scale(0.92) !important;
+    transform-origin: center !important;
+  }
+
+  .menu-footer-left {
+    transform: scale(0.92) !important;
+    transform-origin: bottom left !important;
+  }
+
+  .menu-footer-right {
+    transform: scale(0.92) !important;
+    transform-origin: bottom right !important;
+  }
 }
 
 /* 높이 700px 미만 - 태블릿/중간 사이즈 */
@@ -1059,9 +1105,24 @@ body {
   }
 
   .menu-buttons {
-    bottom: 5rem !important;
+    bottom: 3.5rem !important;
     transform: scale(0.85) !important;
     gap: 0.3rem !important;
+  }
+
+  .menu-footer {
+    transform: scale(0.88) !important;
+    transform-origin: center !important;
+  }
+
+  .menu-footer-left {
+    transform: scale(0.88) !important;
+    transform-origin: bottom left !important;
+  }
+
+  .menu-footer-right {
+    transform: scale(0.88) !important;
+    transform-origin: bottom right !important;
   }
 }
 
@@ -1077,6 +1138,21 @@ body {
     transform: scale(0.75) !important;
     gap: 0.25rem !important;
   }
+
+  .menu-footer {
+    transform: scale(0.85) !important;
+    transform-origin: center !important;
+  }
+
+  .menu-footer-left {
+    transform: scale(0.85) !important;
+    transform-origin: bottom left !important;
+  }
+
+  .menu-footer-right {
+    transform: scale(0.85) !important;
+    transform-origin: bottom right !important;
+  }
 }
 
 /* 높이 500px 미만 - 모바일 가로 모드 */
@@ -1088,10 +1164,25 @@ body {
   }
 
   .menu-buttons {
-    bottom: 4rem !important;
-    transform: scale(0.6) !important;
+    bottom: 3rem !important;
+    transform: scale(0.5) !important;
     transform-origin: bottom center !important;
-    gap: 0.2rem !important;
+    gap: 0.15rem !important;
+  }
+
+  .menu-footer {
+    transform: scale(0.8) !important;
+    transform-origin: center !important;
+  }
+
+  .menu-footer-left {
+    transform: scale(0.8) !important;
+    transform-origin: bottom left !important;
+  }
+
+  .menu-footer-right {
+    transform: scale(0.8) !important;
+    transform-origin: bottom right !important;
   }
 }
 
@@ -1103,9 +1194,24 @@ body {
   }
 
   .menu-buttons {
-    bottom: 3.5rem !important;
-    transform: scale(0.55) !important;
-    gap: 0.15rem !important;
+    bottom: 2.5rem !important;
+    transform: scale(0.45) !important;
+    gap: 0.1rem !important;
+  }
+
+  .menu-footer {
+    transform: scale(0.75) !important;
+    transform-origin: center !important;
+  }
+
+  .menu-footer-left {
+    transform: scale(0.75) !important;
+    transform-origin: bottom left !important;
+  }
+
+  .menu-footer-right {
+    transform: scale(0.75) !important;
+    transform-origin: bottom right !important;
   }
 }
 
@@ -1117,9 +1223,24 @@ body {
   }
 
   .menu-buttons {
-    bottom: 3rem !important;
-    transform: scale(0.5) !important;
-    gap: 0.1rem !important;
+    bottom: 2rem !important;
+    transform: scale(0.4) !important;
+    gap: 0.05rem !important;
+  }
+
+  .menu-footer {
+    transform: scale(0.7) !important;
+    transform-origin: center !important;
+  }
+
+  .menu-footer-left {
+    transform: scale(0.7) !important;
+    transform-origin: bottom left !important;
+  }
+
+  .menu-footer-right {
+    transform: scale(0.7) !important;
+    transform-origin: bottom right !important;
   }
 }
 

@@ -365,10 +365,6 @@ export function MainMenu() {
       {/* 블랙홀 소용돌이 배경 */}
       <BlackholeBackground />
 
-      {/* 좌측 상단 통계 버튼 */}
-      <div className="absolute top-4 left-4 z-20">
-        <StatsPanel />
-      </div>
 
       {/* 우측 상단 로그인/로그아웃 버튼 */}
       <div className="absolute top-4 right-4 z-20 flex items-center gap-3">
@@ -510,7 +506,7 @@ export function MainMenu() {
       </div>
 
       {/* 메인 메뉴 버튼들 - 하단 배치 */}
-      <div className="menu-buttons absolute bottom-32 sm:bottom-40 flex flex-col gap-2 sm:gap-3 z-10 items-center">
+      <div className="menu-buttons absolute bottom-20 sm:bottom-24 flex flex-col gap-2 sm:gap-3 z-10 items-center">
         {/* 새 게임 버튼 */}
         <button
           onMouseEnter={playButtonHover}
@@ -524,11 +520,11 @@ export function MainMenu() {
           <img
             src="/button_long.png"
             alt=""
-            className="w-[160px] sm:w-[200px] h-auto"
+            className="w-[150px] sm:w-[185px] h-auto"
             style={{ imageRendering: 'pixelated' }}
           />
           <span
-            className="absolute inset-0 flex items-center justify-center text-[var(--gold-light)] text-sm sm:text-base"
+            className="absolute inset-0 flex items-center justify-center text-[var(--gold-light)] text-base sm:text-lg"
             style={{
               fontFamily: '"NeoDunggeunmo", "Neo둥근모", cursive',
               textShadow: '2px 2px 0 #000',
@@ -552,11 +548,11 @@ export function MainMenu() {
           <img
             src="/button_long.png"
             alt=""
-            className={`w-[160px] sm:w-[200px] h-auto ${!canContinue || isSaveLoading ? 'opacity-50' : ''}`}
+            className={`w-[150px] sm:w-[185px] h-auto ${!canContinue || isSaveLoading ? 'opacity-50' : ''}`}
             style={{ imageRendering: 'pixelated' }}
           />
           <span
-            className={`absolute inset-0 flex items-center justify-center text-[var(--gold-light)] text-sm sm:text-base ${!canContinue || isSaveLoading ? 'opacity-50' : ''}`}
+            className={`absolute inset-0 flex items-center justify-center text-[var(--gold-light)] text-base sm:text-lg ${!canContinue || isSaveLoading ? 'opacity-50' : ''}`}
             style={{
               fontFamily: '"NeoDunggeunmo", "Neo둥근모", cursive',
               textShadow: '2px 2px 0 #000',
@@ -579,11 +575,11 @@ export function MainMenu() {
           <img
             src="/button_long.png"
             alt=""
-            className="w-[160px] sm:w-[200px] h-auto"
+            className="w-[150px] sm:w-[185px] h-auto"
             style={{ imageRendering: 'pixelated' }}
           />
           <span
-            className="absolute inset-0 flex items-center justify-center text-[var(--gold-light)] text-sm sm:text-base"
+            className="absolute inset-0 flex items-center justify-center text-[var(--gold-light)] text-base sm:text-lg"
             style={{
               fontFamily: '"NeoDunggeunmo", "Neo둥근모", cursive',
               textShadow: '2px 2px 0 #000',
@@ -592,6 +588,37 @@ export function MainMenu() {
             연습 모드
           </span>
         </button>
+
+        {/* 통계&업적 버튼 */}
+        <StatsPanel
+          renderButton={(onClick) => (
+            <button
+              onMouseEnter={playButtonHover}
+              onClick={() => { playButtonClick(); onClick(); }}
+              className="relative transition-all duration-150 hover:scale-105 hover:brightness-125"
+              style={{
+                animation: 'buttonFadeIn 0.5s ease-out 0.8s forwards',
+                opacity: 0,
+              }}
+            >
+              <img
+                src="/button_long.png"
+                alt=""
+                className="w-[150px] sm:w-[185px] h-auto"
+                style={{ imageRendering: 'pixelated' }}
+              />
+              <span
+                className="absolute inset-0 flex items-center justify-center text-[var(--gold-light)] text-base sm:text-lg"
+                style={{
+                  fontFamily: '"NeoDunggeunmo", "Neo둥근모", cursive',
+                  textShadow: '2px 2px 0 #000',
+                }}
+              >
+                통계 & 업적
+              </span>
+            </button>
+          )}
+        />
       </div>
 
       {/* 경고 모달 */}
@@ -722,7 +749,7 @@ export function MainMenu() {
       )}
 
       {/* 하단 버전 정보 - 가운데 */}
-      <div className="absolute bottom-4 sm:bottom-6 left-1/2 -translate-x-1/2 z-10">
+      <div className="menu-footer absolute bottom-2 sm:bottom-3 left-0 right-0 flex justify-center z-10">
         <p
           className="text-[8px] sm:text-[10px] text-[var(--gold-dark)] opacity-60"
           style={{ fontFamily: '"Press Start 2P", monospace' }}
@@ -732,7 +759,7 @@ export function MainMenu() {
       </div>
 
       {/* 하단 좌측 링크들 */}
-      <div className="absolute bottom-4 sm:bottom-6 left-4 z-10 flex gap-3">
+      <div className="menu-footer-left absolute bottom-2 sm:bottom-3 left-4 z-10 flex gap-3">
         <button
           onClick={() => setShowAbout(true)}
           className="text-[10px] sm:text-xs text-[var(--gold-dark)] opacity-70 hover:opacity-100 transition-opacity"
@@ -767,7 +794,7 @@ export function MainMenu() {
       </div>
 
       {/* 하단 우측 볼륨 조절 */}
-      <div className="absolute bottom-4 sm:bottom-6 right-4 z-10 flex items-center gap-2">
+      <div className="menu-footer-right absolute bottom-2 sm:bottom-3 right-4 z-10 flex items-center gap-2">
         <span
           className="text-[10px] sm:text-xs text-[var(--gold-dark)] opacity-70"
           style={{ fontFamily: '"NeoDunggeunmo", cursive' }}

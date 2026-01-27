@@ -712,7 +712,7 @@ export function CombatScreen() {
           .from('user_preferences')
           .select('hide_a2hs_prompt')
           .eq('user_id', user.uid)
-          .single();
+          .maybeSingle();
 
         if (!data?.hide_a2hs_prompt) {
           setShowA2HSPrompt(true);
