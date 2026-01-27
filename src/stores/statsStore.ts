@@ -260,6 +260,12 @@ export const useStatsStore = create<StatsStore>((set, get) => ({
 
   // 패배
   recordDefeat: (floor) => {
+    const { stats } = get();
+    // 첫 사망 업적 체크 (아직 패배한 적이 없는 경우)
+    if (stats.totalDefeats === 0) {
+      get().unlockAchievement('first_death');
+    }
+
     set((state) => ({
       stats: {
         ...state.stats,

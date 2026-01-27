@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useGameStore } from '../stores/gameStore';
 import { useCombatStore } from '../stores/combatStore';
-import { playButtonHover, playButtonClick, playDefeat } from '../utils/sound';
+import { playButtonHover, playButtonClick, playDefeat, playBGM } from '../utils/sound';
 
 export function GameOver() {
   const { player, setPhase } = useGameStore();
@@ -13,6 +13,7 @@ export function GameOver() {
 
   const handleRestart = () => {
     resetCombat();
+    playBGM('title');
     setPhase('MAIN_MENU');
   };
 
