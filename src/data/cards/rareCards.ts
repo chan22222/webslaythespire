@@ -102,7 +102,7 @@ export const FULL_ARMAMENT: Card = {
   name: '완전 무장',
   type: 'EFFECT',
   rarity: 'RARE',
-  cost: 2,
+  cost: 1,
   image: '/cards/effect/full_armament.png',
   description: '힘과 민첩 2를 얻습니다.',
   effects: [

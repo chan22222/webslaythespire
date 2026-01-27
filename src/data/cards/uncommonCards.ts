@@ -7,13 +7,13 @@ export const RAGE: Card = {
   rarity: 'UNCOMMON',
   cost: 1,
   image: '/cards/effect/rage.png',
-  description: '힘 2를 얻습니다.',
-  effects: [{ type: 'APPLY_STATUS', value: 2, target: 'SELF', status: 'STRENGTH' }],
+  description: '힘 3을 얻습니다.',
+  effects: [{ type: 'APPLY_STATUS', value: 3, target: 'SELF', status: 'STRENGTH' }],
   upgraded: false,
   upgradeEffect: {
     name: '분노+',
-    description: '힘 3을 얻습니다.',
-    effects: [{ type: 'APPLY_STATUS', value: 3, target: 'SELF', status: 'STRENGTH' }],
+    description: '힘 4를 얻습니다.',
+    effects: [{ type: 'APPLY_STATUS', value: 4, target: 'SELF', status: 'STRENGTH' }],
   },
 };
 
@@ -176,18 +176,18 @@ export const DIAMOND_SHIELD: Card = {
   rarity: 'UNCOMMON',
   cost: 2,
   image: '/cards/effect/diamond_shield.png',
-  description: '방어도 12를 두 번 얻습니다.',
+  description: '방어도 15를 두 번 얻습니다.',
   effects: [
-    { type: 'BLOCK', value: 12 },
-    { type: 'BLOCK', value: 12 },
+    { type: 'BLOCK', value: 15 },
+    { type: 'BLOCK', value: 15 },
   ],
   upgraded: false,
   upgradeEffect: {
     name: '다이아몬드 방패+',
-    description: '방어도 16을 두 번 얻습니다.',
+    description: '방어도 20을 두 번 얻습니다.',
     effects: [
-      { type: 'BLOCK', value: 16 },
-      { type: 'BLOCK', value: 16 },
+      { type: 'BLOCK', value: 20 },
+      { type: 'BLOCK', value: 20 },
     ],
   },
 };

@@ -551,6 +551,7 @@ export function CombatScreen() {
     isEndTurnLocked,
     lockEndTurn,
     dealDamageToEnemy,
+    applyCardStatusToEnemy,
     resetCombat,
   } = useCombatStore();
 
@@ -1154,6 +1155,10 @@ export function CombatScreen() {
               setTimeout(() => {
                 showDamagePopup(hit.targetId, hit.baseValue, 'damage', hit.modifier, idx);
                 dealDamageToEnemy(hit.targetId, hit.actualValue);
+                // 마지막 타격 후 상태 효과 적용 (장비파괴 등)
+                if (idx === hits.length - 1) {
+                  applyCardStatusToEnemy(cardInstanceId, confirmedTargetId);
+                }
               }, idx * 100);
             });
           }, 600);
@@ -1235,10 +1240,14 @@ export function CombatScreen() {
               }
             }
 
-            allEnemyHits.forEach(hit => {
+            allEnemyHits.forEach((hit, idx) => {
               triggerEnemyHit(hit.targetId);
               showDamagePopup(hit.targetId, hit.baseValue, 'damage', hit.modifier);
               dealDamageToEnemy(hit.targetId, hit.actualValue);
+              // 마지막 적 처리 후 상태 효과 적용 (장비파괴 등)
+              if (idx === allEnemyHits.length - 1) {
+                applyCardStatusToEnemy(cardInstanceId, '');
+              }
             });
           }, 600);
 

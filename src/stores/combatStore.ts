@@ -64,6 +64,7 @@ interface CombatStore extends CombatState {
   gainPlayerBlock: (amount: number) => void;
   applyStatusToEnemy: (enemyId: string, status: Status) => void;
   applyStatusToPlayer: (status: Status) => void;
+  applyCardStatusToEnemy: (cardInstanceId: string, targetEnemyId: string) => void;
   gainEnergy: (amount: number) => void;
 
   // 유틸리티
@@ -761,6 +762,10 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
           if (effect.status) {
             if (effect.target === 'SELF') {
               get().applyStatusToPlayer({ type: effect.status, stacks: effect.value });
+            } else if (skipDamage) {
+              // skipDamage가 true면 적 대상 상태 효과는 나중에 데미지 처리 후 적용
+              // (applyCardStatusToEnemy에서 처리)
+              break;
             } else if (effect.target === 'ALL') {
               enemies.forEach(enemy => {
                 if (enemy.currentHp > 0) {
@@ -1582,6 +1587,28 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       playBuff();
     }
     get().addToCombatLog(`${enemy.name}에게 ${statusName} ${status.stacks} 부여!`);
+  },
+
+  // 카드의 적 대상 상태 효과만 적용 (데미지 처리 후 호출용)
+  applyCardStatusToEnemy: (cardInstanceId: string, targetEnemyId: string) => {
+    const { discardPile, enemies } = get();
+    // 이미 discard로 이동한 카드를 찾음
+    const card = discardPile.find(c => c.instanceId === cardInstanceId);
+    if (!card) return;
+
+    card.effects.forEach(effect => {
+      if (effect.type === 'APPLY_STATUS' && effect.status) {
+        if (effect.target === 'ALL') {
+          enemies.forEach(enemy => {
+            if (enemy.currentHp > 0) {
+              get().applyStatusToEnemy(enemy.instanceId, { type: effect.status!, stacks: effect.value });
+            }
+          });
+        } else if (effect.target === 'SINGLE' && targetEnemyId) {
+          get().applyStatusToEnemy(targetEnemyId, { type: effect.status, stacks: effect.value });
+        }
+      }
+    });
   },
 
   applyStatusToPlayer: (status: Status) => {
