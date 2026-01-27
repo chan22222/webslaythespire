@@ -1520,6 +1520,7 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       // 업적 추적: 에너지를 쓰지 않고(풀 에너지) 피해 입음, HP 변경
       const { energy, maxEnergy } = get();
       recordDamageTakenWithFullEnergy(energy, maxEnergy);
+      checkImmediateAchievements();
       const finalHp = useGameStore.getState().player.currentHp;
       checkHpChangeAchievements(finalHp);
     }

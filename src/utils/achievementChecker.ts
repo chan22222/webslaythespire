@@ -179,11 +179,6 @@ export const checkImmediateAchievements = () => {
   }
 };
 
-// 플레이어 턴 종료 시 방어도 저장 (적 턴 전)
-export const recordBlockBeforeEnemyTurn = (currentBlock: number) => {
-  battleState.blockBeforeEnemyTurn = currentBlock;
-};
-
 // 플레이어 턴 시작 시 방어도 체크 (적 턴 후)
 export const checkBlockNotReducedAchievement = (currentBlock: number) => {
   const statsStore = useStatsStore.getState();
