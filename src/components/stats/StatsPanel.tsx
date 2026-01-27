@@ -69,7 +69,7 @@ export function StatsPanel({ externalControl, isOpen: externalIsOpen, onClose, h
           onClick={handleClose}
         >
           <div
-            className="relative p-6 rounded-lg border-2 border-[var(--gold-dark)] max-w-md w-full mx-4 max-h-[85vh] overflow-y-auto"
+            className="relative p-6 rounded-lg border-2 border-[var(--gold-dark)] max-w-lg w-full mx-4 max-h-[85vh] flex flex-col"
             style={{
               background: 'linear-gradient(180deg, #1a1510 0%, #0d0a08 100%)',
               boxShadow: '0 0 30px rgba(0,0,0,0.8), inset 0 1px 0 rgba(212,168,75,0.1)',
@@ -130,8 +130,8 @@ export function StatsPanel({ externalControl, isOpen: externalIsOpen, onClose, h
               </div>
             )}
 
-            {/* 통계 그리드 */}
-            <div className="space-y-4" style={{ fontFamily: '"NeoDunggeunmo", cursive' }}>
+            {/* 통계 그리드 (스크롤 영역) */}
+            <div className="space-y-4 overflow-y-auto flex-1 pr-1" style={{ fontFamily: '"NeoDunggeunmo", cursive' }}>
               {/* 처치 통계 */}
               <div
                 className="p-3 rounded-lg"
@@ -272,52 +272,59 @@ export function StatsPanel({ externalControl, isOpen: externalIsOpen, onClose, h
                 </div>
               </div>
 
-              {/* 업적 */}
-              <div
-                className="p-3 rounded-lg"
-                style={{
-                  background: 'rgba(0, 0, 0, 0.3)',
-                  border: '1px solid rgba(212, 168, 75, 0.2)',
-                }}
-              >
-                <h4 className="text-[var(--gold)] text-base mb-3 flex items-center justify-between">
-                  <span>업적</span>
-                  <span className="text-sm text-gray-400">
-                    {unlockedCount} / {totalAchievements}
-                  </span>
-                </h4>
-                <div className="grid grid-cols-6 gap-2">
-                  {ACHIEVEMENTS.map((achievement) => {
-                    const isUnlocked = unlockedAchievements.includes(achievement.id);
-                    const isHidden = achievement.hidden && !isUnlocked;
-                    return (
+            </div>
+
+            {/* 업적 (스크롤 영역 밖) */}
+            <div
+              className="p-3 rounded-lg mt-4 overflow-visible"
+              style={{
+                background: 'rgba(0, 0, 0, 0.3)',
+                border: '1px solid rgba(212, 168, 75, 0.2)',
+                fontFamily: '"NeoDunggeunmo", cursive',
+              }}
+            >
+              <h4 className="text-[var(--gold)] text-base mb-3 flex items-center justify-between">
+                <span>업적</span>
+                <span className="text-sm text-gray-400">
+                  {unlockedCount} / {totalAchievements}
+                </span>
+              </h4>
+              <div className="grid grid-cols-6 gap-2 overflow-visible">
+                {ACHIEVEMENTS.map((achievement) => {
+                  const isUnlocked = unlockedAchievements.includes(achievement.id);
+                  const isHidden = achievement.hidden && !isUnlocked;
+                  return (
+                    <div
+                      key={achievement.id}
+                      className="relative group"
+                    >
                       <div
-                        key={achievement.id}
-                        className="relative group"
+                        className={`w-8 h-8 flex items-center justify-center rounded transition-all cursor-pointer ${
+                          isUnlocked
+                            ? 'bg-gradient-to-br from-yellow-600 to-yellow-800 border border-yellow-500'
+                            : 'bg-gray-800 border border-gray-700 opacity-40'
+                        }`}
                       >
-                        <div
-                          className={`w-8 h-8 flex items-center justify-center rounded transition-all ${
-                            isUnlocked
-                              ? 'bg-gradient-to-br from-yellow-600 to-yellow-800 border border-yellow-500'
-                              : 'bg-gray-800 border border-gray-700 opacity-40'
-                          }`}
-                        >
-                          <span className="text-sm">{isHidden ? '?' : achievement.icon}</span>
-                        </div>
-                        {/* 툴팁 */}
-                        <div
-                          className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 rounded bg-black/95 border border-[var(--gold-dark)] opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10"
-                          style={{ fontSize: '12px' }}
-                        >
-                          <p className={`font-bold ${isUnlocked ? 'text-yellow-400' : 'text-gray-400'}`}>
-                            {isHidden ? '???' : achievement.name}
-                          </p>
-                          <p className="text-gray-300">{isHidden ? '???' : achievement.description}</p>
-                        </div>
+                        <span className="text-sm">{isHidden ? '?' : achievement.icon}</span>
                       </div>
-                    );
-                  })}
-                </div>
+                      {/* 툴팁 - 위로 표시, 높은 z-index */}
+                      <div
+                        className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 rounded bg-black border-2 border-[var(--gold-dark)] opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-[100]"
+                        style={{
+                          fontSize: '12px',
+                          minWidth: '150px',
+                          whiteSpace: 'normal',
+                          boxShadow: '0 0 15px rgba(0,0,0,0.9)',
+                        }}
+                      >
+                        <p className={`font-bold ${isUnlocked ? 'text-yellow-400' : 'text-gray-400'}`}>
+                          {isHidden ? '???' : achievement.name}
+                        </p>
+                        <p className="text-gray-300 text-xs mt-1">{isHidden ? '???' : achievement.description}</p>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
