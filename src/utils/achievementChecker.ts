@@ -179,14 +179,27 @@ export const checkImmediateAchievements = () => {
   }
 };
 
-// 턴 종료 시 체크
-export const checkTurnEndAchievements = (currentBlock: number) => {
+// 플레이어 턴 종료 시 방어도 저장 (적 턴 전)
+export const recordBlockBeforeEnemyTurn = (currentBlock: number) => {
+  battleState.blockBeforeEnemyTurn = currentBlock;
+};
+
+// 플레이어 턴 시작 시 방어도 체크 (적 턴 후)
+export const checkBlockNotReducedAchievement = (currentBlock: number) => {
   const statsStore = useStatsStore.getState();
 
-  // 방어도가 깎이지 않은 상태로 턴종료 (방어도가 0 초과이고 깎이지 않음)
-  if (currentBlock > 0 && battleState.blockNotReducedThisTurn) {
+  // 이전 턴에 방어도가 있었고, 적 턴을 거친 후에도 방어도가 줄지 않았으면 달성
+  if (battleState.blockBeforeEnemyTurn > 0 && currentBlock >= battleState.blockBeforeEnemyTurn) {
     statsStore.unlockAchievement('block_not_reduced');
   }
+
+  // 체크 후 초기화
+  battleState.blockBeforeEnemyTurn = 0;
+};
+
+// 턴 종료 시 체크 (현재 사용 안 함, 호환성 유지)
+export const checkTurnEndAchievements = (_currentBlock: number) => {
+  // 방어도 관련 업적은 checkBlockNotReducedAchievement로 이동
 };
 
 // HP 변경 시 체크

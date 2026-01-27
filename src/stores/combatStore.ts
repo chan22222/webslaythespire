@@ -18,9 +18,11 @@ import {
   recordDamageTakenWithFullEnergy,
   recordWeakAndVulnerable,
   recordKillWithCard,
+  recordBlockBeforeEnemyTurn,
   checkBattleEndAchievements,
   checkImmediateAchievements,
   checkTurnEndAchievements,
+  checkBlockNotReducedAchievement,
   checkHpChangeAchievements,
   checkHandAchievements,
   checkKillAchievements,
@@ -273,7 +275,12 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
   },
 
   startPlayerTurn: () => {
-    const { turn, maxEnergy, playerStatuses, extraDrawNextTurn } = get();
+    const { turn, maxEnergy, playerStatuses, extraDrawNextTurn, playerBlock } = get();
+
+    // 업적 체크: 적 턴 후 방어도가 깎이지 않았는지 (첫 턴 제외)
+    if (turn > 1) {
+      checkBlockNotReducedAchievement(playerBlock);
+    }
 
     // 업적 체크용 턴 상태 초기화
     resetTurnAchievementState();
@@ -469,8 +476,9 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       playerStatuses: updatedStatuses,
     });
 
-    // 업적 추적: 턴 종료 시 체크 (방어도 깎이지 않고 턴 종료 등)
+    // 업적 추적: 적 턴 전 방어도 저장 (적 턴 후에 체크하기 위해)
     const currentBlock = get().playerBlock;
+    recordBlockBeforeEnemyTurn(currentBlock);
     checkTurnEndAchievements(currentBlock);
 
     // 추가 턴 처리 (시간 왜곡)
