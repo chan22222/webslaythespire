@@ -722,41 +722,25 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       set({ usedCardTypes: [...usedCardTypes, card.id] });
     }
 
-    // 다중 히트 딜레이를 위한 DAMAGE 효과 카운트
-    let damageHitIndex = 0;
-    const DAMAGE_HIT_DELAY = 800; // ms
-
     card.effects.forEach(effect => {
       switch (effect.type) {
         case 'DAMAGE': {
           // skipDamage가 true이면 데미지 처리 건너뛰기 (이미 애니메이션에서 처리됨)
           if (skipDamage) break;
 
-          // 기본 데미지 + 힘만 계산 (약화/취약은 dealDamageToEnemy에서 합연산 처리)
+          // 기본 데미지 + 힘 계산 (약화/취약은 dealDamageToEnemy에서 처리)
           let baseDamage = effect.value;
           const strength = get().playerStatuses.find(s => s.type === 'STRENGTH')?.stacks || 0;
           baseDamage += strength;
 
-          const currentHitIndex = damageHitIndex;
-          damageHitIndex++;
-
-          const executeDamage = () => {
-            if (effect.target === 'ALL') {
-              get().enemies.forEach(enemy => {
-                if (enemy.currentHp > 0) {
-                  get().dealDamageToEnemy(enemy.instanceId, baseDamage);
-                }
-              });
-            } else if (targetEnemyId) {
-              get().dealDamageToEnemy(targetEnemyId, baseDamage);
-            }
-          };
-
-          // 첫 번째 히트는 바로, 이후는 딜레이
-          if (currentHitIndex === 0) {
-            executeDamage();
-          } else {
-            setTimeout(executeDamage, currentHitIndex * DAMAGE_HIT_DELAY);
+          if (effect.target === 'ALL') {
+            get().enemies.forEach(enemy => {
+              if (enemy.currentHp > 0) {
+                get().dealDamageToEnemy(enemy.instanceId, baseDamage);
+              }
+            });
+          } else if (targetEnemyId) {
+            get().dealDamageToEnemy(targetEnemyId, baseDamage);
           }
           break;
         }
@@ -1094,34 +1078,6 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
             } else {
               get().addToCombatLog(`효과 없음...`);
             }
-          }
-          break;
-        }
-        case 'MULTI_HIT': {
-          // 4연속 베기: 다중 히트
-          if (skipDamage) break;
-
-          const hitCount = effect.hits || 1;
-          let baseDamageMulti = effect.value;
-          const strengthMulti = get().playerStatuses.find(s => s.type === 'STRENGTH')?.stacks || 0;
-          baseDamageMulti += strengthMulti;
-
-          for (let hit = 0; hit < hitCount; hit++) {
-            const currentHit = hit;
-            setTimeout(() => {
-              if (effect.target === 'ALL') {
-                get().enemies.forEach(enemy => {
-                  if (enemy.currentHp > 0) {
-                    get().dealDamageToEnemy(enemy.instanceId, baseDamageMulti);
-                  }
-                });
-              } else if (targetEnemyId) {
-                const targetEnemy = get().enemies.find(e => e.instanceId === targetEnemyId);
-                if (targetEnemy && targetEnemy.currentHp > 0) {
-                  get().dealDamageToEnemy(targetEnemyId, baseDamageMulti);
-                }
-              }
-            }, currentHit * DAMAGE_HIT_DELAY);
           }
           break;
         }

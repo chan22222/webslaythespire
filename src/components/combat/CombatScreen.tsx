@@ -646,13 +646,10 @@ export function CombatScreen() {
     });
     return () => setOnPlayerHit(null);
   }, [setOnPlayerHit]);
-  // 대기 중인 공격 (애니메이션 중간에 실행)
+  // 대기 중인 공격 (애니메이션 완료 후 카드 실행)
   const pendingAttackRef = useRef<{
     cardInstanceId: string;
     targetEnemyId?: string;
-    hits: { targetId: string; baseValue: number; actualValue: number; modifier?: number }[]; // 각 타격 정보
-    currentHit: number; // 현재 몇 번째 타격인지
-    totalHits: number; // 총 타격 횟수
   } | null>(null);
 
   // 전투 초기화 (인트로와 동시에 백그라운드에서 로드)
@@ -1133,19 +1130,16 @@ export function CombatScreen() {
               modifier: calculateDamageModifier(baseValue, confirmedTargetId)
             };
           });
-          // 공격 대기 상태로 저장 (모션 1번만)
+          // 공격 대기 상태로 저장
           pendingAttackRef.current = {
             cardInstanceId,
             targetEnemyId: confirmedTargetId,
-            hits,
-            currentHit: 0,
-            totalHits: 1 // 모션은 1번만
           };
           setIsAttacking(true);
           playFootsteps(); // 발소리
           setPlayerAnimation('attack');
 
-          // 모든 타격을 600ms 후에 한번에 처리 (데미지 팝업은 약간씩 딜레이)
+          // 600ms 후에 데미지 처리 (팝업은 100ms 간격으로)
           setTimeout(() => {
             playAttack(); // 공격 사운드
             // 슬래시 이펙트 표시
@@ -1161,9 +1155,9 @@ export function CombatScreen() {
             }
 
             // 모든 타격 데미지 처리 (팝업은 100ms 간격으로)
+            triggerEnemyHit(confirmedTargetId);
             hits.forEach((hit, idx) => {
               setTimeout(() => {
-                if (idx === 0) triggerEnemyHit(hit.targetId); // 피격 이펙트는 1번만
                 showDamagePopup(hit.targetId, hit.baseValue, 'damage', hit.modifier, idx);
                 dealDamageToEnemy(hit.targetId, hit.actualValue);
               }, idx * 100);
@@ -1202,7 +1196,12 @@ export function CombatScreen() {
               setAttackTargetPos({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
             }
           }
-          // 공격 대기 상태로 저장 (팝업용 기본값 + 실제 데미지용 힘 포함값)
+          // 공격 대기 상태로 저장
+          pendingAttackRef.current = {
+            cardInstanceId,
+            targetEnemyId: undefined,
+          };
+          // 전체 공격 데이터 준비
           const allStrength = playerStatuses.find(s => s.type === 'STRENGTH')?.stacks || 0;
           const allEnemyHits = enemies
             .filter(e => e.currentHp > 0)
@@ -1210,30 +1209,21 @@ export function CombatScreen() {
               const modifier = calculateDamageModifier(damageEffect.value, e.instanceId);
               return {
                 targetId: e.instanceId,
-                baseValue: damageEffect.value,  // 팝업 표시용
-                actualValue: damageEffect.value + allStrength,  // 실제 데미지용
+                baseValue: damageEffect.value,
+                actualValue: damageEffect.value + allStrength,
                 modifier
               };
             });
-          // 전체 공격은 1회 모션에 모든 적에게 데미지
-          pendingAttackRef.current = {
-            cardInstanceId,
-            targetEnemyId: undefined,
-            hits: allEnemyHits,
-            currentHit: 0,
-            totalHits: 1 // 전체 공격은 1회 모션
-          };
           setIsAttacking(true);
           playFootsteps(); // 발소리
           setPlayerAnimation('attack');
 
-          // 애니메이션 중간(600ms)에 모든 적에게 데미지 팝업, 피격, 실제 데미지 적용
+          // 600ms 후에 모든 적에게 데미지
           setTimeout(() => {
             playAttack(); // 공격 사운드
-            // 이동한 플레이어 위치(첫 번째 적 근처)에 슬래시 이펙트 표시
-            if (pendingAttackRef.current && pendingAttackRef.current.hits.length > 0) {
-              const firstTarget = pendingAttackRef.current.hits[0];
-              const targetEl = enemyRefs.current.get(firstTarget.targetId);
+            // 슬래시 이펙트 표시
+            if (allEnemyHits.length > 0) {
+              const targetEl = enemyRefs.current.get(allEnemyHits[0].targetId);
               if (targetEl) {
                 const targetRect = targetEl.getBoundingClientRect();
                 const newEffectId = ++effectIdRef.current;
@@ -1245,13 +1235,11 @@ export function CombatScreen() {
               }
             }
 
-            if (pendingAttackRef.current) {
-              pendingAttackRef.current.hits.forEach(hit => {
-                triggerEnemyHit(hit.targetId);
-                showDamagePopup(hit.targetId, hit.baseValue, 'damage', hit.modifier);
-                dealDamageToEnemy(hit.targetId, hit.actualValue);
-              });
-            }
+            allEnemyHits.forEach(hit => {
+              triggerEnemyHit(hit.targetId);
+              showDamagePopup(hit.targetId, hit.baseValue, 'damage', hit.modifier);
+              dealDamageToEnemy(hit.targetId, hit.actualValue);
+            });
           }, 600);
         } else {
           // 데미지 없는 카드는 스킬 애니메이션 후 실행
@@ -1851,48 +1839,15 @@ export function CombatScreen() {
                   handleDeathAnimationEnd();
                   return;
                 }
+                // 공격 완료 시 카드 실행 (데미지는 이미 적용됨)
                 if (pendingAttackRef.current) {
-                  const { currentHit, totalHits, hits, cardInstanceId, targetEnemyId } = pendingAttackRef.current;
-                  const nextHit = currentHit + 1;
-
-                  if (nextHit < totalHits) {
-                    // 다음 타격이 있으면 제자리에서 바로 다음 공격 (idle 없이)
-                    pendingAttackRef.current.currentHit = nextHit;
-                    const hitData = hits[nextHit];
-                    const hitIdx = nextHit;
-                    // 바로 attack_combo로 전환 (달리기 없이 공격 모션만)
-                    setPlayerAnimation('attack_combo');
-                    // 데미지 팝업, 피격 효과, 실제 데미지 적용 + 슬래시 이펙트
-                    setTimeout(() => {
-                      playAttack(); // 콤보 공격 사운드
-                      // 슬래시 이펙트 추가
-                      const targetEl = enemyRefs.current.get(hitData.targetId);
-                      if (targetEl) {
-                        const targetRect = targetEl.getBoundingClientRect();
-                        const newEffectId = ++effectIdRef.current;
-                        setSwordSlashEffects(prev => [...prev, {
-                          id: newEffectId,
-                          x: targetRect.left,
-                          y: targetRect.top + targetRect.height / 2 - 35
-                        }]);
-                      }
-                      triggerEnemyHit(hitData.targetId);
-                      showDamagePopup(hitData.targetId, hitData.baseValue, 'damage', hitData.modifier, hitIdx);
-                      dealDamageToEnemy(hitData.targetId, hitData.actualValue);
-                    }, 300);
-                  } else {
-                    // 모든 타격 완료, 카드 실행 (데미지는 이미 적용됨)
-                    playCard(cardInstanceId, targetEnemyId, true);
-                    pendingAttackRef.current = null;
-                    setPlayerAnimation('idle');
-                    setAttackTargetPos(null);
-                    setIsAttacking(false);
-                  }
-                } else {
-                  setPlayerAnimation('idle');
-                  setAttackTargetPos(null);
-                  setIsAttacking(false);
+                  const { cardInstanceId, targetEnemyId } = pendingAttackRef.current;
+                  playCard(cardInstanceId, targetEnemyId, true);
+                  pendingAttackRef.current = null;
                 }
+                setPlayerAnimation('idle');
+                setAttackTargetPos(null);
+                setIsAttacking(false);
               }}
             />
           </div>
