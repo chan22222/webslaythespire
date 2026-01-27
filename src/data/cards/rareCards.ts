@@ -24,7 +24,7 @@ export const IRON_FORTRESS: Card = {
   rarity: 'RARE',
   cost: 1,
   image: '/cards/effect/iron_fortress.png',
-  description: '1턴 간 방어도가 사라지지 않습니다.',
+  description: '이번 턴의 방어도가 사라지지 않습니다.',
   effects: [{ type: 'BLOCK_RETAIN', value: 1, target: 'SELF' }],
   upgraded: false,
   upgradeEffect: {
@@ -39,7 +39,7 @@ export const ON_THE_EDGE: Card = {
   name: '사선에서',
   type: 'ATTACK',
   rarity: 'RARE',
-  cost: 2,
+  cost: 3,
   image: '/cards/effect/on_the_edge.png',
   description: '잃은 HP 3당 2의 피해를 줍니다.',
   effects: [{ type: 'DAMAGE_PER_LOST_HP', value: 2, ratio: 3, target: 'SINGLE' }],
@@ -56,7 +56,7 @@ export const TACTICAL_COMMAND: Card = {
   name: '전술 지휘',
   type: 'EFFECT',
   rarity: 'RARE',
-  cost: 1,
+  cost: 2,
   image: '/cards/effect/tactical_command.png',
   description: '카드 2장을 뽑습니다. 뽑은 카드가 공격 카드면 코스트를 2 감소 시킵니다.',
   effects: [
@@ -79,7 +79,7 @@ export const BLOOD_FESTIVAL: Card = {
   name: '피의 축제',
   type: 'ATTACK',
   rarity: 'RARE',
-  cost: 2,
+  cost: 3,
   image: '/cards/effect/blood_festival.png',
   description: '14 피해를 줍니다. 이 공격으로 적 처치 시 최대 HP가 3 증가합니다.',
   effects: [
@@ -102,7 +102,7 @@ export const FULL_ARMAMENT: Card = {
   name: '완전 무장',
   type: 'EFFECT',
   rarity: 'RARE',
-  cost: 0,
+  cost: 2,
   image: '/cards/effect/full_armament.png',
   description: '힘과 민첩 2를 얻습니다.',
   effects: [

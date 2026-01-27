@@ -165,11 +165,6 @@ export const checkImmediateAchievements = () => {
     statsStore.unlockAchievement('weak_and_vulnerable');
   }
 
-  // 회복 카드 3회 사용
-  if (battleState.healEffectsUsed >= 3) {
-    statsStore.unlockAchievement('heal_3_times');
-  }
-
   // 야생 버섯 섭취 카드 5번 사용
   if (battleState.wildMushroomUsed >= 5) {
     statsStore.unlockAchievement('wild_mushroom_5_times');

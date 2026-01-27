@@ -5,20 +5,20 @@ export const COMBO_ATTACK: Card = {
   name: '연계 공격',
   type: 'ATTACK',
   rarity: 'COMMON',
-  cost: 1,
+  cost: 2,
   image: '/cards/effect/combo_attack.png',
-  description: '8 피해를 주고 카드 1장을 뽑습니다.',
+  description: '7 피해를 주고 카드 1장을 뽑습니다.',
   effects: [
-    { type: 'DAMAGE', value: 8, target: 'SINGLE' },
+    { type: 'DAMAGE', value: 7, target: 'SINGLE' },
     { type: 'DRAW', value: 1 },
   ],
   upgraded: false,
   upgradeEffect: {
     name: '연계 공격+',
-    description: '12 피해를 주고 카드 1장을 뽑습니다.',
+    description: '7 피해를 주고 카드 2장을 뽑습니다.',
     effects: [
-      { type: 'DAMAGE', value: 12, target: 'SINGLE' },
-      { type: 'DRAW', value: 1 },
+      { type: 'DAMAGE', value: 7, target: 'SINGLE' },
+      { type: 'DRAW', value: 2 },
     ],
   },
 };
@@ -38,9 +38,9 @@ export const ASSAULT_SHIELD: Card = {
   upgraded: false,
   upgradeEffect: {
     name: '강습 방패+',
-    description: '7 방어도를 얻고 7 피해를 줍니다.',
+    description: '8 방어도를 얻고 7 피해를 줍니다.',
     effects: [
-      { type: 'BLOCK', value: 7 },
+      { type: 'BLOCK', value: 8 },
       { type: 'DAMAGE', value: 7, target: 'SINGLE' },
     ],
   },
@@ -48,23 +48,23 @@ export const ASSAULT_SHIELD: Card = {
 
 export const DOUBLE_STRIKE: Card = {
   id: 'double_strike',
-  name: '이연격',
+  name: '연속 베기',
   type: 'ATTACK',
   rarity: 'COMMON',
   cost: 2,
   image: '/cards/effect/double_strike.png',
-  description: '7 피해를 2번 줍니다.',
+  description: '12 피해를 2번 줍니다.',
   effects: [
-    { type: 'DAMAGE', value: 7, target: 'SINGLE' },
-    { type: 'DAMAGE', value: 7, target: 'SINGLE' },
+    { type: 'DAMAGE', value: 12, target: 'SINGLE' },
+    { type: 'DAMAGE', value: 12, target: 'SINGLE' },
   ],
   upgraded: false,
   upgradeEffect: {
-    name: '이연격+',
-    description: '10 피해를 2번 줍니다.',
+    name: '연속 베기+',
+    description: '16 피해를 2번 줍니다.',
     effects: [
-      { type: 'DAMAGE', value: 10, target: 'SINGLE' },
-      { type: 'DAMAGE', value: 10, target: 'SINGLE' },
+      { type: 'DAMAGE', value: 16, target: 'SINGLE' },
+      { type: 'DAMAGE', value: 16, target: 'SINGLE' },
     ],
   },
 };
@@ -76,17 +76,17 @@ export const EQUIPMENT_CHECK: Card = {
   rarity: 'COMMON',
   cost: 1,
   image: '/cards/effect/equipment_check.png',
-  description: '4 방어도를 얻습니다. 손에 있는 카드 1장을 업그레이드합니다.',
+  description: '7 방어도를 얻습니다. 손에 있는 카드 1장을 업그레이드합니다.',
   effects: [
-    { type: 'BLOCK', value: 4 },
+    { type: 'BLOCK', value: 7 },
     { type: 'UPGRADE_HAND', value: 1 },
   ],
   upgraded: false,
   upgradeEffect: {
     name: '장비 점검+',
-    description: '4 방어도를 얻습니다. 손에 있는 카드 2장을 업그레이드합니다.',
+    description: '7 방어도를 얻습니다. 손에 있는 카드 2장을 업그레이드합니다.',
     effects: [
-      { type: 'BLOCK', value: 4 },
+      { type: 'BLOCK', value: 7 },
       { type: 'UPGRADE_HAND', value: 2 },
     ],
   },
@@ -107,9 +107,9 @@ export const NEUTRALIZE: Card = {
   upgraded: false,
   upgradeEffect: {
     name: '무력화+',
-    description: '12 피해를 주고 무기손상 3을 부여합니다.',
+    description: '10 피해를 주고 무기손상 3을 부여합니다.',
     effects: [
-      { type: 'DAMAGE', value: 12, target: 'SINGLE' },
+      { type: 'DAMAGE', value: 10, target: 'SINGLE' },
       { type: 'APPLY_STATUS', value: 3, target: 'SINGLE', status: 'WEAK' },
     ],
   },
@@ -130,10 +130,10 @@ export const INSTANT_FOCUS: Card = {
   upgraded: false,
   upgradeEffect: {
     name: '순간 집중+',
-    description: '힘 4를 얻습니다. 턴 종료 시 힘 4를 잃습니다.',
+    description: '힘 3을 얻습니다. 턴 종료 시 힘 3을 잃습니다.',
     effects: [
-      { type: 'APPLY_STATUS', value: 4, target: 'SELF', status: 'STRENGTH' },
-      { type: 'APPLY_STATUS', value: 4, target: 'SELF', status: 'STRENGTH_DOWN' },
+      { type: 'APPLY_STATUS', value: 3, target: 'SELF', status: 'STRENGTH' },
+      { type: 'APPLY_STATUS', value: 3, target: 'SELF', status: 'STRENGTH_DOWN' },
     ],
   },
 };
@@ -145,14 +145,14 @@ export const TACTICAL_REVIEW: Card = {
   rarity: 'COMMON',
   cost: 1,
   image: '/cards/effect/tactical_review.png',
-  description: '4 피해를 줍니다. 사용한 후 다시 손으로 가져옵니다.',
-  effects: [{ type: 'DAMAGE', value: 4, target: 'SINGLE' }],
+  description: '6 피해를 줍니다. 사용한 후 다시 손으로 가져옵니다.',
+  effects: [{ type: 'DAMAGE', value: 6, target: 'SINGLE' }],
   returnToHand: true,
   upgraded: false,
   upgradeEffect: {
     name: '전술 복기+',
-    description: '6 피해를 줍니다. 사용한 후 다시 손으로 가져옵니다.',
-    effects: [{ type: 'DAMAGE', value: 6, target: 'SINGLE' }],
+    description: '9 피해를 줍니다. 사용한 후 다시 손으로 가져옵니다.',
+    effects: [{ type: 'DAMAGE', value: 9, target: 'SINGLE' }],
   },
 };
 

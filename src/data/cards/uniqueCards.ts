@@ -59,7 +59,7 @@ export const DIVINE_POWER: Card = {
   name: '신의 권능',
   type: 'ATTACK',
   rarity: 'UNIQUE',
-  cost: 4,
+  cost: 5,
   image: '/cards/effect/divine_power.png',
   description: '적의 현재 체력을 절반으로 줄입니다. (최대 100) 소멸.',
   effects: [{ type: 'HALVE_ENEMY_HP', value: 100, target: 'SINGLE' }],

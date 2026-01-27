@@ -1653,6 +1653,15 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
         checkImmediateAchievements();
       }
     }
+
+    // 업적 추적: 중독 15 이상 중첩
+    if (status.type === 'POISON') {
+      const updatedStatuses = get().playerStatuses;
+      const poisonStatus = updatedStatuses.find(s => s.type === 'POISON');
+      if (poisonStatus && poisonStatus.stacks >= 15) {
+        useStatsStore.getState().unlockAchievement('poison_15_stacks');
+      }
+    }
   },
 
   gainEnergy: (amount: number) => {

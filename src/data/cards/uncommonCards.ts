@@ -22,7 +22,7 @@ export const DIAMOND_BODY: Card = {
   name: '금강불괴',
   type: 'SHIELD',
   rarity: 'UNCOMMON',
-  cost: 1,
+  cost: 2,
   image: '/cards/effect/diamond_body.png',
   description: '매 턴 종료 시 방어도 2를 얻습니다.',
   effects: [{ type: 'APPLY_STATUS', value: 2, target: 'SELF', status: 'METALLICIZE' }],
@@ -49,10 +49,10 @@ export const LIFE_EXCHANGE: Card = {
   upgraded: false,
   upgradeEffect: {
     name: '생명 치환+',
-    description: 'HP를 2 잃고 에너지 2를 얻습니다.',
+    description: 'HP를 5 잃고 에너지 3을 얻습니다.',
     effects: [
-      { type: 'LOSE_HP', value: 2 },
-      { type: 'GAIN_ENERGY', value: 2 },
+      { type: 'LOSE_HP', value: 5 },
+      { type: 'GAIN_ENERGY', value: 3 },
     ],
   },
 };
@@ -64,13 +64,15 @@ export const DESPERATE_STRIKE: Card = {
   rarity: 'UNCOMMON',
   cost: 2,
   image: '/cards/effect/desperate_strike.png',
-  description: '20 피해를 줍니다.',
-  effects: [{ type: 'DAMAGE', value: 20, target: 'SINGLE' }],
+  description: '30 피해를 줍니다. 소멸.',
+  effects: [{ type: 'DAMAGE', value: 30, target: 'SINGLE' }],
+  exhaust: true,
   upgraded: false,
   upgradeEffect: {
     name: '결사의 일격+',
-    description: '28 피해를 줍니다.',
-    effects: [{ type: 'DAMAGE', value: 28, target: 'SINGLE' }],
+    description: '44 피해를 줍니다. 소멸.',
+    effects: [{ type: 'DAMAGE', value: 44, target: 'SINGLE' }],
+    exhaust: true,
   },
 };
 
@@ -81,18 +83,18 @@ export const FATAL_WOUND: Card = {
   rarity: 'UNCOMMON',
   cost: 2,
   image: '/cards/effect/fatal_wound.png',
-  description: '13 피해를 줍니다. 무기손상 1과 장비파괴 1을 부여합니다.',
+  description: '12 피해를 줍니다. 무기손상 1과 장비파괴 1을 부여합니다.',
   effects: [
-    { type: 'DAMAGE', value: 13, target: 'SINGLE' },
+    { type: 'DAMAGE', value: 12, target: 'SINGLE' },
     { type: 'APPLY_STATUS', value: 1, target: 'SINGLE', status: 'WEAK' },
     { type: 'APPLY_STATUS', value: 1, target: 'SINGLE', status: 'VULNERABLE' },
   ],
   upgraded: false,
   upgradeEffect: {
     name: '치명상+',
-    description: '13 피해를 줍니다. 무기손상 2와 장비파괴 2를 부여합니다.',
+    description: '12 피해를 줍니다. 무기손상 2와 장비파괴 2를 부여합니다.',
     effects: [
-      { type: 'DAMAGE', value: 13, target: 'SINGLE' },
+      { type: 'DAMAGE', value: 12, target: 'SINGLE' },
       { type: 'APPLY_STATUS', value: 2, target: 'SINGLE', status: 'WEAK' },
       { type: 'APPLY_STATUS', value: 2, target: 'SINGLE', status: 'VULNERABLE' },
     ],
@@ -123,13 +125,13 @@ export const SWEEPING: Card = {
   rarity: 'UNCOMMON',
   cost: 1,
   image: '/cards/effect/sweeping.png',
-  description: '모든 적에게 6 피해를 줍니다.',
-  effects: [{ type: 'DAMAGE', value: 6, target: 'ALL' }],
+  description: '모든 적에게 8 피해를 줍니다.',
+  effects: [{ type: 'DAMAGE', value: 8, target: 'ALL' }],
   upgraded: false,
   upgradeEffect: {
     name: '휩쓸기+',
-    description: '모든 적에게 11 피해를 줍니다.',
-    effects: [{ type: 'DAMAGE', value: 11, target: 'ALL' }],
+    description: '모든 적에게 12 피해를 줍니다.',
+    effects: [{ type: 'DAMAGE', value: 12, target: 'ALL' }],
   },
 };
 
@@ -140,13 +142,13 @@ export const WILD_MUSHROOM: Card = {
   rarity: 'UNCOMMON',
   cost: 1,
   image: '/cards/effect/mushroom.png',
-  description: '-2 ~ 5 HP를 얻습니다. 3% 확률로 HP를 10 잃습니다.',
-  effects: [{ type: 'RANDOM_HEAL', value: 5, min: -2, critChance: 0.03, critDamage: 10 }],
+  description: '-2 ~ 5 HP를 얻습니다. 5% 확률로 HP를 10 잃습니다.',
+  effects: [{ type: 'RANDOM_HEAL', value: 5, min: -2, critChance: 0.05, critDamage: 10 }],
   upgraded: false,
   upgradeEffect: {
     name: '야생 버섯 섭취+',
-    description: '-3 ~ 8 HP를 얻습니다. 3% 확률로 HP를 10 잃습니다.',
-    effects: [{ type: 'RANDOM_HEAL', value: 8, min: -3, critChance: 0.03, critDamage: 10 }],
+    description: '-3 ~ 8 HP를 얻습니다. 5% 확률로 HP를 10 잃습니다.',
+    effects: [{ type: 'RANDOM_HEAL', value: 8, min: -3, critChance: 0.05, critDamage: 10 }],
   },
 };
 

@@ -7,13 +7,13 @@ export const STRIKE: Card = {
   rarity: 'BASIC',
   cost: 1,
   image: '/cards/effect/strike.png',
-  description: '6 피해를 줍니다.',
-  effects: [{ type: 'DAMAGE', value: 6, target: 'SINGLE' }],
+  description: '8 피해를 줍니다.',
+  effects: [{ type: 'DAMAGE', value: 8, target: 'SINGLE' }],
   upgraded: false,
   upgradeEffect: {
     name: '기본 베기+',
-    description: '9 피해를 줍니다.',
-    effects: [{ type: 'DAMAGE', value: 9, target: 'SINGLE' }],
+    description: '12 피해를 줍니다.',
+    effects: [{ type: 'DAMAGE', value: 12, target: 'SINGLE' }],
   },
 };
 
@@ -24,13 +24,13 @@ export const DEFEND: Card = {
   rarity: 'BASIC',
   cost: 1,
   image: '/cards/effect/defend.png',
-  description: '5 방어도를 얻습니다.',
-  effects: [{ type: 'BLOCK', value: 5 }],
+  description: '7 방어도를 얻습니다.',
+  effects: [{ type: 'BLOCK', value: 7 }],
   upgraded: false,
   upgradeEffect: {
     name: '방어 태세+',
-    description: '8 방어도를 얻습니다.',
-    effects: [{ type: 'BLOCK', value: 8 }],
+    description: '11 방어도를 얻습니다.',
+    effects: [{ type: 'BLOCK', value: 11 }],
   },
 };
 
@@ -41,9 +41,9 @@ export const BASH: Card = {
   rarity: 'BASIC',
   cost: 2,
   image: '/cards/effect/bash.png',
-  description: '8 피해를 주고 장비파괴 1을 부여합니다.',
+  description: '10 피해를 주고 장비파괴 1을 부여합니다.',
   effects: [
-    { type: 'DAMAGE', value: 8, target: 'SINGLE' },
+    { type: 'DAMAGE', value: 10, target: 'SINGLE' },
     { type: 'APPLY_STATUS', value: 1, target: 'SINGLE', status: 'VULNERABLE' },
   ],
   upgraded: false,
@@ -82,7 +82,7 @@ export const FLEXIBLE_RESPONSE: Card = {
   name: '유연한 대응',
   type: 'SHIELD',
   rarity: 'BASIC',
-  cost: 1,
+  cost: 2,
   image: '/cards/effect/flexible_response.png',
   description: '7 방어도를 얻고 카드 1장을 뽑습니다.',
   effects: [
@@ -92,9 +92,9 @@ export const FLEXIBLE_RESPONSE: Card = {
   upgraded: false,
   upgradeEffect: {
     name: '유연한 대응+',
-    description: '10 방어도를 얻고 카드 1장을 뽑습니다.',
+    description: '11 방어도를 얻고 카드 1장을 뽑습니다.',
     effects: [
-      { type: 'BLOCK', value: 10 },
+      { type: 'BLOCK', value: 11 },
       { type: 'DRAW', value: 1 },
     ],
   },

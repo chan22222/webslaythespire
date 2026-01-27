@@ -44,9 +44,9 @@ export const ACHIEVEMENTS: Achievement[] = [
     unlocksCard: 'life_exchange', // 생명 치환
   },
   {
-    id: 'heal_3_times',
+    id: 'poison_15_stacks',
     name: '슈퍼 마리오 식단',
-    description: '회복 카드 3회 사용',
+    description: '중독 15까지 중첩되기',
     icon: '🍄',
     hidden: false,
     isSpecialCondition: true,
