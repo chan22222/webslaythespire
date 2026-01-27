@@ -8,6 +8,10 @@ interface StatsStore {
   unlockedAchievements: string[];
   isLoading: boolean;
 
+  // 업적 알림용
+  recentUnlockedAchievement: string | null;
+  clearRecentAchievement: () => void;
+
   // 통계 업데이트 액션
   incrementKill: (type: 'mob' | 'elite' | 'boss') => void;
   incrementCardPlayed: (cardType: 'ATTACK' | 'SHIELD' | 'GADGET' | 'EFFECT' | 'TERRAIN') => void;
@@ -44,6 +48,11 @@ export const useStatsStore = create<StatsStore>((set, get) => ({
   stats: createInitialStats(),
   unlockedAchievements: [],
   isLoading: false,
+  recentUnlockedAchievement: null,
+
+  clearRecentAchievement: () => {
+    set({ recentUnlockedAchievement: null });
+  },
 
   // 적 처치 (전투 승리 시 한 번에 저장)
   incrementKill: (type) => {
@@ -280,13 +289,15 @@ export const useStatsStore = create<StatsStore>((set, get) => ({
 
   // 업적 해금
   unlockAchievement: (achievementId) => {
-    set((state) => {
-      if (state.unlockedAchievements.includes(achievementId)) {
-        return state;
-      }
-      return {
-        unlockedAchievements: [...state.unlockedAchievements, achievementId],
-      };
+    const { unlockedAchievements } = get();
+    // 이미 달성한 업적이면 무시
+    if (unlockedAchievements.includes(achievementId)) {
+      return;
+    }
+    // 새 업적 달성
+    set({
+      unlockedAchievements: [...unlockedAchievements, achievementId],
+      recentUnlockedAchievement: achievementId,
     });
     get().saveStats();
   },

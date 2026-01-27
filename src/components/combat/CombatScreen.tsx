@@ -9,6 +9,7 @@ import { Enemy } from './Enemy';
 import { EnergyOrb } from './EnergyOrb';
 import { PlayerStatus } from './PlayerStatus';
 import { DamagePopupManager } from './DamagePopup';
+import { AchievementNotification } from './AchievementNotification';
 import { SwordSlashEffect, SlashHitEffect } from './characters';
 import { generateNormalEncounter, ELITE_ENEMIES, BOSS_ENEMIES, EASTER_EGG_ENCOUNTER } from '../../data/enemies';
 import { playButtonHover, playButtonClick, playAttack, playFootsteps, playBuff, playBGM } from '../../utils/sound';
@@ -1290,6 +1291,9 @@ export function CombatScreen() {
 
   return (
     <>
+      {/* 업적 달성 알림 */}
+      <AchievementNotification />
+
       {/* 전투 시작 인트로 */}
       {showIntro && (
         <BattleIntro
