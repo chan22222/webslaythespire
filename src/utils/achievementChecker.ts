@@ -153,10 +153,7 @@ export const checkImmediateAchievements = () => {
     statsStore.unlockAchievement('block_20_in_turn');
   }
 
-  // 적 3마리에게 모두 피해를 1이상 입히기
-  if (battleState.damagedEnemyIds.size >= 3) {
-    statsStore.unlockAchievement('damage_3_enemies');
-  }
+  // 적 3마리에게 모두 피해 입히기 (combatStore에서 직접 체크)
 
   // 에너지를 쓰지 않고 피해 입기
   if (battleState.tookDamageWithZeroEnergy) {

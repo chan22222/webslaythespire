@@ -19,6 +19,7 @@ import {
   recordWeakAndVulnerable,
   recordKillWithCard,
   recordBlockBeforeEnemyTurn,
+  getBattleAchievementState,
   checkBattleEndAchievements,
   checkImmediateAchievements,
   checkTurnEndAchievements,
@@ -1330,6 +1331,16 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     // 업적 체크: 적에게 피해 입힘
     recordDamageToEnemy(enemyId, remainingDamage);
     checkImmediateAchievements();
+
+    // 업적 체크: 적 3마리에게 모두 피해 입히기 (모두 살아있을 때만)
+    const aliveEnemies = get().enemies.filter(e => e.currentHp > 0);
+    if (aliveEnemies.length >= 3) {
+      const { damagedEnemyIds } = getBattleAchievementState();
+      const allAliveHit = aliveEnemies.every(e => damagedEnemyIds.has(e.instanceId));
+      if (allAliveHit) {
+        useStatsStore.getState().unlockAchievement('damage_3_enemies');
+      }
+    }
 
     // 통계 업데이트: 적 처치 (저장은 전투 승리 시 한 번에)
     if (newHp <= 0 && enemy.currentHp > 0) {
