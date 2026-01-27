@@ -4,6 +4,7 @@ import { COMMON_CARDS } from './commonCards';
 import { UNCOMMON_CARDS } from './uncommonCards';
 import { RARE_CARDS } from './rareCards';
 import { UNIQUE_CARDS } from './uniqueCards';
+import { isCardUnlocked } from '../achievements';
 
 export { createStarterDeck, STRIKE, DEFEND, BASH, BASIC_CARDS };
 export { COMMON_CARDS };
@@ -33,11 +34,17 @@ export function getCardsByRarity(rarity: Card['rarity']): Card[] {
 
 // 랜덤 카드 보상 생성 (3장)
 // deckCardIds: 덱에 있는 카드 ID 배열 (unique 카드 필터링용)
-export function generateCardRewards(count: number = 3, deckCardIds: string[] = []): Card[] {
+// unlockedAchievements: 해금된 업적 ID 배열 (해금된 카드만 등장)
+export function generateCardRewards(count: number = 3, deckCardIds: string[] = [], unlockedAchievements: string[] = []): Card[] {
   const rewards: Card[] = [];
-  // unique 카드가 이미 덱에 있으면 보상 후보에서 제외
+  // unique 카드가 이미 덱에 있거나, 해금되지 않은 카드는 보상 후보에서 제외
   const availableCards = ALL_OBTAINABLE_CARDS.filter(card => {
+    // unique 카드가 이미 덱에 있으면 제외
     if (card.unique && deckCardIds.includes(card.id)) {
+      return false;
+    }
+    // 해금되지 않은 카드는 제외
+    if (!isCardUnlocked(card.id, unlockedAchievements)) {
       return false;
     }
     return true;

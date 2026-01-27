@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useGameStore } from '../../stores/gameStore';
+import { useStatsStore } from '../../stores/statsStore';
 import { Card } from '../combat/Card';
 import { Card as CardType, createCardInstance } from '../../types/card';
 import { Relic } from '../../types/relic';
@@ -103,7 +104,8 @@ export function ShopScreen() {
   }, [stopAutoScroll]);
 
   useEffect(() => {
-    const cards = generateCardRewards(5);
+    const unlockedAchievements = useStatsStore.getState().unlockedAchievements;
+    const cards = generateCardRewards(5, [], unlockedAchievements);
 
     // 플레이어가 이미 보유한 유물 ID
     const ownedRelicIds = new Set(player.relics.map(r => r.id));

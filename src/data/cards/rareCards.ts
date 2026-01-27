@@ -120,6 +120,75 @@ export const FULL_ARMAMENT: Card = {
   },
 };
 
+export const QUAD_STRIKE: Card = {
+  id: 'quad_strike',
+  name: '4연속 베기',
+  type: 'ATTACK',
+  rarity: 'RARE',
+  cost: 2,
+  image: '/cards/effect/quad_strike.png',
+  description: '4 피해를 4번 줍니다.',
+  effects: [{ type: 'MULTI_HIT', value: 4, hits: 4, target: 'SINGLE' }],
+  upgraded: false,
+  upgradeEffect: {
+    name: '4연속 베기+',
+    description: '6 피해를 4번 줍니다.',
+    effects: [{ type: 'MULTI_HIT', value: 6, hits: 4, target: 'SINGLE' }],
+  },
+};
+
+export const BERSERKER_RING: Card = {
+  id: 'berserker_ring',
+  name: '광전사의 반지',
+  type: 'EFFECT',
+  rarity: 'RARE',
+  cost: 2,
+  image: '/cards/effect/berserker_ring.png',
+  description: '1턴 동안, 어떠한 피해에도 HP가 1 아래로 내려가지 않습니다.',
+  effects: [{ type: 'APPLY_UNDYING', value: 1, target: 'SELF' }],
+  upgraded: false,
+  upgradeEffect: {
+    name: '광전사의 반지+',
+    description: '2턴 동안, 어떠한 피해에도 HP가 1 아래로 내려가지 않습니다.',
+    effects: [{ type: 'APPLY_UNDYING', value: 2, target: 'SELF' }],
+  },
+};
+
+export const BEST_DEFENSE: Card = {
+  id: 'best_defense',
+  name: '최선의 방어',
+  type: 'EFFECT',
+  rarity: 'RARE',
+  cost: 3,
+  image: '/cards/effect/best_defense.png',
+  description: '공격 카드를 사용할 때 마다 방어도 1을 얻습니다.',
+  effects: [{ type: 'APPLY_BLOCK_ON_ATTACK', value: 1, target: 'SELF' }],
+  upgraded: false,
+  upgradeEffect: {
+    name: '최선의 방어+',
+    description: '공격 카드를 사용할 때 마다 방어도 2를 얻습니다.',
+    effects: [{ type: 'APPLY_BLOCK_ON_ATTACK', value: 2, target: 'SELF' }],
+  },
+};
+
+export const BASIC_MASTERY: Card = {
+  id: 'basic_mastery',
+  name: '기본기 충실',
+  type: 'EFFECT',
+  rarity: 'RARE',
+  cost: 3,
+  image: '/cards/effect/basic_mastery.png',
+  description: "이번 전투에서 '베기'라는 이름이 포함된 모든 카드의 코스트를 1 감소시킵니다. 소멸.",
+  effects: [{ type: 'REDUCE_SLASH_COST', value: 1 }],
+  exhaust: true,
+  upgraded: false,
+  upgradeEffect: {
+    name: '기본기 충실+',
+    description: "이번 전투에서 '베기'라는 이름이 포함된 모든 카드의 코스트를 2 감소시킵니다. 소멸.",
+    effects: [{ type: 'REDUCE_SLASH_COST', value: 2 }],
+  },
+};
+
 // 모든 레어 카드 목록
 export const RARE_CARDS: Card[] = [
   LIMIT_BREAK,
@@ -128,4 +197,8 @@ export const RARE_CARDS: Card[] = [
   TACTICAL_COMMAND,
   BLOOD_FESTIVAL,
   FULL_ARMAMENT,
+  QUAD_STRIKE,
+  BERSERKER_RING,
+  BEST_DEFENSE,
+  BASIC_MASTERY,
 ];

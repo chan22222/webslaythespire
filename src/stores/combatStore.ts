@@ -454,11 +454,11 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       processedStatuses = processedStatuses.filter(s => s.type !== 'STRENGTH_DOWN');
     }
 
-    // 상태 효과 지속시간 감소 (약화, 취약, 방어도 유지, 무적, 치유 감소, 언데드화)
+    // 상태 효과 지속시간 감소 (약화, 취약, 방어도 유지, 무적, 치유 감소, 언데드화, 불사)
     const updatedStatuses = processedStatuses
       .map(s => ({
         ...s,
-        stacks: (s.type === 'WEAK' || s.type === 'VULNERABLE' || s.type === 'BLOCK_RETAIN' || s.type === 'INVULNERABLE' || s.type === 'HEAL_REDUCTION' || s.type === 'UNDEAD')
+        stacks: (s.type === 'WEAK' || s.type === 'VULNERABLE' || s.type === 'BLOCK_RETAIN' || s.type === 'INVULNERABLE' || s.type === 'HEAL_REDUCTION' || s.type === 'UNDEAD' || s.type === 'UNDYING')
           ? s.stacks - 1
           : s.stacks,
       }))
@@ -642,6 +642,13 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     // 에너지 체크
     if (card.cost > energy) {
       get().addToCombatLog('에너지가 부족합니다!');
+      return;
+    }
+
+    // 공격 카드 금지 체크 (ATTACK_DISABLED)
+    const attackDisabled = get().playerStatuses.find(s => s.type === 'ATTACK_DISABLED');
+    if (attackDisabled && attackDisabled.stacks > 0 && card.type === 'ATTACK') {
+      get().addToCombatLog('공격 카드를 사용할 수 없습니다!');
       return;
     }
 
@@ -1058,8 +1065,116 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
           }
           break;
         }
+        case 'MULTI_HIT': {
+          // 4연속 베기: 다중 히트
+          if (skipDamage) break;
+
+          const hitCount = effect.hits || 1;
+          let baseDamageMulti = effect.value;
+          const strengthMulti = get().playerStatuses.find(s => s.type === 'STRENGTH')?.stacks || 0;
+          baseDamageMulti += strengthMulti;
+
+          for (let hit = 0; hit < hitCount; hit++) {
+            const currentHit = hit;
+            setTimeout(() => {
+              if (effect.target === 'ALL') {
+                get().enemies.forEach(enemy => {
+                  if (enemy.currentHp > 0) {
+                    get().dealDamageToEnemy(enemy.instanceId, baseDamageMulti);
+                  }
+                });
+              } else if (targetEnemyId) {
+                const targetEnemy = get().enemies.find(e => e.instanceId === targetEnemyId);
+                if (targetEnemy && targetEnemy.currentHp > 0) {
+                  get().dealDamageToEnemy(targetEnemyId, baseDamageMulti);
+                }
+              }
+            }, currentHit * DAMAGE_HIT_DELAY);
+          }
+          break;
+        }
+        case 'APPLY_UNDYING': {
+          // 광전사의 반지: 불사 상태 부여
+          get().applyStatusToPlayer({ type: 'UNDYING', stacks: effect.value });
+          get().addToCombatLog(`${effect.value}턴간 불사 상태!`);
+          break;
+        }
+        case 'APPLY_BLOCK_ON_ATTACK': {
+          // 최선의 방어: 공격 시 방어도 획득 패시브
+          get().applyStatusToPlayer({ type: 'GAIN_BLOCK_ON_ATTACK', stacks: effect.value });
+          get().addToCombatLog(`공격 카드 사용 시 방어도 ${effect.value} 획득 효과!`);
+          break;
+        }
+        case 'REDUCE_SLASH_COST': {
+          // 기본기 충실: '베기' 카드 코스트 감소 (덱, 손, 버린 더미 모두)
+          const costReduction = effect.value;
+
+          // 손패
+          const newHandSlash = get().hand.map(c => {
+            if (c.name.includes('베기')) {
+              return { ...c, cost: Math.max(0, c.cost - costReduction), originalCost: Math.max(0, c.originalCost - costReduction) };
+            }
+            return c;
+          });
+
+          // 뽑기 더미
+          const newDrawPile = get().drawPile.map(c => {
+            if (c.name.includes('베기')) {
+              return { ...c, cost: Math.max(0, c.cost - costReduction), originalCost: Math.max(0, c.originalCost - costReduction) };
+            }
+            return c;
+          });
+
+          // 버린 더미
+          const newDiscardPile = get().discardPile.map(c => {
+            if (c.name.includes('베기')) {
+              return { ...c, cost: Math.max(0, c.cost - costReduction), originalCost: Math.max(0, c.originalCost - costReduction) };
+            }
+            return c;
+          });
+
+          set({ hand: newHandSlash, drawPile: newDrawPile, discardPile: newDiscardPile });
+          get().addToCombatLog(`'베기' 카드 코스트 ${costReduction} 감소!`);
+          break;
+        }
+        case 'APPLY_OIL': {
+          // 기름통: 적에게 기름 마킹
+          if (targetEnemyId) {
+            const explosionDmg = effect.explosionDamage || 8;
+            get().applyStatusToEnemy(targetEnemyId, { type: 'OIL_MARKED', stacks: explosionDmg });
+            get().addToCombatLog(`적에게 기름 부착! 처치 시 ${explosionDmg} 폭발!`);
+          }
+          break;
+        }
+        case 'APPLY_THORNS': {
+          // 바늘 갑옷: 방어도 반사 패시브 (value = 반사 비율 %)
+          get().applyStatusToPlayer({ type: 'THORNS', stacks: effect.value });
+          get().addToCombatLog(`피격 시 방어도의 ${effect.value}% 반사!`);
+          break;
+        }
+        case 'APPLY_ATTACK_DISABLED': {
+          // 방패 용사: 공격 카드 사용 금지
+          get().applyStatusToPlayer({ type: 'ATTACK_DISABLED', stacks: effect.value });
+          get().addToCombatLog(`공격 카드 사용 금지!`);
+          break;
+        }
+        case 'APPLY_BLOCK_TO_DAMAGE': {
+          // 방패 용사: 방어도 획득 시 피해 (value = 비율 %)
+          get().applyStatusToPlayer({ type: 'BLOCK_TO_DAMAGE', stacks: effect.value });
+          get().addToCombatLog(`방어도 획득 시 ${effect.value}% 피해 변환!`);
+          break;
+        }
       }
     });
+
+    // GAIN_BLOCK_ON_ATTACK 효과: 공격 카드 사용 시 방어도 획득
+    if (card.type === 'ATTACK') {
+      const blockOnAttack = get().playerStatuses.find(s => s.type === 'GAIN_BLOCK_ON_ATTACK');
+      if (blockOnAttack && blockOnAttack.stacks > 0) {
+        get().gainPlayerBlock(blockOnAttack.stacks);
+        get().addToCombatLog(`최선의 방어! 방어도 ${blockOnAttack.stacks} 획득!`);
+      }
+    }
 
     // 카드 사용 후 처리 (DRAW 효과로 hand가 변경되었을 수 있으므로 다시 가져옴)
     const currentHand = get().hand;
@@ -1226,6 +1341,22 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
         recordKillWithCard(currentPlayingCardId, currentPlayingCardName);
         checkKillAchievements(currentPlayingCardId, currentPlayingCardName);
       }
+
+      // OIL_MARKED 효과: 기름 묻은 적 처치 시 모든 적에게 폭발 피해
+      const oilMarked = enemy.statuses.find(s => s.type === 'OIL_MARKED');
+      if (oilMarked && oilMarked.stacks > 0) {
+        const explosionDamage = oilMarked.stacks;
+        get().addToCombatLog(`💥 기름통 폭발! 모든 적에게 ${explosionDamage} 피해!`);
+        // 폭발은 다른 적들에게만 (이미 죽은 적은 제외, 자신도 제외)
+        const currentEnemies = get().enemies;
+        currentEnemies.forEach(otherEnemy => {
+          if (otherEnemy.instanceId !== enemyId && otherEnemy.currentHp > 0) {
+            setTimeout(() => {
+              get().dealDamageToEnemy(otherEnemy.instanceId, explosionDamage);
+            }, 200);
+          }
+        });
+      }
     }
 
     // ON_DAMAGE_DEALT 유물 효과 트리거
@@ -1332,17 +1463,48 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       // 업적 추적: 방어도 감소 기록, 최대 막은 피해
       recordBlockReduced();
       useStatsStore.getState().updateMaxBlockedDamage(blockedAmount);
+
+      // THORNS 효과: 방어도 감소분 반사
+      const thorns = playerStatuses.find(s => s.type === 'THORNS');
+      if (thorns && thorns.stacks > 0 && attackerEnemyId) {
+        const thornsDamage = Math.floor(blockedAmount * (thorns.stacks / 100));
+        if (thornsDamage > 0) {
+          get().dealDamageToEnemy(attackerEnemyId, thornsDamage);
+          get().addToCombatLog(`바늘 갑옷! 공격자에게 ${thornsDamage} 반사!`);
+        }
+      }
     }
 
     // 실제 HP 데미지 팝업 (빨간색) - 오른쪽 아래, 약간 딜레이
     if (remainingDamage > 0) {
-      setTimeout(() => {
-        get().addDamagePopup(remainingDamage, 'damage', 0, 0, 'player', undefined, 30, 10);
-      }, blockedAmount > 0 ? 150 : 0);
-      const pName = useGameStore.getState().playerName;
-      get().addToCombatLog(`${pName}(이)가 ${remainingDamage} 피해를 입었습니다!`);
-      // gameStore의 HP를 실제로 감소
-      useGameStore.getState().modifyHp(-remainingDamage);
+      // UNDYING 효과: HP가 1 아래로 내려가지 않음
+      const undying = playerStatuses.find(s => s.type === 'UNDYING');
+      const currentHp = useGameStore.getState().player.currentHp;
+      let actualDamage = remainingDamage;
+
+      if (undying && undying.stacks > 0) {
+        // HP가 1 아래로 내려가지 않도록 데미지 제한
+        if (currentHp - remainingDamage < 1) {
+          actualDamage = Math.max(0, currentHp - 1);
+          if (actualDamage < remainingDamage) {
+            get().addToCombatLog(`불사! HP가 1 아래로 내려가지 않습니다!`);
+          }
+        }
+      }
+
+      if (actualDamage > 0) {
+        setTimeout(() => {
+          get().addDamagePopup(actualDamage, 'damage', 0, 0, 'player', undefined, 30, 10);
+        }, blockedAmount > 0 ? 150 : 0);
+        const pName = useGameStore.getState().playerName;
+        get().addToCombatLog(`${pName}(이)가 ${actualDamage} 피해를 입었습니다!`);
+        // gameStore의 HP를 실제로 감소
+        useGameStore.getState().modifyHp(-actualDamage);
+        remainingDamage = actualDamage;
+      } else {
+        get().addDamagePopup(0, 'blocked', 0, 0, 'player');
+        remainingDamage = 0;
+      }
 
       // 통계 업데이트: 데미지 받음
       useStatsStore.getState().addDamageTaken(remainingDamage);
@@ -1350,15 +1512,15 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       // 업적 추적: 에너지 0일 때 피해 입음, HP 변경
       const { energy } = get();
       recordDamageTakenWithZeroEnergy(energy);
-      const currentHp = useGameStore.getState().player.currentHp;
-      checkHpChangeAchievements(currentHp);
+      const finalHp = useGameStore.getState().player.currentHp;
+      checkHpChangeAchievements(finalHp);
     }
 
     return remainingDamage;
   },
 
   gainPlayerBlock: (amount: number) => {
-    const { playerBlock } = get();
+    const { playerBlock, playerStatuses, enemies } = get();
     const newBlock = playerBlock + amount;
     set({ playerBlock: newBlock });
     const pName = useGameStore.getState().playerName;
@@ -1371,6 +1533,22 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     recordBlockGained(amount);
     useStatsStore.getState().updateMaxBlockInTurn(newBlock);
     checkImmediateAchievements();
+
+    // BLOCK_TO_DAMAGE 효과: 방어도 획득 시 무작위 적에게 피해
+    const blockToDamage = playerStatuses.find(s => s.type === 'BLOCK_TO_DAMAGE');
+    if (blockToDamage && blockToDamage.stacks > 0 && amount > 0) {
+      const damageRatio = blockToDamage.stacks / 100; // stacks = 비율 %
+      const damageAmount = Math.floor(amount * damageRatio);
+      if (damageAmount > 0) {
+        // 살아있는 적 중 무작위 선택
+        const aliveEnemies = enemies.filter(e => e.currentHp > 0);
+        if (aliveEnemies.length > 0) {
+          const randomEnemy = aliveEnemies[Math.floor(Math.random() * aliveEnemies.length)];
+          get().dealDamageToEnemy(randomEnemy.instanceId, damageAmount);
+          get().addToCombatLog(`방패 반격! ${randomEnemy.name}에게 ${damageAmount} 피해!`);
+        }
+      }
+    }
   },
 
   applyStatusToEnemy: (enemyId: string, status: Status) => {

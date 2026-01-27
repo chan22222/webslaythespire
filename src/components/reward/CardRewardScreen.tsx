@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useGameStore } from '../../stores/gameStore';
 import { useCombatStore } from '../../stores/combatStore';
+import { useStatsStore } from '../../stores/statsStore';
 import { Card } from '../combat/Card';
 import { Card as CardType, createCardInstance } from '../../types/card';
 import { generateCardRewards } from '../../data/cards';
@@ -28,7 +29,9 @@ export function CardRewardScreen() {
   useEffect(() => {
     // 덱에 있는 카드 ID 목록 (unique 카드 필터링용)
     const deckCardIds = player.deck.map(card => card.id);
-    setCardRewards(generateCardRewards(3, deckCardIds));
+    // 해금된 업적 목록
+    const unlockedAchievements = useStatsStore.getState().unlockedAchievements;
+    setCardRewards(generateCardRewards(3, deckCardIds, unlockedAchievements));
     setGoldReward(randomInt(20, 50));
     if (hasEasterEggEnemy) {
       setBonusGold(2000);

@@ -68,4 +68,34 @@ export const STATUS_INFO: Record<StatusType, { name: string; description: string
     description: '회복이 피해로 전환됩니다.',
     isDebuff: true,
   },
+  UNDYING: {
+    name: '불사',
+    description: 'HP가 1 아래로 내려가지 않습니다.',
+    isDebuff: false,
+  },
+  GAIN_BLOCK_ON_ATTACK: {
+    name: '최선의 방어',
+    description: '공격 카드 사용 시 방어도를 얻습니다.',
+    isDebuff: false,
+  },
+  THORNS: {
+    name: '바늘 갑옷',
+    description: '피격 시 감소된 방어도의 일정%를 적에게 반사합니다.',
+    isDebuff: false,
+  },
+  OIL_MARKED: {
+    name: '기름',
+    description: '처치 시 모든 적에게 폭발 피해를 줍니다.',
+    isDebuff: true,
+  },
+  ATTACK_DISABLED: {
+    name: '공격 봉인',
+    description: '공격 카드를 사용할 수 없습니다.',
+    isDebuff: true,
+  },
+  BLOCK_TO_DAMAGE: {
+    name: '방패 전환',
+    description: '방어도 획득 시 일정 비율로 무작위 적에게 피해를 줍니다.',
+    isDebuff: false,
+  },
 };

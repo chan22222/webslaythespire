@@ -93,6 +93,30 @@ export const TIME_WARP: Card = {
   },
 };
 
+export const SHIELD_HERO: Card = {
+  id: 'shield_hero',
+  name: '방패 용사 성공담',
+  type: 'EFFECT',
+  rarity: 'UNIQUE',
+  cost: 3,
+  image: '/cards/effect/shield_hero.png',
+  description: '이번 게임에서 공격 사용 불가. 방어도를 얻을 때 50%만큼 무작위로 피해를 입힙니다.',
+  effects: [
+    { type: 'APPLY_ATTACK_DISABLED', value: 999, target: 'SELF' },
+    { type: 'APPLY_BLOCK_TO_DAMAGE', value: 50, target: 'SELF' },
+  ],
+  unique: true,
+  upgraded: false,
+  upgradeEffect: {
+    name: '방패 용사 성공담+',
+    description: '이번 게임에서 공격 사용 불가. 방어도를 얻을 때 75%만큼 무작위로 피해를 입힙니다.',
+    effects: [
+      { type: 'APPLY_ATTACK_DISABLED', value: 999, target: 'SELF' },
+      { type: 'APPLY_BLOCK_TO_DAMAGE', value: 75, target: 'SELF' },
+    ],
+  },
+};
+
 // 모든 유니크 카드 목록
 export const UNIQUE_CARDS: Card[] = [
   FINAL_STRIKE,
@@ -100,4 +124,5 @@ export const UNIQUE_CARDS: Card[] = [
   ABSOLUTE_DEFENSE,
   DIVINE_POWER,
   TIME_WARP,
+  SHIELD_HERO,
 ];

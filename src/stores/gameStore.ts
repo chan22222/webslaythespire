@@ -83,9 +83,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     'strike', 'defend', 'bash', 'relax', 'flexible_response',
     // 커먼 카드 (자동 해금)
     'combo_attack', 'assault_shield', 'double_strike', 'equipment_check', 'neutralize', 'instant_focus', 'tactical_review',
-    // 언커먼 카드 (자동 해금)
-    'rage', 'diamond_body', 'life_exchange', 'desperate_strike', 'fatal_wound', 'battle_trance', 'sweeping', 'wild_mushroom',
-  ], // 레어/유니크는 조건 달성 시 해금
+  ], // 언커먼/레어/유니크는 업적 달성 시 해금
   ownedRelicIds: ['burning_blood', 'ring_of_the_snake', 'cracked_armor'], // 스타터 유물만 보유
 
   setPlayerName: (name: string) => {
@@ -123,7 +121,6 @@ export const useGameStore = create<GameState>((set, get) => ({
         ownedCardIds: [
           'strike', 'defend', 'bash', 'relax', 'flexible_response',
           'combo_attack', 'assault_shield', 'double_strike', 'equipment_check', 'neutralize', 'instant_focus', 'tactical_review',
-          'rage', 'diamond_body', 'life_exchange', 'desperate_strike', 'fatal_wound', 'battle_trance', 'sweeping', 'wild_mushroom',
         ],
         map: newMap,
         currentAct: 1,

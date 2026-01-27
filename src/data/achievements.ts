@@ -68,7 +68,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     icon: '🔧',
     hidden: false,
     isSpecialCondition: true,
-    unlocksCard: 'critical_wound', // 치명상
+    unlocksCard: 'fatal_wound', // 치명상
   },
   {
     id: 'cards_100_played',

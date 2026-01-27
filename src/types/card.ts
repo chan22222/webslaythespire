@@ -1,7 +1,7 @@
 export type CardType = 'ATTACK' | 'SHIELD' | 'EFFECT' | 'GADGET' | 'TERRAIN';
 export type CardRarity = 'BASIC' | 'COMMON' | 'UNCOMMON' | 'RARE' | 'UNIQUE';
 export type TargetType = 'SINGLE' | 'ALL' | 'SELF' | 'RANDOM';
-export type StatusType = 'VULNERABLE' | 'WEAK' | 'STRENGTH' | 'DEXTERITY' | 'POISON' | 'BLOCK_NEXT_TURN' | 'METALLICIZE' | 'STRENGTH_DOWN' | 'BLOCK_RETAIN' | 'INVULNERABLE' | 'HEAL_REDUCTION' | 'UNDEAD';
+export type StatusType = 'VULNERABLE' | 'WEAK' | 'STRENGTH' | 'DEXTERITY' | 'POISON' | 'BLOCK_NEXT_TURN' | 'METALLICIZE' | 'STRENGTH_DOWN' | 'BLOCK_RETAIN' | 'INVULNERABLE' | 'HEAL_REDUCTION' | 'UNDEAD' | 'UNDYING' | 'GAIN_BLOCK_ON_ATTACK' | 'THORNS' | 'OIL_MARKED' | 'ATTACK_DISABLED' | 'BLOCK_TO_DAMAGE';
 
 export interface CardEffect {
   type:
@@ -27,7 +27,16 @@ export interface CardEffect {
     | 'HALVE_ENEMY_HP'
     | 'EXTRA_TURN'
     | 'CONSUME_ENERGY_DRAW' // 에너지 소비해서 카드 드로우
-    | 'RANDOM_HEAL'; // 랜덤 범위 HP 회복/손실
+    | 'RANDOM_HEAL' // 랜덤 범위 HP 회복/손실
+    // 신규 효과
+    | 'MULTI_HIT' // 다중 히트 (value=데미지, hits=횟수)
+    | 'REDUCE_SLASH_COST' // '베기' 카드 코스트 감소
+    | 'APPLY_OIL' // 기름통 마킹 (처치 시 폭발)
+    | 'APPLY_UNDYING' // 불사 상태 부여
+    | 'APPLY_BLOCK_ON_ATTACK' // 공격 시 방어도 획득 패시브
+    | 'APPLY_THORNS' // 방어도 반사 패시브
+    | 'APPLY_ATTACK_DISABLED' // 공격 카드 사용 금지
+    | 'APPLY_BLOCK_TO_DAMAGE'; // 방어도 획득 시 피해 변환
   value: number;
   target?: TargetType;
   status?: StatusType;
@@ -36,6 +45,9 @@ export interface CardEffect {
   min?: number; // RANDOM_HEAL용 최소값
   critChance?: number; // RANDOM_HEAL용 크리티컬 확률 (0~1)
   critDamage?: number; // RANDOM_HEAL용 크리티컬 시 HP 손실량
+  hits?: number; // MULTI_HIT용 히트 횟수
+  explosionDamage?: number; // APPLY_OIL용 폭발 피해
+  ratio2?: number; // APPLY_BLOCK_TO_DAMAGE용 피해 비율 (백분율)
 }
 
 export interface Card {

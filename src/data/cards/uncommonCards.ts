@@ -150,6 +150,63 @@ export const WILD_MUSHROOM: Card = {
   },
 };
 
+export const OIL_DRUM: Card = {
+  id: 'oil_drum',
+  name: '기름통',
+  type: 'EFFECT',
+  rarity: 'UNCOMMON',
+  cost: 1,
+  image: '/cards/effect/oil_drum.png',
+  description: '해당 적 처치 시 모든 적에게 8의 피해를 줍니다.',
+  effects: [{ type: 'APPLY_OIL', value: 1, explosionDamage: 8, target: 'SINGLE' }],
+  upgraded: false,
+  upgradeEffect: {
+    name: '기름통+',
+    description: '해당 적 처치 시 모든 적에게 12의 피해를 줍니다.',
+    effects: [{ type: 'APPLY_OIL', value: 1, explosionDamage: 12, target: 'SINGLE' }],
+  },
+};
+
+export const DIAMOND_SHIELD: Card = {
+  id: 'diamond_shield',
+  name: '다이아몬드 방패',
+  type: 'SHIELD',
+  rarity: 'UNCOMMON',
+  cost: 2,
+  image: '/cards/effect/diamond_shield.png',
+  description: '방어도 12를 두 번 얻습니다.',
+  effects: [
+    { type: 'BLOCK', value: 12 },
+    { type: 'BLOCK', value: 12 },
+  ],
+  upgraded: false,
+  upgradeEffect: {
+    name: '다이아몬드 방패+',
+    description: '방어도 16을 두 번 얻습니다.',
+    effects: [
+      { type: 'BLOCK', value: 16 },
+      { type: 'BLOCK', value: 16 },
+    ],
+  },
+};
+
+export const NEEDLE_ARMOR: Card = {
+  id: 'needle_armor',
+  name: '바늘 갑옷',
+  type: 'EFFECT',
+  rarity: 'UNCOMMON',
+  cost: 2,
+  image: '/cards/effect/needle_armor.png',
+  description: '피격 시 감소된 방어도의 20%만큼 적에게 피해를 입힙니다.',
+  effects: [{ type: 'APPLY_THORNS', value: 20, target: 'SELF' }],
+  upgraded: false,
+  upgradeEffect: {
+    name: '바늘 갑옷+',
+    description: '피격 시 감소된 방어도의 30%만큼 적에게 피해를 입힙니다.',
+    effects: [{ type: 'APPLY_THORNS', value: 30, target: 'SELF' }],
+  },
+};
+
 // 모든 언커먼 카드 목록
 export const UNCOMMON_CARDS: Card[] = [
   RAGE,
@@ -160,4 +217,7 @@ export const UNCOMMON_CARDS: Card[] = [
   BATTLE_TRANCE,
   SWEEPING,
   WILD_MUSHROOM,
+  OIL_DRUM,
+  DIAMOND_SHIELD,
+  NEEDLE_ARMOR,
 ];
