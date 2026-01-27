@@ -595,8 +595,9 @@ export function CombatScreen() {
   // 적 타격 이펙트 (slashhit.png)
   const [hitEffects, setHitEffects] = useState<{ id: number; x: number; y: number }[]>([]);
   const effectIdRef = useRef(0);
-  // 공격 중 여부 (카드 사용 불가)
+  // 공격 중 여부 (카드 사용 불가) - ref로 동기 체크
   const [isAttacking, setIsAttacking] = useState(false);
+  const isAttackingRef = useRef(false);
   // 공격 중 카드 클릭 카운터 (버그 방지)
   const attackClickCountRef = useRef(0);
   // 플레이어 사망 처리 중
@@ -1026,13 +1027,14 @@ export function CombatScreen() {
   }, [selectedCardId, hand, energy]);
 
   const handleCardDragEnd = useCallback((cardInstanceId: string, x: number, y: number, dragDistance: number) => {
-    // 공격 중이면 카드 사용 불가
-    if (isAttacking) {
+    // 공격 중이면 카드 사용 불가 (ref로 동기 체크)
+    if (isAttackingRef.current) {
       attackClickCountRef.current++;
       // 2번 이상 클릭 시 끝나지 않은 공격 모션 강제 종료
       if (attackClickCountRef.current >= 2) {
         setPlayerAnimation('idle');
         setAttackTargetPos(null);
+        isAttackingRef.current = false;
         setIsAttacking(false);
         attackClickCountRef.current = 0;
       }
@@ -1124,6 +1126,7 @@ export function CombatScreen() {
               modifier: calculateDamageModifier(baseValue, confirmedTargetId)
             };
           });
+          isAttackingRef.current = true;
           setIsAttacking(true);
           playFootsteps(); // 발소리
           setPlayerAnimation('attack');
@@ -1159,6 +1162,7 @@ export function CombatScreen() {
           setTimeout(() => {
             setPlayerAnimation('idle');
             setAttackTargetPos(null);
+            isAttackingRef.current = false;
             setIsAttacking(false);
           }, 1200);
         } else {
@@ -1207,6 +1211,7 @@ export function CombatScreen() {
                 modifier
               };
             });
+          isAttackingRef.current = true;
           setIsAttacking(true);
           playFootsteps(); // 발소리
           setPlayerAnimation('attack');
@@ -1241,6 +1246,7 @@ export function CombatScreen() {
           setTimeout(() => {
             setPlayerAnimation('idle');
             setAttackTargetPos(null);
+            isAttackingRef.current = false;
             setIsAttacking(false);
           }, 1200);
         } else {
@@ -1844,6 +1850,7 @@ export function CombatScreen() {
                 // 공격/스킬 완료 시 idle로 복귀 (카드 실행은 타임아웃에서 처리)
                 setPlayerAnimation('idle');
                 setAttackTargetPos(null);
+                isAttackingRef.current = false;
                 setIsAttacking(false);
               }}
             />
