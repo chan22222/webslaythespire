@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { EnemyInstance } from '../../types/enemy';
 import { HealthBar } from '../common/HealthBar';
 import { STATUS_INFO } from '../../types/status';
@@ -369,6 +369,17 @@ function DebuffIntent({ statusType, stacks }: { statusType?: string; stacks?: nu
         >
           💀
         </span>
+        {/* 턴 수 표시 */}
+        {stacks && (
+          <div className="absolute bottom-0 right-0 z-10">
+            <span
+              className="font-title text-sm font-bold"
+              style={{ color: colors.gradStart, textShadow: '0 0 4px rgba(0,0,0,0.8)' }}
+            >
+              {stacks}
+            </span>
+          </div>
+        )}
       </div>
     );
   }
@@ -592,35 +603,41 @@ export function Enemy({ enemy, isTargetable = false, incomingDamage = 0, ignoreB
 
   // 피격 트리거 감지 (다중 타격 애니메이션)
   useEffect(() => {
+    let timer: NodeJS.Timeout;
     if (hitTrigger > prevHitTriggerRef.current) {
       setIsHurt(true);
-      setTimeout(() => {
+      timer = setTimeout(() => {
         setIsHurt(false);
       }, 300);
     }
     prevHitTriggerRef.current = hitTrigger;
+    return () => clearTimeout(timer);
   }, [hitTrigger]);
 
   // 스킬 트리거 감지 (BUFF/DEFEND 애니메이션)
   useEffect(() => {
+    let timer: NodeJS.Timeout;
     if (skillTrigger > prevSkillTriggerRef.current) {
       setIsSkillActive(true);
-      setTimeout(() => {
+      timer = setTimeout(() => {
         setIsSkillActive(false);
       }, 700);
     }
     prevSkillTriggerRef.current = skillTrigger;
+    return () => clearTimeout(timer);
   }, [skillTrigger]);
 
   // 공격 트리거 감지 (공격 애니메이션)
   useEffect(() => {
+    let timer: NodeJS.Timeout;
     if (attackTrigger > prevAttackTriggerRef.current) {
       setIsAttacking(true);
-      setTimeout(() => {
+      timer = setTimeout(() => {
         setIsAttacking(false);
       }, 600);
     }
     prevAttackTriggerRef.current = attackTrigger;
+    return () => clearTimeout(timer);
   }, [attackTrigger]);
 
   // 피격 감지 (HP 감소 시) - 죽음 처리용
@@ -647,35 +664,45 @@ export function Enemy({ enemy, isTargetable = false, incomingDamage = 0, ignoreB
     setPrevHp(enemy.currentHp);
   }, [enemy.currentHp, prevHp, isDying, hitTrigger]);
 
+  // 상태 값 캐싱 (매번 find 하지 않음)
+  const enemyStrength = useMemo(
+    () => enemy.statuses.find(s => s.type === 'STRENGTH')?.stacks || 0,
+    [enemy.statuses]
+  );
+  const enemyWeak = useMemo(
+    () => enemy.statuses.find(s => s.type === 'WEAK'),
+    [enemy.statuses]
+  );
+  const playerVulnerable = useMemo(
+    () => playerStatuses.find(s => s.type === 'VULNERABLE'),
+    [playerStatuses]
+  );
+
   // 적 공격 데미지 계산 (힘, 약화, 플레이어 취약 반영)
-  const calculateEnemyDamage = (baseDamage: number) => {
+  const calculateEnemyDamage = useCallback((baseDamage: number) => {
     let damage = baseDamage;
 
     // 적의 힘 적용
-    const enemyStrength = enemy.statuses.find(s => s.type === 'STRENGTH')?.stacks || 0;
     damage += enemyStrength;
 
     // 적의 약화 적용 (25% 감소)
-    const enemyWeak = enemy.statuses.find(s => s.type === 'WEAK');
     if (enemyWeak && enemyWeak.stacks > 0) {
       damage = Math.round(damage * 0.75);
     }
 
     // 플레이어 취약 적용 (50% 추가)
-    const playerVulnerable = playerStatuses.find(s => s.type === 'VULNERABLE');
     if (playerVulnerable && playerVulnerable.stacks > 0) {
       damage = Math.round(damage * 1.5);
     }
 
     return Math.max(0, damage);
-  };
+  }, [enemyStrength, enemyWeak, playerVulnerable]);
 
   // 데미지 계산 과정 문자열 생성 (예: "9+3" 또는 "9-2+4")
-  const getDamageBreakdown = (baseDamage: number) => {
+  const getDamageBreakdown = useCallback((baseDamage: number) => {
     const parts: string[] = [String(baseDamage)];
 
     // 적의 힘
-    const enemyStrength = enemy.statuses.find(s => s.type === 'STRENGTH')?.stacks || 0;
     if (enemyStrength > 0) {
       parts.push(`+${enemyStrength}`);
     } else if (enemyStrength < 0) {
@@ -683,7 +710,6 @@ export function Enemy({ enemy, isTargetable = false, incomingDamage = 0, ignoreB
     }
 
     // 적의 약화 (25% 감소) - 힘 적용 후 계산
-    const enemyWeak = enemy.statuses.find(s => s.type === 'WEAK');
     if (enemyWeak && enemyWeak.stacks > 0) {
       const damageAfterStr = baseDamage + enemyStrength;
       const reduction = damageAfterStr - Math.round(damageAfterStr * 0.75);
@@ -693,7 +719,6 @@ export function Enemy({ enemy, isTargetable = false, incomingDamage = 0, ignoreB
     }
 
     // 플레이어 취약 (50% 추가)
-    const playerVulnerable = playerStatuses.find(s => s.type === 'VULNERABLE');
     if (playerVulnerable && playerVulnerable.stacks > 0) {
       let damageBeforeVuln = baseDamage + enemyStrength;
       if (enemyWeak && enemyWeak.stacks > 0) {
@@ -706,9 +731,9 @@ export function Enemy({ enemy, isTargetable = false, incomingDamage = 0, ignoreB
     }
 
     return parts.length > 1 ? parts.join('') : null;
-  };
+  }, [enemyStrength, enemyWeak, playerVulnerable]);
 
-  const getIntentTooltip = () => {
+  const getIntentTooltip = useCallback(() => {
     switch (enemy.intent.type) {
       case 'ATTACK':
         const baseDamage = enemy.intent.damage || 0;
@@ -751,9 +776,9 @@ export function Enemy({ enemy, isTargetable = false, incomingDamage = 0, ignoreB
       default:
         return '알 수 없는 행동';
     }
-  };
+  }, [enemy.intent, calculateEnemyDamage, getDamageBreakdown]);
 
-  const getIntentDisplay = () => {
+  const intentDisplay = useMemo(() => {
     switch (enemy.intent.type) {
       case 'ATTACK':
         const baseDamage = enemy.intent.damage || 0;
@@ -768,7 +793,7 @@ export function Enemy({ enemy, isTargetable = false, incomingDamage = 0, ignoreB
       default:
         return <UnknownIntent />;
     }
-  };
+  }, [enemy.intent, calculateEnemyDamage]);
 
   // 죽은 적도 공간 유지 (visibility: hidden으로 처리)
   return (
@@ -803,7 +828,7 @@ export function Enemy({ enemy, isTargetable = false, incomingDamage = 0, ignoreB
         }}
       >
         <div className="flex items-center gap-1">
-          {getIntentDisplay()}
+          {intentDisplay}
           {/* 힘 버프 있을 때 초록색 위 화살표 */}
           {enemy.intent.type === 'ATTACK' && enemy.statuses.find(s => s.type === 'STRENGTH' && s.stacks > 0) && (
             <div

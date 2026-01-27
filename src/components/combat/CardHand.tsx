@@ -58,10 +58,16 @@ export function CardHand({
   const prevCardsRef = useRef<CardInstance[]>([]);
   const prevCardIdsRef = useRef<Set<string>>(new Set());
 
+  // 카드 ID Set 캐싱
+  const currentIds = useMemo(
+    () => new Set(cards.map(c => c.instanceId)),
+    [cards]
+  );
+
   useEffect(() => {
-    const currentIds = new Set(cards.map(c => c.instanceId));
     const prevIds = prevCardIdsRef.current;
     const prevCards = prevCardsRef.current;
+    const timers: NodeJS.Timeout[] = [];
 
     // 새로 추가된 카드 찾기
     const newIds: string[] = [];
@@ -82,10 +88,10 @@ export function CardHand({
 
       // 애니메이션 완료 후 상태 정리
       const maxDelay = newIds.length * 80 + 300;
-      setTimeout(() => {
+      timers.push(setTimeout(() => {
         setNewCardIds(new Set());
         setCardDelays(new Map());
-      }, maxDelay);
+      }, maxDelay));
     }
 
     // 제거된 카드 찾기 (2장 이상 동시 제거 = 턴 종료 버리기)
@@ -107,15 +113,20 @@ export function CardHand({
 
       // 애니메이션 완료 후 정리
       const maxDelay = removedCards.length * 60 + 350;
-      setTimeout(() => {
+      timers.push(setTimeout(() => {
         setDiscardingCards([]);
         setDiscardDelays(new Map());
-      }, maxDelay);
+      }, maxDelay));
     }
 
     prevCardIdsRef.current = currentIds;
     prevCardsRef.current = [...cards];
-  }, [cards]);
+
+    // Cleanup: 컴포넌트 언마운트 시 타이머 정리
+    return () => {
+      timers.forEach(timer => clearTimeout(timer));
+    };
+  }, [cards, currentIds]);
 
   // 슬더슬 스타일 부채꼴 배치 계산 (화면 크기 반응형)
   const getCardTransform = useMemo(() => (index: number, total: number) => {

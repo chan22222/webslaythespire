@@ -1,3 +1,4 @@
+import { useMemo, useCallback } from 'react';
 import { Card as CardType, CardInstance } from '../../types/card';
 import { useCombatStore } from '../../stores/combatStore';
 
@@ -120,16 +121,24 @@ export function Card({
   const usedCardTypes = useCombatStore(state => state.usedCardTypes);
   const isInCombat = enemies.length > 0;
 
+  // 상태 값 캐싱
+  const strength = useMemo(
+    () => playerStatuses.find(s => s.type === 'STRENGTH')?.stacks || 0,
+    [playerStatuses]
+  );
+  const weak = useMemo(
+    () => playerStatuses.find(s => s.type === 'WEAK'),
+    [playerStatuses]
+  );
+
   // 데미지 수정치 계산
-  const calculateModifiedDamage = (baseDamage: number) => {
+  const calculateModifiedDamage = useCallback((baseDamage: number) => {
     let damage = baseDamage;
 
     // 힘 적용
-    const strength = playerStatuses.find(s => s.type === 'STRENGTH')?.stacks || 0;
     damage += strength;
 
     // 약화 적용 (25% 감소)
-    const weak = playerStatuses.find(s => s.type === 'WEAK');
     if (weak && weak.stacks > 0) {
       damage = Math.round(damage * 0.75);
     }
@@ -138,7 +147,7 @@ export function Card({
     // 실제 적용은 적마다 다르므로 여기선 기본 데미지만 계산
 
     return Math.max(0, damage);
-  };
+  }, [strength, weak]);
 
   // 데미지가 수정되었는지 확인하고 설명 업데이트
   const getModifiedDescription = () => {

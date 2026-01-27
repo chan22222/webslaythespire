@@ -263,9 +263,9 @@ function StatusBadge({ status }: { status: Status }) {
       case 'INVULNERABLE':
         return <InvulnerableIcon size={14} color="#fbbf24" />;
       case 'HEAL_REDUCTION':
-        return <span style={{ fontSize: '14px', filter: 'grayscale(1)' }}>❤️</span>;
+        return <span style={{ fontSize: '14px', width: '14px', height: '14px', lineHeight: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', filter: 'grayscale(1)' }}>❤️</span>;
       case 'UNDEAD':
-        return <span style={{ fontSize: '14px' }}>💀</span>;
+        return <span style={{ fontSize: '14px', width: '14px', height: '14px', lineHeight: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>💀</span>;
       default:
         return null;
     }
