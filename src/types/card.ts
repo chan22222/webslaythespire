@@ -1,7 +1,7 @@
 export type CardType = 'ATTACK' | 'SHIELD' | 'EFFECT' | 'GADGET' | 'TERRAIN';
 export type CardRarity = 'BASIC' | 'COMMON' | 'UNCOMMON' | 'RARE' | 'UNIQUE';
 export type TargetType = 'SINGLE' | 'ALL' | 'SELF' | 'RANDOM';
-export type StatusType = 'VULNERABLE' | 'WEAK' | 'STRENGTH' | 'DEXTERITY' | 'POISON' | 'BLOCK_NEXT_TURN' | 'METALLICIZE' | 'STRENGTH_DOWN' | 'BLOCK_RETAIN' | 'INVULNERABLE' | 'HEAL_REDUCTION';
+export type StatusType = 'VULNERABLE' | 'WEAK' | 'STRENGTH' | 'DEXTERITY' | 'POISON' | 'BLOCK_NEXT_TURN' | 'METALLICIZE' | 'STRENGTH_DOWN' | 'BLOCK_RETAIN' | 'INVULNERABLE' | 'HEAL_REDUCTION' | 'UNDEAD';
 
 export interface CardEffect {
   type:
@@ -51,6 +51,7 @@ export interface Card {
   image?: string;
   exhaust?: boolean; // 소멸
   returnToHand?: boolean; // 사용 후 손으로
+  unique?: boolean; // 게임에서 한 장만 등장
 }
 
 export interface CardInstance extends Card {

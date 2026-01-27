@@ -34,8 +34,6 @@ export interface EnemyTemplate {
   name: string;
   minHp: number;
   maxHp: number;
-  getNextIntent: (enemy: Enemy, turn: number) => EnemyIntent;
-  executeIntent: (enemy: Enemy, dealDamageToPlayer: (damage: number) => void, applyStatusToPlayer: (status: Status) => void) => void;
 }
 
 export interface EnemyInstance extends Enemy {

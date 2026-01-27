@@ -64,13 +64,16 @@ export const RELAX: Card = {
   rarity: 'BASIC',
   cost: 2,
   image: '/cards/effect/relax.png',
-  description: '4 HP를 얻습니다.',
+  description: '4 HP를 얻습니다. 소멸.',
   effects: [{ type: 'HEAL', value: 4 }],
+  exhaust: true,
+  unique: true, // 게임에서 한 장만 등장
   upgraded: false,
   upgradeEffect: {
     name: '휴식+',
-    description: '7 HP를 얻습니다.',
-    effects: [{ type: 'HEAL', value: 7 }],
+    description: '6 HP를 얻습니다. 소멸.',
+    effects: [{ type: 'HEAL', value: 6 }],
+    exhaust: true,
   },
 };
 

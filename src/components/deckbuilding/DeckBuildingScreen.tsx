@@ -372,7 +372,7 @@ export function DeckBuildingScreen() {
           <div className="flex-1 overflow-y-auto pr-2">
             <div className="deckbuild-card-grid flex flex-wrap gap-4 justify-start pt-4">
               {filteredCards.map((card, index) => {
-                const isOwned = ownedCardIds.includes(card.id);
+                const isOwned = isAdmin || ownedCardIds.includes(card.id);
                 return (
                 <div
                   key={`${card.id}-${index}`}
@@ -428,7 +428,7 @@ export function DeckBuildingScreen() {
             <div className="space-y-1">
               {ALL_RELICS.map((relic) => {
                 const isSelected = selectedRelics.some(r => r.id === relic.id);
-                const isOwned = ownedRelicIds.includes(relic.id);
+                const isOwned = isAdmin || ownedRelicIds.includes(relic.id);
                 const rarityColor = relic.rarity === 'STARTER' ? '#4ade80'
                   : relic.rarity === 'COMMON' ? '#a3a3a3'
                   : relic.rarity === 'UNCOMMON' ? '#4a9eff'

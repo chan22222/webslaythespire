@@ -15,7 +15,6 @@ import {
   PoisonIcon,
   MetallicizeIcon,
   InvulnerableIcon,
-  HealReductionIcon,
 } from './icons';
 
 // 스킬 이펙트 컴포넌트 (export해서 Enemy에서도 사용)
@@ -264,7 +263,9 @@ function StatusBadge({ status }: { status: Status }) {
       case 'INVULNERABLE':
         return <InvulnerableIcon size={14} color="#fbbf24" />;
       case 'HEAL_REDUCTION':
-        return <HealReductionIcon size={14} color="#ff6b6b" />;
+        return <span style={{ fontSize: '14px', filter: 'grayscale(1)' }}>❤️</span>;
+      case 'UNDEAD':
+        return <span style={{ fontSize: '14px' }}>💀</span>;
       default:
         return null;
     }

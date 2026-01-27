@@ -170,7 +170,7 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     const enemies = enemyTemplates.map(template => {
       const enemy = createEnemyInstance(template);
       // 첫 번째 의도 설정
-      enemy.intent = template.getNextIntent(enemy, 1);
+      enemy.intent = getNextEnemyIntent(enemy, 1);
       return enemy;
     });
 
@@ -287,17 +287,24 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
 
     // 턴 시작 유물 효과 적용
     if (turnHealAmount > 0) {
-      // 치유 감소 상태 체크 (15턴 이상이거나 HEAL_REDUCTION 상태가 있으면 적용)
       const currentStatuses = get().playerStatuses;
-      const healReductionTurn = currentStatuses.find(s => s.type === 'HEAL_REDUCTION');
-      const hasDangerHealReduction = turn >= 15 || (healReductionTurn && healReductionTurn.stacks > 0);
-      let finalTurnHeal = turnHealAmount;
-      if (hasDangerHealReduction) {
-        finalTurnHeal = Math.floor(turnHealAmount * 0.5);
-        get().addToCombatLog(`(치유 감소로 50% 감소)`);
+      const undead = currentStatuses.find(s => s.type === 'UNDEAD');
+      const healReduction = currentStatuses.find(s => s.type === 'HEAL_REDUCTION');
+
+      // 언데드화 상태면 피해로 전환
+      if (undead && undead.stacks > 0) {
+        useGameStore.getState().modifyHp(-turnHealAmount);
+        get().addToCombatLog(`💀 언데드화! 유물 회복이 ${turnHealAmount} 피해로 전환!`);
+      } else {
+        // 치유 감소 또는 15턴 이상이면 50% 감소
+        let finalTurnHeal = turnHealAmount;
+        if ((healReduction && healReduction.stacks > 0) || turn >= 15) {
+          finalTurnHeal = Math.floor(turnHealAmount * 0.5);
+          get().addToCombatLog(`(치유 감소로 50% 감소)`);
+        }
+        useGameStore.getState().healPlayer(finalTurnHeal);
+        get().addToCombatLog(`유물 효과로 HP ${finalTurnHeal} 회복!`);
       }
-      useGameStore.getState().healPlayer(finalTurnHeal);
-      get().addToCombatLog(`유물 효과로 HP ${finalTurnHeal} 회복!`);
     }
     if (turnDamageToPlayer > 0) {
       get().dealDamageToPlayer(turnDamageToPlayer);
@@ -409,11 +416,11 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       processedStatuses = processedStatuses.filter(s => s.type !== 'STRENGTH_DOWN');
     }
 
-    // 상태 효과 지속시간 감소 (약화, 취약, 방어도 유지, 무적, 치유 감소)
+    // 상태 효과 지속시간 감소 (약화, 취약, 방어도 유지, 무적, 치유 감소, 언데드화)
     const updatedStatuses = processedStatuses
       .map(s => ({
         ...s,
-        stacks: (s.type === 'WEAK' || s.type === 'VULNERABLE' || s.type === 'BLOCK_RETAIN' || s.type === 'INVULNERABLE' || s.type === 'HEAL_REDUCTION')
+        stacks: (s.type === 'WEAK' || s.type === 'VULNERABLE' || s.type === 'BLOCK_RETAIN' || s.type === 'INVULNERABLE' || s.type === 'HEAL_REDUCTION' || s.type === 'UNDEAD')
           ? s.stacks - 1
           : s.stacks,
       }))
@@ -708,15 +715,24 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
         }
         case 'HEAL': {
           let healAmount = effect.value;
-          // 치유 감소 상태 체크
+          const undead = get().playerStatuses.find(s => s.type === 'UNDEAD');
           const healReduction = get().playerStatuses.find(s => s.type === 'HEAL_REDUCTION');
-          if (healReduction && healReduction.stacks > 0) {
-            healAmount = Math.floor(healAmount * 0.5);
-            get().addToCombatLog(`(치유 감소로 50% 감소)`);
+
+          // 언데드화 - 회복이 피해로 전환
+          if (undead && undead.stacks > 0) {
+            useGameStore.getState().modifyHp(-healAmount);
+            get().addDamagePopup(healAmount, 'damage', 0, 0, 'player');
+            get().addToCombatLog(`💀 언데드화! 회복이 ${healAmount} 피해로 전환!`);
+          } else {
+            // 치유 감소 - 50% 감소
+            if (healReduction && healReduction.stacks > 0) {
+              healAmount = Math.floor(healAmount * 0.5);
+              get().addToCombatLog(`(치유 감소로 50% 감소)`);
+            }
+            useGameStore.getState().healPlayer(healAmount);
+            get().addDamagePopup(healAmount, 'heal', 0, 0, 'player');
+            get().addToCombatLog(`HP ${healAmount} 회복!`);
           }
-          useGameStore.getState().healPlayer(healAmount);
-          get().addDamagePopup(healAmount, 'heal', 0, 0, 'player');
-          get().addToCombatLog(`HP ${healAmount} 회복!`);
           break;
         }
         case 'UPGRADE_HAND': {
@@ -942,15 +958,24 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
             // 랜덤 힐/데미지
             let randomValue = Math.floor(Math.random() * (maxVal - minVal + 1)) + minVal;
             if (randomValue > 0) {
-              // 치유 감소 상태 체크
-              const healReductionRandom = get().playerStatuses.find(s => s.type === 'HEAL_REDUCTION');
-              if (healReductionRandom && healReductionRandom.stacks > 0) {
-                randomValue = Math.floor(randomValue * 0.5);
-                get().addToCombatLog(`(치유 감소로 50% 감소)`);
+              const undead = get().playerStatuses.find(s => s.type === 'UNDEAD');
+              const healReduction = get().playerStatuses.find(s => s.type === 'HEAL_REDUCTION');
+
+              // 언데드화 - 회복이 피해로 전환
+              if (undead && undead.stacks > 0) {
+                useGameStore.getState().modifyHp(-randomValue);
+                get().addDamagePopup(randomValue, 'damage', 0, 0, 'player');
+                get().addToCombatLog(`💀 언데드화! 회복이 ${randomValue} 피해로 전환!`);
+              } else {
+                // 치유 감소 - 50% 감소
+                if (healReduction && healReduction.stacks > 0) {
+                  randomValue = Math.floor(randomValue * 0.5);
+                  get().addToCombatLog(`(치유 감소로 50% 감소)`);
+                }
+                useGameStore.getState().healPlayer(randomValue);
+                get().addDamagePopup(randomValue, 'heal', 0, 0, 'player');
+                get().addToCombatLog(`HP ${randomValue} 회복!`);
               }
-              useGameStore.getState().healPlayer(randomValue);
-              get().addDamagePopup(randomValue, 'heal', 0, 0, 'player');
-              get().addToCombatLog(`HP ${randomValue} 회복!`);
             } else if (randomValue < 0) {
               useGameStore.getState().modifyHp(randomValue);
               get().addDamagePopup(Math.abs(randomValue), 'damage', 0, 0, 'player');
@@ -1108,16 +1133,25 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
           const context = {
             damageDealt: remainingDamage, // 실제로 HP에 들어간 데미지
             heal: (amount: number) => {
-              // 치유 감소 상태 체크
-              const healReductionRelic = get().playerStatuses.find(s => s.type === 'HEAL_REDUCTION');
-              let finalHeal = amount;
-              if (healReductionRelic && healReductionRelic.stacks > 0) {
-                finalHeal = Math.floor(amount * 0.5);
-                get().addToCombatLog(`(치유 감소로 50% 감소)`);
+              const undead = get().playerStatuses.find(s => s.type === 'UNDEAD');
+              const healReduction = get().playerStatuses.find(s => s.type === 'HEAL_REDUCTION');
+
+              // 언데드화 - 회복이 피해로 전환
+              if (undead && undead.stacks > 0) {
+                useGameStore.getState().modifyHp(-amount);
+                get().addDamagePopup(amount, 'damage', 0, 0, 'player');
+                get().addToCombatLog(`💀 언데드화! 흡혈이 ${amount} 피해로 전환!`);
+              } else {
+                let finalAmount = amount;
+                // 치유 감소 - 50% 감소
+                if (healReduction && healReduction.stacks > 0) {
+                  finalAmount = Math.floor(amount * 0.5);
+                  get().addToCombatLog(`(치유 감소로 50% 감소)`);
+                }
+                useGameStore.getState().healPlayer(finalAmount);
+                get().addDamagePopup(finalAmount, 'heal', 0, 0, 'player');
+                get().addToCombatLog(`흡혈! HP ${finalAmount} 회복!`);
               }
-              useGameStore.getState().healPlayer(finalHeal);
-              get().addDamagePopup(finalHeal, 'heal', 0, 0, 'player');
-              get().addToCombatLog(`흡혈! HP ${finalHeal} 회복!`);
             },
           };
           effect.execute(context);
@@ -1345,60 +1379,60 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
 
 // 간소화된 적 의도 결정 함수
 function getNextEnemyIntent(enemy: EnemyInstance, turn: number): EnemyInstance['intent'] {
-  // 고블린: 힘+3 → 공격 → 공격...
+  // 고블린: 힘+3 → 공격 → 공격 (3턴 주기 반복)
   if (enemy.templateId === 'goblin') {
-    return turn === 1
-      ? { type: 'BUFF', statusType: 'STRENGTH', statusStacks: 3 }
-      : { type: 'ATTACK', damage: 9 + Math.floor(Math.random() * 3) };
+    const pattern = turn % 3;
+    if (pattern === 1) return { type: 'BUFF', statusType: 'STRENGTH', statusStacks: 3 };
+    return { type: 'ATTACK', damage: 9 + Math.floor(Math.random() * 3) }; // 9-11
   }
 
-  // 스켈레톤: 방어 7 → 공격 (2턴 주기)
+  // 스켈레톤: 방어 10 → 공격 (2턴 주기)
   if (enemy.templateId === 'skeleton') {
     return turn % 2 === 1
-      ? { type: 'DEFEND', block: 7 }
-      : { type: 'ATTACK', damage: 7 + Math.floor(Math.random() * 5) };
+      ? { type: 'DEFEND', block: 10 }
+      : { type: 'ATTACK', damage: 7 + Math.floor(Math.random() * 5) }; // 7-11
   }
 
-  // 플라잉아이: 공격 → 힘+3 (2턴 주기)
+  // 플라잉아이: 공격 → 장비파괴 1 (2턴 주기)
   if (enemy.templateId === 'flying_eye') {
     return turn % 2 === 1
-      ? { type: 'ATTACK', damage: 4 + Math.floor(Math.random() * 3) }
-      : { type: 'BUFF', statusType: 'STRENGTH', statusStacks: 3 };
+      ? { type: 'ATTACK', damage: 6 + Math.floor(Math.random() * 3) } // 6-8
+      : { type: 'DEBUFF', statusType: 'VULNERABLE', statusStacks: 1 };
   }
 
-  // 그린 플라잉아이: 공격 → 약화 1 → 공격 (3턴 주기)
+  // 그린 플라잉아이: 공격 → 무기손상 1 (2턴 주기)
   if (enemy.templateId === 'green_flying_eye') {
-    const pattern = turn % 3;
-    if (pattern === 1) return { type: 'ATTACK', damage: 4 + Math.floor(Math.random() * 3) };
-    if (pattern === 2) return { type: 'DEBUFF', statusType: 'WEAK', statusStacks: 1 };
-    return { type: 'ATTACK', damage: 4 + Math.floor(Math.random() * 3) };
+    return turn % 2 === 1
+      ? { type: 'ATTACK', damage: 7 + Math.floor(Math.random() * 3) } // 7-9
+      : { type: 'DEBUFF', statusType: 'WEAK', statusStacks: 1 };
   }
 
-  // 산성 머쉬룸: 중독 5 → 공격 패턴
+  // 산성 머쉬룸: 중독 4 → 공격 (2턴 주기)
   if (enemy.templateId === 'acid_mushroom') {
     return turn % 2 === 1
-      ? { type: 'DEBUFF', statusType: 'POISON', statusStacks: 5 }
-      : { type: 'ATTACK', damage: 10 + Math.floor(Math.random() * 3) };
+      ? { type: 'DEBUFF', statusType: 'POISON', statusStacks: 4 }
+      : { type: 'ATTACK', damage: 10 + Math.floor(Math.random() * 3) }; // 10-12
   }
 
-  // 머쉬룸: 공격 → 방어 패턴
+  // 머쉬룸: 공격 → 방어 9 (2턴 주기)
   if (enemy.templateId === 'mushroom') {
     return turn % 2 === 1
-      ? { type: 'ATTACK', damage: 9 + Math.floor(Math.random() * 3) }
-      : { type: 'DEFEND', block: 5 };
+      ? { type: 'ATTACK', damage: 9 + Math.floor(Math.random() * 3) } // 9-11
+      : { type: 'DEFEND', block: 9 };
   }
 
-  // 고위 노블레스: 힘+5 → 공격...
+  // 이블 위자드: 힘+4 → 공격 → 언데드화 (3턴 주기)
   if (enemy.templateId === 'gremlin_nob') {
-    return turn === 1
-      ? { type: 'BUFF', statusType: 'STRENGTH', statusStacks: 5 }
-      : { type: 'ATTACK', damage: 13 + Math.floor(Math.random() * 3) };
+    const pattern = turn % 3;
+    if (pattern === 1) return { type: 'BUFF', statusType: 'STRENGTH', statusStacks: 4 };
+    if (pattern === 2) return { type: 'ATTACK', damage: 13 + Math.floor(Math.random() * 3) }; // 13-15
+    return { type: 'DEBUFF', statusType: 'UNDEAD', statusStacks: 3 }; // 언데드화 3턴
   }
 
-  // 슬라임 보스: 공격 → 중독 7 → 취약 2 (3턴 주기)
+  // 나이트본: 공격 → 중독 7 → 취약 2 (3턴 주기)
   if (enemy.templateId === 'slime_boss') {
     const pattern = turn % 3;
-    if (pattern === 1) return { type: 'ATTACK', damage: 25 + Math.floor(Math.random() * 6) };
+    if (pattern === 1) return { type: 'ATTACK', damage: 24 + Math.floor(Math.random() * 5) }; // 24-28
     if (pattern === 2) return { type: 'DEBUFF', statusType: 'POISON', statusStacks: 7 };
     return { type: 'DEBUFF', statusType: 'VULNERABLE', statusStacks: 2 };
   }

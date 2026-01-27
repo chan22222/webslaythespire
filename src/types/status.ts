@@ -63,4 +63,9 @@ export const STATUS_INFO: Record<StatusType, { name: string; description: string
     description: '받는 치유량이 50% 감소합니다.',
     isDebuff: true,
   },
+  UNDEAD: {
+    name: '언데드화',
+    description: '회복이 피해로 전환됩니다.',
+    isDebuff: true,
+  },
 };

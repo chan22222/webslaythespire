@@ -269,6 +269,18 @@ function DebuffIntent({ statusType, stacks }: { statusType?: string; stacks?: nu
           accentLight: '#fca5a5',
           shadow: 'rgba(239, 68, 68, 0.9)',
         };
+      case 'UNDEAD': // 언데드화 - 어두운 보라색
+        return {
+          glow: 'rgba(88, 28, 135, 0.6)',
+          glowDark: 'rgba(59, 7, 100, 0.3)',
+          gradStart: '#a855f7',
+          gradMid: '#7c3aed',
+          gradEnd: '#581c87',
+          stroke: '#c084fc',
+          accent: '#7c3aed',
+          accentLight: '#a855f7',
+          shadow: 'rgba(88, 28, 135, 0.9)',
+        };
       default: // WEAK
         return {
           glow: 'rgba(139, 92, 246, 0.6)',
@@ -333,6 +345,30 @@ function DebuffIntent({ statusType, stacks }: { statusType?: string; stacks?: nu
             {stacks || 1}
           </span>
         </div>
+      </div>
+    );
+  }
+
+  // 언데드화 전용 해골 이모지
+  if (statusType === 'UNDEAD') {
+    return (
+      <div className="relative flex items-center justify-center" style={{ width: '52px', height: '56px' }}>
+        <div
+          className="absolute inset-0"
+          style={{
+            background: `radial-gradient(ellipse at center, ${colors.glow} 0%, ${colors.glowDark} 40%, transparent 70%)`,
+            filter: 'blur(12px)',
+            animation: 'pulse 2.5s ease-in-out infinite',
+          }}
+        />
+        <span
+          className="relative z-10 text-4xl"
+          style={{
+            filter: `drop-shadow(0 0 12px ${colors.shadow})`,
+          }}
+        >
+          💀
+        </span>
       </div>
     );
   }
@@ -708,6 +744,8 @@ export function Enemy({ enemy, isTargetable = false, incomingDamage = 0, ignoreB
           return `무기손상 ${debuffStacks}을 부여합니다. (피해량 25% 감소)`;
         } else if (debuffType === 'VULNERABLE') {
           return `장비파괴 ${debuffStacks}을 부여합니다. (받는 피해 50% 증가)`;
+        } else if (debuffType === 'UNDEAD') {
+          return `언데드화를 부여합니다. (회복이 피해로 전환)`;
         }
         return `디버프를 부여합니다.`;
       default:

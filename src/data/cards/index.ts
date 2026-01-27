@@ -32,9 +32,16 @@ export function getCardsByRarity(rarity: Card['rarity']): Card[] {
 }
 
 // 랜덤 카드 보상 생성 (3장)
-export function generateCardRewards(count: number = 3): Card[] {
+// deckCardIds: 덱에 있는 카드 ID 배열 (unique 카드 필터링용)
+export function generateCardRewards(count: number = 3, deckCardIds: string[] = []): Card[] {
   const rewards: Card[] = [];
-  const availableCards = [...ALL_OBTAINABLE_CARDS];
+  // unique 카드가 이미 덱에 있으면 보상 후보에서 제외
+  const availableCards = ALL_OBTAINABLE_CARDS.filter(card => {
+    if (card.unique && deckCardIds.includes(card.id)) {
+      return false;
+    }
+    return true;
+  });
 
   for (let i = 0; i < count && availableCards.length > 0; i++) {
     // 희귀도 가중치: COMMON 55%, UNCOMMON 30%, RARE 12%, UNIQUE 3%

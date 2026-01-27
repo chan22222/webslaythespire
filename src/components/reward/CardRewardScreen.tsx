@@ -26,12 +26,14 @@ export function CardRewardScreen() {
   );
 
   useEffect(() => {
-    setCardRewards(generateCardRewards(3));
+    // 덱에 있는 카드 ID 목록 (unique 카드 필터링용)
+    const deckCardIds = player.deck.map(card => card.id);
+    setCardRewards(generateCardRewards(3, deckCardIds));
     setGoldReward(randomInt(20, 50));
     if (hasEasterEggEnemy) {
       setBonusGold(2000);
     }
-  }, [hasEasterEggEnemy]);
+  }, [hasEasterEggEnemy, player.deck]);
 
   const handleCollectGold = () => {
     if (!goldCollected) {
