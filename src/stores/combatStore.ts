@@ -7,6 +7,24 @@ import { shuffle } from '../utils/shuffle';
 import { useGameStore } from './gameStore';
 import { useStatsStore } from './statsStore';
 import { playCardDraw, playHit, playBuff, playDebuff, playEnemyBuff, playWin } from '../utils/sound';
+import {
+  resetBattleAchievementState,
+  resetTurnAchievementState,
+  recordCardUsed,
+  recordHealUsed,
+  recordBlockGained,
+  recordDamageToEnemy,
+  recordBlockReduced,
+  recordDamageTakenWithZeroEnergy,
+  recordWeakAndVulnerable,
+  recordKillWithCard,
+  checkBattleEndAchievements,
+  checkImmediateAchievements,
+  checkTurnEndAchievements,
+  checkHpChangeAchievements,
+  checkHandAchievements,
+  checkKillAchievements,
+} from '../utils/achievementChecker';
 
 // 데미지 팝업 타입
 export interface DamagePopup {
@@ -89,6 +107,10 @@ interface CombatStore extends CombatState {
   // 타겟팅 중인 적 ID (드래그 중 적 위에 있을 때)
   targetedEnemyId: string | null;
   setTargetedEnemyId: (id: string | null) => void;
+
+  // 현재 사용 중인 카드 정보 (업적 체크용)
+  currentPlayingCardId: string | null;
+  currentPlayingCardName: string | null;
 }
 
 export const useCombatStore = create<CombatStore>((set, get) => ({
@@ -104,6 +126,8 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
   isPlayingCard: false,
   isEndTurnLocked: false,
   targetedEnemyId: null,
+  currentPlayingCardId: null,
+  currentPlayingCardName: null,
   onPlayerHit: null,
   setOnPlayerHit: (callback) => set({ onPlayerHit: callback }),
 
@@ -169,6 +193,9 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
   },
 
   initCombat: (deck: CardInstance[], enemyTemplates: EnemyTemplate[]) => {
+    // 업적 체크용 전투 상태 초기화
+    resetBattleAchievementState();
+
     // 덱 복사 및 셔플
     const shuffledDeck = shuffle(deck.map(card => createCardInstance(card)));
 
@@ -186,6 +213,8 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       enemies,
       playerBlock: 0,
       playerStatuses: [],
+      currentPlayingCardId: null,
+      currentPlayingCardName: null,
     });
 
     // 유물 효과 트리거 (ON_COMBAT_START)
@@ -245,6 +274,9 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
 
   startPlayerTurn: () => {
     const { turn, maxEnergy, playerStatuses, extraDrawNextTurn } = get();
+
+    // 업적 체크용 턴 상태 초기화
+    resetTurnAchievementState();
 
     // 첫 턴이 아니면 방어도 리셋 (BLOCK_RETAIN 상태가 있으면 유지)
     if (turn > 1) {
@@ -437,6 +469,10 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       playerStatuses: updatedStatuses,
     });
 
+    // 업적 추적: 턴 종료 시 체크 (방어도 깎이지 않고 턴 종료 등)
+    const currentBlock = get().playerBlock;
+    checkTurnEndAchievements(currentBlock);
+
     // 추가 턴 처리 (시간 왜곡)
     const { extraTurnPending } = get();
     if (extraTurnPending) {
@@ -590,6 +626,9 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       hand: newHand,
       discardPile: newDiscardPile,
     });
+
+    // 업적 추적: 손패 변경 시 체크 (공격 카드 5장 이상 등)
+    checkHandAchievements(newHand);
   },
 
   playCard: (cardInstanceId: string, targetEnemyId?: string, skipDamage?: boolean) => {
@@ -624,8 +663,19 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     const pName = useGameStore.getState().playerName;
     get().addToCombatLog(`${pName}(이)가 ${card.name} 사용!`);
 
+    // 현재 사용 중인 카드 정보 저장 (업적 체크용)
+    set({ currentPlayingCardId: card.id, currentPlayingCardName: card.name });
+
     // 통계 업데이트: 카드 사용
     useStatsStore.getState().incrementCardPlayed(card.type);
+
+    // 통계 업데이트: 에너지 사용
+    if (card.cost > 0) {
+      useStatsStore.getState().addEnergyUsed(card.cost);
+    }
+
+    // 업적 체크: 카드 사용 기록
+    recordCardUsed(card.id, card.name, card.type);
 
     // 사용한 카드 종류 기록 (중복 제외)
     const usedCardTypes = get().usedCardTypes;
@@ -747,6 +797,10 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
 
             // 통계 업데이트: 회복량
             useStatsStore.getState().addHealing(healAmount);
+
+            // 업적 체크: 회복 사용
+            recordHealUsed();
+            checkImmediateAchievements();
           }
           break;
         }
@@ -1146,7 +1200,13 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     // 통계 업데이트: 데미지 입힘
     if (remainingDamage > 0) {
       useStatsStore.getState().addDamageDealt(remainingDamage);
+      // 통계 업데이트: 한 번에 입힌 최대 피해
+      useStatsStore.getState().updateMaxSingleDamage(remainingDamage);
     }
+
+    // 업적 체크: 적에게 피해 입힘
+    recordDamageToEnemy(enemyId, remainingDamage);
+    checkImmediateAchievements();
 
     // 통계 업데이트: 적 처치 (저장은 전투 승리 시 한 번에)
     if (newHp <= 0 && enemy.currentHp > 0) {
@@ -1158,6 +1218,13 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
         useStatsStore.getState().incrementKill('elite');
       } else {
         useStatsStore.getState().incrementKill('mob');
+      }
+
+      // 업적 체크: 특정 카드로 적 처치
+      const { currentPlayingCardId, currentPlayingCardName } = get();
+      if (currentPlayingCardId && currentPlayingCardName) {
+        recordKillWithCard(currentPlayingCardId, currentPlayingCardName);
+        checkKillAchievements(currentPlayingCardId, currentPlayingCardName);
       }
     }
 
@@ -1261,6 +1328,10 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     if (blockedAmount > 0) {
       get().addDamagePopup(blockedAmount, 'blocked', 0, 0, 'player', undefined, -40, -20);
       get().addToCombatLog(`[방어도 ${blockedAmount} 흡수, 남은 방어도: ${newBlock}]`);
+
+      // 업적 추적: 방어도 감소 기록, 최대 막은 피해
+      recordBlockReduced();
+      useStatsStore.getState().updateMaxBlockedDamage(blockedAmount);
     }
 
     // 실제 HP 데미지 팝업 (빨간색) - 오른쪽 아래, 약간 딜레이
@@ -1275,6 +1346,12 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
 
       // 통계 업데이트: 데미지 받음
       useStatsStore.getState().addDamageTaken(remainingDamage);
+
+      // 업적 추적: 에너지 0일 때 피해 입음, HP 변경
+      const { energy } = get();
+      recordDamageTakenWithZeroEnergy(energy);
+      const currentHp = useGameStore.getState().player.currentHp;
+      checkHpChangeAchievements(currentHp);
     }
 
     return remainingDamage;
@@ -1282,12 +1359,18 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
 
   gainPlayerBlock: (amount: number) => {
     const { playerBlock } = get();
-    set({ playerBlock: playerBlock + amount });
+    const newBlock = playerBlock + amount;
+    set({ playerBlock: newBlock });
     const pName = useGameStore.getState().playerName;
     get().addToCombatLog(`${pName}(이)가 방어도 ${amount} 획득!`);
 
     // 통계 업데이트: 방어도 획득
     useStatsStore.getState().addBlockGained(amount);
+
+    // 업적 추적: 방어도 획득 기록, 한 턴 최대 방어도
+    recordBlockGained(amount);
+    useStatsStore.getState().updateMaxBlockInTurn(newBlock);
+    checkImmediateAchievements();
   },
 
   applyStatusToEnemy: (enemyId: string, status: Status) => {
@@ -1361,6 +1444,17 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     if (status.type === 'STRENGTH' && status.stacks > 0) {
       useStatsStore.getState().addStrengthGained(status.stacks);
     }
+
+    // 업적 추적: 무기손상+장비파괴 동시 부여 체크
+    if (status.type === 'WEAK' || status.type === 'VULNERABLE') {
+      const updatedStatuses = get().playerStatuses;
+      const hasWeak = updatedStatuses.some(s => s.type === 'WEAK' && s.stacks > 0);
+      const hasVulnerable = updatedStatuses.some(s => s.type === 'VULNERABLE' && s.stacks > 0);
+      if (hasWeak && hasVulnerable) {
+        recordWeakAndVulnerable();
+        checkImmediateAchievements();
+      }
+    }
   },
 
   gainEnergy: (amount: number) => {
@@ -1375,7 +1469,7 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
   },
 
   checkCombatEnd: (): 'ONGOING' | 'VICTORY' | 'DEFEAT' => {
-    const { enemies } = get();
+    const { enemies, turn } = get();
 
     // 모든 적이 죽었는지 확인
     const allEnemiesDead = enemies.every(e => e.currentHp <= 0);
@@ -1387,6 +1481,16 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       });
       playWin();
       get().addToCombatLog('승리!');
+
+      // 업적 추적: 전투 종료 업적 체크, 최대 턴 수 업데이트
+      const gameState = useGameStore.getState();
+      const playerHp = gameState.player.currentHp;
+      const maxHp = gameState.player.maxHp;
+      const currentNodeId = gameState.map.currentNodeId;
+      const currentNode = gameState.map.nodes.find(n => n.id === currentNodeId);
+      const nodeType = currentNode?.type || 'ENEMY';
+      checkBattleEndAchievements(playerHp, maxHp, nodeType);
+      useStatsStore.getState().updateMaxTurnInBattle(turn);
 
       // 전투 승리 시 통계 한 번에 저장
       useStatsStore.getState().saveStats();

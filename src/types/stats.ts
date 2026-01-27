@@ -31,6 +31,13 @@ export interface PlayerStats {
   totalDefeats: number;
   highestFloorReached: number;
 
+  // 추가 통계 (업적용)
+  totalEnergyUsed: number;      // 총 사용한 에너지
+  maxSingleDamage: number;      // 한 번에 입힌 최대 피해
+  maxBlockInTurn: number;       // 한 턴에 얻은 최대 방어도
+  maxTurnInBattle: number;      // 한 전투에서 최대 턴 수
+  maxBlockedDamage: number;     // 한 번에 막은 최대 피해
+
   // 타임스탬프
   lastUpdated: number;
 }
@@ -64,5 +71,10 @@ export const createInitialStats = (): PlayerStats => ({
   totalVictories: 0,
   totalDefeats: 0,
   highestFloorReached: 0,
+  totalEnergyUsed: 0,
+  maxSingleDamage: 0,
+  maxBlockInTurn: 0,
+  maxTurnInBattle: 0,
+  maxBlockedDamage: 0,
   lastUpdated: Date.now(),
 });

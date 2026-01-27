@@ -18,6 +18,13 @@ interface StatsStore {
   addHpLostByCard: (amount: number) => void;
   addHealing: (amount: number) => void;
 
+  // 추가 통계 (업적용)
+  addEnergyUsed: (amount: number) => void;
+  updateMaxSingleDamage: (damage: number) => void;
+  updateMaxBlockInTurn: (block: number) => void;
+  updateMaxTurnInBattle: (turn: number) => void;
+  updateMaxBlockedDamage: (blocked: number) => void;
+
   // 게임 진행
   recordGameStart: () => void;
   recordVictory: (floor: number) => void;
@@ -139,6 +146,82 @@ export const useStatsStore = create<StatsStore>((set, get) => ({
         lastUpdated: Date.now(),
       },
     }));
+  },
+
+  // 에너지 사용
+  addEnergyUsed: (amount) => {
+    if (amount <= 0) return;
+    set((state) => ({
+      stats: {
+        ...state.stats,
+        totalEnergyUsed: state.stats.totalEnergyUsed + amount,
+        lastUpdated: Date.now(),
+      },
+    }));
+  },
+
+  // 한 번에 입힌 최대 피해
+  updateMaxSingleDamage: (damage) => {
+    set((state) => {
+      if (damage > state.stats.maxSingleDamage) {
+        return {
+          stats: {
+            ...state.stats,
+            maxSingleDamage: damage,
+            lastUpdated: Date.now(),
+          },
+        };
+      }
+      return state;
+    });
+  },
+
+  // 한 턴에 얻은 최대 방어도
+  updateMaxBlockInTurn: (block) => {
+    set((state) => {
+      if (block > state.stats.maxBlockInTurn) {
+        return {
+          stats: {
+            ...state.stats,
+            maxBlockInTurn: block,
+            lastUpdated: Date.now(),
+          },
+        };
+      }
+      return state;
+    });
+  },
+
+  // 한 전투에서 최대 턴 수
+  updateMaxTurnInBattle: (turn) => {
+    set((state) => {
+      if (turn > state.stats.maxTurnInBattle) {
+        return {
+          stats: {
+            ...state.stats,
+            maxTurnInBattle: turn,
+            lastUpdated: Date.now(),
+          },
+        };
+      }
+      return state;
+    });
+  },
+
+  // 한 번에 막은 최대 피해
+  updateMaxBlockedDamage: (blocked) => {
+    set((state) => {
+      if (blocked > state.stats.maxBlockedDamage) {
+        return {
+          stats: {
+            ...state.stats,
+            maxBlockedDamage: blocked,
+            lastUpdated: Date.now(),
+          },
+        };
+      }
+      return state;
+    });
   },
 
   // 게임 시작
