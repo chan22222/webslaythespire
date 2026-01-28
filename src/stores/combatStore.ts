@@ -1466,9 +1466,32 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
 
               // 언데드화 - 회복이 피해로 전환
               if (undead && undead.stacks > 0) {
-                useGameStore.getState().modifyHp(-amount);
-                get().addDamagePopup(amount, 'damage', 0, 0, 'player');
-                get().addToCombatLog(`💀 언데드화! 흡혈이 ${amount} 피해로 전환!`);
+                const invulnerable = get().playerStatuses.find(s => s.type === 'INVULNERABLE');
+                const undying = get().playerStatuses.find(s => s.type === 'UNDYING');
+
+                // 무적 상태면 피해 무효화
+                if (invulnerable && invulnerable.stacks > 0) {
+                  get().addToCombatLog(`💀 언데드화! 하지만 무적으로 피해 무효화!`);
+                } else if (undying && undying.stacks > 0) {
+                  // 불사 상태면 HP가 1 아래로 내려가지 않음
+                  const currentHp = useGameStore.getState().player.currentHp;
+                  if (currentHp - amount < 1) {
+                    const actualDamage = Math.max(0, currentHp - 1);
+                    if (actualDamage > 0) {
+                      useGameStore.getState().modifyHp(-actualDamage);
+                      get().addDamagePopup(actualDamage, 'damage', 0, 0, 'player');
+                    }
+                    get().addToCombatLog(`💀 언데드화! 흡혈이 피해로 전환! 불사로 HP 1 유지!`);
+                  } else {
+                    useGameStore.getState().modifyHp(-amount);
+                    get().addDamagePopup(amount, 'damage', 0, 0, 'player');
+                    get().addToCombatLog(`💀 언데드화! 흡혈이 ${amount} 피해로 전환!`);
+                  }
+                } else {
+                  useGameStore.getState().modifyHp(-amount);
+                  get().addDamagePopup(amount, 'damage', 0, 0, 'player');
+                  get().addToCombatLog(`💀 언데드화! 흡혈이 ${amount} 피해로 전환!`);
+                }
               } else {
                 let finalAmount = amount;
                 // 치유 감소 - 50% 감소
