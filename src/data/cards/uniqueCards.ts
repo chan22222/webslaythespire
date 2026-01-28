@@ -43,14 +43,14 @@ export const ABSOLUTE_DEFENSE: Card = {
   rarity: 'UNIQUE',
   cost: 3,
   image: '/cards/effect/absolute_defense.png',
-  description: '2턴 동안 플레이어가 입는 모든 피해를 무효화합니다. 소멸.',
-  effects: [{ type: 'INVULNERABLE', value: 2, target: 'SELF' }],
+  description: '1턴 동안 플레이어가 입는 모든 피해를 무효화합니다. 소멸.',
+  effects: [{ type: 'INVULNERABLE', value: 1, target: 'SELF' }],
   exhaust: true,
   upgraded: false,
   upgradeEffect: {
     name: '절대 방어 영역+',
-    description: '3턴 동안 플레이어가 입는 모든 피해를 무효화합니다. 소멸.',
-    effects: [{ type: 'INVULNERABLE', value: 3, target: 'SELF' }],
+    description: '2턴 동안 플레이어가 입는 모든 피해를 무효화합니다. 소멸.',
+    effects: [{ type: 'INVULNERABLE', value: 2, target: 'SELF' }],
   },
 };
 
