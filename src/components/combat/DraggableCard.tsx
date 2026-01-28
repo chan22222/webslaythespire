@@ -86,6 +86,7 @@ export function DraggableCard({
   const usedCardTypes = useCombatStore(state => state.usedCardTypes);
   const enemies = useCombatStore(state => state.enemies);
   const targetedEnemyId = useCombatStore(state => state.targetedEnemyId);
+  const activeTerrain = useCombatStore(state => state.activeTerrain);
 
   // 타겟팅된 적의 장비파괴(VULNERABLE) 상태 확인 (instanceId로 찾음)
   const targetedEnemy = targetedEnemyId ? enemies.find(e => e.instanceId === targetedEnemyId) : null;
@@ -97,7 +98,7 @@ export function DraggableCard({
     const strength = playerStatuses.find(s => s.type === 'STRENGTH')?.stacks || 0;
     const damageWithStrength = baseDamage + strength;
 
-    // 합연산 배수 계산 (기본 1.0 + 취약 0.5 - 약화 0.25)
+    // 합연산 배수 계산 (기본 1.0 + 취약 0.5 - 약화 0.25 + 검투사의 경기장 0.5)
     let damageMultiplier = 1.0;
 
     // 약화 적용 (-25%)
@@ -108,6 +109,11 @@ export function DraggableCard({
 
     // 타겟의 장비파괴 적용 (+50%)
     if (includeVulnerable && targetVulnerable && targetVulnerable.stacks > 0) {
+      damageMultiplier += 0.5;
+    }
+
+    // 검투사의 경기장 (+50% 데미지)
+    if (activeTerrain === 'gladiator_arena') {
       damageMultiplier += 0.5;
     }
 
@@ -168,7 +174,8 @@ export function DraggableCard({
     }
 
     const dexterity = playerStatuses.find(s => s.type === 'DEXTERITY')?.stacks || 0;
-    const hasModifier = strength !== 0 || dexterity !== 0 || (weak && weak.stacks > 0) || (targetVulnerable && targetVulnerable.stacks > 0);
+    const hasTerrainEffect = activeTerrain === 'gladiator_arena' || activeTerrain === 'sacred_ground';
+    const hasModifier = strength !== 0 || dexterity !== 0 || (weak && weak.stacks > 0) || (targetVulnerable && targetVulnerable.stacks > 0) || hasTerrainEffect;
 
     if (!hasModifier) {
       return description;
@@ -190,10 +197,15 @@ export function DraggableCard({
         }
       }
 
-      // 방어도에 민첩 적용
-      if (effect.type === 'BLOCK' && dexterity !== 0) {
+      // 방어도에 민첩 + 신성한 구역 적용
+      if (effect.type === 'BLOCK') {
         const baseBlock = effect.value;
-        const modifiedBlock = Math.max(0, baseBlock + dexterity);
+        let modifiedBlock = Math.max(0, baseBlock + dexterity);
+
+        // 신성한 구역 (2x 방어도)
+        if (activeTerrain === 'sacred_ground') {
+          modifiedBlock *= 2;
+        }
 
         if (baseBlock !== modifiedBlock) {
           const pattern = new RegExp(`${baseBlock} 방어`, 'g');
@@ -236,7 +248,12 @@ export function DraggableCard({
     for (const effect of card.effects) {
       if (effect.type === 'BLOCK') {
         const baseBlock = effect.value;
-        const modifiedBlock = Math.max(0, baseBlock + dexterity);
+        let modifiedBlock = Math.max(0, baseBlock + dexterity);
+
+        // 신성한 구역 (2x 방어도)
+        if (activeTerrain === 'sacred_ground') {
+          modifiedBlock *= 2;
+        }
 
         if (modifiedBlock > baseBlock) return '#4ade80';
         if (modifiedBlock < baseBlock) return '#ff6b6b';

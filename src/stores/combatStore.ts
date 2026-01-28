@@ -349,11 +349,20 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       }
 
       // 플레이어 약화/취약 감소 (불사/무적은 피해 처리 후 감소)
+      // justApplied가 true면 이번 턴은 감소 스킵하고 false로 변경
       const reducedStatuses = playerStatuses
-        .map(s => ({
-          ...s,
-          stacks: (s.type === 'WEAK' || s.type === 'VULNERABLE') ? s.stacks - 1 : s.stacks,
-        }))
+        .map(s => {
+          if (s.type === 'WEAK' || s.type === 'VULNERABLE') {
+            if (s.justApplied) {
+              // 방금 적용된 디버프: 감소 스킵, 플래그 해제
+              return { ...s, justApplied: false };
+            } else {
+              // 이전 턴 디버프: 감소
+              return { ...s, stacks: s.stacks - 1 };
+            }
+          }
+          return s;
+        })
         .filter(s => s.stacks > 0);
       set({ playerStatuses: reducedStatuses });
     }
@@ -489,42 +498,52 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     const currentStatuses = get().playerStatuses;
     const poisonStatus = currentStatuses.find(s => s.type === 'POISON');
     if (poisonStatus && poisonStatus.stacks > 0) {
-      const poisonDamage = poisonStatus.stacks;
-
-      // 무적 상태면 독 피해도 무효화
-      const invulnerable = currentStatuses.find(s => s.type === 'INVULNERABLE');
-      if (invulnerable && invulnerable.stacks > 0) {
-        get().addToCombatLog(`무적! 중독 피해 무효화!`);
-        get().addDamagePopup(0, 'blocked', 0, 0, 'player');
+      // justApplied면 이번 턴은 효과 스킵하고 플래그만 해제
+      if (poisonStatus.justApplied) {
+        const latestStatuses = get().playerStatuses;
+        set({
+          playerStatuses: latestStatuses.map(s =>
+            s.type === 'POISON' ? { ...s, justApplied: false } : s
+          ),
+        });
       } else {
-        get().addToCombatLog(`중독으로 ${poisonDamage} 피해!`);
+        const poisonDamage = poisonStatus.stacks;
 
-        // 불사 상태면 HP가 1 아래로 내려가지 않음
-        const undying = currentStatuses.find(s => s.type === 'UNDYING');
-        const currentHp = useGameStore.getState().player.currentHp;
-        if (undying && undying.stacks > 0 && currentHp - poisonDamage < 1) {
-          const actualDamage = Math.max(0, currentHp - 1);
-          if (actualDamage > 0) {
-            useGameStore.getState().takeDamage(actualDamage);
-          }
-          get().addToCombatLog(`불사! HP가 1 아래로 내려가지 않습니다!`);
-          get().addDamagePopup(actualDamage, 'poison', 0, 0, 'player');
+        // 무적 상태면 독 피해도 무효화
+        const invulnerable = currentStatuses.find(s => s.type === 'INVULNERABLE');
+        if (invulnerable && invulnerable.stacks > 0) {
+          get().addToCombatLog(`무적! 중독 피해 무효화!`);
+          get().addDamagePopup(0, 'blocked', 0, 0, 'player');
         } else {
-          // 직접 HP 감소 (방어도 무시)
-          useGameStore.getState().takeDamage(poisonDamage);
-          // 초록색 팝업 표시
-          get().addDamagePopup(poisonDamage, 'poison', 0, 0, 'player');
-        }
-      }
+          get().addToCombatLog(`중독으로 ${poisonDamage} 피해!`);
 
-      // 최신 상태를 다시 가져와서 중독만 업데이트
-      const latestStatuses = get().playerStatuses;
-      const newPoisonStacks = poisonStatus.stacks - 1;
-      set({
-        playerStatuses: newPoisonStacks > 0
-          ? latestStatuses.map(s => s.type === 'POISON' ? { ...s, stacks: newPoisonStacks } : s)
-          : latestStatuses.filter(s => s.type !== 'POISON'),
-      });
+          // 불사 상태면 HP가 1 아래로 내려가지 않음
+          const undying = currentStatuses.find(s => s.type === 'UNDYING');
+          const currentHp = useGameStore.getState().player.currentHp;
+          if (undying && undying.stacks > 0 && currentHp - poisonDamage < 1) {
+            const actualDamage = Math.max(0, currentHp - 1);
+            if (actualDamage > 0) {
+              useGameStore.getState().takeDamage(actualDamage);
+            }
+            get().addToCombatLog(`불사! HP가 1 아래로 내려가지 않습니다!`);
+            get().addDamagePopup(actualDamage, 'poison', 0, 0, 'player');
+          } else {
+            // 직접 HP 감소 (방어도 무시)
+            useGameStore.getState().takeDamage(poisonDamage);
+            // 초록색 팝업 표시
+            get().addDamagePopup(poisonDamage, 'poison', 0, 0, 'player');
+          }
+        }
+
+        // 최신 상태를 다시 가져와서 중독만 업데이트
+        const latestStatuses = get().playerStatuses;
+        const newPoisonStacks = poisonStatus.stacks - 1;
+        set({
+          playerStatuses: newPoisonStacks > 0
+            ? latestStatuses.map(s => s.type === 'POISON' ? { ...s, stacks: newPoisonStacks } : s)
+            : latestStatuses.filter(s => s.type !== 'POISON'),
+        });
+      }
     }
 
     // 불사/무적 감소 (모든 피해 처리 후, 첫 턴 제외)
@@ -652,13 +671,18 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     }
 
     // 상태 효과 지속시간 감소 (방어도 유지만 - 약화/취약/불사/무적은 턴 시작 시 감소)
+    // justApplied면 이번 턴은 감소 스킵하고 플래그만 해제
     const updatedStatuses = processedStatuses
-      .map(s => ({
-        ...s,
-        stacks: (s.type === 'BLOCK_RETAIN' || s.type === 'HEAL_REDUCTION' || s.type === 'UNDEAD')
-          ? s.stacks - 1
-          : s.stacks,
-      }))
+      .map(s => {
+        const shouldDecrement = s.type === 'BLOCK_RETAIN' || s.type === 'HEAL_REDUCTION' || s.type === 'UNDEAD';
+        if (shouldDecrement) {
+          if (s.justApplied) {
+            return { ...s, justApplied: false };
+          }
+          return { ...s, stacks: s.stacks - 1 };
+        }
+        return s;
+      })
       .filter(s => s.stacks > 0);
 
     set({
@@ -2129,16 +2153,19 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       playBuff();
     }
 
+    // 디버프는 justApplied 플래그 설정 (첫 턴 효과 스킵용)
+    const needsJustApplied = statusInfo?.isDebuff ?? false;
+
     if (existingStatus) {
       // 뮤테이션 없이 새 객체 생성
       const updatedStatuses = playerStatuses.map(s =>
         s.type === status.type
-          ? { ...s, stacks: s.stacks + status.stacks }
+          ? { ...s, stacks: s.stacks + status.stacks, justApplied: needsJustApplied ? true : s.justApplied }
           : s
       );
       set({ playerStatuses: updatedStatuses });
     } else {
-      set({ playerStatuses: [...playerStatuses, { ...status }] });
+      set({ playerStatuses: [...playerStatuses, { ...status, justApplied: needsJustApplied }] });
     }
     const pName = useGameStore.getState().playerName;
     const statusName = statusInfo?.name || status.type;

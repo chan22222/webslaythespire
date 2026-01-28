@@ -5,6 +5,7 @@ export interface Status {
   type: StatusType;
   stacks: number;
   duration?: number; // undefined = 영구, 숫자 = 턴 후 사라짐
+  justApplied?: boolean; // 방금 적용됨 (첫 턴 감소 스킵용)
 }
 
 export const STATUS_INFO: Record<StatusType, { name: string; description: string; isDebuff: boolean }> = {
