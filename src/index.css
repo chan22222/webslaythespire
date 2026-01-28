@@ -287,6 +287,22 @@ body {
     height: 8rem !important;
   }
 
+  /* 전투 영역 위로 */
+  .combat-main-area {
+    margin-top: -3rem !important;
+  }
+
+  /* PC용 배틀로그 숨기고 모바일용 표시 */
+  .combat-log-pc {
+    display: none !important;
+  }
+
+  .combat-log-mobile {
+    display: block !important;
+    top: 1.5rem !important;
+    right: 3rem !important;
+  }
+
   .combat-top-area {
     height: 4rem !important;
   }
@@ -426,7 +442,7 @@ body {
 
   /* 전투 영역 더 위로 */
   .combat-main-area {
-    margin-top: -5rem !important;
+    margin-top: -6rem !important;
   }
 
   /* 모바일용 배틀로그 버튼 위치 */
@@ -494,7 +510,7 @@ body {
 
   /* 전투 영역 최대로 위로 */
   .combat-main-area {
-    margin-top: -6rem !important;
+    margin-top: -7.5rem !important;
   }
 
   /* 모바일용 배틀로그 버튼 위치 */
@@ -569,7 +585,7 @@ body {
 
   /* 전투 영역 더 위로 */
   .combat-main-area {
-    margin-top: -8rem !important;
+    margin-top: -9rem !important;
   }
 
   /* 플레이어-적 간격 더 좁히기 */
