@@ -1151,11 +1151,10 @@ export function CombatScreen() {
               }]);
             }
 
-            // 모든 타격 데미지 처리 (팝업은 100ms 간격으로)
+            // 모든 타격 데미지 처리 (팝업은 dealDamageToEnemy에서 처리)
             triggerEnemyHit(confirmedTargetId);
             hits.forEach((hit, idx) => {
               setTimeout(() => {
-                showDamagePopup(hit.targetId, hit.baseValue, 'damage', hit.modifier, idx);
                 dealDamageToEnemy(hit.targetId, hit.actualValue);
                 // 마지막 타격 후 상태 효과 적용 (장비파괴 등)
                 if (idx === hits.length - 1) {
@@ -1244,7 +1243,7 @@ export function CombatScreen() {
 
             allEnemyHits.forEach((hit, idx) => {
               triggerEnemyHit(hit.targetId);
-              showDamagePopup(hit.targetId, hit.baseValue, 'damage', hit.modifier);
+              // 팝업은 dealDamageToEnemy에서 처리
               dealDamageToEnemy(hit.targetId, hit.actualValue);
               // 마지막 적 처리 후 상태 효과 적용 (장비파괴 등)
               if (idx === allEnemyHits.length - 1) {

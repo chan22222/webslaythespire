@@ -1616,24 +1616,53 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     // 방어도 먼저 소모
     let remainingDamage = finalDamage;
     let newBlock = enemy.block;
+    let blockedAmount = 0;
     if (newBlock > 0) {
       if (newBlock >= remainingDamage) {
+        blockedAmount = remainingDamage;
         newBlock -= remainingDamage;
         remainingDamage = 0;
       } else {
+        blockedAmount = newBlock;
         remainingDamage -= newBlock;
         newBlock = 0;
+      }
+      // 적이 방어도로 막았을 때 실드 사운드
+      playShieldBlock();
+      // 방어도가 흡수한 데미지 팝업 (회색) - 랜덤 위치
+      const enemyEl = document.querySelector(`[data-enemy-id="${enemyId}"]`);
+      if (enemyEl) {
+        const rect = enemyEl.getBoundingClientRect();
+        const randomX = (Math.random() - 0.5) * 60; // -30 ~ +30
+        const randomY = (Math.random() - 0.5) * 40; // -20 ~ +20
+        get().addDamagePopup(blockedAmount, 'blocked', rect.left + rect.width / 2 + randomX, rect.top + rect.height / 3 + randomY);
       }
     }
 
     // HP 감소
     const newHp = Math.max(0, enemy.currentHp - remainingDamage);
 
-    // 로그 출력 (배수 적용 시 상세 표시)
-    if (modifiers.length > 0) {
-      get().addToCombatLog(`${enemy.name}에게 ${finalDamage} 피해! [${baseDamage} × ${damageMultiplier.toFixed(2)} (${modifiers.join(', ')})]`);
-    } else {
-      get().addToCombatLog(`${enemy.name}에게 ${finalDamage} 피해! (남은 HP: ${newHp})`);
+    // 실제 HP에 들어간 데미지 팝업 (빨간색) - 막은 양이 있으면 딜레이 후 표시, 랜덤 위치
+    if (remainingDamage > 0) {
+      const enemyEl = document.querySelector(`[data-enemy-id="${enemyId}"]`);
+      if (enemyEl) {
+        const rect = enemyEl.getBoundingClientRect();
+        const randomX = (Math.random() - 0.5) * 60; // -30 ~ +30
+        const randomY = (Math.random() - 0.5) * 40; // -20 ~ +20
+        setTimeout(() => {
+          get().addDamagePopup(remainingDamage, 'damage', rect.left + rect.width / 2 + randomX, rect.top + rect.height / 3 + randomY);
+        }, blockedAmount > 0 ? 150 : 0);
+      }
+    }
+
+    // 로그 출력 (방어도 흡수 + 실제 피해)
+    if (blockedAmount > 0) {
+      get().addToCombatLog(`[방어도 ${blockedAmount} 흡수, 남은 방어도: ${newBlock}]`);
+    }
+    if (remainingDamage > 0) {
+      get().addToCombatLog(`${enemy.name}(이)가 ${remainingDamage} 피해를 입었습니다! (남은 HP: ${newHp})`);
+    } else if (blockedAmount > 0) {
+      get().addToCombatLog(`${enemy.name}의 방어도가 모든 피해를 흡수!`);
     }
 
     // 새로운 enemy 객체 생성
