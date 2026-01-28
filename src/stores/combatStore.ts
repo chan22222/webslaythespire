@@ -445,11 +445,22 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       } else {
         get().addToCombatLog(`중독으로 ${poisonDamage} 피해!`);
 
-        // 직접 HP 감소 (방어도 무시)
-        useGameStore.getState().takeDamage(poisonDamage);
-
-        // 초록색 팝업 표시
-        get().addDamagePopup(poisonDamage, 'poison', 0, 0, 'player');
+        // 불사 상태면 HP가 1 아래로 내려가지 않음
+        const undying = playerStatuses.find(s => s.type === 'UNDYING');
+        const currentHp = useGameStore.getState().player.currentHp;
+        if (undying && undying.stacks > 0 && currentHp - poisonDamage < 1) {
+          const actualDamage = Math.max(0, currentHp - 1);
+          if (actualDamage > 0) {
+            useGameStore.getState().takeDamage(actualDamage);
+          }
+          get().addToCombatLog(`불사! HP가 1 아래로 내려가지 않습니다!`);
+          get().addDamagePopup(actualDamage, 'poison', 0, 0, 'player');
+        } else {
+          // 직접 HP 감소 (방어도 무시)
+          useGameStore.getState().takeDamage(poisonDamage);
+          // 초록색 팝업 표시
+          get().addDamagePopup(poisonDamage, 'poison', 0, 0, 'player');
+        }
       }
 
       poisonStatus.stacks -= 1;
