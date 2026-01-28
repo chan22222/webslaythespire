@@ -313,11 +313,11 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
         get().addToCombatLog('방어도 유지 상태로 방어도가 유지됩니다!');
       }
 
-      // 플레이어 약화/취약/불사 감소 (적 턴이 끝난 후 = 플레이어 턴 시작 시)
+      // 플레이어 약화/취약/불사/무적 감소 (적 턴이 끝난 후 = 플레이어 턴 시작 시)
       const reducedStatuses = playerStatuses
         .map(s => ({
           ...s,
-          stacks: (s.type === 'WEAK' || s.type === 'VULNERABLE' || s.type === 'UNDYING') ? s.stacks - 1 : s.stacks,
+          stacks: (s.type === 'WEAK' || s.type === 'VULNERABLE' || s.type === 'UNDYING' || s.type === 'INVULNERABLE') ? s.stacks - 1 : s.stacks,
         }))
         .filter(s => s.stacks > 0);
       set({ playerStatuses: reducedStatuses });
@@ -537,11 +537,11 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       processedStatuses = processedStatuses.filter(s => s.type !== 'STRENGTH_DOWN');
     }
 
-    // 상태 효과 지속시간 감소 (방어도 유지만 - 약화/취약/불사는 턴 시작 시 감소)
+    // 상태 효과 지속시간 감소 (방어도 유지만 - 약화/취약/불사/무적은 턴 시작 시 감소)
     const updatedStatuses = processedStatuses
       .map(s => ({
         ...s,
-        stacks: (s.type === 'BLOCK_RETAIN' || s.type === 'INVULNERABLE' || s.type === 'HEAL_REDUCTION' || s.type === 'UNDEAD')
+        stacks: (s.type === 'BLOCK_RETAIN' || s.type === 'HEAL_REDUCTION' || s.type === 'UNDEAD')
           ? s.stacks - 1
           : s.stacks,
       }))
