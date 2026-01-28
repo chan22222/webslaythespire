@@ -257,6 +257,10 @@ export function StatsPanel({ externalControl, isOpen: externalIsOpen, onClose, h
                     <span className="text-gray-400">총 회복량</span>
                     <span className="text-emerald-400">{formatNumber(stats.totalHealing)}</span>
                   </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">총 에너지 사용</span>
+                    <span className="text-yellow-400">{formatNumber(stats.totalEnergyUsed)}</span>
+                  </div>
                 </div>
               </div>
 

@@ -3,6 +3,10 @@ import { PlayerStats, createInitialStats } from '../types/stats';
 import { supabase } from '../lib/supabase';
 import { useAuthStore } from './authStore';
 import { checkAchievements as checkStatAchievements } from '../data/achievements';
+import { useGameStore } from './gameStore';
+
+// 테스트 모드 확인 헬퍼
+const isTestMode = () => useGameStore.getState().testEnemies !== null;
 
 interface StatsStore {
   stats: PlayerStats;
@@ -109,6 +113,7 @@ export const useStatsStore = create<StatsStore>((set, get) => ({
 
   // 적 처치 (전투 승리 시 한 번에 저장)
   incrementKill: (type) => {
+    if (isTestMode()) return; // 연습 모드에서는 통계 기록 안 함
     set((state) => {
       const newStats = { ...state.stats };
       newStats.totalKills += 1;
@@ -123,6 +128,7 @@ export const useStatsStore = create<StatsStore>((set, get) => ({
 
   // 카드 사용
   incrementCardPlayed: (cardType) => {
+    if (isTestMode()) return; // 연습 모드에서는 통계 기록 안 함
     set((state) => {
       const newStats = { ...state.stats };
       newStats.totalCardsPlayed += 1;
@@ -140,6 +146,7 @@ export const useStatsStore = create<StatsStore>((set, get) => ({
 
   // 데미지 입힘
   addDamageDealt: (amount) => {
+    if (isTestMode()) return; // 연습 모드에서는 통계 기록 안 함
     if (amount <= 0) return;
     set((state) => ({
       stats: {
@@ -152,6 +159,7 @@ export const useStatsStore = create<StatsStore>((set, get) => ({
 
   // 데미지 받음
   addDamageTaken: (amount) => {
+    if (isTestMode()) return; // 연습 모드에서는 통계 기록 안 함
     if (amount <= 0) return;
     set((state) => ({
       stats: {
@@ -164,6 +172,7 @@ export const useStatsStore = create<StatsStore>((set, get) => ({
 
   // 방어도 획득
   addBlockGained: (amount) => {
+    if (isTestMode()) return; // 연습 모드에서는 통계 기록 안 함
     if (amount <= 0) return;
     set((state) => ({
       stats: {
@@ -176,6 +185,7 @@ export const useStatsStore = create<StatsStore>((set, get) => ({
 
   // 힘 획득
   addStrengthGained: (amount) => {
+    if (isTestMode()) return; // 연습 모드에서는 통계 기록 안 함
     if (amount <= 0) return;
     set((state) => ({
       stats: {
@@ -188,6 +198,7 @@ export const useStatsStore = create<StatsStore>((set, get) => ({
 
   // 카드로 HP 손실
   addHpLostByCard: (amount) => {
+    if (isTestMode()) return; // 연습 모드에서는 통계 기록 안 함
     if (amount <= 0) return;
     set((state) => ({
       stats: {
@@ -200,6 +211,7 @@ export const useStatsStore = create<StatsStore>((set, get) => ({
 
   // 회복
   addHealing: (amount) => {
+    if (isTestMode()) return; // 연습 모드에서는 통계 기록 안 함
     if (amount <= 0) return;
     set((state) => ({
       stats: {
@@ -212,6 +224,7 @@ export const useStatsStore = create<StatsStore>((set, get) => ({
 
   // 에너지 사용
   addEnergyUsed: (amount) => {
+    if (isTestMode()) return; // 연습 모드에서는 통계 기록 안 함
     if (amount <= 0) return;
     set((state) => ({
       stats: {
@@ -226,6 +239,7 @@ export const useStatsStore = create<StatsStore>((set, get) => ({
 
   // 한 번에 입힌 최대 피해
   updateMaxSingleDamage: (damage) => {
+    if (isTestMode()) return; // 연습 모드에서는 통계 기록 안 함
     set((state) => {
       if (damage > state.stats.maxSingleDamage) {
         return {
@@ -242,6 +256,7 @@ export const useStatsStore = create<StatsStore>((set, get) => ({
 
   // 한 턴에 얻은 최대 방어도
   updateMaxBlockInTurn: (block) => {
+    if (isTestMode()) return; // 연습 모드에서는 통계 기록 안 함
     set((state) => {
       if (block > state.stats.maxBlockInTurn) {
         return {
@@ -258,6 +273,7 @@ export const useStatsStore = create<StatsStore>((set, get) => ({
 
   // 한 전투에서 최대 턴 수
   updateMaxTurnInBattle: (turn) => {
+    if (isTestMode()) return; // 연습 모드에서는 통계 기록 안 함
     set((state) => {
       if (turn > state.stats.maxTurnInBattle) {
         return {
@@ -274,6 +290,7 @@ export const useStatsStore = create<StatsStore>((set, get) => ({
 
   // 한 번에 막은 최대 피해
   updateMaxBlockedDamage: (blocked) => {
+    if (isTestMode()) return; // 연습 모드에서는 통계 기록 안 함
     set((state) => {
       if (blocked > state.stats.maxBlockedDamage) {
         return {
@@ -290,6 +307,7 @@ export const useStatsStore = create<StatsStore>((set, get) => ({
 
   // 게임 시작
   recordGameStart: () => {
+    if (isTestMode()) return; // 연습 모드에서는 통계 기록 안 함
     set((state) => ({
       stats: {
         ...state.stats,
@@ -302,6 +320,7 @@ export const useStatsStore = create<StatsStore>((set, get) => ({
 
   // 승리
   recordVictory: (floor) => {
+    if (isTestMode()) return; // 연습 모드에서는 통계 기록 안 함
     set((state) => ({
       stats: {
         ...state.stats,
@@ -319,6 +338,7 @@ export const useStatsStore = create<StatsStore>((set, get) => ({
 
   // 패배
   recordDefeat: (floor) => {
+    if (isTestMode()) return; // 연습 모드에서는 통계 기록 안 함
     const { stats } = get();
     // 첫 사망 업적 체크 (아직 패배한 적이 없는 경우)
     if (stats.totalDefeats === 0) {
@@ -338,6 +358,7 @@ export const useStatsStore = create<StatsStore>((set, get) => ({
 
   // 최고 층수 업데이트
   updateHighestFloor: (floor) => {
+    if (isTestMode()) return; // 연습 모드에서는 통계 기록 안 함
     set((state) => {
       if (floor > state.stats.highestFloorReached) {
         return {
