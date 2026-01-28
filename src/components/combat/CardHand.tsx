@@ -217,6 +217,7 @@ export function CardHand({
                       setHoveredCardId(null);
                     }
                   }}
+                  index={index}
                 />
               </div>
             </div>

@@ -12,6 +12,7 @@ interface DraggableCardProps {
   onDragEnd: (x: number, y: number, dragDistance: number) => void;
   rotation?: number;
   onHoverChange?: (isHovered: boolean) => void;
+  index?: number; // 단축키 표시용 (0부터 시작)
 }
 
 export function DraggableCard({
@@ -22,6 +23,7 @@ export function DraggableCard({
   onDragEnd,
   rotation = 0,
   onHoverChange,
+  index,
 }: DraggableCardProps) {
   const [dragState, setDragState] = useState({
     isDragging: false,
@@ -530,6 +532,25 @@ export function DraggableCard({
             className="absolute inset-0 rounded-lg pointer-events-none"
             style={{ background: 'rgba(0,0,0,0.4)' }}
           />
+        )}
+
+        {/* 단축키 숫자 표시 (1-9) - PC만 */}
+        {index !== undefined && index < 9 && (
+          <div
+            className="absolute w-6 h-6 rounded hidden lg:flex items-center justify-center text-xs pointer-events-none"
+            style={{
+              top: '-26px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              background: 'rgba(0, 0, 0, 0.3)',
+              border: '1px solid rgba(255, 255, 255, 0.25)',
+              color: 'rgba(255, 255, 255, 0.5)',
+              fontFamily: '"NeoDunggeunmo", cursive',
+              zIndex: 10,
+            }}
+          >
+            {index + 1}
+          </div>
         )}
       </div>
     </>

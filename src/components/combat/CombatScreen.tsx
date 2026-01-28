@@ -2237,6 +2237,21 @@ export function CombatScreen() {
               >
                 턴 종료
               </span>
+              {/* Space 단축키 표시 - PC만 */}
+              <div
+                className="absolute px-1.5 py-0.5 rounded text-[12px] hidden lg:block"
+                style={{
+                  top: '-18px',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  background: 'rgba(0, 0, 0, 0.3)',
+                  border: '1px solid rgba(255, 255, 255, 0.25)',
+                  color: 'rgba(255, 255, 255, 0.5)',
+                  fontFamily: '"NeoDunggeunmo", cursive',
+                }}
+              >
+                Space
+              </div>
             </div>
           </button>
           {/* 턴 끝내기 툴팁 */}
