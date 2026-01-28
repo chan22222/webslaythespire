@@ -210,3 +210,17 @@ export const playPlayerHit = () => {
   sound.volume = 0.2 * globalVolume;
   sound.play().catch(() => {});
 };
+
+let lastThunderIndex = 0;
+export const playThunder = () => {
+  // 이전과 다른 인덱스 선택
+  let index;
+  do {
+    index = Math.floor(Math.random() * 2) + 1;
+  } while (index === lastThunderIndex);
+  lastThunderIndex = index;
+
+  const sound = new Audio(`/sfx/sound/skill_sfx/thunder${index}.mp3`);
+  sound.volume = 0.2 * globalVolume;
+  sound.play().catch(() => {});
+};

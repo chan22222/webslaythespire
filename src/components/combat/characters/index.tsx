@@ -79,6 +79,17 @@ const HIT_EFFECT_CONFIG = {
   speed: 50,
 };
 
+// 번개 이펙트 스프라이트시트 설정 (Thunderstrike.png - 832x64, 64x64 프레임 13개)
+const THUNDERSTRIKE_EFFECT_CONFIG = {
+  frameWidth: 64,
+  frameHeight: 64,
+  columns: 13,
+  sheetWidth: 832,
+  sheetHeight: 64,
+  totalFrames: 13,
+  speed: 40,
+};
+
 // 모든 스프라이트 이미지 미리 로드 (깜빡임 방지)
 const preloadImages = [
   '/sprites/character_sprite_1.png',
@@ -86,6 +97,7 @@ const preloadImages = [
   '/sprites/character_sprite_hitdeath.png',
   '/sprites/swordslash.png',
   '/sprites/slashhit.png',
+  '/sprites/skill/Thunderstrike.png',
 ];
 preloadImages.forEach(src => {
   const img = new Image();
@@ -208,6 +220,63 @@ export function SlashHitEffect({ x, y, size = 120, onComplete }: SlashEffectProp
         backgroundImage: 'url(/sprites/slashhit.png)',
         backgroundPosition: `${bgX}px ${bgY}px`,
         backgroundSize: `${HIT_EFFECT_CONFIG.sheetWidth * scale}px ${HIT_EFFECT_CONFIG.sheetHeight * scale}px`,
+        backgroundRepeat: 'no-repeat',
+        imageRendering: 'pixelated',
+        mixBlendMode: 'screen',
+      }}
+    />
+  );
+}
+
+// 번개 이펙트 (Thunderstrike.png) - 벼락치는 황야용
+export function ThunderstrikeEffect({ x, y, size = 200, onComplete }: SlashEffectProps) {
+  const [frame, setFrame] = useState(0);
+  const [isVisible, setIsVisible] = useState(true);
+
+  // 세로로 긴 번개 효과를 위해 높이 기준으로 스케일 조정
+  const scale = size / THUNDERSTRIKE_EFFECT_CONFIG.frameHeight;
+  const width = THUNDERSTRIKE_EFFECT_CONFIG.frameWidth * scale;
+  const height = THUNDERSTRIKE_EFFECT_CONFIG.frameHeight * scale;
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setFrame(prev => {
+        const nextFrame = prev + 1;
+        if (nextFrame >= THUNDERSTRIKE_EFFECT_CONFIG.totalFrames) {
+          clearInterval(interval);
+          setIsVisible(false);
+          return prev;
+        }
+        return nextFrame;
+      });
+    }, THUNDERSTRIKE_EFFECT_CONFIG.speed);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // 애니메이션 완료 시 콜백 호출
+  useEffect(() => {
+    if (!isVisible && onComplete) {
+      onComplete();
+    }
+  }, [isVisible, onComplete]);
+
+  if (!isVisible) return null;
+
+  // 가로 스프라이트시트이므로 col만 사용
+  const bgX = -(frame * THUNDERSTRIKE_EFFECT_CONFIG.frameWidth) * scale;
+
+  return (
+    <div
+      className="fixed pointer-events-none z-50"
+      style={{
+        left: x - width / 2,
+        top: y - height * 0.85,  // 대상 위쪽에 번개
+        width,
+        height,
+        backgroundImage: 'url(/sprites/skill/Thunderstrike.png)',
+        backgroundPosition: `${bgX}px 0px`,
+        backgroundSize: `${THUNDERSTRIKE_EFFECT_CONFIG.sheetWidth * scale}px ${THUNDERSTRIKE_EFFECT_CONFIG.sheetHeight * scale}px`,
         backgroundRepeat: 'no-repeat',
         imageRendering: 'pixelated',
         mixBlendMode: 'screen',

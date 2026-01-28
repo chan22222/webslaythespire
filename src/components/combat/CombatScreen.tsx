@@ -9,9 +9,9 @@ import { Enemy } from './Enemy';
 import { EnergyOrb } from './EnergyOrb';
 import { PlayerStatus } from './PlayerStatus';
 import { DamagePopupManager } from './DamagePopup';
-import { SwordSlashEffect, SlashHitEffect } from './characters';
+import { SwordSlashEffect, SlashHitEffect, ThunderstrikeEffect } from './characters';
 import { generateNormalEncounter, ELITE_ENEMIES, BOSS_ENEMIES, EASTER_EGG_ENCOUNTER } from '../../data/enemies';
-import { playButtonHover, playButtonClick, playAttack, playFootsteps, playBuff, playBGM } from '../../utils/sound';
+import { playButtonHover, playButtonClick, playAttack, playFootsteps, playBuff, playBGM, playThunder } from '../../utils/sound';
 
 // 전투 시작 인트로 화면
 function BattleIntro({
@@ -553,6 +553,8 @@ export function CombatScreen() {
     dealDamageToEnemy,
     applyCardStatusToEnemy,
     resetCombat,
+    thunderEffectQueue,
+    clearThunderEffects,
   } = useCombatStore();
 
   const currentNode = getCurrentNode();
@@ -595,6 +597,8 @@ export function CombatScreen() {
   const [swordSlashEffects, setSwordSlashEffects] = useState<{ id: number; x: number; y: number }[]>([]);
   // 적 타격 이펙트 (slashhit.png)
   const [hitEffects, setHitEffects] = useState<{ id: number; x: number; y: number }[]>([]);
+  // 번개 이펙트 (벼락치는 황야)
+  const [thunderstrikeEffects, setThunderstrikeEffects] = useState<{ id: number; x: number; y: number }[]>([]);
   const effectIdRef = useRef(0);
   // 공격 중 여부 (카드 사용 불가) - ref로 동기 체크
   const [isAttacking, setIsAttacking] = useState(false);
@@ -620,6 +624,42 @@ export function CombatScreen() {
   useEffect(() => {
     isPlayerDyingRef.current = isPlayerDying;
   }, [isPlayerDying]);
+
+  // 번개 이펙트 큐 처리 (벼락치는 황야)
+  useEffect(() => {
+    if (thunderEffectQueue.length === 0) return;
+
+    thunderEffectQueue.forEach((effect) => {
+      setTimeout(() => {
+        let x = 0;
+        let y = 0;
+
+        if (effect.targetType === 'player') {
+          const playerEl = document.querySelector('[data-player]');
+          if (playerEl) {
+            const rect = playerEl.getBoundingClientRect();
+            x = rect.left + rect.width / 2;
+            y = rect.top + rect.height / 2;
+          }
+        } else if (effect.targetId) {
+          const enemyEl = enemyRefs.current.get(effect.targetId);
+          if (enemyEl) {
+            const rect = enemyEl.getBoundingClientRect();
+            x = rect.left + rect.width / 2;
+            y = rect.top + rect.height / 2;
+          }
+        }
+
+        if (x && y) {
+          const newEffectId = ++effectIdRef.current;
+          setThunderstrikeEffects(prev => [...prev, { id: newEffectId, x, y }]);
+        }
+      }, effect.delay);
+    });
+
+    // 큐 처리 후 클리어
+    clearThunderEffects();
+  }, [thunderEffectQueue, clearThunderEffects]);
 
   // 피격 후 idle 복귀 타이머 ref
   const hurtTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -1174,14 +1214,38 @@ export function CombatScreen() {
         } else {
           // 데미지 없는 타겟 카드는 스킬 애니메이션 후 실행
           const hasLoseHpTarget = card.effects.some(e => e.type === 'LOSE_HP');
-          setPlayerAnimation('skill');
-          playBuff(); // 스킬 사운드
-          setTimeout(() => {
-            playCard(cardInstanceId, confirmedTargetId);
-            if (!hasLoseHpTarget) {
+          const hasHalveHp = card.effects.some(e => e.type === 'HALVE_ENEMY_HP');
+
+          if (hasHalveHp) {
+            // 신의 권능: 번개 이펙트 + 사운드
+            setPlayerAnimation('skill');
+            playBuff();
+            setTimeout(() => {
+              playThunder();
+              const targetEl = enemyRefs.current.get(confirmedTargetId);
+              if (targetEl) {
+                const rect = targetEl.getBoundingClientRect();
+                const newEffectId = ++effectIdRef.current;
+                setThunderstrikeEffects(prev => [...prev, {
+                  id: newEffectId,
+                  x: rect.left + rect.width / 2,
+                  y: rect.top + rect.height / 2
+                }]);
+              }
+              triggerEnemyHit(confirmedTargetId);
+              playCard(cardInstanceId, confirmedTargetId);
               setPlayerAnimation('idle');
-            }
-          }, 600);
+            }, 600);
+          } else {
+            setPlayerAnimation('skill');
+            playBuff(); // 스킬 사운드
+            setTimeout(() => {
+              playCard(cardInstanceId, confirmedTargetId);
+              if (!hasLoseHpTarget) {
+                setPlayerAnimation('idle');
+              }
+            }, 600);
+          }
         }
       }
     } else {
@@ -1262,15 +1326,46 @@ export function CombatScreen() {
         } else {
           // 데미지 없는 카드는 스킬 애니메이션 후 실행
           const hasLoseHp = card.effects.some(e => e.type === 'LOSE_HP');
-          setPlayerAnimation('skill');
-          playBuff(); // 스킬 사운드
-          setTimeout(() => {
-            playCard(cardInstanceId);
-            // LOSE_HP가 있으면 hurt 애니메이션이 실행되므로 idle 설정 안함
-            if (!hasLoseHp) {
-              setPlayerAnimation('idle');
-            }
-          }, 600);
+          const hasDamagePerPlayed = card.effects.some(e => e.type === 'DAMAGE_PER_PLAYED' && e.target === 'ALL');
+
+          if (hasDamagePerPlayed) {
+            // 종언의 일격: 번개 이펙트 + 사운드 (모든 적)
+            setPlayerAnimation('skill');
+            playBuff();
+            setTimeout(() => {
+              const aliveEnemies = enemies.filter(e => e.currentHp > 0);
+              aliveEnemies.forEach((enemy, idx) => {
+                setTimeout(() => {
+                  playThunder();
+                  const targetEl = enemyRefs.current.get(enemy.instanceId);
+                  if (targetEl) {
+                    const rect = targetEl.getBoundingClientRect();
+                    const newEffectId = ++effectIdRef.current;
+                    setThunderstrikeEffects(prev => [...prev, {
+                      id: newEffectId,
+                      x: rect.left + rect.width / 2,
+                      y: rect.top + rect.height / 2
+                    }]);
+                  }
+                  triggerEnemyHit(enemy.instanceId);
+                }, idx * 150);
+              });
+              playCard(cardInstanceId);
+              setTimeout(() => {
+                setPlayerAnimation('idle');
+              }, aliveEnemies.length * 150);
+            }, 600);
+          } else {
+            setPlayerAnimation('skill');
+            playBuff(); // 스킬 사운드
+            setTimeout(() => {
+              playCard(cardInstanceId);
+              // LOSE_HP가 있으면 hurt 애니메이션이 실행되므로 idle 설정 안함
+              if (!hasLoseHp) {
+                setPlayerAnimation('idle');
+              }
+            }, 600);
+          }
         }
       }
     }
@@ -1512,6 +1607,17 @@ export function CombatScreen() {
             y={effect.y}
             size={window.innerHeight < 500 ? 150 : 300}
             onComplete={() => setHitEffects(prev => prev.filter(e => e.id !== effect.id))}
+          />
+        ))}
+
+        {/* 번개 이펙트 (벼락치는 황야) */}
+        {thunderstrikeEffects.map(effect => (
+          <ThunderstrikeEffect
+            key={effect.id}
+            x={effect.x}
+            y={effect.y}
+            size={window.innerHeight < 500 ? 150 : 250}
+            onComplete={() => setThunderstrikeEffects(prev => prev.filter(e => e.id !== effect.id))}
           />
         ))}
 

@@ -6,7 +6,7 @@ import { Status, STATUS_INFO } from '../types/status';
 import { shuffle } from '../utils/shuffle';
 import { useGameStore } from './gameStore';
 import { useStatsStore } from './statsStore';
-import { playCardDraw, playHit, playShieldBlock, playBuff, playDebuff, playEnemyBuff, playWin, playPlayerHit, playTimeSkill, playInvincibility } from '../utils/sound';
+import { playCardDraw, playHit, playShieldBlock, playBuff, playDebuff, playEnemyBuff, playWin, playPlayerHit, playTimeSkill, playInvincibility, playThunder } from '../utils/sound';
 import {
   resetBattleAchievementState,
   resetTurnAchievementState,
@@ -97,6 +97,11 @@ interface CombatStore extends CombatState {
   playerDebuffTrigger: number;
   triggerPlayerDebuff: () => void;
 
+  // 번개 이펙트 큐 (벼락치는 황야)
+  thunderEffectQueue: { targetType: 'player' | 'enemy'; targetId?: string; delay: number }[];
+  addThunderEffect: (targetType: 'player' | 'enemy', targetId: string | undefined, delay: number) => void;
+  clearThunderEffects: () => void;
+
   // 추가 턴 (시간 왜곡)
   extraTurnPending: boolean;
 
@@ -126,6 +131,7 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
   enemySkillTriggers: {},
   enemyAttackTriggers: {},
   playerDebuffTrigger: 0,
+  thunderEffectQueue: [],
   extraTurnPending: false,
   isPlayingCard: false,
   isEndTurnLocked: false,
@@ -137,6 +143,16 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
 
   triggerPlayerDebuff: () => {
     set(state => ({ playerDebuffTrigger: state.playerDebuffTrigger + 1 }));
+  },
+
+  addThunderEffect: (targetType, targetId, delay) => {
+    set(state => ({
+      thunderEffectQueue: [...state.thunderEffectQueue, { targetType, targetId, delay }],
+    }));
+  },
+
+  clearThunderEffects: () => {
+    set({ thunderEffectQueue: [] });
   },
 
   addDamagePopup: (value: number, type: DamagePopup['type'], x: number, y: number, targetId?: string, modifier?: number, offsetX?: number, offsetY?: number) => {
@@ -571,17 +587,23 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       });
       get().addToCombatLog(`🔥 용암 지대: 모든 캐릭터가 3 피해!`);
     } else if (activeTerrain === 'thunder_wasteland') {
-      // 벼락치는 황야: 무작위 대상 10번 낙뢰
+      // 벼락치는 황야: 무작위 대상 5번 낙뢰
       const allTargets: { type: 'player' | 'enemy'; id?: string }[] = [{ type: 'player' }];
       enemies.forEach(enemy => {
         if (enemy.currentHp > 0) {
           allTargets.push({ type: 'enemy', id: enemy.instanceId });
         }
       });
-      get().addToCombatLog(`⚡ 벼락치는 황야: 낙뢰 10회!`);
-      for (let i = 0; i < 10; i++) {
+      get().addToCombatLog(`⚡ 벼락치는 황야: 낙뢰 5회!`);
+      // 이펙트 큐 초기화
+      get().clearThunderEffects();
+      for (let i = 0; i < 5; i++) {
         const target = allTargets[Math.floor(Math.random() * allTargets.length)];
+        // 번개 이펙트 큐에 추가
+        get().addThunderEffect(target.type, target.id, i * 200);
         setTimeout(() => {
+          // 번개 효과음 재생
+          playThunder();
           if (target.type === 'player') {
             get().dealDamageToPlayer(3);
           } else if (target.id) {
@@ -590,7 +612,7 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
               get().dealDamageToEnemy(target.id, 3);
             }
           }
-        }, i * 100);
+        }, i * 200);
       }
     }
 
@@ -641,8 +663,15 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       return;
     }
 
-    // 적 턴 실행
-    get().executeEnemyTurn();
+    // 적 턴 실행 (벼락치는 황야면 번개 이펙트 후 실행)
+    if (activeTerrain === 'thunder_wasteland') {
+      // 5회 * 200ms + 여유 시간
+      setTimeout(() => {
+        get().executeEnemyTurn();
+      }, 1200);
+    } else {
+      get().executeEnemyTurn();
+    }
   },
 
   executeEnemyTurn: async () => {
@@ -1909,6 +1938,11 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
         useGameStore.getState().modifyHp(-actualDamage);
         // 플레이어 피격 음성 재생
         playPlayerHit();
+        // 플레이어 피격 애니메이션 트리거
+        const { onPlayerHit } = get();
+        if (onPlayerHit) {
+          onPlayerHit();
+        }
         remainingDamage = actualDamage;
       } else {
         get().addDamagePopup(0, 'blocked', 0, 0, 'player');
