@@ -11,6 +11,7 @@ import { COMMON_CARDS } from '../../data/cards/commonCards';
 import { UNCOMMON_CARDS } from '../../data/cards/uncommonCards';
 import { RARE_CARDS } from '../../data/cards/rareCards';
 import { UNIQUE_CARDS } from '../../data/cards/uniqueCards';
+import { TERRAIN_CARDS } from '../../data/cards/terrainCards';
 import { ACHIEVEMENTS } from '../../data/achievements';
 import {
   GOBLIN,
@@ -50,6 +51,7 @@ const ALL_CARDS: Card[] = [
   ...UNCOMMON_CARDS,
   ...RARE_CARDS,
   ...UNIQUE_CARDS,
+  ...TERRAIN_CARDS,
 ];
 
 const typeStyles = {
@@ -398,8 +400,8 @@ export function DeckBuildingScreen() {
           <div className="flex-1 overflow-y-auto pr-2">
             <div className="deckbuild-card-grid flex flex-wrap gap-4 justify-start pt-4">
               {filteredCards.map((card, index) => {
-                // 관리자 또는 연습모드면 모든 카드 사용 가능
-                const isOwned = isAdmin || isGuest || allOwnedCardIds.includes(card.id);
+                // 관리자, 연습모드, 또는 지형 카드면 모든 카드 사용 가능
+                const isOwned = isAdmin || isGuest || card.type === 'TERRAIN' || allOwnedCardIds.includes(card.id);
                 return (
                 <div
                   key={`${card.id}-${index}`}

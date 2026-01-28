@@ -4,6 +4,7 @@ import { COMMON_CARDS } from './commonCards';
 import { UNCOMMON_CARDS } from './uncommonCards';
 import { RARE_CARDS } from './rareCards';
 import { UNIQUE_CARDS } from './uniqueCards';
+import { TERRAIN_CARDS } from './terrainCards';
 import { isCardUnlocked } from '../achievements';
 
 export { createStarterDeck, STRIKE, DEFEND, BASH, BASIC_CARDS };
@@ -11,6 +12,7 @@ export { COMMON_CARDS };
 export { UNCOMMON_CARDS };
 export { RARE_CARDS };
 export { UNIQUE_CARDS };
+export { TERRAIN_CARDS };
 
 // 모든 획득 가능한 카드 (BASIC 제외)
 export const ALL_OBTAINABLE_CARDS: Card[] = [
@@ -84,6 +86,25 @@ export function generateCardRewards(count: number = 3, deckCardIds: string[] = [
       availableCards.splice(randomIndex, 1);
     }
   }
+
+  return rewards;
+}
+
+// 보스 처치 시 카드 보상 생성 (5장: 지형 3장 + 일반 2장)
+export function generateBossCardRewards(deckCardIds: string[] = [], unlockedAchievements: string[] = [], isGuest: boolean = false): Card[] {
+  const rewards: Card[] = [];
+
+  // 지형 카드 3장 (중복 없이)
+  const availableTerrainCards = [...TERRAIN_CARDS];
+  for (let i = 0; i < 3 && availableTerrainCards.length > 0; i++) {
+    const randomIndex = Math.floor(Math.random() * availableTerrainCards.length);
+    rewards.push({ ...availableTerrainCards[randomIndex] });
+    availableTerrainCards.splice(randomIndex, 1);
+  }
+
+  // 일반 카드 2장
+  const normalRewards = generateCardRewards(2, deckCardIds, unlockedAchievements, isGuest);
+  rewards.push(...normalRewards);
 
   return rewards;
 }

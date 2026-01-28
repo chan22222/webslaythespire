@@ -35,7 +35,15 @@ export interface CardEffect {
     | 'APPLY_BLOCK_ON_ATTACK' // 공격 시 방어도 획득 패시브
     | 'APPLY_THORNS' // 방어도 반사 패시브
     | 'APPLY_ATTACK_DISABLED' // 공격 카드 사용 금지
-    | 'APPLY_BLOCK_TO_DAMAGE'; // 방어도 획득 시 피해 변환
+    | 'APPLY_BLOCK_TO_DAMAGE' // 방어도 획득 시 피해 변환
+    // 지형 효과
+    | 'TERRAIN_TOXIC_SWAMP' // 독성 늪지대
+    | 'TERRAIN_LAVA_ZONE' // 용암 지대
+    | 'TERRAIN_SACRED_GROUND' // 신성한 구역
+    | 'TERRAIN_GLADIATOR_ARENA' // 검투사의 경기장
+    | 'TERRAIN_ZERO_GRAVITY' // 무중력 공간
+    | 'TERRAIN_THUNDER_WASTELAND' // 벼락치는 황야
+    | 'TERRAIN_ANCIENT_LIBRARY'; // 고대 도서관
   value: number;
   target?: TargetType;
   status?: StatusType;

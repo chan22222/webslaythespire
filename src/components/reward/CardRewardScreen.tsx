@@ -5,7 +5,7 @@ import { useStatsStore } from '../../stores/statsStore';
 import { useAuthStore } from '../../stores/authStore';
 import { Card } from '../combat/Card';
 import { Card as CardType, createCardInstance } from '../../types/card';
-import { generateCardRewards } from '../../data/cards';
+import { generateCardRewards, generateBossCardRewards } from '../../data/cards';
 import { randomInt } from '../../utils/shuffle';
 import { playButtonHover, playButtonClick, playCardBuy } from '../../utils/sound';
 
@@ -34,12 +34,22 @@ export function CardRewardScreen() {
     const unlockedAchievements = useStatsStore.getState().unlockedAchievements;
     // 연습모드 여부
     const isGuest = useAuthStore.getState().isGuest;
-    setCardRewards(generateCardRewards(3, deckCardIds, unlockedAchievements, isGuest));
+    // 현재 노드 타입 확인
+    const currentNode = getCurrentNode();
+    const isBossNode = currentNode?.type === 'BOSS';
+
+    // 보스 처치 시 5장 (지형 3장 + 일반 2장), 일반은 3장
+    if (isBossNode) {
+      setCardRewards(generateBossCardRewards(deckCardIds, unlockedAchievements, isGuest));
+    } else {
+      setCardRewards(generateCardRewards(3, deckCardIds, unlockedAchievements, isGuest));
+    }
+
     setGoldReward(randomInt(20, 50));
     if (hasEasterEggEnemy) {
       setBonusGold(2000);
     }
-  }, [hasEasterEggEnemy, player.deck]);
+  }, [hasEasterEggEnemy, player.deck, getCurrentNode]);
 
   const handleCollectGold = () => {
     if (!goldCollected) {

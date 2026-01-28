@@ -62,8 +62,8 @@ export function DraggableCard({
     },
     TERRAIN: {
       cardImage: '/cards/terraincard.png',
-      accentColor: '#8b6914',
-      glowColor: 'rgba(139, 105, 20, 0.7)',
+      accentColor: '#4ade80',
+      glowColor: 'rgba(74, 222, 128, 0.7)',
       textColor: '#fff',
       typeName: 'Terrain',
     },
@@ -150,6 +150,21 @@ export function DraggableCard({
 
     const strength = playerStatuses.find(s => s.type === 'STRENGTH')?.stacks || 0;
     const weak = playerStatuses.find(s => s.type === 'WEAK');
+
+    // 고대 도서관: 전투 중이면 힘 절반 적용된 피해량 표시
+    for (const effect of card.effects) {
+      if (effect.type === 'TERRAIN_ANCIENT_LIBRARY') {
+        const baseDamage = effect.value;
+        const halfStrength = Math.floor(strength / 2);
+        const modifiedDamage = baseDamage + halfStrength;
+        // 다른 공격 카드와 동일하게 "현재값 (기본값)" 형식
+        description = description.replace(
+          /피해를 \d+ 입히며/,
+          `피해를 ${modifiedDamage} (${baseDamage}) 입히며`
+        );
+      }
+    }
+
     const hasModifier = strength !== 0 || (weak && weak.stacks > 0) || (targetVulnerable && targetVulnerable.stacks > 0);
 
     if (!hasModifier) {
@@ -331,6 +346,8 @@ export function DraggableCard({
           filter: getDropShadow(),
           zIndex: dragState.isDragging ? 1000 : isSelected ? 100 : isHovered ? 50 : undefined,
           transition: dragState.isDragging ? 'none' : 'transform 0.15s ease-out, filter 0.15s ease-out',
+          backgroundColor: '#1a1a1a',
+          borderRadius: '8px',
         }}
       >
         {/* 카드 아트 이미지 (프레임 뒤) */}
@@ -349,7 +366,13 @@ export function DraggableCard({
           src={config.cardImage}
           alt=""
           className="absolute inset-0 w-full h-full object-cover rounded-lg pointer-events-none"
-          style={{ zIndex: 1 }}
+          style={{
+            zIndex: 1,
+            // TERRAIN 카드는 약간 확대해서 흰 테두리 숨김
+            ...(card.type === 'TERRAIN' && {
+              transform: 'scale(1.02)',
+            }),
+          }}
           draggable={false}
         />
 

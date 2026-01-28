@@ -40,8 +40,8 @@ const typeConfig = {
   },
   TERRAIN: {
     cardImage: '/cards/terraincard.png',
-    accentColor: '#8b6914',
-    glowColor: 'rgba(139, 105, 20, 0.6)',
+    accentColor: '#4ade80',
+    glowColor: 'rgba(74, 222, 128, 0.6)',
     typeName: 'Terrain',
   },
 };
@@ -174,9 +174,24 @@ export function Card({
     }
 
     // 힘이나 약화가 있는지 확인
-    const strength = playerStatuses.find(s => s.type === 'STRENGTH')?.stacks || 0;
+    const strengthVal = playerStatuses.find(s => s.type === 'STRENGTH')?.stacks || 0;
     const weak = playerStatuses.find(s => s.type === 'WEAK');
-    const hasModifier = strength !== 0 || (weak && weak.stacks > 0);
+
+    // 고대 도서관: 전투 중이면 힘 절반 적용된 피해량 표시
+    for (const effect of card.effects) {
+      if (effect.type === 'TERRAIN_ANCIENT_LIBRARY') {
+        const baseDamage = effect.value;
+        const halfStrength = Math.floor(strengthVal / 2);
+        const modifiedDamage = baseDamage + halfStrength;
+        // 다른 공격 카드와 동일하게 "현재값 (기본값)" 형식
+        description = description.replace(
+          /피해를 \d+ 입히며/,
+          `피해를 ${modifiedDamage} (${baseDamage}) 입히며`
+        );
+      }
+    }
+
+    const hasModifier = strengthVal !== 0 || (weak && weak.stacks > 0);
 
     if (!hasModifier) {
       return description;
@@ -236,6 +251,7 @@ export function Card({
         boxShadow: isSelected
           ? `0 0 20px ${config.glowColor}, ${rarityGlow[card.rarity]}`
           : `0 4px 12px rgba(0,0,0,0.4), ${rarityGlow[card.rarity]}`,
+        backgroundColor: '#1a1a1a',
       }}
     >
       {/* 카드 아트 이미지 (프레임 뒤) */}
@@ -254,7 +270,13 @@ export function Card({
         src={config.cardImage}
         alt=""
         className="absolute inset-0 w-full h-full object-cover pointer-events-none"
-        style={{ zIndex: 1 }}
+        style={{
+          zIndex: 1,
+          // TERRAIN 카드는 약간 확대해서 흰 테두리 숨김
+          ...(card.type === 'TERRAIN' && {
+            transform: 'scale(1.02)',
+          }),
+        }}
         draggable={false}
       />
 

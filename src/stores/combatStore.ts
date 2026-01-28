@@ -520,8 +520,6 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
   },
 
   endPlayerTurn: () => {
-    const { playerStatuses } = get();
-
     // 손패 버리기
     get().discardHand();
 
@@ -552,9 +550,55 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       get().addToCombatLog(`유물 효과로 HP ${turnEndDamage} 손실!`);
     }
 
+    // 지형 효과 처리 (턴 종료 시)
+    const { activeTerrain, enemies } = get();
+    if (activeTerrain === 'toxic_swamp') {
+      // 독성 늪지대: 모든 캐릭터 중독 2
+      get().applyStatusToPlayer({ type: 'POISON', stacks: 2 });
+      enemies.forEach(enemy => {
+        if (enemy.currentHp > 0) {
+          get().applyStatusToEnemy(enemy.instanceId, { type: 'POISON', stacks: 2 });
+        }
+      });
+      get().addToCombatLog(`🌿 독성 늪지대: 모든 캐릭터가 중독 2!`);
+    } else if (activeTerrain === 'lava_zone') {
+      // 용암 지대: 모든 캐릭터 데미지 3
+      get().dealDamageToPlayer(3);
+      enemies.forEach(enemy => {
+        if (enemy.currentHp > 0) {
+          get().dealDamageToEnemy(enemy.instanceId, 3);
+        }
+      });
+      get().addToCombatLog(`🔥 용암 지대: 모든 캐릭터가 3 피해!`);
+    } else if (activeTerrain === 'thunder_wasteland') {
+      // 벼락치는 황야: 무작위 대상 10번 낙뢰
+      const allTargets: { type: 'player' | 'enemy'; id?: string }[] = [{ type: 'player' }];
+      enemies.forEach(enemy => {
+        if (enemy.currentHp > 0) {
+          allTargets.push({ type: 'enemy', id: enemy.instanceId });
+        }
+      });
+      get().addToCombatLog(`⚡ 벼락치는 황야: 낙뢰 10회!`);
+      for (let i = 0; i < 10; i++) {
+        const target = allTargets[Math.floor(Math.random() * allTargets.length)];
+        setTimeout(() => {
+          if (target.type === 'player') {
+            get().dealDamageToPlayer(3);
+          } else if (target.id) {
+            const enemy = get().enemies.find(e => e.instanceId === target.id);
+            if (enemy && enemy.currentHp > 0) {
+              get().dealDamageToEnemy(target.id, 3);
+            }
+          }
+        }, i * 100);
+      }
+    }
+
     // STRENGTH_DOWN 처리: 힘 감소 후 제거
-    const strengthDown = playerStatuses.find(s => s.type === 'STRENGTH_DOWN');
-    let processedStatuses = [...playerStatuses];
+    // 최신 playerStatuses 사용 (지형 효과로 상태가 변경되었을 수 있음)
+    const latestPlayerStatuses = get().playerStatuses;
+    const strengthDown = latestPlayerStatuses.find(s => s.type === 'STRENGTH_DOWN');
+    let processedStatuses = [...latestPlayerStatuses];
 
     if (strengthDown && strengthDown.stacks > 0) {
       const strengthStatus = processedStatuses.find(s => s.type === 'STRENGTH');
@@ -612,6 +656,33 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       // 적 방어도 리셋
       enemy.block = 0;
 
+      // 적 중독 처리 (턴 시작 시)
+      const poisonStatus = enemy.statuses.find(s => s.type === 'POISON');
+      if (poisonStatus && poisonStatus.stacks > 0) {
+        const poisonDamage = poisonStatus.stacks;
+        // 중독 피해 (방어도 무시, 직접 HP 감소)
+        enemy.currentHp = Math.max(0, enemy.currentHp - poisonDamage);
+        get().addToCombatLog(`${enemy.name}이(가) 중독으로 ${poisonDamage} 피해!`);
+        get().addDamagePopup(poisonDamage, 'poison', 0, 0, enemy.instanceId);
+
+        // 중독 스택 감소
+        poisonStatus.stacks -= 1;
+        if (poisonStatus.stacks <= 0) {
+          enemy.statuses = enemy.statuses.filter(s => s.type !== 'POISON');
+        }
+
+        // 적이 중독으로 죽었으면 다음 적으로
+        if (enemy.currentHp <= 0) {
+          get().addToCombatLog(`${enemy.name}이(가) 중독으로 쓰러졌습니다!`);
+          // 적 상태 업데이트
+          const updatedEnemies = [...get().enemies];
+          updatedEnemies[i] = enemy;
+          set({ enemies: updatedEnemies });
+          get().checkCombatEnd();
+          continue;
+        }
+      }
+
       // 의도 실행
       get().addToCombatLog(`${enemy.name}의 행동!`);
 
@@ -653,7 +724,17 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       } else if (enemy.intent.type === 'DEFEND') {
         get().triggerEnemySkill(enemy.instanceId);
         playEnemyBuff();
-        enemy.block += enemy.intent.block || 0;
+        const terrain = get().activeTerrain;
+        if (terrain === 'gladiator_arena') {
+          // 검투사의 경기장: 방어도 획득 불가
+          get().addToCombatLog(`⚔️ ${enemy.name} 방어도 획득 불가!`);
+        } else {
+          let blockAmount = enemy.intent.block || 0;
+          if (terrain === 'sacred_ground') {
+            blockAmount *= 2; // 신성한 구역: 2배
+          }
+          enemy.block += blockAmount;
+        }
         await new Promise(resolve => setTimeout(resolve, 500));
       } else if (enemy.intent.type === 'BUFF') {
         get().triggerEnemySkill(enemy.instanceId);
@@ -723,7 +804,7 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
   },
 
   drawCards: (count: number, silent?: boolean) => {
-    const { drawPile, hand, discardPile } = get();
+    const { drawPile, hand, discardPile, activeTerrain } = get();
     const newHand = [...hand];
     let newDrawPile = [...drawPile];
     let newDiscardPile = [...discardPile];
@@ -737,8 +818,12 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
         newDiscardPile = [];
       }
 
-      const card = newDrawPile.pop();
+      let card = newDrawPile.pop();
       if (card) {
+        // 무중력 공간: 코스트 무작위 변경
+        if (activeTerrain === 'zero_gravity') {
+          card = { ...card, cost: Math.floor(Math.random() * 4) }; // 0~3
+        }
         newHand.push(card);
         // 카드 드로우 사운드 재생 (딜레이를 줘서 순차 재생, silent면 재생 안 함)
         if (!silent) {
@@ -753,6 +838,20 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       hand: newHand,
       discardPile: newDiscardPile,
     });
+
+    // 고대 도서관: 카드 뽑을 때마다 무작위 적에게 피해 1 (힘 절반 적용)
+    if (activeTerrain === 'ancient_library' && drawnCount > 0) {
+      const aliveEnemies = get().enemies.filter(e => e.currentHp > 0);
+      const strength = get().playerStatuses.find(s => s.type === 'STRENGTH')?.stacks || 0;
+      const halfStrength = Math.floor(strength / 2);
+      const baseDamage = 1 + halfStrength;
+      for (let i = 0; i < drawnCount; i++) {
+        if (aliveEnemies.length > 0) {
+          const randomEnemy = aliveEnemies[Math.floor(Math.random() * aliveEnemies.length)];
+          get().dealDamageToEnemy(randomEnemy.instanceId, Math.max(0, baseDamage));
+        }
+      }
+    }
 
     // 업적 추적: 손패 변경 시 체크 (공격 카드 5장 이상 등)
     checkHandAchievements(newHand);
@@ -1143,6 +1242,25 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
         }
         case 'RANDOM_HEAL': {
           // 야생 버섯 섭취: 랜덤 범위 HP 회복/손실
+          const currentTerrain = get().activeTerrain;
+
+          // 독성 늪지대: 고정 HP 5 회복 (독 면역)
+          if (currentTerrain === 'toxic_swamp') {
+            const fixedHeal = 5;
+            const undead = get().playerStatuses.find(s => s.type === 'UNDEAD');
+            if (undead && undead.stacks > 0) {
+              useGameStore.getState().modifyHp(-fixedHeal);
+              get().addDamagePopup(fixedHeal, 'damage', 0, 0, 'player');
+              get().addToCombatLog(`🌿 독성 늪지대: 💀 언데드화! 회복이 ${fixedHeal} 피해로 전환!`);
+            } else {
+              useGameStore.getState().healPlayer(fixedHeal);
+              get().addDamagePopup(fixedHeal, 'heal', 0, 0, 'player');
+              get().addToCombatLog(`🌿 독성 늪지대: 야생 버섯이 정화됨! HP ${fixedHeal} 회복!`);
+              useStatsStore.getState().addHealing(fixedHeal);
+            }
+            break;
+          }
+
           const minVal = effect.min ?? 0;
           const maxVal = effect.value;
           const critChance = effect.critChance ?? 0;
@@ -1233,11 +1351,19 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
           break;
         }
         case 'APPLY_OIL': {
-          // 기름통: 적에게 기름 마킹
+          // 기름통: 적에게 기름 마킹 (용암 지대: 직접 공격으로 변경)
           if (targetEnemyId) {
-            const explosionDmg = effect.explosionDamage || 8;
-            get().applyStatusToEnemy(targetEnemyId, { type: 'OIL_MARKED', stacks: explosionDmg });
-            get().addToCombatLog(`적에게 기름 부착! 처치 시 ${explosionDmg} 폭발!`);
+            const explosionDmg = effect.explosionDamage || 12;
+            const currentTerrain = get().activeTerrain;
+            if (currentTerrain === 'lava_zone') {
+              // 용암 지대: 기름통이 일반 공격으로 변경 (3배 피해)
+              const lavaDamage = explosionDmg * 3; // 12*3=36, 18*3=54
+              get().dealDamageToEnemy(targetEnemyId, lavaDamage);
+              get().addToCombatLog(`🔥 용암 지대: 기름통 폭발! ${lavaDamage} 피해!`);
+            } else {
+              get().applyStatusToEnemy(targetEnemyId, { type: 'OIL_MARKED', stacks: explosionDmg });
+              get().addToCombatLog(`적에게 기름 부착! 처치 시 ${explosionDmg} 폭발!`);
+            }
           }
           break;
         }
@@ -1259,6 +1385,85 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
           get().addToCombatLog(`방어도 획득 시 ${effect.value}% 피해 변환!`);
           break;
         }
+        // 지형 카드 효과
+        case 'TERRAIN_TOXIC_SWAMP': {
+          // 무중력 공간에서 변경 시 코스트 복구
+          if (get().activeTerrain === 'zero_gravity') {
+            const restoredHand = get().hand.map(c => ({ ...c, cost: c.originalCost }));
+            set({ hand: restoredHand });
+            get().addToCombatLog(`🌀 무중력 해제: 카드 코스트 복구!`);
+          }
+          set({ activeTerrain: 'toxic_swamp' });
+          get().addToCombatLog(`🌿 지형 변경: 독성 늪지대!`);
+          break;
+        }
+        case 'TERRAIN_LAVA_ZONE': {
+          // 무중력 공간에서 변경 시 코스트 복구
+          if (get().activeTerrain === 'zero_gravity') {
+            const restoredHand = get().hand.map(c => ({ ...c, cost: c.originalCost }));
+            set({ hand: restoredHand });
+            get().addToCombatLog(`🌀 무중력 해제: 카드 코스트 복구!`);
+          }
+          set({ activeTerrain: 'lava_zone' });
+          get().addToCombatLog(`🔥 지형 변경: 용암 지대!`);
+          break;
+        }
+        case 'TERRAIN_SACRED_GROUND': {
+          // 무중력 공간에서 변경 시 코스트 복구
+          if (get().activeTerrain === 'zero_gravity') {
+            const restoredHand = get().hand.map(c => ({ ...c, cost: c.originalCost }));
+            set({ hand: restoredHand });
+            get().addToCombatLog(`🌀 무중력 해제: 카드 코스트 복구!`);
+          }
+          set({ activeTerrain: 'sacred_ground' });
+          get().addToCombatLog(`✨ 지형 변경: 신성한 구역!`);
+          break;
+        }
+        case 'TERRAIN_GLADIATOR_ARENA': {
+          // 무중력 공간에서 변경 시 코스트 복구
+          if (get().activeTerrain === 'zero_gravity') {
+            const restoredHand = get().hand.map(c => ({ ...c, cost: c.originalCost }));
+            set({ hand: restoredHand });
+            get().addToCombatLog(`🌀 무중력 해제: 카드 코스트 복구!`);
+          }
+          set({ activeTerrain: 'gladiator_arena' });
+          get().addToCombatLog(`⚔️ 지형 변경: 검투사의 경기장!`);
+          break;
+        }
+        case 'TERRAIN_ZERO_GRAVITY': {
+          set({ activeTerrain: 'zero_gravity' });
+          get().addToCombatLog(`🌀 지형 변경: 무중력 공간!`);
+          // 현재 손패 카드 코스트 무작위 변경
+          const currentHandCards = get().hand;
+          const randomizedHand = currentHandCards.map(c => ({
+            ...c,
+            cost: Math.floor(Math.random() * 4), // 0~3
+          }));
+          set({ hand: randomizedHand });
+          break;
+        }
+        case 'TERRAIN_THUNDER_WASTELAND': {
+          // 무중력 공간에서 변경 시 코스트 복구
+          if (get().activeTerrain === 'zero_gravity') {
+            const restoredHand = get().hand.map(c => ({ ...c, cost: c.originalCost }));
+            set({ hand: restoredHand });
+            get().addToCombatLog(`🌀 무중력 해제: 카드 코스트 복구!`);
+          }
+          set({ activeTerrain: 'thunder_wasteland' });
+          get().addToCombatLog(`⚡ 지형 변경: 벼락치는 황야!`);
+          break;
+        }
+        case 'TERRAIN_ANCIENT_LIBRARY': {
+          // 무중력 공간에서 변경 시 코스트 복구
+          if (get().activeTerrain === 'zero_gravity') {
+            const restoredHand = get().hand.map(c => ({ ...c, cost: c.originalCost }));
+            set({ hand: restoredHand });
+            get().addToCombatLog(`🌀 무중력 해제: 카드 코스트 복구!`);
+          }
+          set({ activeTerrain: 'ancient_library' });
+          get().addToCombatLog(`📚 지형 변경: 고대 도서관!`);
+          break;
+        }
       }
     });
 
@@ -1274,18 +1479,31 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     // 카드 사용 후 처리 (DRAW 효과로 hand가 변경되었을 수 있으므로 다시 가져옴)
     const currentHand = get().hand;
     const newHand = currentHand.filter(c => c.instanceId !== cardInstanceId);
-    const { discardPile, exhaustPile, energy: currentEnergy } = get();
+    const { discardPile, exhaustPile, energy: currentEnergy, activeTerrain } = get();
 
-    // exhaust 카드는 소멸 더미로
+    // exhaust 카드는 소멸 더미로 (고대 도서관: 소멸 안 하고 버려진 카드 더미로, 단 TERRAIN 카드는 제외)
     if (card.exhaust) {
-      set({
-        hand: newHand,
-        exhaustPile: [...exhaustPile, card],
-        energy: currentEnergy - card.cost,
-        selectedCardId: null,
-        targetingMode: false,
-      });
-      get().addToCombatLog(`${card.name} 소멸!`);
+      if (activeTerrain === 'ancient_library' && card.type !== 'TERRAIN') {
+        // 고대 도서관: 소멸 카드도 버려진 카드 더미로 (TERRAIN 카드는 정상 소멸)
+        const restoredCard = { ...card, cost: card.originalCost };
+        set({
+          hand: newHand,
+          discardPile: [...discardPile, restoredCard],
+          energy: currentEnergy - card.cost,
+          selectedCardId: null,
+          targetingMode: false,
+        });
+        get().addToCombatLog(`📚 고대 도서관: ${card.name} 소멸 방지!`);
+      } else {
+        set({
+          hand: newHand,
+          exhaustPile: [...exhaustPile, card],
+          energy: currentEnergy - card.cost,
+          selectedCardId: null,
+          targetingMode: false,
+        });
+        get().addToCombatLog(`${card.name} 소멸!`);
+      }
     }
     // returnToHand 카드는 잠시 버린 후 다시 손으로 돌아옴
     else if (card.returnToHand) {
@@ -1310,6 +1528,18 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
           });
           playCardDraw();
           get().addToCombatLog(`${card.name}이(가) 손으로 돌아왔습니다!`);
+
+          // 고대 도서관: 카드가 손으로 돌아올 때도 피해 (힘 절반 적용)
+          if (get().activeTerrain === 'ancient_library') {
+            const aliveEnemies = get().enemies.filter(e => e.currentHp > 0);
+            const strength = get().playerStatuses.find(s => s.type === 'STRENGTH')?.stacks || 0;
+            const halfStrength = Math.floor(strength / 2);
+            const damage = 1 + halfStrength;
+            if (aliveEnemies.length > 0) {
+              const randomEnemy = aliveEnemies[Math.floor(Math.random() * aliveEnemies.length)];
+              get().dealDamageToEnemy(randomEnemy.instanceId, Math.max(0, damage));
+            }
+          }
         }
       }, 300);
     }
@@ -1349,7 +1579,7 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
   },
 
   dealDamageToEnemy: (enemyId: string, baseDamage: number) => {
-    const { enemies, playerStatuses } = get();
+    const { enemies, playerStatuses, activeTerrain } = get();
     const enemyIndex = enemies.findIndex(e => e.instanceId === enemyId);
 
     if (enemyIndex === -1) return;
@@ -1372,6 +1602,12 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     if (vulnerable && vulnerable.stacks > 0) {
       damageMultiplier += 0.5;
       modifiers.push('장비파괴+50%');
+    }
+
+    // 검투사의 경기장: +50% 데미지
+    if (activeTerrain === 'gladiator_arena') {
+      damageMultiplier += 0.5;
+      modifiers.push('경기장+50%');
     }
 
     // 최종 데미지 계산 (버림 사용)
@@ -1531,7 +1767,7 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
   },
 
   dealDamageToPlayer: (baseDamage: number, attackerEnemyId?: string) => {
-    const { playerBlock, playerStatuses, enemies } = get();
+    const { playerBlock, playerStatuses, enemies, activeTerrain } = get();
 
     // 무적 상태 체크
     const invulnerable = playerStatuses.find(s => s.type === 'INVULNERABLE');
@@ -1562,6 +1798,12 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     if (vulnerable && vulnerable.stacks > 0) {
       damageMultiplier += 0.5;
       modifiers.push('장비파괴+50%');
+    }
+
+    // 검투사의 경기장: +50% 데미지 (적도 더 강해짐)
+    if (activeTerrain === 'gladiator_arena') {
+      damageMultiplier += 0.5;
+      modifiers.push('경기장+50%');
     }
 
     // 최종 데미지 계산 (버림 사용)
@@ -1675,11 +1917,25 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
   },
 
   gainPlayerBlock: (amount: number) => {
-    const { playerBlock, playerStatuses, enemies } = get();
-    const newBlock = playerBlock + amount;
+    const { playerBlock, playerStatuses, enemies, activeTerrain } = get();
+
+    // 검투사의 경기장: 방어도 획득 불가
+    if (activeTerrain === 'gladiator_arena') {
+      get().addToCombatLog(`⚔️ 검투사의 경기장: 방어도 획득 불가!`);
+      return;
+    }
+
+    // 신성한 구역: 방어도 2배
+    let finalAmount = amount;
+    if (activeTerrain === 'sacred_ground') {
+      finalAmount = amount * 2;
+      get().addToCombatLog(`✨ 신성한 구역: 방어도 2배!`);
+    }
+
+    const newBlock = playerBlock + finalAmount;
     set({ playerBlock: newBlock });
     const pName = useGameStore.getState().playerName;
-    get().addToCombatLog(`${pName}(이)가 방어도 ${amount} 획득!`);
+    get().addToCombatLog(`${pName}(이)가 방어도 ${finalAmount} 획득!`);
 
     // 통계 업데이트: 방어도 획득
     useStatsStore.getState().addBlockGained(amount);
