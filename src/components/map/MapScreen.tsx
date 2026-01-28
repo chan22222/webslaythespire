@@ -21,7 +21,7 @@ const VIEW_STEP_PC = 400; // PC 버튼 클릭시 이동 거리
 const VIEW_STEP_MOBILE = 150; // 모바일 버튼 클릭시 이동 거리
 
 export function MapScreen() {
-  const { player, map, moveToNode, getAvailableNodes } = useGameStore();
+  const { player, map, moveToNode, getAvailableNodes, setPhase } = useGameStore();
   const availableNodes = getAvailableNodes();
   const [showDeck, setShowDeck] = useState(false);
   const [showRelics, setShowRelics] = useState(false);
@@ -102,6 +102,7 @@ export function MapScreen() {
   }, [map.currentNodeId, availableNodes, map.nodes.length, mapScale]);
 
   const isMobile = () => window.innerWidth <= 800;
+  const isMobileHeight = () => window.innerHeight < 500;
 
   // 스케일 적용된 맵 너비
   const getMapWidth = () => MAP_WIDTH * mapScale;
@@ -252,6 +253,29 @@ export function MapScreen() {
           background: 'radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.7) 100%)',
         }}
       />
+
+      {/* 타이틀로 돌아가기 버튼 */}
+      <button
+        onMouseEnter={playButtonHover}
+        onClick={() => { playButtonClick(); setPhase('MAIN_MENU'); }}
+        className="fixed bottom-4 left-4 z-50 flex items-center justify-center transition-all duration-150 hover:brightness-125"
+        style={{
+          background: 'rgba(10, 8, 5, 0.8)',
+          border: '1px solid var(--gold-dark)',
+          borderRadius: '4px',
+          padding: isMobileHeight() ? '2px 4px' : '8px 12px',
+        }}
+      >
+        <span
+          style={{
+            fontFamily: '"NeoDunggeunmo", cursive',
+            color: 'var(--gold)',
+            fontSize: isMobileHeight() ? '8px' : '14px',
+          }}
+        >
+          ← 타이틀로 돌아가기
+        </span>
+      </button>
 
       {/* 상단 HUD */}
       <header

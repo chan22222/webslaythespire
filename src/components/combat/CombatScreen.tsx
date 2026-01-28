@@ -2004,7 +2004,13 @@ export function CombatScreen() {
           </div>
 
           {/* 적 영역 - 우측 (고정 슬롯 시스템) */}
-          <div className="combat-enemy-gap flex items-end justify-center gap-0.5 xs:gap-1 sm:gap-2 md:gap-4 lg:gap-6">
+          <div
+            className="combat-enemy-gap flex items-end justify-center gap-0.5 xs:gap-1 sm:gap-2 md:gap-4 lg:gap-6"
+            style={{
+              // 적이 1마리일 때 플레이어와 간격 확보
+              paddingLeft: enemies.length === 1 ? '80px' : enemies.length === 2 ? '40px' : '0',
+            }}
+          >
             {enemies.map((enemy, index) => {
               // 적마다 다른 높이로 배치 (시각적 변화)
               const yOffsets = [-15, 8, -5, 12, -8];

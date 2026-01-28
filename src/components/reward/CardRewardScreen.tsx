@@ -36,10 +36,10 @@ export function CardRewardScreen() {
     const isGuest = useAuthStore.getState().isGuest;
     // 현재 노드 타입 확인
     const currentNode = getCurrentNode();
-    const isBossNode = currentNode?.type === 'BOSS';
+    const isBossOrElite = currentNode?.type === 'BOSS' || currentNode?.type === 'ELITE';
 
-    // 보스 처치 시 5장 (지형 3장 + 일반 2장), 일반은 3장
-    if (isBossNode) {
+    // 보스/엘리트 처치 시 5장 (지형 3장 + 일반 2장), 일반은 3장
+    if (isBossOrElite) {
       setCardRewards(generateBossCardRewards(deckCardIds, unlockedAchievements, isGuest));
     } else {
       setCardRewards(generateCardRewards(3, deckCardIds, unlockedAchievements, isGuest));
