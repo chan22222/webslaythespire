@@ -636,14 +636,18 @@ export function CombatScreen() {
     isPlayerDyingRef.current = isPlayerDying;
   }, [isPlayerDying]);
 
-  // 마우스 위치 추적
+  // 마우스 위치 추적 (키보드 선택 시 화살표 업데이트용)
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       mousePosRef.current = { x: e.clientX, y: e.clientY };
+      // 키보드 선택 중이면 화살표 끝점 업데이트
+      if (isKeyboardSelection) {
+        setKeyboardArrowEnd({ x: e.clientX, y: e.clientY });
+      }
     };
     window.addEventListener('mousemove', handleMouseMove);
     return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, []);
+  }, [isKeyboardSelection]);
 
   // 번개 이펙트 큐 처리 (벼락치는 황야)
   useEffect(() => {
@@ -2331,8 +2335,8 @@ export function CombatScreen() {
             isActive={true}
             cardType={card.type}
             needsTarget={needsTarget}
-            initialEndX={keyboardArrowEnd?.x}
-            initialEndY={keyboardArrowEnd?.y}
+            controlledEndX={keyboardArrowEnd?.x}
+            controlledEndY={keyboardArrowEnd?.y}
           />
         );
       })()}

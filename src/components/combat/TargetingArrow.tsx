@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useId, useRef } from 'react';
+import { useEffect, useLayoutEffect, useState, useCallback, useId, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useCombatStore } from '../../stores/combatStore';
 
@@ -10,6 +10,9 @@ interface TargetingArrowProps {
   needsTarget: boolean;
   initialEndX?: number;
   initialEndY?: number;
+  // 외부에서 끝점을 제어할 때 사용 (키보드 선택 모드)
+  controlledEndX?: number;
+  controlledEndY?: number;
 }
 
 interface SnapTarget {
@@ -26,8 +29,11 @@ const isMobile = () => window.innerHeight < 500;
 // 자석 효과 범위 (px) - 모바일에서 더 작게
 const getSnapDistance = () => isMobile() ? 60 : 100;
 
-export function TargetingArrow({ startX, startY, isActive, cardType, needsTarget, initialEndX, initialEndY }: TargetingArrowProps) {
+export function TargetingArrow({ startX, startY, isActive, cardType, needsTarget, initialEndX, initialEndY, controlledEndX, controlledEndY }: TargetingArrowProps) {
+  const isControlled = controlledEndX !== undefined && controlledEndY !== undefined;
   const [mousePos, setMousePos] = useState({ x: initialEndX ?? startX, y: initialEndY ?? startY });
+  // 초기 끝점을 ref로 저장 (dependency 문제 방지)
+  const initialEndRef = useRef({ x: initialEndX, y: initialEndY });
   const [snappedTarget, setSnappedTarget] = useState<SnapTarget | null>(null);
   const targetsRef = useRef<SnapTarget[]>([]);
   const playerRef = useRef<SnapTarget | null>(null);
@@ -136,25 +142,67 @@ export function TargetingArrow({ startX, startY, isActive, cardType, needsTarget
     }
   }, [processMove]);
 
-  const handleMouseMove = useCallback((e: MouseEvent) => {
-    handleMove(e.clientX, e.clientY);
-  }, [handleMove]);
+  // 콜백을 ref로 감싸서 dependency 문제 방지
+  const handleMoveRef = useRef(handleMove);
+  handleMoveRef.current = handleMove;
 
-  const handleTouchMove = useCallback((e: TouchEvent) => {
-    const touch = e.touches[0];
-    handleMove(touch.clientX, touch.clientY);
-  }, [handleMove]);
-
+  // props 변경 시 ref 업데이트
   useEffect(() => {
-    if (isActive) {
+    initialEndRef.current = { x: initialEndX, y: initialEndY };
+  }, [initialEndX, initialEndY]);
+
+  // 외부 제어 모드: controlledEndX/Y가 변경되면 스냅 처리
+  useEffect(() => {
+    if (isActive && isControlled && controlledEndX !== undefined && controlledEndY !== undefined) {
+      updateTargets();
+
+      if (needsTarget) {
+        // 적에게 스냅
+        let closest: SnapTarget | null = null;
+        let minDistance = getSnapDistance();
+        for (const target of targetsRef.current) {
+          const distance = Math.sqrt(Math.pow(controlledEndX - target.x, 2) + Math.pow(controlledEndY - target.y, 2));
+          if (distance < minDistance) {
+            minDistance = distance;
+            closest = target;
+          }
+        }
+        setSnappedTarget(closest);
+        setTargetedEnemyId(closest && closest.id !== 'player' ? closest.id : null);
+        if (closest) {
+          setMousePos({ x: closest.x, y: closest.y - 20 });
+        } else {
+          setMousePos({ x: controlledEndX, y: controlledEndY });
+        }
+      } else {
+        // 논타겟: 플레이어에 스냅
+        const isInPlayArea = controlledEndY < window.innerHeight * 0.5;
+        if (isInPlayArea && playerRef.current) {
+          setSnappedTarget(playerRef.current);
+          setMousePos({ x: playerRef.current.x, y: playerRef.current.y - 30 });
+        } else {
+          setSnappedTarget(null);
+          setMousePos({ x: controlledEndX, y: controlledEndY });
+        }
+        setTargetedEnemyId(null);
+      }
+    }
+  }, [isActive, isControlled, controlledEndX, controlledEndY, needsTarget, updateTargets, setTargetedEnemyId]);
+
+  // useLayoutEffect로 DOM 업데이트 직후 동기적으로 이벤트 리스너 등록 (비제어 모드만)
+  useLayoutEffect(() => {
+    // 외부 제어 모드면 내부 이벤트 리스너 사용 안 함
+    if (isActive && !isControlled) {
       updateTargets();
       // 초기 끝점이 주어지면 그 위치로, 아니면 시작점으로
-      const initX = initialEndX ?? startX;
-      const initY = initialEndY ?? startY;
+      const initEndX = initialEndRef.current.x;
+      const initEndY = initialEndRef.current.y;
+      const initX = initEndX ?? startX;
+      const initY = initEndY ?? startY;
       setMousePos({ x: initX, y: initY });
       setSnappedTarget(null);
       // 초기 위치에서 바로 스냅 체크
-      if (initialEndX !== undefined && initialEndY !== undefined) {
+      if (initEndX !== undefined && initEndY !== undefined) {
         pendingPosRef.current = { x: initX, y: initY };
         requestAnimationFrame(() => {
           if (pendingPosRef.current) {
@@ -181,11 +229,19 @@ export function TargetingArrow({ startX, startY, isActive, cardType, needsTarget
           }
         });
       }
-      window.addEventListener('mousemove', handleMouseMove);
-      window.addEventListener('touchmove', handleTouchMove);
+
+      // ref를 통해 호출하여 dependency 변경 시 cleanup/재등록 방지
+      const onMouseMove = (e: MouseEvent) => handleMoveRef.current(e.clientX, e.clientY);
+      const onTouchMove = (e: TouchEvent) => {
+        const touch = e.touches[0];
+        handleMoveRef.current(touch.clientX, touch.clientY);
+      };
+
+      window.addEventListener('mousemove', onMouseMove);
+      window.addEventListener('touchmove', onTouchMove);
       return () => {
-        window.removeEventListener('mousemove', handleMouseMove);
-        window.removeEventListener('touchmove', handleTouchMove);
+        window.removeEventListener('mousemove', onMouseMove);
+        window.removeEventListener('touchmove', onTouchMove);
         if (rafRef.current) {
           cancelAnimationFrame(rafRef.current);
           rafRef.current = null;
@@ -194,7 +250,7 @@ export function TargetingArrow({ startX, startY, isActive, cardType, needsTarget
         setTargetedEnemyId(null);
       };
     }
-  }, [isActive, handleMouseMove, handleTouchMove, startX, startY, initialEndX, initialEndY, updateTargets, setTargetedEnemyId, needsTarget]);
+  }, [isActive, isControlled, startX, startY, updateTargets, setTargetedEnemyId, needsTarget]);
 
   if (!isActive) return null;
 
