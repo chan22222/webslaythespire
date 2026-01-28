@@ -9,7 +9,7 @@ import { Enemy } from './Enemy';
 import { EnergyOrb } from './EnergyOrb';
 import { PlayerStatus } from './PlayerStatus';
 import { DamagePopupManager } from './DamagePopup';
-import { SwordSlashEffect, SlashHitEffect, ThunderstrikeEffect } from './characters';
+import { SwordSlashEffect, SlashHitEffect, ThunderstrikeEffect, HitEffect } from './characters';
 import { generateNormalEncounter, ELITE_ENEMIES, BOSS_ENEMIES, EASTER_EGG_ENCOUNTER } from '../../data/enemies';
 import { playButtonHover, playButtonClick, playAttack, playFootsteps, playBuff, playBGM, playThunder } from '../../utils/sound';
 
@@ -555,6 +555,8 @@ export function CombatScreen() {
     resetCombat,
     thunderEffectQueue,
     clearThunderEffects,
+    hitEffectQueue,
+    removeHitEffect,
   } = useCombatStore();
 
   const currentNode = getCurrentNode();
@@ -1616,8 +1618,19 @@ export function CombatScreen() {
             key={effect.id}
             x={effect.x}
             y={effect.y}
-            size={window.innerHeight < 500 ? 150 : 250}
+            size={window.innerHeight < 500 ? 100 : 250}
             onComplete={() => setThunderstrikeEffects(prev => prev.filter(e => e.id !== effect.id))}
+          />
+        ))}
+
+        {/* 범용 히트 이펙트 (모든 적 피해에 표시) */}
+        {hitEffectQueue.map(effect => (
+          <HitEffect
+            key={effect.enemyId}
+            x={effect.x}
+            y={effect.y}
+            size={window.innerHeight < 500 ? 100 : 240}
+            onComplete={() => removeHitEffect(effect.enemyId)}
           />
         ))}
 

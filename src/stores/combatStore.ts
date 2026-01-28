@@ -102,6 +102,11 @@ interface CombatStore extends CombatState {
   addThunderEffect: (targetType: 'player' | 'enemy', targetId: string | undefined, delay: number) => void;
   clearThunderEffects: () => void;
 
+  // 히트 이펙트 큐 (적이 피해 받을 때)
+  hitEffectQueue: { enemyId: string; x: number; y: number }[];
+  addHitEffect: (enemyId: string, x: number, y: number) => void;
+  removeHitEffect: (enemyId: string) => void;
+
   // 추가 턴 (시간 왜곡)
   extraTurnPending: boolean;
 
@@ -132,6 +137,7 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
   enemyAttackTriggers: {},
   playerDebuffTrigger: 0,
   thunderEffectQueue: [],
+  hitEffectQueue: [],
   extraTurnPending: false,
   isPlayingCard: false,
   isEndTurnLocked: false,
@@ -153,6 +159,19 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
 
   clearThunderEffects: () => {
     set({ thunderEffectQueue: [] });
+  },
+
+  addHitEffect: (enemyId, x, y) => {
+    const id = `${enemyId}-${Date.now()}`;
+    set(state => ({
+      hitEffectQueue: [...state.hitEffectQueue, { enemyId: id, x, y }],
+    }));
+  },
+
+  removeHitEffect: (effectId) => {
+    set(state => ({
+      hitEffectQueue: state.hitEffectQueue.filter(e => e.enemyId !== effectId),
+    }));
   },
 
   addDamagePopup: (value: number, type: DamagePopup['type'], x: number, y: number, targetId?: string, modifier?: number, offsetX?: number, offsetY?: number) => {
@@ -868,17 +887,19 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       discardPile: newDiscardPile,
     });
 
-    // 고대 도서관: 카드 뽑을 때마다 무작위 적에게 피해 1 (힘 절반 적용)
+    // 고대 도서관: 카드 뽑을 때마다 무작위 적에게 피해 1 (힘 절반 적용, 50ms 딜레이)
     if (activeTerrain === 'ancient_library' && drawnCount > 0) {
-      const aliveEnemies = get().enemies.filter(e => e.currentHp > 0);
       const strength = get().playerStatuses.find(s => s.type === 'STRENGTH')?.stacks || 0;
       const halfStrength = Math.floor(strength / 2);
       const baseDamage = 1 + halfStrength;
       for (let i = 0; i < drawnCount; i++) {
-        if (aliveEnemies.length > 0) {
-          const randomEnemy = aliveEnemies[Math.floor(Math.random() * aliveEnemies.length)];
-          get().dealDamageToEnemy(randomEnemy.instanceId, Math.max(0, baseDamage));
-        }
+        setTimeout(() => {
+          const aliveEnemies = get().enemies.filter(e => e.currentHp > 0);
+          if (aliveEnemies.length > 0) {
+            const randomEnemy = aliveEnemies[Math.floor(Math.random() * aliveEnemies.length)];
+            get().dealDamageToEnemy(randomEnemy.instanceId, Math.max(0, baseDamage));
+          }
+        }, i * 50);
       }
     }
 
@@ -1662,8 +1683,9 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       const enemyEl = document.querySelector(`[data-enemy-id="${enemyId}"]`);
       if (enemyEl) {
         const rect = enemyEl.getBoundingClientRect();
-        const randomX = (Math.random() - 0.5) * 60; // -30 ~ +30
-        const randomY = (Math.random() - 0.5) * 40; // -20 ~ +20
+        const isMobile = window.innerHeight < 500;
+        const randomX = (Math.random() - 0.5) * (isMobile ? 30 : 60);
+        const randomY = (Math.random() - 0.5) * (isMobile ? 20 : 40);
         get().addDamagePopup(blockedAmount, 'blocked', rect.left + rect.width / 2 + randomX, rect.top + rect.height / 3 + randomY);
       }
     }
@@ -1676,11 +1698,17 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       const enemyEl = document.querySelector(`[data-enemy-id="${enemyId}"]`);
       if (enemyEl) {
         const rect = enemyEl.getBoundingClientRect();
-        const randomX = (Math.random() - 0.5) * 60; // -30 ~ +30
-        const randomY = (Math.random() - 0.5) * 40; // -20 ~ +20
+        const isMobile = window.innerHeight < 500;
+        const randomX = (Math.random() - 0.5) * (isMobile ? 30 : 60);
+        const randomY = (Math.random() - 0.5) * (isMobile ? 20 : 40);
         setTimeout(() => {
           get().addDamagePopup(remainingDamage, 'damage', rect.left + rect.width / 2 + randomX, rect.top + rect.height / 3 + randomY);
         }, blockedAmount > 0 ? 150 : 0);
+
+        // 히트 이펙트 추가 (랜덤 위치, 약간 아래로)
+        const hitRandomX = (Math.random() - 0.5) * (isMobile ? 50 : 100);
+        const hitRandomY = (Math.random() - 0.5) * (isMobile ? 35 : 70);
+        get().addHitEffect(enemyId, rect.left + rect.width / 2 + hitRandomX, rect.top + rect.height / 2 + hitRandomY);
       }
     }
 

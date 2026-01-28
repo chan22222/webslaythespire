@@ -90,6 +90,17 @@ const THUNDERSTRIKE_EFFECT_CONFIG = {
   speed: 40,
 };
 
+// 범용 히트 이펙트 스프라이트시트 설정 (hiteffect.png - 336x48, 48x48 프레임 7개)
+const GENERIC_HIT_EFFECT_CONFIG = {
+  frameWidth: 48,
+  frameHeight: 48,
+  columns: 7,
+  sheetWidth: 336,
+  sheetHeight: 48,
+  totalFrames: 7,
+  speed: 35,
+};
+
 // 모든 스프라이트 이미지 미리 로드 (깜빡임 방지)
 const preloadImages = [
   '/sprites/character_sprite_1.png',
@@ -98,6 +109,7 @@ const preloadImages = [
   '/sprites/swordslash.png',
   '/sprites/slashhit.png',
   '/sprites/skill/Thunderstrike.png',
+  '/sprites/skill/hiteffect.png',
 ];
 preloadImages.forEach(src => {
   const img = new Image();
@@ -277,6 +289,60 @@ export function ThunderstrikeEffect({ x, y, size = 200, onComplete }: SlashEffec
         backgroundImage: 'url(/sprites/skill/Thunderstrike.png)',
         backgroundPosition: `${bgX}px 0px`,
         backgroundSize: `${THUNDERSTRIKE_EFFECT_CONFIG.sheetWidth * scale}px ${THUNDERSTRIKE_EFFECT_CONFIG.sheetHeight * scale}px`,
+        backgroundRepeat: 'no-repeat',
+        imageRendering: 'pixelated',
+        mixBlendMode: 'screen',
+      }}
+    />
+  );
+}
+
+// 히트 이펙트 (hiteffect.png) - 적이 피해 받을 때 항상 표시
+export function HitEffect({ x, y, size = 120, onComplete }: SlashEffectProps) {
+  const [frame, setFrame] = useState(0);
+  const [isVisible, setIsVisible] = useState(true);
+
+  const scale = size / GENERIC_HIT_EFFECT_CONFIG.frameHeight;
+  const width = GENERIC_HIT_EFFECT_CONFIG.frameWidth * scale;
+  const height = GENERIC_HIT_EFFECT_CONFIG.frameHeight * scale;
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setFrame(prev => {
+        const nextFrame = prev + 1;
+        if (nextFrame >= GENERIC_HIT_EFFECT_CONFIG.totalFrames) {
+          clearInterval(interval);
+          setIsVisible(false);
+          return prev;
+        }
+        return nextFrame;
+      });
+    }, GENERIC_HIT_EFFECT_CONFIG.speed);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    if (!isVisible && onComplete) {
+      onComplete();
+    }
+  }, [isVisible, onComplete]);
+
+  if (!isVisible) return null;
+
+  const bgX = -(frame * GENERIC_HIT_EFFECT_CONFIG.frameWidth) * scale;
+
+  return (
+    <div
+      className="fixed pointer-events-none z-50"
+      style={{
+        left: x - width / 2,
+        top: y - height / 2,
+        width,
+        height,
+        backgroundImage: 'url(/sprites/skill/hiteffect.png)',
+        backgroundPosition: `${bgX}px 0px`,
+        backgroundSize: `${GENERIC_HIT_EFFECT_CONFIG.sheetWidth * scale}px ${GENERIC_HIT_EFFECT_CONFIG.sheetHeight * scale}px`,
         backgroundRepeat: 'no-repeat',
         imageRendering: 'pixelated',
         mixBlendMode: 'screen',
