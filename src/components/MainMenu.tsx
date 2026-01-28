@@ -297,6 +297,7 @@ export function MainMenu() {
   const [showVolumePrompt, setShowVolumePrompt] = useState(false);
   const [volume, setVolume] = useState(100);
   const canContinue = !isGuest && hasSaveData;
+  const [showStats, setShowStats] = useState(false);
 
   // 상습 탈주자 여부 (이어하기로 불러왔을 때 이름이 변경됨)
   const isDeserter = playerName === '상습 탈주자';
@@ -604,35 +605,31 @@ export function MainMenu() {
         </button>
 
         {/* 통계&업적 버튼 */}
-        <StatsPanel
-          renderButton={(onClick) => (
-            <button
-              onMouseEnter={playButtonHover}
-              onClick={() => { playButtonClick(); onClick(); }}
-              className="relative transition-all duration-150 hover:scale-105 hover:brightness-125"
-              style={{
-                animation: 'buttonFadeIn 0.5s ease-out 0.8s forwards',
-                opacity: 0,
-              }}
-            >
-              <img
-                src="/button_long.png"
-                alt=""
-                className="w-[150px] sm:w-[185px] h-auto"
-                style={{ imageRendering: 'pixelated' }}
-              />
-              <span
-                className="absolute inset-0 flex items-center justify-center text-[var(--gold-light)] text-base sm:text-lg"
-                style={{
-                  fontFamily: '"NeoDunggeunmo", "Neo둥근모", cursive',
-                  textShadow: '2px 2px 0 #000',
-                }}
-              >
-                통계 & 업적
-              </span>
-            </button>
-          )}
-        />
+        <button
+          onMouseEnter={playButtonHover}
+          onClick={() => { playButtonClick(); setShowStats(true); }}
+          className="relative transition-all duration-150 hover:scale-105 hover:brightness-125"
+          style={{
+            animation: 'buttonFadeIn 0.5s ease-out 0.8s forwards',
+            opacity: 0,
+          }}
+        >
+          <img
+            src="/button_long.png"
+            alt=""
+            className="w-[150px] sm:w-[185px] h-auto"
+            style={{ imageRendering: 'pixelated' }}
+          />
+          <span
+            className="absolute inset-0 flex items-center justify-center text-[var(--gold-light)] text-base sm:text-lg"
+            style={{
+              fontFamily: '"NeoDunggeunmo", "Neo둥근모", cursive',
+              textShadow: '2px 2px 0 #000',
+            }}
+          >
+            통계 & 업적
+          </span>
+        </button>
       </div>
 
       {/* 경고 모달 */}
@@ -1148,6 +1145,13 @@ export function MainMenu() {
           </div>
         </div>
       )}
+
+      {/* 통계&업적 모달 - menu-buttons 밖에서 렌더링 (transform 영향 방지) */}
+      <StatsPanel
+        externalControl
+        isOpen={showStats}
+        onClose={() => setShowStats(false)}
+      />
     </div>
   );
 }
