@@ -107,7 +107,7 @@ const preloadImages = [
   '/sprites/character_sprite_dash.png',
   '/sprites/character_sprite_hitdeath.png',
   '/sprites/skill/slash.png',
-  '/sprites/slashhit.png',
+  '/sprites/skill/slashhit.png',
   '/sprites/skill/Thunderstrike.png',
   '/sprites/skill/hiteffect.png',
 ];
@@ -228,7 +228,7 @@ export function SlashHitEffect({ x, y, size = 120, onComplete }: SlashEffectProp
         top: y - height / 2,
         width,
         height,
-        backgroundImage: 'url(/sprites/slashhit.png)',
+        backgroundImage: 'url(/sprites/skill/slashhit.png)',
         backgroundPosition: `${bgX}px ${bgY}px`,
         backgroundSize: `${HIT_EFFECT_CONFIG.sheetWidth * scale}px ${HIT_EFFECT_CONFIG.sheetHeight * scale}px`,
         backgroundRepeat: 'no-repeat',

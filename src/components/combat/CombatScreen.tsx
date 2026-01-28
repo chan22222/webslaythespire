@@ -1193,6 +1193,13 @@ export function CombatScreen() {
                 y: targetRect.top + targetRect.height / 2 - 10 * scale,
                 scale
               }]);
+              // 적 타격 이펙트 (slashhit.png)
+              const hitEffectId = ++effectIdRef.current;
+              setHitEffects(prev => [...prev, {
+                id: hitEffectId,
+                x: targetRect.left + targetRect.width / 2,
+                y: targetRect.top + targetRect.height / 2
+              }]);
             }
 
             // 모든 타격 데미지 처리 (팝업은 dealDamageToEnemy에서 처리)
@@ -1307,6 +1314,13 @@ export function CombatScreen() {
                   x: targetRect.left + 10 * scale,
                   y: targetRect.top + targetRect.height / 2 - 10 * scale,
                   scale
+                }]);
+                // 적 타격 이펙트 (slashhit.png)
+                const hitEffectId = ++effectIdRef.current;
+                setHitEffects(prev => [...prev, {
+                  id: hitEffectId,
+                  x: targetRect.left + targetRect.width / 2,
+                  y: targetRect.top + targetRect.height / 2
                 }]);
               }
             }
