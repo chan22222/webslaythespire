@@ -803,7 +803,7 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
         } else {
           let blockAmount = enemy.intent.block || 0;
           if (terrain === 'sacred_ground') {
-            blockAmount *= 2; // 신성한 구역: 2배
+            blockAmount = Math.floor(blockAmount * 1.5); // 신성한 구역: 1.5배
           }
           enemy.block += blockAmount;
         }
@@ -1680,10 +1680,10 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       modifiers.push('장비파괴+50%');
     }
 
-    // 검투사의 경기장: +50% 데미지
+    // 검투사의 경기장: 2배 데미지 (+100%)
     if (activeTerrain === 'gladiator_arena') {
-      damageMultiplier += 0.5;
-      modifiers.push('경기장+50%');
+      damageMultiplier += 1.0;
+      modifiers.push('경기장+100%');
     }
 
     // 최종 데미지 계산 (버림 사용)
@@ -1912,10 +1912,10 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       modifiers.push('장비파괴+50%');
     }
 
-    // 검투사의 경기장: +50% 데미지 (적도 더 강해짐)
+    // 검투사의 경기장: 2배 데미지 (+100%, 적도 더 강해짐)
     if (activeTerrain === 'gladiator_arena') {
-      damageMultiplier += 0.5;
-      modifiers.push('경기장+50%');
+      damageMultiplier += 1.0;
+      modifiers.push('경기장+100%');
     }
 
     // 최종 데미지 계산 (버림 사용)
@@ -2042,11 +2042,11 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       return;
     }
 
-    // 신성한 구역: 방어도 2배
+    // 신성한 구역: 방어도 1.5배
     let finalAmount = amount;
     if (activeTerrain === 'sacred_ground') {
-      finalAmount = amount * 2;
-      get().addToCombatLog(`✨ 신성한 구역: 방어도 2배!`);
+      finalAmount = Math.floor(amount * 1.5);
+      get().addToCombatLog(`✨ 신성한 구역: 방어도 1.5배!`);
     }
 
     const newBlock = playerBlock + finalAmount;

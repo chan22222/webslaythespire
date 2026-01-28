@@ -596,6 +596,9 @@ export function Enemy({ enemy, isTargetable = false, incomingDamage = 0, ignoreB
   // 플레이어 상태 구독 (취약 확인용)
   const playerStatuses = useCombatStore(state => state.playerStatuses);
 
+  // 지형 효과 구독
+  const activeTerrain = useCombatStore(state => state.activeTerrain);
+
   // 피격 트리거 구독 (다중 타격용)
   const hitTrigger = useCombatStore(state => state.enemyHitTriggers[enemy.instanceId] || 0);
   const prevHitTriggerRef = useRef(hitTrigger);
@@ -685,25 +688,33 @@ export function Enemy({ enemy, isTargetable = false, incomingDamage = 0, ignoreB
     [playerStatuses]
   );
 
-  // 적 공격 데미지 계산 (힘, 약화, 플레이어 취약 반영)
+  // 적 공격 데미지 계산 (힘, 약화, 플레이어 취약, 지형 반영)
   const calculateEnemyDamage = useCallback((baseDamage: number) => {
     let damage = baseDamage;
 
     // 적의 힘 적용
     damage += enemyStrength;
 
-    // 적의 약화 적용 (25% 감소)
+    // 합연산 배수 계산
+    let damageMultiplier = 1.0;
+
+    // 적의 약화 적용 (-25%)
     if (enemyWeak && enemyWeak.stacks > 0) {
-      damage = Math.round(damage * 0.75);
+      damageMultiplier -= 0.25;
     }
 
-    // 플레이어 취약 적용 (50% 추가)
+    // 플레이어 취약 적용 (+50%)
     if (playerVulnerable && playerVulnerable.stacks > 0) {
-      damage = Math.round(damage * 1.5);
+      damageMultiplier += 0.5;
     }
 
-    return Math.max(0, damage);
-  }, [enemyStrength, enemyWeak, playerVulnerable]);
+    // 검투사의 경기장 (+100%)
+    if (activeTerrain === 'gladiator_arena') {
+      damageMultiplier += 1.0;
+    }
+
+    return Math.max(0, Math.floor(damage * damageMultiplier));
+  }, [enemyStrength, enemyWeak, playerVulnerable, activeTerrain]);
 
   // 데미지 계산 과정 문자열 생성 (예: "9+3" 또는 "9-2+4")
   const getDamageBreakdown = useCallback((baseDamage: number) => {
@@ -716,29 +727,44 @@ export function Enemy({ enemy, isTargetable = false, incomingDamage = 0, ignoreB
       parts.push(`${enemyStrength}`);
     }
 
-    // 적의 약화 (25% 감소) - 힘 적용 후 계산
+    // 힘 적용 후 기준값
+    const damageAfterStr = baseDamage + enemyStrength;
+
+    // 합연산 배수 계산 (calculateEnemyDamage와 동일한 방식)
+    let damageMultiplier = 1.0;
     if (enemyWeak && enemyWeak.stacks > 0) {
-      const damageAfterStr = baseDamage + enemyStrength;
-      const reduction = damageAfterStr - Math.round(damageAfterStr * 0.75);
-      if (reduction > 0) {
-        parts.push(`-${reduction}`);
-      }
+      damageMultiplier -= 0.25;
+    }
+    if (playerVulnerable && playerVulnerable.stacks > 0) {
+      damageMultiplier += 0.5;
+    }
+    if (activeTerrain === 'gladiator_arena') {
+      damageMultiplier += 1.0;
     }
 
-    // 플레이어 취약 (50% 추가)
-    if (playerVulnerable && playerVulnerable.stacks > 0) {
-      let damageBeforeVuln = baseDamage + enemyStrength;
-      if (enemyWeak && enemyWeak.stacks > 0) {
-        damageBeforeVuln = Math.round(damageBeforeVuln * 0.75);
-      }
-      const bonus = Math.round(damageBeforeVuln * 1.5) - damageBeforeVuln;
-      if (bonus > 0) {
-        parts.push(`+${bonus}`);
-      }
+    // 배수 효과 합산해서 표시
+    const multiplierEffect = Math.floor(damageAfterStr * damageMultiplier) - damageAfterStr;
+    if (multiplierEffect > 0) {
+      parts.push(`+${multiplierEffect}`);
+    } else if (multiplierEffect < 0) {
+      parts.push(`${multiplierEffect}`);
     }
 
     return parts.length > 1 ? parts.join('') : null;
-  }, [enemyStrength, enemyWeak, playerVulnerable]);
+  }, [enemyStrength, enemyWeak, playerVulnerable, activeTerrain]);
+
+  // 적 방어도 계산 (지형 반영)
+  const calculateEnemyBlock = useCallback((baseBlock: number) => {
+    // 검투사의 경기장: 방어도 획득 불가
+    if (activeTerrain === 'gladiator_arena') {
+      return 0;
+    }
+    // 신성한 구역: 1.5배
+    if (activeTerrain === 'sacred_ground') {
+      return Math.floor(baseBlock * 1.5);
+    }
+    return baseBlock;
+  }, [activeTerrain]);
 
   const getIntentTooltip = useCallback(() => {
     switch (enemy.intent.type) {
@@ -758,8 +784,15 @@ export function Enemy({ enemy, isTargetable = false, incomingDamage = 0, ignoreB
           ? `${damageText} 데미지를 ${hits}회 가합니다. (총 ${totalDamage})`
           : `${damageText} 데미지를 가합니다.`;
       case 'DEFEND':
-        const block = enemy.intent.block || 0;
-        return `${block} 방어도를 획득합니다.`;
+        const baseBlock = enemy.intent.block || 0;
+        const calculatedBlock = calculateEnemyBlock(baseBlock);
+        if (activeTerrain === 'gladiator_arena') {
+          return `방어도 획득 불가! (경기장)`;
+        }
+        if (activeTerrain === 'sacred_ground') {
+          return `${calculatedBlock} (${baseBlock}x1.5) 방어도를 획득합니다.`;
+        }
+        return `${baseBlock} 방어도를 획득합니다.`;
       case 'BUFF':
         const buffType = enemy.intent.statusType || 'STRENGTH';
         const buffStacks = enemy.intent.statusStacks || 3;
@@ -783,7 +816,7 @@ export function Enemy({ enemy, isTargetable = false, incomingDamage = 0, ignoreB
       default:
         return '알 수 없는 행동';
     }
-  }, [enemy.intent, calculateEnemyDamage, getDamageBreakdown]);
+  }, [enemy.intent, calculateEnemyDamage, getDamageBreakdown, calculateEnemyBlock, activeTerrain]);
 
   const intentDisplay = useMemo(() => {
     switch (enemy.intent.type) {
@@ -792,7 +825,9 @@ export function Enemy({ enemy, isTargetable = false, incomingDamage = 0, ignoreB
         const calculatedDamage = calculateEnemyDamage(baseDamage);
         return <AttackIntent damage={calculatedDamage} hits={enemy.intent.hits} />;
       case 'DEFEND':
-        return <DefendIntent block={enemy.intent.block || 0} />;
+        const baseBlock = enemy.intent.block || 0;
+        const calculatedBlock = calculateEnemyBlock(baseBlock);
+        return <DefendIntent block={calculatedBlock} />;
       case 'BUFF':
         return <BuffIntent stacks={enemy.intent.statusStacks} />;
       case 'DEBUFF':
@@ -800,7 +835,7 @@ export function Enemy({ enemy, isTargetable = false, incomingDamage = 0, ignoreB
       default:
         return <UnknownIntent />;
     }
-  }, [enemy.intent, calculateEnemyDamage]);
+  }, [enemy.intent, calculateEnemyDamage, calculateEnemyBlock]);
 
   // 죽은 적도 공간 유지 (visibility: hidden으로 처리)
   return (

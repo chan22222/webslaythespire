@@ -98,7 +98,7 @@ export function DraggableCard({
     const strength = playerStatuses.find(s => s.type === 'STRENGTH')?.stacks || 0;
     const damageWithStrength = baseDamage + strength;
 
-    // 합연산 배수 계산 (기본 1.0 + 취약 0.5 - 약화 0.25 + 검투사의 경기장 0.5)
+    // 합연산 배수 계산 (기본 1.0 + 취약 0.5 - 약화 0.25 + 검투사의 경기장 1.0)
     let damageMultiplier = 1.0;
 
     // 약화 적용 (-25%)
@@ -112,9 +112,9 @@ export function DraggableCard({
       damageMultiplier += 0.5;
     }
 
-    // 검투사의 경기장 (+50% 데미지)
+    // 검투사의 경기장 (2배 데미지 = +100%)
     if (activeTerrain === 'gladiator_arena') {
-      damageMultiplier += 0.5;
+      damageMultiplier += 1.0;
     }
 
     return Math.max(0, Math.floor(damageWithStrength * damageMultiplier));
@@ -132,7 +132,21 @@ export function DraggableCard({
     if (card.id === 'final_strike') {
       const uniqueCount = usedCardTypes.filter(id => id !== 'final_strike').length;
       const damagePerType = card.upgraded ? 6 : 4;
-      const totalDamage = damagePerType * uniqueCount;
+      const baseDamage = damagePerType * uniqueCount;
+      const strength = playerStatuses.find(s => s.type === 'STRENGTH')?.stacks || 0;
+      const dmgWithStr = baseDamage + strength;
+
+      // 배수 효과 적용 (약화, 검투사의 경기장)
+      let damageMultiplier = 1.0;
+      const weak = playerStatuses.find(s => s.type === 'WEAK');
+      if (weak && weak.stacks > 0) {
+        damageMultiplier -= 0.25;
+      }
+      if (activeTerrain === 'gladiator_arena') {
+        damageMultiplier += 1.0;
+      }
+      const totalDamage = Math.max(0, Math.floor(dmgWithStr * damageMultiplier));
+
       description = description.replace(
         /종류당 (\d+) 피해를/,
         `종류당 $1 (${totalDamage}) 피해를`
@@ -147,7 +161,18 @@ export function DraggableCard({
       const ratio = lostHpEffect.ratio || 1;
       const baseDmg = Math.floor((lostHp / ratio) * lostHpEffect.value);
       const strength = playerStatuses.find(s => s.type === 'STRENGTH')?.stacks || 0;
-      const finalDmg = Math.max(0, baseDmg + strength);
+      const dmgWithStr = baseDmg + strength;
+
+      // 배수 효과 적용 (약화, 검투사의 경기장)
+      let damageMultiplier = 1.0;
+      const weak = playerStatuses.find(s => s.type === 'WEAK');
+      if (weak && weak.stacks > 0) {
+        damageMultiplier -= 0.25;
+      }
+      if (activeTerrain === 'gladiator_arena') {
+        damageMultiplier += 1.0;
+      }
+      const finalDmg = Math.max(0, Math.floor(dmgWithStr * damageMultiplier));
 
       // "잃은 HP X당 Y의 피해" 형식에서 실제 피해 표시
       description = description.replace(
@@ -197,20 +222,30 @@ export function DraggableCard({
         }
       }
 
-      // 방어도에 민첩 + 신성한 구역 적용
+      // 방어도에 민첩 + 지형 효과 적용
       if (effect.type === 'BLOCK') {
         const baseBlock = effect.value;
         let modifiedBlock = Math.max(0, baseBlock + dexterity);
 
-        // 신성한 구역 (2x 방어도)
-        if (activeTerrain === 'sacred_ground') {
-          modifiedBlock *= 2;
+        // 검투사의 경기장: 방어도 0
+        if (activeTerrain === 'gladiator_arena') {
+          modifiedBlock = 0;
+        }
+        // 신성한 구역 (1.5x 방어도)
+        else if (activeTerrain === 'sacred_ground') {
+          modifiedBlock = Math.floor(modifiedBlock * 1.5);
         }
 
         if (baseBlock !== modifiedBlock) {
-          const pattern = new RegExp(`${baseBlock} 방어`, 'g');
-          if (pattern.test(description)) {
-            description = description.replace(pattern, `${modifiedBlock} (${baseBlock}) 방어`);
+          // "X 방어" 형식 (예: "5 방어도를 얻고")
+          const pattern1 = new RegExp(`${baseBlock} 방어`, 'g');
+          if (pattern1.test(description)) {
+            description = description.replace(pattern1, `${modifiedBlock} (${baseBlock}) 방어`);
+          }
+          // "방어도 X" 형식 (예: "방어도 15를 두 번")
+          const pattern2 = new RegExp(`방어도 ${baseBlock}`, 'g');
+          if (pattern2.test(description)) {
+            description = description.replace(pattern2, `방어도 ${modifiedBlock} (${baseBlock})`);
           }
         }
       }
@@ -225,6 +260,20 @@ export function DraggableCard({
   const getDamageColor = () => {
     if (!card.effects) return null;
 
+    const strength = playerStatuses.find(s => s.type === 'STRENGTH')?.stacks || 0;
+    const weak = playerStatuses.find(s => s.type === 'WEAK');
+
+    // 배수 효과 계산
+    let damageMultiplier = 1.0;
+    if (weak && weak.stacks > 0) {
+      damageMultiplier -= 0.25;
+    }
+    if (activeTerrain === 'gladiator_arena') {
+      damageMultiplier += 1.0;
+    }
+
+    const hasModifier = strength !== 0 || (weak && weak.stacks > 0) || activeTerrain === 'gladiator_arena';
+
     for (const effect of card.effects) {
       if (effect.type === 'DAMAGE') {
         const baseDamage = effect.value;
@@ -233,6 +282,18 @@ export function DraggableCard({
 
         if (modifiedDamage > baseDamage) return '#4ade80';
         if (modifiedDamage < baseDamage) return '#ff6b6b';
+      }
+
+      // 사선에서
+      if (effect.type === 'DAMAGE_PER_LOST_HP' && hasModifier) {
+        if (damageMultiplier > 1.0 || strength > 0) return '#4ade80';
+        if (damageMultiplier < 1.0 || strength < 0) return '#ff6b6b';
+      }
+
+      // 종언의 일격
+      if (effect.type === 'DAMAGE_PER_PLAYED' && hasModifier) {
+        if (damageMultiplier > 1.0 || strength > 0) return '#4ade80';
+        if (damageMultiplier < 1.0 || strength < 0) return '#ff6b6b';
       }
     }
     return null;
@@ -250,9 +311,13 @@ export function DraggableCard({
         const baseBlock = effect.value;
         let modifiedBlock = Math.max(0, baseBlock + dexterity);
 
-        // 신성한 구역 (2x 방어도)
-        if (activeTerrain === 'sacred_ground') {
-          modifiedBlock *= 2;
+        // 검투사의 경기장: 방어도 0
+        if (activeTerrain === 'gladiator_arena') {
+          modifiedBlock = 0;
+        }
+        // 신성한 구역 (1.5x 방어도)
+        else if (activeTerrain === 'sacred_ground') {
+          modifiedBlock = Math.floor(modifiedBlock * 1.5);
         }
 
         if (modifiedBlock > baseBlock) return '#4ade80';

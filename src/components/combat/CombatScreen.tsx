@@ -558,6 +558,7 @@ export function CombatScreen() {
     clearThunderEffects,
     hitEffectQueue,
     removeHitEffect,
+    activeTerrain,
   } = useCombatStore();
 
   const currentNode = getCurrentNode();
@@ -1035,13 +1036,16 @@ export function CombatScreen() {
     const enemy = enemies.find(e => e.instanceId === targetEnemyId);
     const vulnerable = enemy?.statuses.find(s => s.type === 'VULNERABLE');
 
-    // 합연산 방식으로 배수 계산 (기본 1.0 + 취약 0.5 - 약화 0.25)
+    // 합연산 방식으로 배수 계산 (기본 1.0 + 취약 0.5 - 약화 0.25 + 검투사의 경기장 1.0)
     let damageMultiplier = 1.0;
     if (weak && weak.stacks > 0) {
       damageMultiplier -= 0.25;
     }
     if (vulnerable && vulnerable.stacks > 0) {
       damageMultiplier += 0.5;
+    }
+    if (activeTerrain === 'gladiator_arena') {
+      damageMultiplier += 1.0;
     }
 
     for (const effect of card.effects) {
@@ -1073,7 +1077,7 @@ export function CombatScreen() {
     }
 
     return totalDamage;
-  }, [selectedCardId, hand, energy, playerStatuses, enemies, usedCardTypes]);
+  }, [selectedCardId, hand, energy, playerStatuses, enemies, usedCardTypes, activeTerrain]);
 
   // 선택된 카드의 플레이어 HP 손실 계산 (LOSE_HP 효과)
   const calculatePlayerHpLoss = useCallback((): number => {
