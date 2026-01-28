@@ -8,6 +8,8 @@ interface TargetingArrowProps {
   isActive: boolean;
   cardType: 'ATTACK' | 'SHIELD' | 'GADGET' | 'EFFECT' | 'TERRAIN';
   needsTarget: boolean;
+  initialEndX?: number;
+  initialEndY?: number;
 }
 
 interface SnapTarget {
@@ -24,8 +26,8 @@ const isMobile = () => window.innerHeight < 500;
 // 자석 효과 범위 (px) - 모바일에서 더 작게
 const getSnapDistance = () => isMobile() ? 60 : 100;
 
-export function TargetingArrow({ startX, startY, isActive, cardType, needsTarget }: TargetingArrowProps) {
-  const [mousePos, setMousePos] = useState({ x: startX, y: startY });
+export function TargetingArrow({ startX, startY, isActive, cardType, needsTarget, initialEndX, initialEndY }: TargetingArrowProps) {
+  const [mousePos, setMousePos] = useState({ x: initialEndX ?? startX, y: initialEndY ?? startY });
   const [snappedTarget, setSnappedTarget] = useState<SnapTarget | null>(null);
   const targetsRef = useRef<SnapTarget[]>([]);
   const playerRef = useRef<SnapTarget | null>(null);
@@ -146,8 +148,39 @@ export function TargetingArrow({ startX, startY, isActive, cardType, needsTarget
   useEffect(() => {
     if (isActive) {
       updateTargets();
-      setMousePos({ x: startX, y: startY });
+      // 초기 끝점이 주어지면 그 위치로, 아니면 시작점으로
+      const initX = initialEndX ?? startX;
+      const initY = initialEndY ?? startY;
+      setMousePos({ x: initX, y: initY });
       setSnappedTarget(null);
+      // 초기 위치에서 바로 스냅 체크
+      if (initialEndX !== undefined && initialEndY !== undefined) {
+        pendingPosRef.current = { x: initX, y: initY };
+        requestAnimationFrame(() => {
+          if (pendingPosRef.current) {
+            const { x, y } = pendingPosRef.current;
+            updateTargets();
+            // processMove 로직 일부 실행
+            if (needsTarget) {
+              let closest: SnapTarget | null = null;
+              let minDistance = getSnapDistance();
+              for (const target of targetsRef.current) {
+                const distance = Math.sqrt(Math.pow(x - target.x, 2) + Math.pow(y - target.y, 2));
+                if (distance < minDistance) {
+                  minDistance = distance;
+                  closest = target;
+                }
+              }
+              setSnappedTarget(closest);
+              setTargetedEnemyId(closest && closest.id !== 'player' ? closest.id : null);
+              if (closest) {
+                setMousePos({ x: closest.x, y: closest.y - 20 });
+              }
+            }
+            pendingPosRef.current = null;
+          }
+        });
+      }
       window.addEventListener('mousemove', handleMouseMove);
       window.addEventListener('touchmove', handleTouchMove);
       return () => {
@@ -161,7 +194,7 @@ export function TargetingArrow({ startX, startY, isActive, cardType, needsTarget
         setTargetedEnemyId(null);
       };
     }
-  }, [isActive, handleMouseMove, handleTouchMove, startX, startY, updateTargets, setTargetedEnemyId]);
+  }, [isActive, handleMouseMove, handleTouchMove, startX, startY, initialEndX, initialEndY, updateTargets, setTargetedEnemyId, needsTarget]);
 
   if (!isActive) return null;
 

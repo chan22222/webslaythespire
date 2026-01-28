@@ -626,11 +626,24 @@ export function CombatScreen() {
   const [isKeyboardSelection, setIsKeyboardSelection] = useState(false);
   // 키보드 타겟팅 화살표 시작 위치 (선택된 카드 위치)
   const [keyboardArrowStart, setKeyboardArrowStart] = useState<{ x: number; y: number } | null>(null);
+  // 키보드 타겟팅 화살표 끝 위치 (현재 마우스 위치)
+  const [keyboardArrowEnd, setKeyboardArrowEnd] = useState<{ x: number; y: number } | null>(null);
+  // 마우스 위치 추적용 ref
+  const mousePosRef = useRef({ x: 0, y: 0 });
 
   // isPlayerDying 상태를 ref에 동기화
   useEffect(() => {
     isPlayerDyingRef.current = isPlayerDying;
   }, [isPlayerDying]);
+
+  // 마우스 위치 추적
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      mousePosRef.current = { x: e.clientX, y: e.clientY };
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
 
   // 번개 이펙트 큐 처리 (벼락치는 황야)
   useEffect(() => {
@@ -1458,6 +1471,7 @@ export function CombatScreen() {
         selectCard(null);
         setIsKeyboardSelection(false);
         setKeyboardArrowStart(null);
+        setKeyboardArrowEnd(null);
         return;
       }
 
@@ -1483,6 +1497,7 @@ export function CombatScreen() {
               selectCard(null);
               setIsKeyboardSelection(false);
               setKeyboardArrowStart(null);
+              setKeyboardArrowEnd(null);
             } else {
               // 카드 선택 (키보드)
               selectCard(card.instanceId);
@@ -1497,6 +1512,8 @@ export function CombatScreen() {
                   y: rect.top + rect.height / 2
                 });
               }
+              // 현재 마우스 위치를 화살표 끝점으로
+              setKeyboardArrowEnd({ ...mousePosRef.current });
             }
           }
         }
@@ -1512,6 +1529,7 @@ export function CombatScreen() {
     if (!selectedCardId) {
       setIsKeyboardSelection(false);
       setKeyboardArrowStart(null);
+      setKeyboardArrowEnd(null);
     }
   }, [selectedCardId]);
 
@@ -2313,6 +2331,8 @@ export function CombatScreen() {
             isActive={true}
             cardType={card.type}
             needsTarget={needsTarget}
+            initialEndX={keyboardArrowEnd?.x}
+            initialEndY={keyboardArrowEnd?.y}
           />
         );
       })()}
