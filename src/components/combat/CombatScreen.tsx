@@ -10,6 +10,7 @@ import { EnergyOrb } from './EnergyOrb';
 import { PlayerStatus } from './PlayerStatus';
 import { DamagePopupManager } from './DamagePopup';
 import { SwordSlashEffect, SlashHitEffect, ThunderstrikeEffect, HitEffect } from './characters';
+import { TargetingArrow } from './TargetingArrow';
 import { generateNormalEncounter, ELITE_ENEMIES, BOSS_ENEMIES, EASTER_EGG_ENCOUNTER } from '../../data/enemies';
 import { playButtonHover, playButtonClick, playAttack, playFootsteps, playBuff, playBGM, playThunder } from '../../utils/sound';
 
@@ -621,6 +622,10 @@ export function CombatScreen() {
   const [isMobileLogOpen, setIsMobileLogOpen] = useState(false);
   // 유물 모달 표시
   const [showRelics, setShowRelics] = useState(false);
+  // 키보드로 카드 선택했는지 (드래그와 구분)
+  const [isKeyboardSelection, setIsKeyboardSelection] = useState(false);
+  // 키보드 타겟팅 화살표 시작 위치 (선택된 카드 위치)
+  const [keyboardArrowStart, setKeyboardArrowStart] = useState<{ x: number; y: number } | null>(null);
 
   // isPlayerDying 상태를 ref에 동기화
   useEffect(() => {
@@ -1396,6 +1401,110 @@ export function CombatScreen() {
     selectCard(selectedCardId === cardInstanceId ? null : cardInstanceId);
   }, [selectedCardId, selectCard]);
 
+  // 적 클릭 핸들러 (키보드로 카드 선택 후 적 클릭)
+  const handleEnemyClick = useCallback((enemyId: string) => {
+    if (!selectedCardId || isAttackingRef.current) return;
+
+    const card = hand.find(c => c.instanceId === selectedCardId);
+    if (!card || card.cost > energy) {
+      selectCard(null);
+      return;
+    }
+
+    // 적의 위치를 가져와서 handleCardDragEnd처럼 처리
+    const targetEl = enemyRefs.current.get(enemyId);
+    if (targetEl) {
+      const rect = targetEl.getBoundingClientRect();
+      const x = rect.left + rect.width / 2;
+      const y = rect.top + rect.height / 2;
+      // 드래그 거리를 충분히 크게 설정해서 사용되게 함
+      handleCardDragEnd(selectedCardId, x, y, 200);
+    }
+  }, [selectedCardId, hand, energy, selectCard, handleCardDragEnd]);
+
+  // 전투 영역 클릭 핸들러 (키보드로 카드 선택 후 화면 클릭 - 논타겟 카드용)
+  const handlePlayAreaClick = useCallback((e: React.MouseEvent) => {
+    if (!selectedCardId || isAttackingRef.current) return;
+
+    const card = hand.find(c => c.instanceId === selectedCardId);
+    if (!card || card.cost > energy) {
+      selectCard(null);
+      return;
+    }
+
+    // 타겟이 필요한 카드는 적 클릭으로만 사용 가능
+    const needsTarget = card.effects.some(eff =>
+      (eff.type === 'DAMAGE' && eff.target === 'SINGLE') ||
+      (eff.type === 'APPLY_STATUS' && eff.target === 'SINGLE') ||
+      (eff.type === 'DAMAGE_PER_LOST_HP' && eff.target === 'SINGLE') ||
+      (eff.type === 'HALVE_ENEMY_HP' && eff.target === 'SINGLE') ||
+      (eff.type === 'APPLY_OIL' && eff.target === 'SINGLE')
+    );
+
+    if (needsTarget) return; // 타겟 필요 카드는 무시
+
+    // 클릭 위치로 카드 사용
+    handleCardDragEnd(selectedCardId, e.clientX, e.clientY, 200);
+  }, [selectedCardId, hand, energy, selectCard, handleCardDragEnd]);
+
+  // 키보드 단축키 (숫자키로 카드 선택)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // 모달이 열려있거나 인트로 중이면 무시
+      if (viewingPile || showIntro || !introComplete) return;
+
+      // ESC: 선택 취소
+      if (e.key === 'Escape') {
+        selectCard(null);
+        setIsKeyboardSelection(false);
+        setKeyboardArrowStart(null);
+        return;
+      }
+
+      // 숫자키 1-9로 카드 선택
+      const keyNum = parseInt(e.key);
+      if (keyNum >= 1 && keyNum <= 9) {
+        const cardIndex = keyNum - 1;
+        if (cardIndex < hand.length) {
+          const card = hand[cardIndex];
+          if (card.cost <= energy && !isAttackingRef.current) {
+            // 같은 카드 다시 누르면 선택 해제
+            if (selectedCardId === card.instanceId) {
+              selectCard(null);
+              setIsKeyboardSelection(false);
+              setKeyboardArrowStart(null);
+            } else {
+              // 카드 선택 (키보드)
+              selectCard(card.instanceId);
+              setIsKeyboardSelection(true);
+
+              // 선택된 카드의 실제 DOM 위치에서 화살표 시작
+              const cardEl = document.querySelector(`[data-card-id="${card.instanceId}"]`);
+              if (cardEl) {
+                const rect = cardEl.getBoundingClientRect();
+                setKeyboardArrowStart({
+                  x: rect.left + rect.width / 2,
+                  y: rect.top + rect.height / 2
+                });
+              }
+            }
+          }
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [hand, energy, selectCard, selectedCardId, viewingPile, showIntro, introComplete]);
+
+  // 카드 선택 해제 시 키보드 상태 리셋
+  useEffect(() => {
+    if (!selectedCardId) {
+      setIsKeyboardSelection(false);
+      setKeyboardArrowStart(null);
+    }
+  }, [selectedCardId]);
+
   // 적 타입 결정 (테스트 모드도 고려)
   const encounterType = useMemo(() => {
     // 테스트 모드: testEnemies에서 보스/엘리트 확인
@@ -1601,6 +1710,7 @@ export function CombatScreen() {
       <div
         ref={playAreaRef}
         className="w-full h-screen combat-arena vignette flex flex-col relative overflow-hidden"
+        onClick={handlePlayAreaClick}
       >
         {/* 데미지 팝업 */}
         <DamagePopupManager
@@ -2032,6 +2142,7 @@ export function CombatScreen() {
                   isTargetable={selectedCardId !== null && enemy.currentHp > 0}
                   incomingDamage={selectedCardId && enemy.currentHp > 0 ? calculateIncomingDamage(enemy.instanceId) : 0}
                   ignoreBlock={selectedCardId ? hand.find(c => c.instanceId === selectedCardId)?.effects.some(e => e.type === 'HALVE_ENEMY_HP') : false}
+                  onClick={() => handleEnemyClick(enemy.instanceId)}
                 />
               </div>
             );
@@ -2158,6 +2269,28 @@ export function CombatScreen() {
         </div>
       </div>
 
+      {/* 키보드 타겟팅 화살표 */}
+      {isKeyboardSelection && keyboardArrowStart && (() => {
+        const card = hand.find(c => c.instanceId === selectedCardId);
+        if (!card) return null;
+        const needsTarget = card.effects.some(eff =>
+          (eff.type === 'DAMAGE' && eff.target === 'SINGLE') ||
+          (eff.type === 'APPLY_STATUS' && eff.target === 'SINGLE') ||
+          (eff.type === 'DAMAGE_PER_LOST_HP' && eff.target === 'SINGLE') ||
+          (eff.type === 'HALVE_ENEMY_HP' && eff.target === 'SINGLE') ||
+          (eff.type === 'APPLY_OIL' && eff.target === 'SINGLE')
+        );
+        return (
+          <TargetingArrow
+            startX={keyboardArrowStart.x}
+            startY={keyboardArrowStart.y}
+            isActive={true}
+            cardType={card.type}
+            needsTarget={needsTarget}
+          />
+        );
+      })()}
+
       {/* 타겟팅 안내 - 카드 드래그 시 (모바일에서 숨김) */}
       {selectedCardId && (
         <div className="combat-release-hint absolute top-20 left-1/2 -translate-x-1/2 pointer-events-none z-40">
@@ -2170,7 +2303,10 @@ export function CombatScreen() {
               boxShadow: '0 0 20px var(--skill-glow)',
             }}
           >
-            Release on target
+            {hand.find(c => c.instanceId === selectedCardId)?.effects.some(eff =>
+              (eff.type === 'DAMAGE' && eff.target === 'SINGLE') ||
+              (eff.type === 'APPLY_STATUS' && eff.target === 'SINGLE')
+            ) ? '적을 클릭하세요' : '화면을 클릭하세요'}
           </div>
         </div>
       )}

@@ -19,6 +19,7 @@ interface EnemyProps {
   isTargetable?: boolean;
   incomingDamage?: number; // 예상 피해량 (버프/디버프 계산 완료된 값)
   ignoreBlock?: boolean; // 방어도 무시 (신의권능 등)
+  onClick?: () => void; // 키보드 단축키로 카드 선택 후 적 클릭 시
 }
 
 // 몹별 인텐트 위치 오프셋 설정 (양수: 위로, 음수: 아래로)
@@ -583,7 +584,7 @@ function EnemyStatusBadge({ status }: { status: { type: string; stacks: number }
   );
 }
 
-export function Enemy({ enemy, isTargetable = false, incomingDamage = 0, ignoreBlock = false }: EnemyProps) {
+export function Enemy({ enemy, isTargetable = false, incomingDamage = 0, ignoreBlock = false, onClick }: EnemyProps) {
   const [showIntentTooltip, setShowIntentTooltip] = useState(false);
   const [isDying, setIsDying] = useState(false);
   const [isRemoved, setIsRemoved] = useState(false);
@@ -922,7 +923,11 @@ export function Enemy({ enemy, isTargetable = false, incomingDamage = 0, ignoreB
       </div>
 
       {/* 적 본체 */}
-      <div className="relative">
+      <div
+        className="relative"
+        onClick={() => isTargetable && onClick?.()}
+        style={{ cursor: isTargetable ? 'pointer' : 'default' }}
+      >
         {/* 타겟팅 글로우 */}
         {isTargetable && (
           <div

@@ -362,6 +362,7 @@ export function DraggableCard({
 
       <div
         ref={cardRef}
+        data-card-id={card.instanceId}
         onMouseDown={handleMouseDown}
         onTouchStart={handleTouchStart}
         onMouseEnter={handleMouseEnter}
