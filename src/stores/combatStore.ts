@@ -286,7 +286,7 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       const currentEnemies = get().enemies;
       statusesToAllEnemies.forEach(status => {
         currentEnemies.forEach((enemy) => {
-          get().applyStatusToEnemy(enemy.instanceId, status as EnemyStatus);
+          get().applyStatusToEnemy(enemy.instanceId, status as Status);
         });
         get().addToCombatLog(`유물 효과로 모든 적에게 ${status.type === 'VULNERABLE' ? '장비파괴' : status.type} ${status.stacks} 부여!`);
       });

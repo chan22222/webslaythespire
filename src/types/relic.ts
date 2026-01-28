@@ -28,6 +28,7 @@ export interface RelicContext {
   damagePlayer?: (amount: number) => void;
   damageDealt?: number;
   damageTaken?: number;
+  applyStatusToAllEnemies?: (status: { type: string; stacks: number }) => void;
 }
 
 export interface Relic {
