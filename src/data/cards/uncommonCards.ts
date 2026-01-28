@@ -159,13 +159,13 @@ export const OIL_DRUM: Card = {
   rarity: 'UNCOMMON',
   cost: 1,
   image: '/cards/effect/oil_drum.png',
-  description: '해당 적 처치 시 모든 적에게 8의 피해를 줍니다.',
-  effects: [{ type: 'APPLY_OIL', value: 1, explosionDamage: 8, target: 'SINGLE' }],
+  description: '해당 적 처치 시 모든 적에게 12의 피해를 줍니다. 기름이 묻은 적은 3배의 피해를 입습니다.',
+  effects: [{ type: 'APPLY_OIL', value: 1, explosionDamage: 12, target: 'SINGLE' }],
   upgraded: false,
   upgradeEffect: {
     name: '기름통+',
-    description: '해당 적 처치 시 모든 적에게 12의 피해를 줍니다.',
-    effects: [{ type: 'APPLY_OIL', value: 1, explosionDamage: 12, target: 'SINGLE' }],
+    description: '해당 적 처치 시 모든 적에게 18의 피해를 줍니다. 기름이 묻은 적은 3배의 피해를 입습니다.',
+    effects: [{ type: 'APPLY_OIL', value: 1, explosionDamage: 18, target: 'SINGLE' }],
   },
 };
 

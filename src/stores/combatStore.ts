@@ -6,7 +6,7 @@ import { Status, STATUS_INFO } from '../types/status';
 import { shuffle } from '../utils/shuffle';
 import { useGameStore } from './gameStore';
 import { useStatsStore } from './statsStore';
-import { playCardDraw, playHit, playBuff, playDebuff, playEnemyBuff, playWin, playPlayerHit } from '../utils/sound';
+import { playCardDraw, playHit, playShieldBlock, playBuff, playDebuff, playEnemyBuff, playWin, playPlayerHit, playTimeSkill, playInvincibility } from '../utils/sound';
 import {
   resetBattleAchievementState,
   resetTurnAchievementState,
@@ -632,8 +632,12 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
         // 공격 애니메이션 재생 후 데미지 적용
         await new Promise(resolve => setTimeout(resolve, 400));
 
-        // 플레이어 피격 사운드
-        playHit();
+        // 플레이어 피격 사운드 (방어도가 있으면 shield, 없으면 hit)
+        if (get().playerBlock > 0) {
+          playShieldBlock();
+        } else {
+          playHit();
+        }
 
         // 피격 콜백 호출
         const { onPlayerHit } = get();
@@ -793,6 +797,13 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     // 카드 효과 실행
     const pName = useGameStore.getState().playerName;
     get().addToCombatLog(`${pName}(이)가 ${card.name} 사용!`);
+
+    // 특수 카드 스킬 사운드
+    if (card.id === 'time_warp' || card.id === 'infinite_vortex') {
+      playTimeSkill();
+    } else if (card.type === 'SHIELD') {
+      playInvincibility();
+    }
 
     // 현재 사용 중인 카드 정보 저장 (업적 체크용)
     set({ currentPlayingCardId: card.id, currentPlayingCardName: card.name });
@@ -1437,16 +1448,24 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       }
 
       // OIL_MARKED 효과: 기름 묻은 적 처치 시 모든 적에게 폭발 피해
-      const oilMarked = enemy.statuses.find(s => s.type === 'OIL_MARKED');
+      // 최신 상태에서 적을 다시 가져옴 (applyStatusToEnemy가 새 객체를 생성하므로)
+      const latestEnemy = get().enemies.find(e => e.instanceId === enemyId);
+      const oilMarked = latestEnemy?.statuses.find(s => s.type === 'OIL_MARKED');
       if (oilMarked && oilMarked.stacks > 0) {
-        const explosionDamage = oilMarked.stacks;
-        get().addToCombatLog(`💥 기름통 폭발! 모든 적에게 ${explosionDamage} 피해!`);
+        const baseExplosionDamage = oilMarked.stacks;
+        get().addToCombatLog(`💥 기름통 폭발! 모든 적에게 피해!`);
         // 폭발은 다른 적들에게만 (이미 죽은 적은 제외, 자신도 제외)
         const currentEnemies = get().enemies;
         currentEnemies.forEach(otherEnemy => {
           if (otherEnemy.instanceId !== enemyId && otherEnemy.currentHp > 0) {
+            // 기름통이 붙은 적에게는 3배 피해
+            const otherOilMarked = otherEnemy.statuses.find(s => s.type === 'OIL_MARKED');
+            const finalDamage = otherOilMarked ? baseExplosionDamage * 3 : baseExplosionDamage;
+            if (otherOilMarked) {
+              get().addToCombatLog(`🔥 ${otherEnemy.name}에게 기름 인화! ${finalDamage} 피해!`);
+            }
             setTimeout(() => {
-              get().dealDamageToEnemy(otherEnemy.instanceId, explosionDamage);
+              get().dealDamageToEnemy(otherEnemy.instanceId, finalDamage);
             }, 200);
           }
         });

@@ -145,6 +145,24 @@ export const playHit = () => {
   sound.play().catch(() => {});
 };
 
+export const playShieldBlock = () => {
+  const sound = new Audio('/sfx/sound/shield.mp3');
+  sound.volume = 0.25 * globalVolume;
+  sound.play().catch(() => {});
+};
+
+export const playTimeSkill = () => {
+  const sound = new Audio('/sfx/sound/skill_sfx/time.mp3');
+  sound.volume = 0.25 * globalVolume;
+  sound.play().catch(() => {});
+};
+
+export const playInvincibility = () => {
+  const sound = new Audio('/sfx/sound/skill_sfx/invincibility.mp3');
+  sound.volume = 0.3 * globalVolume;
+  sound.play().catch(() => {});
+};
+
 export const playFootsteps = () => {
   for (let i = 0; i < 2; i++) {
     setTimeout(() => {
