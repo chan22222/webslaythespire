@@ -178,3 +178,17 @@ export const playWin = () => {
   sound.volume = 0.25 * globalVolume;
   sound.play().catch(() => {});
 };
+
+let lastPlayerHitIndex = 0;
+export const playPlayerHit = () => {
+  // 이전과 다른 인덱스 선택
+  let index;
+  do {
+    index = Math.floor(Math.random() * 3) + 1;
+  } while (index === lastPlayerHitIndex);
+  lastPlayerHitIndex = index;
+
+  const sound = new Audio(`/sfx/sound/hit_player_${index}.mp3`);
+  sound.volume = 0.15 * globalVolume;
+  sound.play().catch(() => {});
+};

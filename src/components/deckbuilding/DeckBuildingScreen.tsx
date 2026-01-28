@@ -84,10 +84,14 @@ export function DeckBuildingScreen() {
     return cardIds;
   }, [unlockedAchievements]);
 
-  // 전체 보유 카드 ID (기본 + 업적 해금)
+  // 전체 보유 카드 ID (기본 + 업적 해금, 연습모드면 전체)
   const allOwnedCardIds = useMemo(() => {
+    // 연습모드나 관리자면 모든 카드 보유
+    if (isGuest || isAdmin) {
+      return ALL_CARDS.map(c => c.id);
+    }
     return [...new Set([...ownedCardIds, ...unlockedCardIds])];
-  }, [ownedCardIds, unlockedCardIds]);
+  }, [ownedCardIds, unlockedCardIds, isGuest, isAdmin]);
   const [selectedCards, setSelectedCards] = useState<CardInstance[]>([]);
   const [filter, setFilter] = useState<'ALL' | 'ATTACK' | 'SHIELD' | 'GADGET' | 'EFFECT' | 'TERRAIN'>('ALL');
   const [sortBy, setSortBy] = useState<SortBy>('rarity');

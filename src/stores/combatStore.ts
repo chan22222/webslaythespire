@@ -6,7 +6,7 @@ import { Status, STATUS_INFO } from '../types/status';
 import { shuffle } from '../utils/shuffle';
 import { useGameStore } from './gameStore';
 import { useStatsStore } from './statsStore';
-import { playCardDraw, playHit, playBuff, playDebuff, playEnemyBuff, playWin } from '../utils/sound';
+import { playCardDraw, playHit, playBuff, playDebuff, playEnemyBuff, playWin, playPlayerHit } from '../utils/sound';
 import {
   resetBattleAchievementState,
   resetTurnAchievementState,
@@ -1503,6 +1503,8 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
         get().addToCombatLog(`${pName}(이)가 ${actualDamage} 피해를 입었습니다!`);
         // gameStore의 HP를 실제로 감소
         useGameStore.getState().modifyHp(-actualDamage);
+        // 플레이어 피격 음성 재생
+        playPlayerHit();
         remainingDamage = actualDamage;
       } else {
         get().addDamagePopup(0, 'blocked', 0, 0, 'player');
