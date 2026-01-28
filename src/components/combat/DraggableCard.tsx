@@ -165,7 +165,8 @@ export function DraggableCard({
       }
     }
 
-    const hasModifier = strength !== 0 || (weak && weak.stacks > 0) || (targetVulnerable && targetVulnerable.stacks > 0);
+    const dexterity = playerStatuses.find(s => s.type === 'DEXTERITY')?.stacks || 0;
+    const hasModifier = strength !== 0 || dexterity !== 0 || (weak && weak.stacks > 0) || (targetVulnerable && targetVulnerable.stacks > 0);
 
     if (!hasModifier) {
       return description;
@@ -183,6 +184,19 @@ export function DraggableCard({
           if (pattern.test(description)) {
             // "실제 (원래) 피해" 형식으로 표시
             description = description.replace(pattern, `${modifiedDamage} (${baseDamage}) 피해`);
+          }
+        }
+      }
+
+      // 방어도에 민첩 적용
+      if (effect.type === 'BLOCK' && dexterity !== 0) {
+        const baseBlock = effect.value;
+        const modifiedBlock = Math.max(0, baseBlock + dexterity);
+
+        if (baseBlock !== modifiedBlock) {
+          const pattern = new RegExp(`${baseBlock} 방어`, 'g');
+          if (pattern.test(description)) {
+            description = description.replace(pattern, `${modifiedBlock} (${baseBlock}) 방어`);
           }
         }
       }
@@ -211,6 +225,25 @@ export function DraggableCard({
   };
 
   const damageColor = getDamageColor();
+
+  // 방어도 색상 (증가: 초록, 감소: 빨강)
+  const getBlockColor = () => {
+    if (!card.effects) return null;
+    const dexterity = playerStatuses.find(s => s.type === 'DEXTERITY')?.stacks || 0;
+
+    for (const effect of card.effects) {
+      if (effect.type === 'BLOCK') {
+        const baseBlock = effect.value;
+        const modifiedBlock = Math.max(0, baseBlock + dexterity);
+
+        if (modifiedBlock > baseBlock) return '#4ade80';
+        if (modifiedBlock < baseBlock) return '#ff6b6b';
+      }
+    }
+    return null;
+  };
+
+  const blockColor = getBlockColor();
 
   const startDrag = () => {
     if (!isPlayable) return;
@@ -466,7 +499,7 @@ export function DraggableCard({
           <p
             className="font-card text-[10px] text-center leading-tight"
             style={{
-              color: damageColor || '#e0e0e0',
+              color: damageColor || blockColor || '#e0e0e0',
               textShadow: '1px 1px 2px #000',
               display: '-webkit-box',
               WebkitLineClamp: 4,

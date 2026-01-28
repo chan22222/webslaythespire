@@ -212,11 +212,14 @@ export const useGameStore = create<GameState>((set, get) => ({
     // 게임 오버 또는 승리 시 저장 데이터 삭제 및 통계 기록 (연습 모드 제외)
     if (phase === 'GAME_OVER' && !isPracticeMode) {
       get().deleteSaveData();
+      // 맵 데이터 초기화 (새로운 여정과 동일하게)
+      set({ map: generateMap(), hasSaveData: false });
       // 통계 업데이트: 패배
       useStatsStore.getState().recordDefeat(map.floor);
     }
     if (phase === 'VICTORY' && !isPracticeMode) {
       get().deleteSaveData();
+      set({ hasSaveData: false });
       // 통계 업데이트: 승리
       useStatsStore.getState().recordVictory(map.floor);
     }

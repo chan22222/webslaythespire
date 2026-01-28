@@ -1517,12 +1517,14 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       }
     });
 
-    // GAIN_BLOCK_ON_ATTACK 효과: 공격 카드 사용 시 방어도 획득
+    // GAIN_BLOCK_ON_ATTACK 효과: 공격 카드 사용 시 방어도 획득 (민첩 적용)
     if (card.type === 'ATTACK') {
       const blockOnAttack = get().playerStatuses.find(s => s.type === 'GAIN_BLOCK_ON_ATTACK');
       if (blockOnAttack && blockOnAttack.stacks > 0) {
-        get().gainPlayerBlock(blockOnAttack.stacks);
-        get().addToCombatLog(`최선의 방어! 방어도 ${blockOnAttack.stacks} 획득!`);
+        const dexterity = get().playerStatuses.find(s => s.type === 'DEXTERITY')?.stacks || 0;
+        const blockAmount = Math.max(0, blockOnAttack.stacks + dexterity);
+        get().gainPlayerBlock(blockAmount);
+        get().addToCombatLog(`최선의 방어! 방어도 ${blockAmount} 획득!`);
       }
     }
 
