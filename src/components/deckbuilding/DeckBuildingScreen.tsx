@@ -14,6 +14,8 @@ import { UNIQUE_CARDS } from '../../data/cards/uniqueCards';
 import { TERRAIN_CARDS } from '../../data/cards/terrainCards';
 import { ACHIEVEMENTS } from '../../data/achievements';
 import {
+  DUMMY_DEFENSE,
+  DUMMY_ATTACK,
   GOBLIN,
   SKELETON,
   FLYING_EYE,
@@ -26,7 +28,9 @@ import {
 import { ALL_RELICS } from '../../data/relics';
 
 // 선택 가능한 적 목록
-const ENEMY_OPTIONS: { template: EnemyTemplate; label: string; type: 'normal' | 'elite' | 'boss' }[] = [
+const ENEMY_OPTIONS: { template: EnemyTemplate; label: string; type: 'normal' | 'elite' | 'boss' | 'dummy' }[] = [
+  { template: DUMMY_DEFENSE, label: '수비형 더미', type: 'dummy' },
+  { template: DUMMY_ATTACK, label: '공격형 더미', type: 'dummy' },
   { template: GOBLIN, label: '고블린', type: 'normal' },
   { template: SKELETON, label: '스켈레톤', type: 'normal' },
   { template: FLYING_EYE, label: '플라잉아이', type: 'normal' },

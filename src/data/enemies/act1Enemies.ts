@@ -1,5 +1,23 @@
 import { EnemyTemplate } from '../../types/enemy';
 
+// ===== 연습용 더미 =====
+
+// 수비형 더미 - 매턴 방어 5
+export const DUMMY_DEFENSE: EnemyTemplate = {
+  id: 'dummy_defense',
+  name: '수비형 더미',
+  minHp: 1000,
+  maxHp: 1000,
+};
+
+// 공격형 더미 - 매턴 공격 5
+export const DUMMY_ATTACK: EnemyTemplate = {
+  id: 'dummy_attack',
+  name: '공격형 더미',
+  minHp: 1000,
+  maxHp: 1000,
+};
+
 // 고블린 - 힘+3 → 공격 → 공격 (3턴 주기)
 export const GOBLIN: EnemyTemplate = {
   id: 'goblin',
@@ -84,6 +102,12 @@ export const KKUCHU: EnemyTemplate = {
 
 // 이스터에그 전투 (파추/권혁찬)
 export const EASTER_EGG_ENCOUNTER: EnemyTemplate[] = [REAL_TUKBUG, KKUCHU];
+
+// 연습용 더미 목록
+export const DUMMY_ENEMIES: EnemyTemplate[] = [
+  DUMMY_DEFENSE,
+  DUMMY_ATTACK,
+];
 
 // 적 템플릿 목록
 export const NORMAL_ENEMIES: EnemyTemplate[] = [

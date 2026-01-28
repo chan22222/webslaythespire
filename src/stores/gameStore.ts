@@ -199,19 +199,23 @@ export const useGameStore = create<GameState>((set, get) => ({
   },
 
   setPhase: (phase: GamePhase) => {
-    const { map } = get();
+    const { map, testEnemies } = get();
     set({ phase });
-    // MAP 화면 진입 시 자동 저장
-    if (phase === 'MAP') {
+
+    // 연습 모드(testEnemies가 있음)에서는 저장/삭제하지 않음
+    const isPracticeMode = testEnemies !== null;
+
+    // MAP 화면 진입 시 자동 저장 (연습 모드 제외)
+    if (phase === 'MAP' && !isPracticeMode) {
       setTimeout(() => get().saveGame(), 100);
     }
-    // 게임 오버 또는 승리 시 저장 데이터 삭제 및 통계 기록
-    if (phase === 'GAME_OVER') {
+    // 게임 오버 또는 승리 시 저장 데이터 삭제 및 통계 기록 (연습 모드 제외)
+    if (phase === 'GAME_OVER' && !isPracticeMode) {
       get().deleteSaveData();
       // 통계 업데이트: 패배
       useStatsStore.getState().recordDefeat(map.floor);
     }
-    if (phase === 'VICTORY') {
+    if (phase === 'VICTORY' && !isPracticeMode) {
       get().deleteSaveData();
       // 통계 업데이트: 승리
       useStatsStore.getState().recordVictory(map.floor);
@@ -546,7 +550,10 @@ export const useGameStore = create<GameState>((set, get) => ({
     const { user, isGuest } = useAuthStore.getState();
     if (isGuest || !user) return;
 
-    const { player, map, currentAct, playerName, phase } = get();
+    const { player, map, currentAct, playerName, phase, testEnemies } = get();
+
+    // 연습 모드이거나 맵이 비어있으면 저장하지 않음
+    if (testEnemies !== null || map.nodes.length === 0) return;
 
     try {
       // 기존 save_data에서 통계/업적 가져오기

@@ -1387,6 +1387,11 @@ function EasterEggEnemy({ imageUrl, size }: { imageUrl: string; size: number }) 
 // 캐릭터 매핑
 export function getEnemyCharacter(templateId: string, size: number, isAttacking: boolean = false) {
   switch (templateId) {
+    // 연습용 더미 (머쉬룸 스프라이트)
+    case 'dummy_defense':
+      return <MushroomSprite size={size} variant="normal" isAttacking={isAttacking} />;
+    case 'dummy_attack':
+      return <MushroomSprite size={size} variant="acid" isAttacking={isAttacking} />;
     case 'goblin':
       return <GoblinSprite size={size} isAttacking={isAttacking} />;
     case 'skeleton':

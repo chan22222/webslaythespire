@@ -2252,6 +2252,16 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
 
 // 간소화된 적 의도 결정 함수
 function getNextEnemyIntent(enemy: EnemyInstance, turn: number): EnemyInstance['intent'] {
+  // 수비형 더미: 매턴 방어 100
+  if (enemy.templateId === 'dummy_defense') {
+    return { type: 'DEFEND', block: 100 };
+  }
+
+  // 공격형 더미: 매턴 공격 5
+  if (enemy.templateId === 'dummy_attack') {
+    return { type: 'ATTACK', damage: 5 };
+  }
+
   // 고블린: 힘+3 → 공격 → 공격 (3턴 주기 반복)
   if (enemy.templateId === 'goblin') {
     const pattern = turn % 3;
