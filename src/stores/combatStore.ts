@@ -313,11 +313,11 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
         get().addToCombatLog('방어도 유지 상태로 방어도가 유지됩니다!');
       }
 
-      // 플레이어 약화/취약/불사/무적 감소 (적 턴이 끝난 후 = 플레이어 턴 시작 시)
+      // 플레이어 약화/취약 감소 (불사/무적은 피해 처리 후 감소)
       const reducedStatuses = playerStatuses
         .map(s => ({
           ...s,
-          stacks: (s.type === 'WEAK' || s.type === 'VULNERABLE' || s.type === 'UNDYING' || s.type === 'INVULNERABLE') ? s.stacks - 1 : s.stacks,
+          stacks: (s.type === 'WEAK' || s.type === 'VULNERABLE') ? s.stacks - 1 : s.stacks,
         }))
         .filter(s => s.stacks > 0);
       set({ playerStatuses: reducedStatuses });
@@ -490,6 +490,18 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
           ? latestStatuses.map(s => s.type === 'POISON' ? { ...s, stacks: newPoisonStacks } : s)
           : latestStatuses.filter(s => s.type !== 'POISON'),
       });
+    }
+
+    // 불사/무적 감소 (모든 피해 처리 후, 첫 턴 제외)
+    if (turn > 1) {
+      const statusesAfterDamage = get().playerStatuses;
+      const reducedProtectionStatuses = statusesAfterDamage
+        .map(s => ({
+          ...s,
+          stacks: (s.type === 'UNDYING' || s.type === 'INVULNERABLE') ? s.stacks - 1 : s.stacks,
+        }))
+        .filter(s => s.stacks > 0);
+      set({ playerStatuses: reducedProtectionStatuses });
     }
 
     // 카드 5장 드로우 + 추가 드로우 (유물 효과)
