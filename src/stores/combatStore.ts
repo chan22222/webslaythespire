@@ -391,8 +391,25 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
 
       // 언데드화 상태면 피해로 전환
       if (undead && undead.stacks > 0) {
-        useGameStore.getState().modifyHp(-turnHealAmount);
-        get().addToCombatLog(`💀 언데드화! 유물 회복이 ${turnHealAmount} 피해로 전환!`);
+        // 무적 상태면 피해 무효화
+        const invulnerable = currentStatuses.find(s => s.type === 'INVULNERABLE');
+        if (invulnerable && invulnerable.stacks > 0) {
+          get().addToCombatLog(`💀 언데드화! 하지만 무적으로 피해 무효화!`);
+        } else {
+          // 불사 상태면 HP가 1 아래로 내려가지 않음
+          const undying = currentStatuses.find(s => s.type === 'UNDYING');
+          const currentHp = useGameStore.getState().player.currentHp;
+          if (undying && undying.stacks > 0 && currentHp - turnHealAmount < 1) {
+            const actualDamage = Math.max(0, currentHp - 1);
+            if (actualDamage > 0) {
+              useGameStore.getState().modifyHp(-actualDamage);
+            }
+            get().addToCombatLog(`💀 언데드화! 유물 회복이 피해로 전환! 불사로 HP 1 유지!`);
+          } else {
+            useGameStore.getState().modifyHp(-turnHealAmount);
+            get().addToCombatLog(`💀 언데드화! 유물 회복이 ${turnHealAmount} 피해로 전환!`);
+          }
+        }
       } else {
         // 치유 감소 또는 15턴 이상이면 50% 감소
         let finalTurnHeal = turnHealAmount;
