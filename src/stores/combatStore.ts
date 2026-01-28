@@ -231,6 +231,9 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     let extraDraw = 0;
     let damageToPlayer = 0;
 
+    // 모든 적에게 부여할 상태 목록
+    const statusesToAllEnemies: { type: string; stacks: number }[] = [];
+
     relics.forEach(relic => {
       relic.effects.forEach(effect => {
         if (effect.trigger === 'ON_COMBAT_START') {
@@ -243,6 +246,9 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
             drawCards: (count: number) => { extraDraw += count; },
             damagePlayer: (amount: number) => { damageToPlayer += amount; },
             heal: () => {},
+            applyStatusToAllEnemies: (status: { type: string; stacks: number }) => {
+              statusesToAllEnemies.push(status);
+            },
           };
           effect.execute(context);
         }
@@ -274,6 +280,17 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     if (extraDraw > 0) {
       set({ extraDrawNextTurn: extraDraw });
     }
+
+    // 모든 적에게 상태 부여
+    if (statusesToAllEnemies.length > 0) {
+      const currentEnemies = get().enemies;
+      statusesToAllEnemies.forEach(status => {
+        currentEnemies.forEach((_, idx) => {
+          get().applyStatusToEnemy(idx, status as EnemyStatus);
+        });
+        get().addToCombatLog(`유물 효과로 모든 적에게 ${status.type === 'VULNERABLE' ? '장비파괴' : status.type} ${status.stacks} 부여!`);
+      });
+    }
   },
 
   startPlayerTurn: () => {
@@ -295,6 +312,15 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       } else {
         get().addToCombatLog('방어도 유지 상태로 방어도가 유지됩니다!');
       }
+
+      // 플레이어 약화/취약 감소 (적 턴이 끝난 후 = 플레이어 턴 시작 시)
+      const reducedStatuses = playerStatuses
+        .map(s => ({
+          ...s,
+          stacks: (s.type === 'WEAK' || s.type === 'VULNERABLE') ? s.stacks - 1 : s.stacks,
+        }))
+        .filter(s => s.stacks > 0);
+      set({ playerStatuses: reducedStatuses });
     }
 
     // 에너지 리셋
@@ -337,6 +363,8 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     let turnExtraDraw = 0;
     let turnDamageToPlayer = 0;
     let turnHealAmount = 0;
+    let turnStrength = 0;
+    let turnDexterity = 0;
 
     relics.forEach(relic => {
       relic.effects.forEach(effect => {
@@ -347,8 +375,8 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
             damagePlayer: (amount: number) => { turnDamageToPlayer += amount; },
             heal: (amount: number) => { turnHealAmount += amount; },
             gainBlock: () => {},
-            gainStrength: () => {},
-            gainDexterity: () => {},
+            gainStrength: (amount: number) => { turnStrength += amount; },
+            gainDexterity: (amount: number) => { turnDexterity += amount; },
           };
           effect.execute(context);
         }
@@ -385,6 +413,14 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       if (turnExtraEnergy > 0) {
         get().addToCombatLog(`유물 효과로 에너지 +${turnExtraEnergy}!`);
       }
+    }
+    if (turnStrength !== 0) {
+      get().applyStatusToPlayer({ type: 'STRENGTH', stacks: turnStrength });
+      get().addToCombatLog(`유물 효과로 힘 +${turnStrength}!`);
+    }
+    if (turnDexterity !== 0) {
+      get().applyStatusToPlayer({ type: 'DEXTERITY', stacks: turnDexterity });
+      get().addToCombatLog(`유물 효과로 민첩 +${turnDexterity}!`);
     }
 
     // 금속화 효과: 턴 시작 시 방어도 획득 (민첩 적용)
@@ -486,11 +522,11 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       processedStatuses = processedStatuses.filter(s => s.type !== 'STRENGTH_DOWN');
     }
 
-    // 상태 효과 지속시간 감소 (약화, 취약, 방어도 유지, 무적, 치유 감소, 언데드화, 불사)
+    // 상태 효과 지속시간 감소 (방어도 유지만 - 약화/취약은 턴 시작 시 감소)
     const updatedStatuses = processedStatuses
       .map(s => ({
         ...s,
-        stacks: (s.type === 'WEAK' || s.type === 'VULNERABLE' || s.type === 'BLOCK_RETAIN' || s.type === 'INVULNERABLE' || s.type === 'HEAL_REDUCTION' || s.type === 'UNDEAD' || s.type === 'UNDYING')
+        stacks: (s.type === 'BLOCK_RETAIN' || s.type === 'INVULNERABLE' || s.type === 'HEAL_REDUCTION' || s.type === 'UNDEAD' || s.type === 'UNDYING')
           ? s.stacks - 1
           : s.stacks,
       }))
@@ -609,12 +645,22 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     }
 
     // 다음 의도 설정
-    const updatedEnemies = enemies.map(enemy => {
-      if (enemy.currentHp <= 0) return enemy;
+    // 캐시된 enemies(block, statuses 수정됨)와 store의 enemies(HP 변경됨)를 병합
+    const storeEnemies = get().enemies;
+    const updatedEnemies = storeEnemies.map((storeEnemy, i) => {
+      const cachedEnemy = enemies[i];
+      // store에서 HP, 캐시에서 block과 statuses 가져옴
+      const mergedEnemy = {
+        ...storeEnemy,
+        block: cachedEnemy.block,
+        statuses: cachedEnemy.statuses,
+      };
+
+      if (mergedEnemy.currentHp <= 0) return mergedEnemy;
 
       // 템플릿에서 다음 의도 가져오기 (간소화)
-      const nextIntent = getNextEnemyIntent(enemy, turn + 1);
-      return { ...enemy, intent: nextIntent };
+      const nextIntent = getNextEnemyIntent(mergedEnemy, turn + 1);
+      return { ...mergedEnemy, intent: nextIntent };
     });
 
     set({
@@ -690,7 +736,8 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       (e.type === 'DAMAGE' && e.target === 'SINGLE') ||
       (e.type === 'APPLY_STATUS' && e.target === 'SINGLE') ||
       (e.type === 'DAMAGE_PER_LOST_HP' && e.target === 'SINGLE') ||
-      (e.type === 'HALVE_ENEMY_HP' && e.target === 'SINGLE')
+      (e.type === 'HALVE_ENEMY_HP' && e.target === 'SINGLE') ||
+      (e.type === 'APPLY_OIL' && e.target === 'SINGLE')
     );
 
     if (needsTarget && !targetEnemyId) {
@@ -1520,6 +1567,22 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       checkImmediateAchievements();
       const finalHp = useGameStore.getState().player.currentHp;
       checkHpChangeAchievements(finalHp);
+
+      // ON_DAMAGE_TAKEN 유물 효과 (가시갑옷 등)
+      if (attackerEnemyId && actualDamage > 0) {
+        const relics = useGameStore.getState().player.relics;
+        relics.forEach(relic => {
+          relic.effects.forEach(effect => {
+            if (effect.trigger === 'ON_DAMAGE_TAKEN') {
+              // 가시갑옷: 공격자에게 2 피해
+              if (relic.id === 'thorn_armor') {
+                get().dealDamageToEnemy(attackerEnemyId, 2);
+                get().addToCombatLog(`가시갑옷! 공격자에게 2 피해!`);
+              }
+            }
+          });
+        });
+      }
     }
 
     return remainingDamage;
@@ -1649,6 +1712,8 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     // 통계 업데이트: 힘 획득
     if (status.type === 'STRENGTH' && status.stacks > 0) {
       useStatsStore.getState().addStrengthGained(status.stacks);
+      // 업적 체크: 총 힘 30 이상
+      useStatsStore.getState().checkStatBasedAchievements();
     }
 
     // 업적 추적: 무기손상+장비파괴 동시 부여 체크

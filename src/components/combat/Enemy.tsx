@@ -10,6 +10,8 @@ import {
   WeakIcon,
   StrengthIcon,
   PoisonIcon,
+  MetallicizeIcon,
+  OilMarkedIcon,
 } from './icons';
 
 interface EnemyProps {
@@ -519,6 +521,10 @@ function EnemyStatusBadge({ status }: { status: { type: string; stacks: number }
         return <StrengthIcon size={14} color="#4ade80" />;
       case 'POISON':
         return <PoisonIcon size={14} color="#84cc16" />;
+      case 'METALLICIZE':
+        return <MetallicizeIcon size={14} color="#94a3b8" />;
+      case 'OIL_MARKED':
+        return <OilMarkedIcon size={14} color="#854d0e" />;
       default:
         return null;
     }

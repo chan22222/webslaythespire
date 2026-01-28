@@ -953,7 +953,8 @@ export function CombatScreen() {
       (e.type === 'DAMAGE' && e.target === 'SINGLE') ||
       (e.type === 'APPLY_STATUS' && e.target === 'SINGLE') ||
       (e.type === 'DAMAGE_PER_LOST_HP' && e.target === 'SINGLE') ||
-      (e.type === 'HALVE_ENEMY_HP' && e.target === 'SINGLE')
+      (e.type === 'HALVE_ENEMY_HP' && e.target === 'SINGLE') ||
+      (e.type === 'APPLY_OIL' && e.target === 'SINGLE')
     );
 
     // 전체 공격 효과 확인
@@ -1065,7 +1066,8 @@ export function CombatScreen() {
       (e.type === 'DAMAGE' && e.target === 'SINGLE') ||
       (e.type === 'APPLY_STATUS' && e.target === 'SINGLE') ||
       (e.type === 'DAMAGE_PER_LOST_HP' && e.target === 'SINGLE') ||
-      (e.type === 'HALVE_ENEMY_HP' && e.target === 'SINGLE')
+      (e.type === 'HALVE_ENEMY_HP' && e.target === 'SINGLE') ||
+      (e.type === 'APPLY_OIL' && e.target === 'SINGLE')
     );
 
     const SNAP_DISTANCE = 100; // TargetingArrow와 동일한 스냅 거리

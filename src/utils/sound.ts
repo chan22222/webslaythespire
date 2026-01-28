@@ -189,6 +189,6 @@ export const playPlayerHit = () => {
   lastPlayerHitIndex = index;
 
   const sound = new Audio(`/sfx/sound/hit_player_${index}.mp3`);
-  sound.volume = 0.15 * globalVolume;
+  sound.volume = 0.2 * globalVolume;
   sound.play().catch(() => {});
 };

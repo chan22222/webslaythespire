@@ -220,6 +220,8 @@ export const useStatsStore = create<StatsStore>((set, get) => ({
         lastUpdated: Date.now(),
       },
     }));
+    // 업적 체크: 총 에너지 500 이상
+    get().checkStatBasedAchievements();
   },
 
   // 한 번에 입힌 최대 피해

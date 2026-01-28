@@ -307,3 +307,178 @@ export function InvulnerableIcon({ size = 24, className = '', color = 'currentCo
     </svg>
   );
 }
+
+// 다음 턴 블록 아이콘 (방패 + 시계)
+export function BlockNextTurnIcon({ size = 24, className = '', color = 'currentColor' }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} fill="none">
+      {/* 방패 */}
+      <path
+        d="M12 2L4 5V11C4 16.55 7.16 21.74 12 23C16.84 21.74 20 16.55 20 11V5L12 2Z"
+        fill={color}
+        opacity="0.9"
+      />
+      {/* 시계 */}
+      <circle cx="12" cy="11" r="5" fill="rgba(255,255,255,0.9)" />
+      <circle cx="12" cy="11" r="4" fill="rgba(0,0,0,0.2)" />
+      {/* 시계 바늘 */}
+      <path d="M12 8V11L14 13" stroke="rgba(0,0,0,0.8)" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+// 블록 유지 아이콘 (방패 + 고리)
+export function BlockRetainIcon({ size = 24, className = '', color = 'currentColor' }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} fill="none">
+      {/* 방패 */}
+      <path
+        d="M12 2L4 5V11C4 16.55 7.16 21.74 12 23C16.84 21.74 20 16.55 20 11V5L12 2Z"
+        fill={color}
+        opacity="0.9"
+      />
+      {/* 무한 기호/고리 */}
+      <path
+        d="M8 11C8 9 10 9 12 11C14 13 16 13 16 11C16 9 14 9 12 11C10 13 8 13 8 11Z"
+        stroke="rgba(255,255,255,0.9)"
+        strokeWidth="2"
+        fill="none"
+      />
+    </svg>
+  );
+}
+
+// 불사 아이콘 (불꽃 해골)
+export function UndyingIcon({ size = 24, className = '', color = 'currentColor' }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} fill="none">
+      {/* 불꽃 */}
+      <path
+        d="M12 1C14 4 17 5 17 9C17 11 15 13 15 13C16 11 15 9 14 8C14 10 12 12 12 12C12 10 10 8 10 8C9 9 8 11 9 13C9 13 7 11 7 9C7 5 10 4 12 1Z"
+        fill={color}
+        opacity="0.9"
+      />
+      {/* 해골 */}
+      <ellipse cx="12" cy="16" rx="5" ry="5" fill="rgba(255,255,255,0.95)" />
+      <ellipse cx="10" cy="15" rx="1.2" ry="1.5" fill="rgba(0,0,0,0.8)" />
+      <ellipse cx="14" cy="15" rx="1.2" ry="1.5" fill="rgba(0,0,0,0.8)" />
+      <path d="M10 18.5L12 18L14 18.5" stroke="rgba(0,0,0,0.8)" strokeWidth="1" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+// 공격 시 블록 획득 아이콘 (검 + 방패)
+export function GainBlockOnAttackIcon({ size = 24, className = '', color = 'currentColor' }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} fill="none">
+      {/* 검 */}
+      <path
+        d="M4 2L6 4L4 6L6 8L14 8L16 6L14 4L6 4L4 2Z"
+        fill={color}
+        opacity="0.9"
+        transform="rotate(-45 10 6)"
+      />
+      {/* 방패 */}
+      <path
+        d="M14 10L10 12V16C10 19 12 21 14 22C16 21 18 19 18 16V12L14 10Z"
+        fill={color}
+        opacity="0.9"
+      />
+      {/* 화살표 */}
+      <path
+        d="M7 14L10 11"
+        stroke="rgba(255,255,255,0.9)"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+// 가시 아이콘 (가시 달린 방패)
+export function ThornsIcon({ size = 24, className = '', color = 'currentColor' }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} fill="none">
+      {/* 방패 */}
+      <path
+        d="M12 4L6 7V12C6 16 8.5 19 12 21C15.5 19 18 16 18 12V7L12 4Z"
+        fill={color}
+        opacity="0.9"
+      />
+      {/* 가시들 */}
+      <path d="M4 8L7 10" stroke={color} strokeWidth="2" strokeLinecap="round" />
+      <path d="M3 12L6 12" stroke={color} strokeWidth="2" strokeLinecap="round" />
+      <path d="M4 16L7 14" stroke={color} strokeWidth="2" strokeLinecap="round" />
+      <path d="M20 8L17 10" stroke={color} strokeWidth="2" strokeLinecap="round" />
+      <path d="M21 12L18 12" stroke={color} strokeWidth="2" strokeLinecap="round" />
+      <path d="M20 16L17 14" stroke={color} strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+// 기름 표시 아이콘 (기름통)
+export function OilMarkedIcon({ size = 24, className = '', color = 'currentColor' }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} fill="none">
+      {/* 기름통 몸체 */}
+      <rect x="5" y="6" width="14" height="16" rx="2" fill={color} opacity="0.9" />
+      {/* 기름통 상단 */}
+      <rect x="7" y="3" width="10" height="4" rx="1" fill={color} opacity="0.8" />
+      {/* 기름 방울 */}
+      <path
+        d="M12 10C12 10 9 14 9 16C9 18 10.5 19 12 19C13.5 19 15 18 15 16C15 14 12 10 12 10Z"
+        fill="rgba(255,255,255,0.8)"
+      />
+      {/* 불꽃 표시 */}
+      <path
+        d="M17 4L19 2L20 4L19 6L17 4Z"
+        fill="#ff6b6b"
+      />
+    </svg>
+  );
+}
+
+// 공격 봉인 아이콘 (봉인된 검)
+export function AttackDisabledIcon({ size = 24, className = '', color = 'currentColor' }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} fill="none">
+      {/* 검 */}
+      <path
+        d="M19.5 2L21 3.5L18.5 6L19.5 7L18 8.5L17 7.5L12 12.5L11 11.5L7.5 15L8 18.5L6.5 20L4 17.5L5.5 16L9 15.5L8.5 14L11.5 11L10.5 10L15.5 5L14.5 4L16 2.5L17 3.5L19.5 2Z"
+        fill={color}
+        opacity="0.5"
+      />
+      {/* 금지 원 */}
+      <circle cx="12" cy="12" r="9" stroke="#ff4444" strokeWidth="2.5" fill="none" />
+      <path d="M6 6L18 18" stroke="#ff4444" strokeWidth="2.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+// 블록을 피해로 전환 아이콘
+export function BlockToDamageIcon({ size = 24, className = '', color = 'currentColor' }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" className={className} fill="none">
+      {/* 방패 */}
+      <path
+        d="M6 3L2 5V9C2 12 4 15 6 16"
+        fill={color}
+        opacity="0.9"
+      />
+      {/* 화살표 */}
+      <path
+        d="M9 10L15 10M15 10L12 7M15 10L12 13"
+        stroke="rgba(255,255,255,0.9)"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      {/* 검 */}
+      <path
+        d="M18 4L22 8L20 10L18 8L16 10L14 8L18 4Z"
+        fill="#ff6b6b"
+      />
+      <path d="M14 14L18 18" stroke="#ff6b6b" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}

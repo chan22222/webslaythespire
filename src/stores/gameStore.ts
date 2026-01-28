@@ -84,7 +84,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     // 커먼 카드 (자동 해금)
     'combo_attack', 'assault_shield', 'double_strike', 'equipment_check', 'neutralize', 'instant_focus', 'tactical_review',
   ], // 언커먼/레어/유니크는 업적 달성 시 해금
-  ownedRelicIds: ['burning_blood', 'ring_of_the_snake', 'cracked_armor'], // 스타터 유물만 보유
+  ownedRelicIds: ALL_RELICS.map(r => r.id), // 모든 유물 해금
 
   setPlayerName: (name: string) => {
     set({ playerName: name || '모험가' });

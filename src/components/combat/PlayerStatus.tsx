@@ -15,6 +15,14 @@ import {
   PoisonIcon,
   MetallicizeIcon,
   InvulnerableIcon,
+  BlockNextTurnIcon,
+  BlockRetainIcon,
+  UndyingIcon,
+  GainBlockOnAttackIcon,
+  ThornsIcon,
+  OilMarkedIcon,
+  AttackDisabledIcon,
+  BlockToDamageIcon,
 } from './icons';
 
 // 스킬 이펙트 컴포넌트 (export해서 Enemy에서도 사용)
@@ -266,6 +274,22 @@ function StatusBadge({ status }: { status: Status }) {
         return <span style={{ fontSize: '14px', width: '14px', height: '14px', lineHeight: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', filter: 'grayscale(1)' }}>❤️</span>;
       case 'UNDEAD':
         return <span style={{ fontSize: '14px', width: '14px', height: '14px', lineHeight: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>💀</span>;
+      case 'BLOCK_NEXT_TURN':
+        return <BlockNextTurnIcon size={14} color="#60a5fa" />;
+      case 'BLOCK_RETAIN':
+        return <BlockRetainIcon size={14} color="#60a5fa" />;
+      case 'UNDYING':
+        return <UndyingIcon size={14} color="#fbbf24" />;
+      case 'GAIN_BLOCK_ON_ATTACK':
+        return <GainBlockOnAttackIcon size={14} color="#60a5fa" />;
+      case 'THORNS':
+        return <ThornsIcon size={14} color="#f97316" />;
+      case 'OIL_MARKED':
+        return <OilMarkedIcon size={14} color="#854d0e" />;
+      case 'ATTACK_DISABLED':
+        return <AttackDisabledIcon size={14} color="#ef4444" />;
+      case 'BLOCK_TO_DAMAGE':
+        return <BlockToDamageIcon size={14} color="#f97316" />;
       default:
         return null;
     }

@@ -102,7 +102,7 @@ export const SHIELD_HERO: Card = {
   image: '/cards/effect/shield_hero.png',
   description: '이번 게임에서 공격 사용 불가. 방어도를 얻을 때 50%만큼 무작위로 피해를 입힙니다.',
   effects: [
-    { type: 'APPLY_ATTACK_DISABLED', value: 999, target: 'SELF' },
+    { type: 'APPLY_ATTACK_DISABLED', value: 50, target: 'SELF' },
     { type: 'APPLY_BLOCK_TO_DAMAGE', value: 50, target: 'SELF' },
   ],
   unique: true,
@@ -111,7 +111,7 @@ export const SHIELD_HERO: Card = {
     name: '방패 용사 성공담+',
     description: '이번 게임에서 공격 사용 불가. 방어도를 얻을 때 75%만큼 무작위로 피해를 입힙니다.',
     effects: [
-      { type: 'APPLY_ATTACK_DISABLED', value: 999, target: 'SELF' },
+      { type: 'APPLY_ATTACK_DISABLED', value: 50, target: 'SELF' },
       { type: 'APPLY_BLOCK_TO_DAMAGE', value: 75, target: 'SELF' },
     ],
   },

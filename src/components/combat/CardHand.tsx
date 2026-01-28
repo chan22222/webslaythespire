@@ -48,6 +48,8 @@ export function CardHand({
 }: CardHandProps) {
   const [hoveredCardId, setHoveredCardId] = useState<string | null>(null);
   const isPlayingCard = useCombatStore(state => state.isPlayingCard);
+  const playerStatuses = useCombatStore(state => state.playerStatuses);
+  const attackDisabled = playerStatuses.some(s => s.type === 'ATTACK_DISABLED' && s.stacks > 0);
   const containerWidth = useCardSpacing();
   // 새로 추가된 카드 추적
   const [newCardIds, setNewCardIds] = useState<Set<string>>(new Set());
@@ -204,7 +206,7 @@ export function CardHand({
                 <DraggableCard
                   card={card}
                   isSelected={isSelected}
-                  isPlayable={card.cost <= energy && !isPlayingCard}
+                  isPlayable={card.cost <= energy && !isPlayingCard && !(attackDisabled && card.type === 'ATTACK')}
                   onSelect={() => onCardSelect(card.instanceId)}
                   onDragEnd={(x, y, dist) => onCardDragEnd(card.instanceId, x, y, dist)}
                   rotation={isSelected || isHovered ? 0 : rotation}

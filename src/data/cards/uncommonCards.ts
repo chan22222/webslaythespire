@@ -155,7 +155,7 @@ export const WILD_MUSHROOM: Card = {
 export const OIL_DRUM: Card = {
   id: 'oil_drum',
   name: '기름통',
-  type: 'EFFECT',
+  type: 'ATTACK',
   rarity: 'UNCOMMON',
   cost: 1,
   image: '/cards/effect/oil_drum.png',
