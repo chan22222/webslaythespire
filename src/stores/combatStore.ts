@@ -433,12 +433,14 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     }
 
     // 독 피해 처리 (방어도 무시, 직접 HP 감소)
-    const poisonStatus = playerStatuses.find(s => s.type === 'POISON');
+    // 최신 상태를 가져옴 (UNDYING 감소 등이 반영된 상태)
+    const currentStatuses = get().playerStatuses;
+    const poisonStatus = currentStatuses.find(s => s.type === 'POISON');
     if (poisonStatus && poisonStatus.stacks > 0) {
       const poisonDamage = poisonStatus.stacks;
 
       // 무적 상태면 독 피해도 무효화
-      const invulnerable = playerStatuses.find(s => s.type === 'INVULNERABLE');
+      const invulnerable = currentStatuses.find(s => s.type === 'INVULNERABLE');
       if (invulnerable && invulnerable.stacks > 0) {
         get().addToCombatLog(`무적! 중독 피해 무효화!`);
         get().addDamagePopup(0, 'blocked', 0, 0, 'player');
@@ -446,7 +448,7 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
         get().addToCombatLog(`중독으로 ${poisonDamage} 피해!`);
 
         // 불사 상태면 HP가 1 아래로 내려가지 않음
-        const undying = playerStatuses.find(s => s.type === 'UNDYING');
+        const undying = currentStatuses.find(s => s.type === 'UNDYING');
         const currentHp = useGameStore.getState().player.currentHp;
         if (undying && undying.stacks > 0 && currentHp - poisonDamage < 1) {
           const actualDamage = Math.max(0, currentHp - 1);
@@ -463,11 +465,13 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
         }
       }
 
-      poisonStatus.stacks -= 1;
+      // 최신 상태를 다시 가져와서 중독만 업데이트
+      const latestStatuses = get().playerStatuses;
+      const newPoisonStacks = poisonStatus.stacks - 1;
       set({
-        playerStatuses: poisonStatus.stacks > 0
-          ? playerStatuses.map(s => s.type === 'POISON' ? poisonStatus : s)
-          : playerStatuses.filter(s => s.type !== 'POISON'),
+        playerStatuses: newPoisonStacks > 0
+          ? latestStatuses.map(s => s.type === 'POISON' ? { ...s, stacks: newPoisonStacks } : s)
+          : latestStatuses.filter(s => s.type !== 'POISON'),
       });
     }
 
