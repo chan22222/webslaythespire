@@ -595,8 +595,8 @@ export function CombatScreen() {
   const [animationKey, setAnimationKey] = useState(0);
   // 공격 타겟 위치
   const [attackTargetPos, setAttackTargetPos] = useState<{ x: number; y: number } | null>(null);
-  // 플레이어 슬래시 이펙트 (swordslash.png)
-  const [swordSlashEffects, setSwordSlashEffects] = useState<{ id: number; x: number; y: number }[]>([]);
+  // 플레이어 슬래시 이펙트 (slash.png)
+  const [swordSlashEffects, setSwordSlashEffects] = useState<{ id: number; x: number; y: number; scale: number }[]>([]);
   // 적 타격 이펙트 (slashhit.png)
   const [hitEffects, setHitEffects] = useState<{ id: number; x: number; y: number }[]>([]);
   // 번개 이펙트 (벼락치는 황야)
@@ -1178,7 +1178,7 @@ export function CombatScreen() {
           // 카드 즉시 사용 (손에서 제거, 데미지는 따로 처리)
           playCard(cardInstanceId, confirmedTargetId, true);
 
-          // 600ms 후에 데미지 처리 (팝업은 100ms 간격으로)
+          // 500ms 후에 데미지 처리 (팝업은 100ms 간격으로)
           setTimeout(() => {
             playAttack(); // 공격 사운드
             // 슬래시 이펙트 표시
@@ -1186,10 +1186,12 @@ export function CombatScreen() {
             if (targetEl) {
               const targetRect = targetEl.getBoundingClientRect();
               const newEffectId = ++effectIdRef.current;
+              const scale = targetRect.height / 150; // 기준 높이 150px
               setSwordSlashEffects(prev => [...prev, {
                 id: newEffectId,
-                x: targetRect.left,
-                y: targetRect.top + targetRect.height / 2 - 35
+                x: targetRect.left + 10 * scale,
+                y: targetRect.top + targetRect.height / 2 - 10 * scale,
+                scale
               }]);
             }
 
@@ -1204,7 +1206,7 @@ export function CombatScreen() {
                 }
               }, idx * 100);
             });
-          }, 600);
+          }, 500);
 
           // 1200ms 후 강제 idle 복귀 (애니메이션 끝나지 않아도)
           setTimeout(() => {
@@ -1299,10 +1301,12 @@ export function CombatScreen() {
               if (targetEl) {
                 const targetRect = targetEl.getBoundingClientRect();
                 const newEffectId = ++effectIdRef.current;
+                const scale = targetRect.height / 150;
                 setSwordSlashEffects(prev => [...prev, {
                   id: newEffectId,
-                  x: targetRect.left - 30,
-                  y: targetRect.top + targetRect.height / 2 - 25
+                  x: targetRect.left + 10 * scale,
+                  y: targetRect.top + targetRect.height / 2 - 10 * scale,
+                  scale
                 }]);
               }
             }
@@ -1590,13 +1594,13 @@ export function CombatScreen() {
           onPopupComplete={removeDamagePopup}
         />
 
-        {/* 플레이어 슬래시 이펙트 (swordslash.png) */}
+        {/* 플레이어 슬래시 이펙트 (slash.png) */}
         {swordSlashEffects.map(effect => (
           <SwordSlashEffect
             key={effect.id}
             x={effect.x}
             y={effect.y}
-            size={window.innerHeight < 500 ? 120 : 200}
+            size={180 * effect.scale}
             onComplete={() => setSwordSlashEffects(prev => prev.filter(e => e.id !== effect.id))}
           />
         ))}

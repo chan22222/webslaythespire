@@ -57,14 +57,14 @@ const isAttackAnimation = (animation: AnimationState) => animation === 'attack' 
 // 피격/사망 애니메이션인지 확인 (hurt, death는 character_sprite_hitdeath.png 사용)
 const isHitDeathAnimation = (animation: AnimationState) => animation === 'hurt' || animation === 'death';
 
-// 검 슬래시 이펙트 스프라이트시트 설정 (swordslash.png - 3x3 그리드, 플레이어 근처)
+// 검 슬래시 이펙트 스프라이트시트 설정 (slash.png - 512x128, 4프레임)
 const SLASH_EFFECT_CONFIG = {
-  frameWidth: Math.floor(1024 / 3),  // 341
-  frameHeight: Math.floor(468 / 3),  // 156
-  columns: 3,
-  sheetWidth: 1024,
-  sheetHeight: 468,
-  totalFrames: 9,
+  frameWidth: 128,
+  frameHeight: 128,
+  columns: 4,
+  sheetWidth: 512,
+  sheetHeight: 128,
+  totalFrames: 4,
   speed: 35,
 };
 
@@ -106,7 +106,7 @@ const preloadImages = [
   '/sprites/character_sprite_1.png',
   '/sprites/character_sprite_dash.png',
   '/sprites/character_sprite_hitdeath.png',
-  '/sprites/swordslash.png',
+  '/sprites/skill/slash.png',
   '/sprites/slashhit.png',
   '/sprites/skill/Thunderstrike.png',
   '/sprites/skill/hiteffect.png',
@@ -171,12 +171,11 @@ export function SwordSlashEffect({ x, y, size = 150, onComplete }: SlashEffectPr
         top: y - height / 2,
         width,
         height,
-        backgroundImage: 'url(/sprites/swordslash.png)',
+        backgroundImage: 'url(/sprites/skill/slash.png)',
         backgroundPosition: `${bgX}px ${bgY}px`,
         backgroundSize: `${SLASH_EFFECT_CONFIG.sheetWidth * scale}px ${SLASH_EFFECT_CONFIG.sheetHeight * scale}px`,
         backgroundRepeat: 'no-repeat',
         imageRendering: 'pixelated',
-        mixBlendMode: 'screen',
       }}
     />
   );
