@@ -1461,6 +1461,16 @@ export function CombatScreen() {
         return;
       }
 
+      // Space: 턴 종료 버튼 클릭
+      if (e.key === ' ' || e.code === 'Space') {
+        e.preventDefault();
+        const endTurnBtn = document.getElementById('end-turn-btn') as HTMLButtonElement;
+        if (endTurnBtn && !endTurnBtn.disabled) {
+          endTurnBtn.click();
+        }
+        return;
+      }
+
       // 숫자키 1-9로 카드 선택
       const keyNum = parseInt(e.key);
       if (keyNum >= 1 && keyNum <= 9) {
@@ -2186,6 +2196,7 @@ export function CombatScreen() {
           onMouseLeave={() => setShowEndTurnTooltip(false)}
         >
           <button
+            id="end-turn-btn"
             onMouseEnter={playButtonHover}
             onClick={() => {
               if (isEndingTurn || isPlayerDying || isEndTurnLocked) return;
