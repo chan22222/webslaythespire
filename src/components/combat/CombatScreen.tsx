@@ -587,6 +587,12 @@ export function CombatScreen() {
   // 지형에 따른 배경 이미지 매핑
   const terrainBgMap: Record<string, string> = {
     lava_zone: '/maps/magma.png',
+    toxic_swamp: '/maps/poison.png',
+    sacred_ground: '/maps/holy.png',
+    gladiator_arena: '/maps/arena.png',
+    thunder_wasteland: '/maps/thunder.png',
+    zero_gravity: '/maps/stage2.png',
+    ancient_library: '/maps/stage2.png',
   };
 
   // 활성 지형이 있으면 해당 배경, 없으면 기본 배경
