@@ -75,6 +75,7 @@ interface CombatStore extends CombatState {
   // 플레이어 상태 (전투 중)
   playerBlock: number;
   playerStatuses: Status[];
+  shouldRetainBlock: boolean; // 다음 턴 방어도 유지 플래그
 
   // 데미지 팝업
   damagePopups: DamagePopup[];
@@ -96,6 +97,11 @@ interface CombatStore extends CombatState {
   // 플레이어 디버프 이펙트 트리거
   playerDebuffTrigger: number;
   triggerPlayerDebuff: () => void;
+
+  // 화면 흔들림 트리거 (피격 시)
+  screenShakeTrigger: number;
+  screenShakeIntensity: 'light' | 'medium' | 'heavy';
+  triggerScreenShake: (intensity?: 'light' | 'medium' | 'heavy') => void;
 
   // 번개 이펙트 큐 (벼락치는 황야)
   thunderEffectQueue: { targetType: 'player' | 'enemy'; targetId?: string; delay: number }[];
@@ -131,11 +137,14 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
   ...createInitialCombatState(),
   playerBlock: 0,
   playerStatuses: [],
+  shouldRetainBlock: false,
   damagePopups: [],
   enemyHitTriggers: {},
   enemySkillTriggers: {},
   enemyAttackTriggers: {},
   playerDebuffTrigger: 0,
+  screenShakeTrigger: 0,
+  screenShakeIntensity: 'medium',
   thunderEffectQueue: [],
   hitEffectQueue: [],
   extraTurnPending: false,
@@ -149,6 +158,13 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
 
   triggerPlayerDebuff: () => {
     set(state => ({ playerDebuffTrigger: state.playerDebuffTrigger + 1 }));
+  },
+
+  triggerScreenShake: (intensity = 'medium') => {
+    set(state => ({
+      screenShakeTrigger: state.screenShakeTrigger + 1,
+      screenShakeIntensity: intensity,
+    }));
   },
 
   addThunderEffect: (targetType, targetId, delay) => {
@@ -252,6 +268,7 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       enemies,
       playerBlock: 0,
       playerStatuses: [],
+      shouldRetainBlock: false,
       currentPlayingCardId: null,
       currentPlayingCardName: null,
     });
@@ -329,7 +346,7 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
   },
 
   startPlayerTurn: () => {
-    const { turn, maxEnergy, playerStatuses, extraDrawNextTurn, playerBlock } = get();
+    const { turn, maxEnergy, playerStatuses, extraDrawNextTurn, playerBlock, shouldRetainBlock } = get();
 
     // 업적 체크: 적 턴 후 방어도가 깎이지 않았는지 (첫 턴 제외)
     if (turn > 1) {
@@ -339,13 +356,13 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     // 업적 체크용 턴 상태 초기화
     resetTurnAchievementState();
 
-    // 첫 턴이 아니면 방어도 리셋 (BLOCK_RETAIN 상태가 있으면 유지)
+    // 첫 턴이 아니면 방어도 리셋 (shouldRetainBlock 플래그가 있으면 유지)
     if (turn > 1) {
-      const blockRetain = playerStatuses.find(s => s.type === 'BLOCK_RETAIN');
-      if (!blockRetain || blockRetain.stacks <= 0) {
+      if (!shouldRetainBlock) {
         set({ playerBlock: 0 });
       } else {
         get().addToCombatLog('방어도 유지 상태로 방어도가 유지됩니다!');
+        set({ shouldRetainBlock: false }); // 플래그 리셋
       }
 
       // 플레이어 약화/취약 감소 (불사/무적은 피해 처리 후 감소)
@@ -670,6 +687,10 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       processedStatuses = processedStatuses.filter(s => s.type !== 'STRENGTH_DOWN');
     }
 
+    // BLOCK_RETAIN이 있으면 다음 턴 방어도 유지 플래그 설정
+    const blockRetain = processedStatuses.find(s => s.type === 'BLOCK_RETAIN');
+    const willRetainBlock = blockRetain && blockRetain.stacks > 0;
+
     // 상태 효과 지속시간 감소 (방어도 유지만 - 약화/취약/불사/무적은 턴 시작 시 감소)
     // justApplied면 이번 턴은 감소 스킵하고 플래그만 해제
     const updatedStatuses = processedStatuses
@@ -688,6 +709,7 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
     set({
       isPlayerTurn: false,
       playerStatuses: updatedStatuses,
+      shouldRetainBlock: willRetainBlock ? true : false,
     });
 
     // 업적 추적: 적 턴 전 방어도 저장 (적 턴 후에 체크하기 위해)
@@ -1736,6 +1758,9 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
         const hitRandomY = (Math.random() - 0.5) * (isMobile ? 35 : 70);
         get().addHitEffect(enemyId, rect.left + rect.width / 2 + hitRandomX, rect.top + rect.height / 2 + hitRandomY);
       }
+      // 화면 흔들림 트리거 (적 피격은 플레이어보다 약하게)
+      const shakeIntensity = remainingDamage >= 30 ? 'medium' : 'light';
+      get().triggerScreenShake(shakeIntensity);
     }
 
     // 로그 출력 (방어도 흡수 + 실제 피해)
@@ -1992,6 +2017,9 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
         useGameStore.getState().modifyHp(-actualDamage);
         // 플레이어 피격 음성 재생
         playPlayerHit();
+        // 화면 흔들림 트리거 (데미지에 따라 강도 조절)
+        const shakeIntensity = actualDamage >= 20 ? 'heavy' : actualDamage >= 10 ? 'medium' : 'light';
+        get().triggerScreenShake(shakeIntensity);
         // 플레이어 피격 애니메이션 트리거
         const { onPlayerHit } = get();
         if (onPlayerHit) {
@@ -2271,6 +2299,7 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
       combatLog: combatLog.length > 0 ? [...combatLog, '─────────────'] : [],
       playerBlock: 0,
       playerStatuses: [],
+      shouldRetainBlock: false,
       damagePopups: [],
       isPlayingCard: false,
       isEndTurnLocked: false,

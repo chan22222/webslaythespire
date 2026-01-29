@@ -559,6 +559,8 @@ export function CombatScreen() {
     hitEffectQueue,
     removeHitEffect,
     activeTerrain,
+    screenShakeTrigger,
+    screenShakeIntensity,
   } = useCombatStore();
 
   const currentNode = getCurrentNode();
@@ -631,11 +633,22 @@ export function CombatScreen() {
   const [keyboardArrowEnd, setKeyboardArrowEnd] = useState<{ x: number; y: number } | null>(null);
   // 마우스 위치 추적용 ref
   const mousePosRef = useRef({ x: 0, y: 0 });
+  // 화면 흔들림 상태
+  const [isShaking, setIsShaking] = useState(false);
 
   // isPlayerDying 상태를 ref에 동기화
   useEffect(() => {
     isPlayerDyingRef.current = isPlayerDying;
   }, [isPlayerDying]);
+
+  // 화면 흔들림 트리거 처리
+  useEffect(() => {
+    if (screenShakeTrigger === 0) return;
+    setIsShaking(true);
+    const duration = screenShakeIntensity === 'heavy' ? 400 : screenShakeIntensity === 'medium' ? 300 : 200;
+    const timer = setTimeout(() => setIsShaking(false), duration);
+    return () => clearTimeout(timer);
+  }, [screenShakeTrigger, screenShakeIntensity]);
 
   // 마우스 위치 추적 (키보드 선택 시 화살표 업데이트용)
   useEffect(() => {
@@ -1811,7 +1824,7 @@ export function CombatScreen() {
 
       <div
         ref={playAreaRef}
-        className="w-full h-screen combat-arena vignette flex flex-col relative overflow-hidden"
+        className={`w-full h-screen combat-arena vignette flex flex-col relative overflow-hidden ${isShaking ? `screen-shake-${screenShakeIntensity}` : ''}`}
         onClick={handlePlayAreaClick}
       >
         {/* 데미지 팝업 */}
