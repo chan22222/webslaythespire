@@ -1503,6 +1503,7 @@ body {
     linear-gradient(95deg, transparent 45%, rgba(255, 240, 200, 0.06) 52%, rgba(255, 240, 200, 0.15) 60%, rgba(255, 240, 200, 0.06) 68%, transparent 75%);
   pointer-events: none;
   z-index: 1;
+  mix-blend-mode: screen;
   animation: light-rays 15s ease-in-out infinite;
 }
 
