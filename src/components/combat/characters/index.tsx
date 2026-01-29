@@ -101,8 +101,8 @@ const GENERIC_HIT_EFFECT_CONFIG = {
   speed: 35,
 };
 
-// 모든 스프라이트 이미지 미리 로드 (깜빡임 방지)
-const preloadImages = [
+// 플레이어 + 이펙트 스프라이트는 항상 프리로드
+const basePreloadImages = [
   // 플레이어 스프라이트
   '/sprites/character_sprite_1.png',
   '/sprites/character_sprite_dash.png',
@@ -112,23 +112,42 @@ const preloadImages = [
   '/sprites/skill/slashhit.png',
   '/sprites/skill/Thunderstrike.png',
   '/sprites/skill/hiteffect.png',
-  // 몹 스프라이트 (idle + attack)
-  '/sprites/mob/flyingeye.png',
-  '/sprites/mob/flyingeye_Attack.png',
-  '/sprites/mob/goblin.png',
-  '/sprites/mob/goblin_Attack.png',
-  '/sprites/mob/skeleton.png',
-  '/sprites/mob/skeleton_Attack.png',
-  '/sprites/mob/mushroom.png',
-  '/sprites/mob/mushroom_Attack.png',
-  '/sprites/mob/EvilWizard.png',
-  '/sprites/mob/EvilWizard_Attack.png',
-  '/sprites/mob/NightBorne.png',
 ];
-preloadImages.forEach(src => {
+basePreloadImages.forEach(src => {
   const img = new Image();
   img.src = src;
 });
+
+// 적 templateId -> 스프라이트 URL 매핑
+const enemySpriteMap: Record<string, string[]> = {
+  dummy_defense: ['/sprites/mob/mushroom.png', '/sprites/mob/mushroom_Attack.png'],
+  dummy_attack: ['/sprites/mob/mushroom.png', '/sprites/mob/mushroom_Attack.png'],
+  goblin: ['/sprites/mob/goblin.png', '/sprites/mob/goblin_Attack.png'],
+  skeleton: ['/sprites/mob/skeleton.png', '/sprites/mob/skeleton_Attack.png'],
+  flying_eye: ['/sprites/mob/flyingeye.png', '/sprites/mob/flyingeye_Attack.png'],
+  green_flying_eye: ['/sprites/mob/flyingeye.png', '/sprites/mob/flyingeye_Attack.png'],
+  acid_mushroom: ['/sprites/mob/mushroom.png', '/sprites/mob/mushroom_Attack.png'],
+  mushroom: ['/sprites/mob/mushroom.png', '/sprites/mob/mushroom_Attack.png'],
+  gremlin_nob: ['/sprites/mob/EvilWizard.png', '/sprites/mob/EvilWizard_Attack.png'],
+  slime_boss: ['/sprites/mob/NightBorne.png'],
+  real_tukbug: ['/sprites/mob/easteregg/tukbug.png'],
+  kkuchu: ['/sprites/mob/easteregg/kkuchu.png'],
+};
+
+// 전투에 등장하는 적들의 스프라이트만 동적 프리로딩
+export function preloadEnemySprites(templateIds: string[]) {
+  const urls = new Set<string>();
+  templateIds.forEach(id => {
+    const sprites = enemySpriteMap[id];
+    if (sprites) {
+      sprites.forEach(url => urls.add(url));
+    }
+  });
+  urls.forEach(src => {
+    const img = new Image();
+    img.src = src;
+  });
+}
 
 // 검 슬래시 이펙트 컴포넌트
 interface SlashEffectProps {

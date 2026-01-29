@@ -7,6 +7,7 @@ import { shuffle } from '../utils/shuffle';
 import { useGameStore } from './gameStore';
 import { useStatsStore } from './statsStore';
 import { playCardDraw, playHit, playShieldBlock, playBuff, playDebuff, playEnemyBuff, playWin, playPlayerHit, playTimeSkill, playInvincibility, playThunder } from '../utils/sound';
+import { preloadEnemySprites } from '../components/combat/characters';
 import {
   resetBattleAchievementState,
   resetTurnAchievementState,
@@ -248,6 +249,9 @@ export const useCombatStore = create<CombatStore>((set, get) => ({
   },
 
   initCombat: (deck: CardInstance[], enemyTemplates: EnemyTemplate[]) => {
+    // 현재 전투에 등장하는 적들의 스프라이트만 프리로딩
+    preloadEnemySprites(enemyTemplates.map(t => t.id));
+
     // 업적 체크용 전투 상태 초기화
     resetBattleAchievementState();
 
