@@ -590,7 +590,39 @@ export function CombatScreen() {
   };
 
   // 활성 지형이 있으면 해당 배경, 없으면 기본 배경
-  const bgImage = activeTerrain && terrainBgMap[activeTerrain] ? terrainBgMap[activeTerrain] : defaultBgImage;
+  const targetBgImage = activeTerrain && terrainBgMap[activeTerrain] ? terrainBgMap[activeTerrain] : defaultBgImage;
+
+  // 배경 전환 애니메이션 상태
+  const [displayedBg, setDisplayedBg] = useState(targetBgImage);
+  const [nextBg, setNextBg] = useState<string | null>(null);
+  const [bgOpacity, setBgOpacity] = useState(0);
+
+  // 배경 변경 감지 및 전환 애니메이션
+  useEffect(() => {
+    if (targetBgImage !== displayedBg && !nextBg) {
+      // 새 배경 설정, opacity 0에서 시작
+      setNextBg(targetBgImage);
+      setBgOpacity(0);
+      // 다음 프레임에서 opacity 1로 전환
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setBgOpacity(1);
+        });
+      });
+    }
+  }, [targetBgImage, displayedBg, nextBg]);
+
+  // 전환 완료 후 배경 교체
+  useEffect(() => {
+    if (bgOpacity === 1 && nextBg) {
+      const timer = setTimeout(() => {
+        setDisplayedBg(nextBg);
+        setNextBg(null);
+        setBgOpacity(0);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [bgOpacity, nextBg]);
 
   // 전투 인트로 상태
   const [showIntro, setShowIntro] = useState(true);
@@ -1838,17 +1870,52 @@ export function CombatScreen() {
         className={`w-full h-screen combat-arena-base vignette flex flex-col relative overflow-hidden ${isShaking ? `screen-shake-${screenShakeIntensity}` : ''}`}
         onClick={handlePlayAreaClick}
       >
-        {/* 배경 이미지 (pixelated 렌더링) */}
-        <div
-          className="absolute inset-0 z-0 pointer-events-none"
-          style={{
-            backgroundImage: `url(${bgImage})`,
-            backgroundSize: 'auto 100%',
-            backgroundPosition: 'center',
-            backgroundRepeat: 'repeat-x',
-            imageRendering: 'pixelated',
-          }}
-        />
+        {/* 현재 배경 (거울 반복: 왼쪽 거울 + 가운데 원본 + 오른쪽 거울) */}
+        <div className="absolute inset-0 z-0 pointer-events-none flex justify-center">
+          {[-1, 0, 1].map(i => (
+            <div
+              key={i}
+              style={{
+                flex: '0 0 auto',
+                width: '100vh',
+                height: '100%',
+                backgroundImage: `url(${displayedBg})`,
+                backgroundSize: 'auto 100%',
+                backgroundPosition: 'center',
+                backgroundRepeat: 'no-repeat',
+                imageRendering: 'pixelated',
+                transform: i === 0 ? 'none' : 'scaleX(-1)',
+              }}
+            />
+          ))}
+        </div>
+        {/* 새 배경 (페이드 인, 거울 반복) */}
+        {nextBg && (
+          <div
+            className="absolute inset-0 z-0 pointer-events-none flex justify-center"
+            style={{
+              opacity: bgOpacity,
+              transition: 'opacity 0.5s ease-in-out',
+            }}
+          >
+            {[-1, 0, 1].map(i => (
+              <div
+                key={i}
+                style={{
+                  flex: '0 0 auto',
+                  width: '100vh',
+                  height: '100%',
+                  backgroundImage: `url(${nextBg})`,
+                  backgroundSize: 'auto 100%',
+                  backgroundPosition: 'center',
+                  backgroundRepeat: 'no-repeat',
+                  imageRendering: 'pixelated',
+                  transform: i === 0 ? 'none' : 'scaleX(-1)',
+                }}
+              />
+            ))}
+          </div>
+        )}
         {/* 데미지 팝업 */}
         <DamagePopupManager
           popups={damagePopups}
