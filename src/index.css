@@ -1478,7 +1478,7 @@ body {
     url('/maps/stage1.png');
   background-size: cover, auto 100%;
   background-position: center, center;
-  background-repeat: no-repeat;
+  background-repeat: no-repeat, repeat-x;
   background-color: #0a0908;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
@@ -1488,7 +1488,7 @@ body {
   content: '';
   position: absolute;
   inset: -50px;
-  background: radial-gradient(ellipse 56% 80% at 50% 50%, transparent 40%, rgba(10, 9, 8, 0.6) 58%, rgba(10, 9, 8, 0.97) 68%, #0a0908 76%);
+  background: radial-gradient(ellipse 54% 76% at 50% 50%, transparent 36%, rgba(10, 9, 8, 0.6) 54%, rgba(10, 9, 8, 0.97) 64%, #0a0908 72%);
   pointer-events: none;
   z-index: 2;
   animation: vignette-breathe 3s ease-in-out infinite;
@@ -1497,7 +1497,7 @@ body {
 
 @keyframes vignette-breathe {
   0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.15); }
+  50% { transform: scale(1.25); }
 }
 
 /* 빛줄기 효과 */
