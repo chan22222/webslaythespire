@@ -103,13 +103,27 @@ const GENERIC_HIT_EFFECT_CONFIG = {
 
 // 모든 스프라이트 이미지 미리 로드 (깜빡임 방지)
 const preloadImages = [
+  // 플레이어 스프라이트
   '/sprites/character_sprite_1.png',
   '/sprites/character_sprite_dash.png',
   '/sprites/character_sprite_hitdeath.png',
+  // 이펙트 스프라이트
   '/sprites/skill/slash.png',
   '/sprites/skill/slashhit.png',
   '/sprites/skill/Thunderstrike.png',
   '/sprites/skill/hiteffect.png',
+  // 몹 스프라이트 (idle + attack)
+  '/sprites/mob/flyingeye.png',
+  '/sprites/mob/flyingeye_Attack.png',
+  '/sprites/mob/goblin.png',
+  '/sprites/mob/goblin_Attack.png',
+  '/sprites/mob/skeleton.png',
+  '/sprites/mob/skeleton_Attack.png',
+  '/sprites/mob/mushroom.png',
+  '/sprites/mob/mushroom_Attack.png',
+  '/sprites/mob/EvilWizard.png',
+  '/sprites/mob/EvilWizard_Attack.png',
+  '/sprites/mob/NightBorne.png',
 ];
 preloadImages.forEach(src => {
   const img = new Image();
