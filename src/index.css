@@ -142,7 +142,7 @@ body {
   }
 
   /* 전투 UI 간격 최적화 */
-  .combat-arena {
+  .combat-arena-base {
     --mobile-gap: 4px;
   }
 }
@@ -154,14 +154,14 @@ body {
     min-width: 44px;
   }
 
-  .combat-arena {
+  .combat-arena-base {
     --mobile-gap: 8px;
   }
 }
 
 /* 중형 모바일/태블릿 (640px - 767px) */
 @media (min-width: 640px) and (max-width: 767px) and (orientation: landscape) {
-  .combat-arena {
+  .combat-arena-base {
     --mobile-gap: 12px;
   }
 }
@@ -1471,20 +1471,13 @@ body {
    전투 화면 배경 시스템
    ============================================ */
 
-.combat-arena {
+.combat-arena-base {
   position: relative;
-  background:
-    linear-gradient(180deg, rgba(0, 0, 0, 0.15) 0%, transparent 30%, transparent 70%, rgba(0, 0, 0, 0.2) 100%),
-    url('/maps/stage1.png');
-  background-size: cover, auto 100%;
-  background-position: center, center;
-  background-repeat: no-repeat, repeat-x;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.15) 0%, transparent 30%, transparent 70%, rgba(0, 0, 0, 0.2) 100%);
   background-color: #0a0908;
-  image-rendering: pixelated;
-  image-rendering: crisp-edges;
 }
 
-.combat-arena::before {
+.combat-arena-base::before {
   content: '';
   position: absolute;
   inset: -50px;
@@ -1501,7 +1494,7 @@ body {
 }
 
 /* 빛줄기 효과 */
-.combat-arena::after {
+.combat-arena-base::after {
   content: '';
   position: absolute;
   inset: 0;

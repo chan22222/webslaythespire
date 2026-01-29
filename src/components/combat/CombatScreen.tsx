@@ -581,6 +581,17 @@ export function CombatScreen() {
     playBGM('battle');
   }, []);
 
+  // 배경 이미지 랜덤 선택 (전투마다)
+  const [defaultBgImage] = useState(() => Math.random() < 0.5 ? '/maps/stage1.png' : '/maps/stage1-2.png');
+
+  // 지형에 따른 배경 이미지 매핑
+  const terrainBgMap: Record<string, string> = {
+    lava_zone: '/maps/magma.png',
+  };
+
+  // 활성 지형이 있으면 해당 배경, 없으면 기본 배경
+  const bgImage = activeTerrain && terrainBgMap[activeTerrain] ? terrainBgMap[activeTerrain] : defaultBgImage;
+
   // 전투 인트로 상태
   const [showIntro, setShowIntro] = useState(true);
   const [introComplete, setIntroComplete] = useState(false);
@@ -1824,9 +1835,20 @@ export function CombatScreen() {
 
       <div
         ref={playAreaRef}
-        className={`w-full h-screen combat-arena vignette flex flex-col relative overflow-hidden ${isShaking ? `screen-shake-${screenShakeIntensity}` : ''}`}
+        className={`w-full h-screen combat-arena-base vignette flex flex-col relative overflow-hidden ${isShaking ? `screen-shake-${screenShakeIntensity}` : ''}`}
         onClick={handlePlayAreaClick}
       >
+        {/* 배경 이미지 (pixelated 렌더링) */}
+        <div
+          className="absolute inset-0 z-0 pointer-events-none"
+          style={{
+            backgroundImage: `url(${bgImage})`,
+            backgroundSize: 'auto 100%',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'repeat-x',
+            imageRendering: 'pixelated',
+          }}
+        />
         {/* 데미지 팝업 */}
         <DamagePopupManager
           popups={damagePopups}
