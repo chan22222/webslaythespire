@@ -6,6 +6,7 @@ interface HealthBarProps {
   size?: 'sm' | 'md' | 'lg';
   incomingDamage?: number; // 예상 피해량 (방어도 감안 전)
   enemyBlock?: number; // 적의 방어도 (예상 피해 계산용)
+  incomingHeal?: number; // 예상 회복량
 }
 
 export function HealthBar({
@@ -16,6 +17,7 @@ export function HealthBar({
   size = 'md',
   incomingDamage = 0,
   enemyBlock = 0,
+  incomingHeal = 0,
 }: HealthBarProps) {
   const percentage = Math.max(0, Math.min(100, (current / max) * 100));
   const isCritical = percentage < 15;
@@ -25,6 +27,10 @@ export function HealthBar({
   const expectedHp = Math.max(0, current - effectiveDamage);
   const expectedPercentage = Math.max(0, Math.min(100, (expectedHp / max) * 100));
   const willDie = expectedHp <= 0 && incomingDamage > 0;
+
+  // 예상 회복 계산 (최대 HP 초과 불가)
+  const healedHp = Math.min(max, current + incomingHeal);
+  const healedPercentage = Math.max(0, Math.min(100, (healedHp / max) * 100));
 
   const heights = {
     sm: 18,
@@ -100,6 +106,39 @@ export function HealthBar({
           />
         )}
 
+        {/* 회복 예정 영역 (초록색) */}
+        {incomingHeal > 0 && healedPercentage > percentage && (
+          <div
+            className="absolute inset-0 overflow-hidden animate-pulse"
+            style={{
+              clipPath: `inset(0 ${100 - healedPercentage}% 0 ${percentage}%)`,
+              zIndex: 1,
+            }}
+          >
+            <div
+              className="w-full h-full"
+              style={{
+                background: 'linear-gradient(90deg, #22c55e 0%, #4ade80 100%)',
+                opacity: 0.7,
+              }}
+            />
+          </div>
+        )}
+
+        {/* 회복 영역 강조선 */}
+        {incomingHeal > 0 && healedPercentage > percentage && (
+          <div
+            className="absolute h-full animate-pulse"
+            style={{
+              left: `${healedPercentage}%`,
+              width: '2px',
+              background: '#4ade80',
+              boxShadow: '0 0 8px rgba(74, 222, 128, 0.8)',
+              zIndex: 2,
+            }}
+          />
+        )}
+
         {/* 숫자 표시 */}
         {showNumbers && (
           <div
@@ -140,6 +179,18 @@ export function HealthBar({
                   <rect x="4" y="17" width="2" height="3" rx="0.5" fill="#fbbf24" stroke="#ef4444" strokeWidth="0.5" />
                 </svg>
               </div>
+            ) : incomingHeal > 0 ? (
+              <>
+                <span style={{
+                  color: '#4ade80',
+                  textShadow: '0 0 6px rgba(74, 222, 128, 0.8), 0 1px 2px rgba(0,0,0,0.8)',
+                  fontWeight: 'bold'
+                }}>
+                  {healedHp}
+                </span>
+                <span style={{ color: 'rgba(255,255,255,0.4)', margin: '0 2px' }}>/</span>
+                <span style={{ color: 'rgba(255,255,255,0.6)' }}>{max}</span>
+              </>
             ) : (
               <>
                 <span style={{ color: '#fff', textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}>

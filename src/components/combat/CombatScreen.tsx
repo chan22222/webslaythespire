@@ -1096,6 +1096,72 @@ export function CombatScreen() {
     return totalLoss;
   }, [selectedCardId, hand, energy]);
 
+  // 선택된 카드의 플레이어 HP 회복 계산 (HEAL 효과 + 흡혈)
+  const calculatePlayerHpGain = useCallback((): number => {
+    if (!selectedCardId) return 0;
+
+    const card = hand.find(c => c.instanceId === selectedCardId);
+    if (!card || card.cost > energy) return 0;
+
+    let totalHeal = 0;
+
+    // HEAL 효과 계산
+    for (const effect of card.effects) {
+      if (effect.type === 'HEAL') {
+        totalHeal += effect.value;
+      }
+    }
+
+    // 흡혈귀의 이빨 유물 체크
+    const hasVampireFang = player.relics.some(r => r.id === 'vampire_fang');
+    if (hasVampireFang) {
+      const strength = playerStatuses.find(s => s.type === 'STRENGTH')?.stacks || 0;
+      const weak = playerStatuses.find(s => s.type === 'WEAK');
+
+      // 각 적에 대해 각 히트별로 개별 계산 (실제 흡혈 로직과 동일)
+      for (const enemy of enemies) {
+        if (enemy.currentHp <= 0) continue;
+
+        const vulnerable = enemy.statuses.find(s => s.type === 'VULNERABLE');
+        let remainingBlock = enemy.block;
+
+        // 배수 계산
+        let damageMultiplier = 1.0;
+        if (weak && weak.stacks > 0) damageMultiplier -= 0.25;
+        if (vulnerable && vulnerable.stacks > 0) damageMultiplier += 0.5;
+        if (activeTerrain === 'gladiator_arena') damageMultiplier += 1.0;
+
+        // 각 DAMAGE 효과를 순회 (다중 히트 처리)
+        for (const effect of card.effects) {
+          if (effect.type === 'DAMAGE') {
+            // 단일 타겟 or 전체 공격
+            if (effect.target === 'ALL' || effect.target === 'SINGLE') {
+              const baseDamage = effect.value + strength;
+              const finalDamage = Math.floor(baseDamage * damageMultiplier);
+
+              // 방어도 차감
+              let actualDamage = finalDamage;
+              if (remainingBlock > 0) {
+                if (remainingBlock >= actualDamage) {
+                  remainingBlock -= actualDamage;
+                  actualDamage = 0;
+                } else {
+                  actualDamage -= remainingBlock;
+                  remainingBlock = 0;
+                }
+              }
+
+              // 각 히트별 10% 흡혈 (내림)
+              totalHeal += Math.floor(actualDamage * 0.1);
+            }
+          }
+        }
+      }
+    }
+
+    return totalHeal;
+  }, [selectedCardId, hand, energy, player.relics, enemies, playerStatuses, activeTerrain]);
+
   const handleCardDragEnd = useCallback((cardInstanceId: string, x: number, y: number, dragDistance: number) => {
     // 공격 중이면 카드 사용 불가 (ref로 동기 체크)
     if (isAttackingRef.current) {
@@ -2134,6 +2200,7 @@ export function CombatScreen() {
               attackTargetPos={attackTargetPos}
               enemyCount={enemies.length}
               incomingDamage={calculatePlayerHpLoss()}
+              incomingHeal={calculatePlayerHpGain()}
               onAnimationEnd={() => {
                 // 사망 애니메이션 완료 시
                 if (playerAnimation === 'death') {
